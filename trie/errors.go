@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc.
+// (c) 2020-2021, Ava Labs, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -8,7 +8,7 @@
 //
 // Much love to the original authors for their work.
 // **********
-// Copyright 2017 The go-ethereum Authors
+// Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
 // The go-ethereum library is free software: you can redistribute it and/or modify
@@ -24,30 +24,22 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package misc
+package trie
 
 import (
 	"fmt"
 
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// VerifyForkHashes verifies that blocks conforming to network hard-forks do have
-// the correct hashes, to avoid clients going off on different chains. This is an
-// optional feature.
-func VerifyForkHashes(config *params.ChainConfig, header *types.Header, uncle bool) error {
-	// We don't care about uncles
-	if uncle {
-		return nil
-	}
-	// If the homestead reprice hash is set, validate it
-	if config.EIP150Block != nil && config.EIP150Block.Cmp(header.Number) == 0 {
-		if config.EIP150Hash != (common.Hash{}) && config.EIP150Hash != header.Hash() {
-			return fmt.Errorf("homestead gas reprice fork: have 0x%x, want 0x%x", header.Hash(), config.EIP150Hash)
-		}
-	}
-	// All ok, return
-	return nil
+// MissingNodeError is returned by the trie functions (TryGet, TryUpdate, TryDelete)
+// in the case where a trie node is not present in the local database. It contains
+// information necessary for retrieving the missing node.
+type MissingNodeError struct {
+	NodeHash common.Hash // hash of the missing node
+	Path     []byte      // hex-encoded path to the missing node
+}
+
+func (err *MissingNodeError) Error() string {
+	return fmt.Sprintf("missing trie node %x (path %x)", err.NodeHash, err.Path)
 }
