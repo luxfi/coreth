@@ -9,12 +9,12 @@ import (
 
 	"github.com/luxdefi/coreth/params"
 
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/utils"
-	"github.com/luxdefi/avalanchego/utils/crypto"
-	"github.com/luxdefi/avalanchego/vms/components/avax"
-	"github.com/luxdefi/avalanchego/vms/components/chain"
-	"github.com/luxdefi/avalanchego/vms/secp256k1fx"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils"
+	"github.com/luxdefi/node/utils/crypto"
+	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/components/chain"
+	"github.com/luxdefi/node/vms/secp256k1fx"
 
 	"github.com/stretchr/testify/assert"
 )

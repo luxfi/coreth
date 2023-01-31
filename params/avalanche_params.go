@@ -6,7 +6,7 @@ package params
 import (
 	"math/big"
 
-	"github.com/luxdefi/avalanchego/utils/units"
+	"github.com/luxdefi/node/utils/units"
 )
 
 // Minimum Gas Price

@@ -7,10 +7,10 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/luxdefi/avalanchego/chains/atomic"
-	"github.com/luxdefi/avalanchego/codec"
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/utils/wrappers"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils/wrappers"
 
 	"github.com/luxdefi/coreth/trie"
 	"github.com/ethereum/go-ethereum/common"

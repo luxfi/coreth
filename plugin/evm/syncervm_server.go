@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxdefi/avalanchego/database"
-	"github.com/luxdefi/avalanchego/snow/engine/snowman/block"
+	"github.com/luxdefi/node/database"
+	"github.com/luxdefi/node/snow/engine/snowman/block"
 
 	"github.com/luxdefi/coreth/core"
 	"github.com/luxdefi/coreth/plugin/evm/message"

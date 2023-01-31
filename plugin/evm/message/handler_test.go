@@ -6,7 +6,7 @@ package message
 import (
 	"testing"
 
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/ids"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -32,7 +32,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/luxdefi/avalanchego/utils/timer/mockable"
+	"github.com/luxdefi/node/utils/timer/mockable"
 	"github.com/luxdefi/coreth/consensus/dummy"
 	"github.com/luxdefi/coreth/core"
 	"github.com/luxdefi/coreth/core/types"

@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/ids"
 )
 
 var _ CrossChainRequest = EthCallRequest{}

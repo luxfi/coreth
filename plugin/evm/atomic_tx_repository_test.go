@@ -9,20 +9,20 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/luxdefi/avalanchego/chains/atomic"
-	"github.com/luxdefi/avalanchego/database"
-	"github.com/luxdefi/avalanchego/database/prefixdb"
-	"github.com/luxdefi/avalanchego/database/versiondb"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/database"
+	"github.com/luxdefi/node/database/prefixdb"
+	"github.com/luxdefi/node/database/versiondb"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/luxdefi/avalanchego/codec"
-	"github.com/luxdefi/avalanchego/utils/set"
-	"github.com/luxdefi/avalanchego/utils/wrappers"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/utils/wrappers"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/luxdefi/avalanchego/database/memdb"
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/database/memdb"
+	"github.com/luxdefi/node/ids"
 )
 
 // addTxs writes [txsPerHeight] txs for heights ranging in [fromHeight, toHeight) directly to [acceptedAtomicTxDB],

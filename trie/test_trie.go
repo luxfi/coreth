@@ -10,7 +10,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/luxdefi/avalanchego/utils/wrappers"
+	"github.com/luxdefi/node/utils/wrappers"
 	"github.com/luxdefi/coreth/accounts/keystore"
 	"github.com/luxdefi/coreth/core/types"
 

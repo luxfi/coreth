@@ -4,9 +4,9 @@
 package evm
 
 import (
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/snow"
-	"github.com/luxdefi/avalanchego/vms"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/node/vms"
 )
 
 var (

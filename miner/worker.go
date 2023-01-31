@@ -36,8 +36,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxdefi/avalanchego/utils/timer/mockable"
-	"github.com/luxdefi/avalanchego/utils/units"
+	"github.com/luxdefi/node/utils/timer/mockable"
+	"github.com/luxdefi/node/utils/units"
 	"github.com/luxdefi/coreth/consensus"
 	"github.com/luxdefi/coreth/consensus/dummy"
 	"github.com/luxdefi/coreth/consensus/misc"

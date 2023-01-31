@@ -34,7 +34,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/coreth/accounts/abi/bind"
 	"github.com/luxdefi/coreth/core/types"
 	"github.com/luxdefi/coreth/interfaces"

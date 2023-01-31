@@ -7,12 +7,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxdefi/avalanchego/codec"
+	"github.com/luxdefi/node/codec"
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/utils/units"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils/units"
 )
 
 const (

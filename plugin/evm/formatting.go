@@ -6,10 +6,10 @@ package evm
 import (
 	"fmt"
 
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/utils/constants"
-	"github.com/luxdefi/avalanchego/utils/crypto"
-	"github.com/luxdefi/avalanchego/utils/formatting/address"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils/constants"
+	"github.com/luxdefi/node/utils/crypto"
+	"github.com/luxdefi/node/utils/formatting/address"
 	"github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )

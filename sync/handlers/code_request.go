@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/luxdefi/avalanchego/codec"
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/ids"
 
 	"github.com/luxdefi/coreth/core/rawdb"
 	"github.com/luxdefi/coreth/ethdb"

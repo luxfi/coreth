@@ -11,14 +11,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/ids"
 
 	"github.com/luxdefi/coreth/ethdb/memorydb"
 	"github.com/luxdefi/coreth/params"
 	"github.com/luxdefi/coreth/sync/client/stats"
 
-	"github.com/luxdefi/avalanchego/codec"
-	"github.com/luxdefi/avalanchego/version"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/version"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"

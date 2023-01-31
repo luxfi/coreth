@@ -8,7 +8,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/luxdefi/avalanchego/utils"
+	"github.com/luxdefi/node/utils"
 	"github.com/luxdefi/coreth/core/rawdb"
 	"github.com/luxdefi/coreth/ethdb/memorydb"
 	"github.com/luxdefi/coreth/plugin/evm/message"

@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/ids"
 
 	"github.com/luxdefi/coreth/consensus/dummy"
 	"github.com/luxdefi/coreth/core"

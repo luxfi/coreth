@@ -9,8 +9,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/luxdefi/avalanchego/database/versiondb"
-	"github.com/luxdefi/avalanchego/utils/wrappers"
+	"github.com/luxdefi/node/database/versiondb"
+	"github.com/luxdefi/node/utils/wrappers"
 
 	"github.com/luxdefi/coreth/plugin/evm/message"
 	syncclient "github.com/luxdefi/coreth/sync/client"

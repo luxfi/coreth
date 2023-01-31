@@ -15,8 +15,8 @@ import (
 
 	"github.com/luxdefi/coreth/core/types"
 
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/snow/choices"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow/choices"
 )
 
 var (

@@ -9,13 +9,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/luxdefi/avalanchego/api"
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/utils/crypto"
-	"github.com/luxdefi/avalanchego/utils/formatting"
-	"github.com/luxdefi/avalanchego/utils/rpc"
+	"github.com/luxdefi/node/api"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils/crypto"
+	"github.com/luxdefi/node/utils/formatting"
+	"github.com/luxdefi/node/utils/rpc"
 
-	cjson "github.com/luxdefi/avalanchego/utils/json"
+	cjson "github.com/luxdefi/node/utils/json"
 )
 
 // Interface compliance

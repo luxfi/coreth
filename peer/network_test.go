@@ -12,18 +12,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxdefi/avalanchego/snow/engine/common"
-	"github.com/luxdefi/avalanchego/utils/set"
+	"github.com/luxdefi/node/snow/engine/common"
+	"github.com/luxdefi/node/utils/set"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/luxdefi/coreth/plugin/evm/message"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/luxdefi/avalanchego/codec"
-	"github.com/luxdefi/avalanchego/codec/linearcodec"
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/version"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/codec/linearcodec"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/version"
 )
 
 var (

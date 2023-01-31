@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxdefi/avalanchego/utils/wrappers"
+	"github.com/luxdefi/node/utils/wrappers"
 	"github.com/luxdefi/coreth/core/types"
 	"github.com/luxdefi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"

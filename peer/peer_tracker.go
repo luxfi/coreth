@@ -8,10 +8,10 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/luxdefi/avalanchego/ids"
-	utils_math "github.com/luxdefi/avalanchego/utils/math"
-	"github.com/luxdefi/avalanchego/utils/set"
-	"github.com/luxdefi/avalanchego/version"
+	"github.com/luxdefi/node/ids"
+	utils_math "github.com/luxdefi/node/utils/math"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/version"
 
 	"github.com/ethereum/go-ethereum/log"
 

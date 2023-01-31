@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	avalanchegoMetrics "github.com/luxdefi/avalanchego/api/metrics"
+	nodeMetrics "github.com/luxdefi/node/api/metrics"
 
 	"github.com/luxdefi/coreth/consensus/dummy"
 	corethConstants "github.com/luxdefi/coreth/constants"
@@ -57,35 +57,35 @@ import (
 
 	avalancheRPC "github.com/gorilla/rpc/v2"
 
-	"github.com/luxdefi/avalanchego/cache"
-	"github.com/luxdefi/avalanchego/codec"
-	"github.com/luxdefi/avalanchego/codec/linearcodec"
-	"github.com/luxdefi/avalanchego/database"
-	"github.com/luxdefi/avalanchego/database/manager"
-	"github.com/luxdefi/avalanchego/database/prefixdb"
-	"github.com/luxdefi/avalanchego/database/versiondb"
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/snow"
-	"github.com/luxdefi/avalanchego/snow/choices"
-	"github.com/luxdefi/avalanchego/snow/consensus/snowman"
-	"github.com/luxdefi/avalanchego/snow/engine/snowman/block"
-	"github.com/luxdefi/avalanchego/utils/constants"
-	"github.com/luxdefi/avalanchego/utils/crypto"
-	"github.com/luxdefi/avalanchego/utils/formatting/address"
-	"github.com/luxdefi/avalanchego/utils/logging"
-	"github.com/luxdefi/avalanchego/utils/math"
-	"github.com/luxdefi/avalanchego/utils/perms"
-	"github.com/luxdefi/avalanchego/utils/profiler"
-	"github.com/luxdefi/avalanchego/utils/set"
-	"github.com/luxdefi/avalanchego/utils/timer/mockable"
-	"github.com/luxdefi/avalanchego/utils/units"
-	"github.com/luxdefi/avalanchego/vms/components/avax"
-	"github.com/luxdefi/avalanchego/vms/components/chain"
-	"github.com/luxdefi/avalanchego/vms/secp256k1fx"
+	"github.com/luxdefi/node/cache"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/codec/linearcodec"
+	"github.com/luxdefi/node/database"
+	"github.com/luxdefi/node/database/manager"
+	"github.com/luxdefi/node/database/prefixdb"
+	"github.com/luxdefi/node/database/versiondb"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/node/snow/choices"
+	"github.com/luxdefi/node/snow/consensus/snowman"
+	"github.com/luxdefi/node/snow/engine/snowman/block"
+	"github.com/luxdefi/node/utils/constants"
+	"github.com/luxdefi/node/utils/crypto"
+	"github.com/luxdefi/node/utils/formatting/address"
+	"github.com/luxdefi/node/utils/logging"
+	"github.com/luxdefi/node/utils/math"
+	"github.com/luxdefi/node/utils/perms"
+	"github.com/luxdefi/node/utils/profiler"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/utils/timer/mockable"
+	"github.com/luxdefi/node/utils/units"
+	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/components/chain"
+	"github.com/luxdefi/node/vms/secp256k1fx"
 
-	commonEng "github.com/luxdefi/avalanchego/snow/engine/common"
+	commonEng "github.com/luxdefi/node/snow/engine/common"
 
-	avalancheJSON "github.com/luxdefi/avalanchego/utils/json"
+	avalancheJSON "github.com/luxdefi/node/utils/json"
 )
 
 const (
@@ -277,7 +277,7 @@ type VM struct {
 	networkCodec codec.Manager
 
 	// Metrics
-	multiGatherer avalanchegoMetrics.MultiGatherer
+	multiGatherer nodeMetrics.MultiGatherer
 
 	bootstrapped bool
 	IsPlugin     bool
@@ -547,7 +547,7 @@ func (vm *VM) Initialize(
 }
 
 func (vm *VM) initializeMetrics() error {
-	vm.multiGatherer = avalanchegoMetrics.NewMultiGatherer()
+	vm.multiGatherer = nodeMetrics.NewMultiGatherer()
 	// If metrics are enabled, register the default metrics regitry
 	if metrics.Enabled {
 		gatherer := corethPrometheus.Gatherer(metrics.DefaultRegistry)

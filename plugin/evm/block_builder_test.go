@@ -10,7 +10,7 @@ import (
 
 	"github.com/luxdefi/coreth/params"
 
-	"github.com/luxdefi/avalanchego/snow"
+	"github.com/luxdefi/node/snow"
 )
 
 func TestBlockBuilderShutsDown(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 
 	"github.com/luxdefi/coreth/params"
 
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/coreth/core/rawdb"
 	"github.com/luxdefi/coreth/ethdb/memorydb"
 	"github.com/luxdefi/coreth/plugin/evm/message"

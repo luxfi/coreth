@@ -7,7 +7,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/coreth/consensus/dummy"
 	"github.com/luxdefi/coreth/core"
 	"github.com/luxdefi/coreth/core/types"
