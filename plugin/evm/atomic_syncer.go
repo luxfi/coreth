@@ -9,12 +9,12 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/database/versiondb"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
+	"github.com/luxdefi/avalanchego/database/versiondb"
+	"github.com/luxdefi/avalanchego/utils/wrappers"
 
-	"github.com/ava-labs/coreth/plugin/evm/message"
-	syncclient "github.com/ava-labs/coreth/sync/client"
-	"github.com/ava-labs/coreth/trie"
+	"github.com/luxdefi/coreth/plugin/evm/message"
+	syncclient "github.com/luxdefi/coreth/sync/client"
+	"github.com/luxdefi/coreth/trie"
 	"github.com/ethereum/go-ethereum/common"
 )
 

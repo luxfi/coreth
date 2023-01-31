@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ava-labs/avalanchego/utils/timer"
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/avalanchego/utils/timer"
+	"github.com/luxdefi/coreth/params"
 
-	"github.com/ava-labs/avalanchego/snow"
-	commonEng "github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/coreth/core"
+	"github.com/luxdefi/avalanchego/snow"
+	commonEng "github.com/luxdefi/avalanchego/snow/engine/common"
+	"github.com/luxdefi/coreth/core"
 	"github.com/ethereum/go-ethereum/log"
 )
 

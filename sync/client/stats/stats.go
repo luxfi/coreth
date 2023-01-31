@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ava-labs/coreth/metrics"
-	"github.com/ava-labs/coreth/plugin/evm/message"
+	"github.com/luxdefi/coreth/metrics"
+	"github.com/luxdefi/coreth/plugin/evm/message"
 )
 
 var (

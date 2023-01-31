@@ -11,15 +11,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ava-labs/avalanchego/database/memdb"
-	"github.com/ava-labs/avalanchego/database/versiondb"
+	"github.com/luxdefi/avalanchego/database/memdb"
+	"github.com/luxdefi/avalanchego/database/versiondb"
 
-	"github.com/ava-labs/coreth/ethdb/memorydb"
-	"github.com/ava-labs/coreth/plugin/evm/message"
-	syncclient "github.com/ava-labs/coreth/sync/client"
-	"github.com/ava-labs/coreth/sync/handlers"
-	handlerstats "github.com/ava-labs/coreth/sync/handlers/stats"
-	"github.com/ava-labs/coreth/trie"
+	"github.com/luxdefi/coreth/ethdb/memorydb"
+	"github.com/luxdefi/coreth/plugin/evm/message"
+	syncclient "github.com/luxdefi/coreth/sync/client"
+	"github.com/luxdefi/coreth/sync/handlers"
+	handlerstats "github.com/luxdefi/coreth/sync/handlers/stats"
+	"github.com/luxdefi/coreth/trie"
 	"github.com/ethereum/go-ethereum/common"
 )
 

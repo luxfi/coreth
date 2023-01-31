@@ -11,14 +11,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ava-labs/avalanchego/chains/atomic"
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/leveldb"
-	"github.com/ava-labs/avalanchego/database/memdb"
-	"github.com/ava-labs/avalanchego/database/versiondb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
+	"github.com/luxdefi/avalanchego/chains/atomic"
+	"github.com/luxdefi/avalanchego/database"
+	"github.com/luxdefi/avalanchego/database/leveldb"
+	"github.com/luxdefi/avalanchego/database/memdb"
+	"github.com/luxdefi/avalanchego/database/versiondb"
+	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/avalanchego/utils/logging"
+	"github.com/luxdefi/avalanchego/utils/wrappers"
 
 	"github.com/ethereum/go-ethereum/common"
 )

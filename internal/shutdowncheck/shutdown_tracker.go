@@ -29,8 +29,8 @@ package shutdowncheck
 import (
 	"time"
 
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/ethdb"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

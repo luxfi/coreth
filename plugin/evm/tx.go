@@ -12,20 +12,20 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/params"
 
-	"github.com/ava-labs/avalanchego/chains/atomic"
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/crypto"
-	"github.com/ava-labs/avalanchego/utils/hashing"
-	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
-	"github.com/ava-labs/avalanchego/vms/components/verify"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/luxdefi/avalanchego/chains/atomic"
+	"github.com/luxdefi/avalanchego/codec"
+	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/avalanchego/snow"
+	"github.com/luxdefi/avalanchego/utils"
+	"github.com/luxdefi/avalanchego/utils/crypto"
+	"github.com/luxdefi/avalanchego/utils/hashing"
+	"github.com/luxdefi/avalanchego/utils/set"
+	"github.com/luxdefi/avalanchego/utils/wrappers"
+	"github.com/luxdefi/avalanchego/vms/components/verify"
+	"github.com/luxdefi/avalanchego/vms/secp256k1fx"
 )
 
 var (

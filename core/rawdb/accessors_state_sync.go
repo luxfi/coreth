@@ -6,8 +6,8 @@ package rawdb
 import (
 	"encoding/binary"
 
-	"github.com/ava-labs/avalanchego/utils/wrappers"
-	"github.com/ava-labs/coreth/ethdb"
+	"github.com/luxdefi/avalanchego/utils/wrappers"
+	"github.com/luxdefi/coreth/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

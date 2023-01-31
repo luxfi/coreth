@@ -11,24 +11,24 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/luxdefi/avalanchego/ids"
 
-	"github.com/ava-labs/coreth/ethdb/memorydb"
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/sync/client/stats"
+	"github.com/luxdefi/coreth/ethdb/memorydb"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/sync/client/stats"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/version"
+	"github.com/luxdefi/avalanchego/codec"
+	"github.com/luxdefi/avalanchego/version"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/ethdb"
-	"github.com/ava-labs/coreth/peer"
-	"github.com/ava-labs/coreth/plugin/evm/message"
-	"github.com/ava-labs/coreth/trie"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxdefi/coreth/peer"
+	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxdefi/coreth/trie"
 )
 
 const (

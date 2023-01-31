@@ -13,13 +13,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/prefixdb"
-	"github.com/ava-labs/avalanchego/database/versiondb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/units"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
+	"github.com/luxdefi/avalanchego/codec"
+	"github.com/luxdefi/avalanchego/database"
+	"github.com/luxdefi/avalanchego/database/prefixdb"
+	"github.com/luxdefi/avalanchego/database/versiondb"
+	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/avalanchego/utils/units"
+	"github.com/luxdefi/avalanchego/utils/wrappers"
 )
 
 const (

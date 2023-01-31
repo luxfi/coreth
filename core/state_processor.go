@@ -30,12 +30,12 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ava-labs/coreth/consensus"
-	"github.com/ava-labs/coreth/consensus/misc"
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/core/vm"
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/coreth/consensus"
+	"github.com/luxdefi/coreth/consensus/misc"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/core/vm"
+	"github.com/luxdefi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
