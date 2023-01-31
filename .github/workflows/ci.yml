@@ -6,12 +6,12 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      avalanchegoRepo:
-        description: 'avalanchego github repository'
+      nodeRepo:
+        description: 'lux node github repository'
         required: true
-        default: 'ava-labs/avalanchego'
-      avalanchegoBranch:
-        description: 'avalanchego branch'
+        default: 'luxdefi/node'
+      nodeBranch:
+        description: 'node branch'
         required: true
         default: 'master'
 
@@ -21,21 +21,21 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - name: check out ${{ github.event.inputs.avalanchegoRepo }} ${{ github.event.inputs.avalanchegoBranch }}
+      - name: check out ${{ github.event.inputs.nodeRepo }} ${{ github.event.inputs.nodeBranch }}
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/checkout@v2
         with:
-          repository: ${{ github.event.inputs.avalanchegoRepo }}
-          ref: ${{ github.event.inputs.avalanchegoBranch }}
-          path: avalanchego
+          repository: ${{ github.event.inputs.nodeRepo }}
+          ref: ${{ github.event.inputs.nodeBranch }}
+          path: node
           token: ${{ secrets.AVALANCHE_PAT }}
       - uses: actions/setup-go@v1
         with:
           go-version: 1.18
-      - name: change avalanchego dep
+      - name: change node dep
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
-          go mod edit -replace github.com/ava-labs/avalanchego=./avalanchego
+          go mod edit -replace github.com/luxdefi/node=./lux
           go mod tidy
           go clean -modcache # avoid conflicts with the golangci-lint-action cache
       - run: ./scripts/lint_allowed_geth_imports.sh
@@ -55,21 +55,21 @@ jobs:
         os: [macos-11.0, ubuntu-18.04, windows-latest]
     steps:
     - uses: actions/checkout@v2
-    - name: check out ${{ github.event.inputs.avalanchegoRepo }} ${{ github.event.inputs.avalanchegoBranch }}
+    - name: check out ${{ github.event.inputs.nodeRepo }} ${{ github.event.inputs.nodeBranch }}
       if: ${{ github.event_name == 'workflow_dispatch' }}
       uses: actions/checkout@v2
       with:
-        repository: ${{ github.event.inputs.avalanchegoRepo }}
-        ref: ${{ github.event.inputs.avalanchegoBranch }}
-        path: avalanchego
+        repository: ${{ github.event.inputs.nodeRepo }}
+        ref: ${{ github.event.inputs.nodeBranch }}
+        path: node
         token: ${{ secrets.AVALANCHE_PAT }}
     - uses: actions/setup-go@v1
       with:
         go-version: ${{ matrix.go }}
-    - name: change avalanchego dep
+    - name: change node dep
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: |
-        go mod edit -replace github.com/ava-labs/avalanchego=./avalanchego
+        go mod edit -replace github.com/luxdefi/node=./lux
         go mod tidy
     - run: go mod download
       shell: bash
@@ -88,21 +88,21 @@ jobs:
         os: [ubuntu-20.04]
     steps:
     - uses: actions/checkout@v2
-    - name: check out ${{ github.event.inputs.avalanchegoRepo }} ${{ github.event.inputs.avalanchegoBranch }}
+    - name: check out ${{ github.event.inputs.nodeRepo }} ${{ github.event.inputs.nodeBranch }}
       if: ${{ github.event_name == 'workflow_dispatch' }}
       uses: actions/checkout@v2
       with:
-        repository: ${{ github.event.inputs.avalanchegoRepo }}
-        ref: ${{ github.event.inputs.avalanchegoBranch }}
-        path: avalanchego
+        repository: ${{ github.event.inputs.nodeRepo }}
+        ref: ${{ github.event.inputs.nodeBranch }}
+        path: node
         token: ${{ secrets.AVALANCHE_PAT }}
     - uses: actions/setup-go@v1
       with:
         go-version: ${{ matrix.go }}
-    - name: change avalanchego dep
+    - name: change node dep
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: |
-        go mod edit -replace github.com/ava-labs/avalanchego=./avalanchego
+        go mod edit -replace github.com/luxdefi/node=./lux
         go mod tidy
     - run: go mod download
       shell: bash
@@ -119,27 +119,27 @@ jobs:
         os: [ ubuntu-20.04 ]
     steps:
     - uses: actions/checkout@v2
-    - name: check out ${{ github.event.inputs.avalanchegoRepo }} ${{ github.event.inputs.avalanchegoBranch }}
+    - name: check out ${{ github.event.inputs.nodeRepo }} ${{ github.event.inputs.nodeBranch }}
       if: ${{ github.event_name == 'workflow_dispatch' }}
       uses: actions/checkout@v2
       with:
-        repository: ${{ github.event.inputs.avalanchegoRepo }}
-        ref: ${{ github.event.inputs.avalanchegoBranch }}
-        path: avalanchego
+        repository: ${{ github.event.inputs.nodeRepo }}
+        ref: ${{ github.event.inputs.nodeBranch }}
+        path: node
         token: ${{ secrets.AVALANCHE_PAT }}
     - uses: actions/setup-go@v1
       with:
         go-version: ${{ matrix.go }}
-    - name: change avalanchego dep
+    - name: change node dep
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: |
-        go mod edit -replace github.com/ava-labs/avalanchego=./avalanchego
+        go mod edit -replace github.com/luxdefi/node=./lux
         go mod tidy
-    - name: prepare avalanchego directory for docker copy
+    - name: prepare node directory for docker copy
       if: ${{ github.event_name == 'workflow_dispatch' }}
-      # mv avalanchego/ to nested dir avalanchego/avalanchego/
+      # mv node/ to nested dir node/node/
       # required because docker instruction "COPY dir ." copies dir/* to .
-      run: mkdir avalanchego_tmp && mv avalanchego avalanchego_tmp && mv avalanchego_tmp avalanchego
+      run: mkdir node_tmp && mv node node_tmp && mv node_tmp node
     - run: .github/workflows/run_e2e_tests.sh --parallelism 1 --client-id $KURTOSIS_CLIENT_ID --client-secret $KURTOSIS_CLIENT_SECRET
       shell: bash
       env:
