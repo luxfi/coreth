@@ -27,13 +27,13 @@
 package core
 
 import (
-	"github.com/ava-labs/coreth/consensus"
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/core/state/snapshot"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/core/vm"
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/coreth/consensus"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/core/state/snapshot"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/core/vm"
+	"github.com/luxdefi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 )

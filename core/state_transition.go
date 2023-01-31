@@ -33,10 +33,10 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/core/vm"
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/vmerrs"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/core/vm"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 )
 

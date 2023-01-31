@@ -13,10 +13,10 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/ava-labs/coreth/core/types"
+	"github.com/luxdefi/coreth/core/types"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/choices"
+	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/avalanchego/snow/choices"
 )
 
 var (

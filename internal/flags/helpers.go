@@ -30,7 +30,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/coreth/params"
 	"github.com/urfave/cli/v2"
 )
 

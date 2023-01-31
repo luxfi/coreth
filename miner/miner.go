@@ -28,11 +28,11 @@
 package miner
 
 import (
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-	"github.com/ava-labs/coreth/consensus"
-	"github.com/ava-labs/coreth/core"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/avalanchego/utils/timer/mockable"
+	"github.com/luxdefi/coreth/consensus"
+	"github.com/luxdefi/coreth/core"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 )

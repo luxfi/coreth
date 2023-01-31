@@ -7,9 +7,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/database/encdb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/luxdefi/avalanchego/database/encdb"
+	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/avalanchego/utils/crypto"
 	"github.com/ethereum/go-ethereum/common"
 )
 

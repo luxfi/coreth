@@ -6,7 +6,7 @@ package message
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/luxdefi/avalanchego/ids"
 
 	"github.com/stretchr/testify/assert"
 )

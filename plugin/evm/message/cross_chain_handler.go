@@ -7,10 +7,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/coreth/internal/ethapi"
-	"github.com/ava-labs/coreth/rpc"
+	"github.com/luxdefi/avalanchego/codec"
+	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/coreth/internal/ethapi"
+	"github.com/luxdefi/coreth/rpc"
 	"github.com/ethereum/go-ethereum/log"
 )
 

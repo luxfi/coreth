@@ -6,13 +6,13 @@ package handlers
 import (
 	"context"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/coreth/core/state/snapshot"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/plugin/evm/message"
-	"github.com/ava-labs/coreth/sync/handlers/stats"
-	"github.com/ava-labs/coreth/trie"
+	"github.com/luxdefi/avalanchego/codec"
+	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/coreth/core/state/snapshot"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxdefi/coreth/sync/handlers/stats"
+	"github.com/luxdefi/coreth/trie"
 	"github.com/ethereum/go-ethereum/common"
 )
 

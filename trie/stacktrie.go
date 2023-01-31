@@ -35,7 +35,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/ava-labs/coreth/ethdb"
+	"github.com/luxdefi/coreth/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )
