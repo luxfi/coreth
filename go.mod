@@ -1,4 +1,4 @@
-module github.com/ava-labs/coreth
+module github.com/luxdefi/coreth
 
 go 1.18
 
