@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/utils/set"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils/set"
 	"github.com/luxdefi/coreth/core/rawdb"
 	"github.com/luxdefi/coreth/ethdb"
 	"github.com/luxdefi/coreth/params"

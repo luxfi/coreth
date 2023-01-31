@@ -10,14 +10,14 @@ import (
 	"github.com/luxdefi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/luxdefi/avalanchego/chains/atomic"
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/utils"
-	"github.com/luxdefi/avalanchego/utils/constants"
-	"github.com/luxdefi/avalanchego/utils/crypto"
-	"github.com/luxdefi/avalanchego/utils/set"
-	"github.com/luxdefi/avalanchego/vms/components/avax"
-	"github.com/luxdefi/avalanchego/vms/secp256k1fx"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils"
+	"github.com/luxdefi/node/utils/constants"
+	"github.com/luxdefi/node/utils/crypto"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/secp256k1fx"
 )
 
 // createImportTxOptions adds a UTXO to shared memory and generates a list of import transactions sending this UTXO

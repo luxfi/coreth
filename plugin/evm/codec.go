@@ -6,10 +6,10 @@ package evm
 import (
 	"fmt"
 
-	"github.com/luxdefi/avalanchego/codec"
-	"github.com/luxdefi/avalanchego/codec/linearcodec"
-	"github.com/luxdefi/avalanchego/utils/wrappers"
-	"github.com/luxdefi/avalanchego/vms/secp256k1fx"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/codec/linearcodec"
+	"github.com/luxdefi/node/utils/wrappers"
+	"github.com/luxdefi/node/vms/secp256k1fx"
 )
 
 // Codec does serialization and deserialization

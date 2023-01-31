@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/luxdefi/avalanchego/utils/formatting"
+	"github.com/luxdefi/node/utils/formatting"
 	"github.com/luxdefi/coreth/core"
 )
 

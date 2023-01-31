@@ -33,7 +33,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/coreth/accounts"
 	"github.com/luxdefi/coreth/accounts/abi"
 	"github.com/luxdefi/coreth/accounts/keystore"
@@ -132,7 +132,7 @@ func (s *EthereumAPI) FeeHistory(ctx context.Context, blockCount rpc.DecimalOrHe
 // Syncing allows the caller to determine whether the chain is syncing or not.
 // In geth, the response is either a map representing an ethereum.SyncProgress
 // struct or "false" (indicating the chain is not syncing).
-// In coreth, avalanchego prevents API calls unless bootstrapping is complete,
+// In coreth, node prevents API calls unless bootstrapping is complete,
 // so we always return false here for API compatibility.
 func (s *EthereumAPI) Syncing() (interface{}, error) {
 	return false, nil

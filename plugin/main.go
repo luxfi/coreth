@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/luxdefi/avalanchego/utils/logging"
-	"github.com/luxdefi/avalanchego/utils/ulimit"
-	"github.com/luxdefi/avalanchego/vms/rpcchainvm"
+	"github.com/luxdefi/node/utils/logging"
+	"github.com/luxdefi/node/utils/ulimit"
+	"github.com/luxdefi/node/vms/rpcchainvm"
 
 	"github.com/luxdefi/coreth/plugin/evm"
 )

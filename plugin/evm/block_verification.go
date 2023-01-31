@@ -9,7 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	safemath "github.com/luxdefi/avalanchego/utils/math"
+	safemath "github.com/luxdefi/node/utils/math"
 
 	"github.com/luxdefi/coreth/constants"
 	"github.com/luxdefi/coreth/core/types"

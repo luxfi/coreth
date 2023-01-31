@@ -9,14 +9,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxdefi/avalanchego/codec"
+	"github.com/luxdefi/node/codec"
 
 	"github.com/luxdefi/coreth/peer"
 
-	"github.com/luxdefi/avalanchego/cache"
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/snow"
-	"github.com/luxdefi/avalanchego/utils/wrappers"
+	"github.com/luxdefi/node/cache"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/node/utils/wrappers"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"

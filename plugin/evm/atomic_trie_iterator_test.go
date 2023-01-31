@@ -6,11 +6,11 @@ package evm
 import (
 	"testing"
 
-	"github.com/luxdefi/avalanchego/chains/atomic"
-	"github.com/luxdefi/avalanchego/database/memdb"
-	"github.com/luxdefi/avalanchego/database/versiondb"
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/utils"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/database/memdb"
+	"github.com/luxdefi/node/database/versiondb"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

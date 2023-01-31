@@ -6,8 +6,8 @@ package handlers
 import (
 	"context"
 
-	"github.com/luxdefi/avalanchego/codec"
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/coreth/core/state/snapshot"
 	"github.com/luxdefi/coreth/core/types"
 	"github.com/luxdefi/coreth/plugin/evm/message"

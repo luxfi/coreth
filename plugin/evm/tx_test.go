@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luxdefi/avalanchego/chains/atomic"
-	"github.com/luxdefi/avalanchego/snow"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/snow"
 	"github.com/luxdefi/coreth/params"
 	"github.com/stretchr/testify/require"
 )

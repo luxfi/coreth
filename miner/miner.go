@@ -28,7 +28,7 @@
 package miner
 
 import (
-	"github.com/luxdefi/avalanchego/utils/timer/mockable"
+	"github.com/luxdefi/node/utils/timer/mockable"
 	"github.com/luxdefi/coreth/consensus"
 	"github.com/luxdefi/coreth/core"
 	"github.com/luxdefi/coreth/core/types"

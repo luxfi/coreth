@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxdefi/avalanchego/utils/timer"
+	"github.com/luxdefi/node/utils/timer"
 	"github.com/luxdefi/coreth/params"
 
-	"github.com/luxdefi/avalanchego/snow"
-	commonEng "github.com/luxdefi/avalanchego/snow/engine/common"
+	"github.com/luxdefi/node/snow"
+	commonEng "github.com/luxdefi/node/snow/engine/common"
 	"github.com/luxdefi/coreth/core"
 	"github.com/ethereum/go-ethereum/log"
 )

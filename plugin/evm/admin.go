@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/luxdefi/avalanchego/api"
-	"github.com/luxdefi/avalanchego/utils/profiler"
+	"github.com/luxdefi/node/api"
+	"github.com/luxdefi/node/utils/profiler"
 	"github.com/ethereum/go-ethereum/log"
 )
 

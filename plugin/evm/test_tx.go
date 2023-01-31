@@ -7,15 +7,15 @@ import (
 	"math/big"
 	"math/rand"
 
-	"github.com/luxdefi/avalanchego/utils"
+	"github.com/luxdefi/node/utils"
 
-	"github.com/luxdefi/avalanchego/chains/atomic"
-	"github.com/luxdefi/avalanchego/codec"
-	"github.com/luxdefi/avalanchego/codec/linearcodec"
-	"github.com/luxdefi/avalanchego/ids"
-	"github.com/luxdefi/avalanchego/snow"
-	"github.com/luxdefi/avalanchego/utils/set"
-	"github.com/luxdefi/avalanchego/utils/wrappers"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/codec/linearcodec"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/utils/wrappers"
 	"github.com/luxdefi/coreth/core/state"
 	"github.com/luxdefi/coreth/params"
 )

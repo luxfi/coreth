@@ -6,10 +6,10 @@ package statesyncclient
 import (
 	"errors"
 
-	"github.com/luxdefi/avalanchego/ids"
+	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/coreth/peer"
 
-	"github.com/luxdefi/avalanchego/version"
+	"github.com/luxdefi/node/version"
 )
 
 var _ peer.NetworkClient = &mockNetwork{}

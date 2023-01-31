@@ -11,8 +11,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/luxdefi/avalanchego/database/memdb"
-	"github.com/luxdefi/avalanchego/database/versiondb"
+	"github.com/luxdefi/node/database/memdb"
+	"github.com/luxdefi/node/database/versiondb"
 
 	"github.com/luxdefi/coreth/ethdb/memorydb"
 	"github.com/luxdefi/coreth/plugin/evm/message"
