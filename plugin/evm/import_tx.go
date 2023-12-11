@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/luxdefi/coreth/core/state"
 	"github.com/luxdefi/coreth/params"
 
@@ -16,10 +18,10 @@ import (
 	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/node/snow"
 	"github.com/luxdefi/node/utils"
-	"github.com/luxdefi/node/utils/crypto"
+	"github.com/luxdefi/node/utils/crypto/secp256k1"
 	"github.com/luxdefi/node/utils/math"
 	"github.com/luxdefi/node/utils/set"
-	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/components/lux"
 	"github.com/luxdefi/node/vms/components/verify"
 	"github.com/luxdefi/node/vms/secp256k1fx"
 	"github.com/ethereum/go-ethereum/common"
@@ -29,13 +31,13 @@ import (
 var (
 	_                           UnsignedAtomicTx       = &UnsignedImportTx{}
 	_                           secp256k1fx.UnsignedTx = &UnsignedImportTx{}
-	errImportNonAVAXInputBanff                         = errors.New("import input cannot contain non-AVAX in Banff")
-	errImportNonAVAXOutputBanff                        = errors.New("import output cannot contain non-AVAX in Banff")
+	errImportNonLUXInputBanff                         = errors.New("import input cannot contain non-LUX in Banff")
+	errImportNonLUXOutputBanff                        = errors.New("import output cannot contain non-LUX in Banff")
 )
 
 // UnsignedImportTx is an unsigned ImportTx
 type UnsignedImportTx struct {
-	avax.Metadata
+	lux.Metadata
 	// ID of the network on which this tx was issued
 	NetworkID uint32 `serialize:"true" json:"networkID"`
 	// ID of this blockchain.
@@ -43,7 +45,7 @@ type UnsignedImportTx struct {
 	// Which chain to consume the funds from
 	SourceChain ids.ID `serialize:"true" json:"sourceChain"`
 	// Inputs that consume UTXOs produced on the chain
-	ImportedInputs []*avax.TransferableInput `serialize:"true" json:"importedInputs"`
+	ImportedInputs []*lux.TransferableInput `serialize:"true" json:"importedInputs"`
 	// Outputs
 	Outs []EVMOutput `serialize:"true" json:"outputs"`
 }
@@ -92,8 +94,8 @@ func (utx *UnsignedImportTx) Verify(
 		if err := out.Verify(); err != nil {
 			return fmt.Errorf("EVM Output failed verification: %w", err)
 		}
-		if rules.IsBanff && out.AssetID != ctx.AVAXAssetID {
-			return errImportNonAVAXOutputBanff
+		if rules.IsBanff && out.AssetID != ctx.LUXAssetID {
+			return errImportNonLUXOutputBanff
 		}
 	}
 
@@ -101,20 +103,20 @@ func (utx *UnsignedImportTx) Verify(
 		if err := in.Verify(); err != nil {
 			return fmt.Errorf("atomic input failed verification: %w", err)
 		}
-		if rules.IsBanff && in.AssetID() != ctx.AVAXAssetID {
-			return errImportNonAVAXInputBanff
+		if rules.IsBanff && in.AssetID() != ctx.LUXAssetID {
+			return errImportNonLUXInputBanff
 		}
 	}
-	if !utils.IsSortedAndUniqueSortable(utx.ImportedInputs) {
+	if !utils.IsSortedAndUnique(utx.ImportedInputs) {
 		return errInputsNotSortedUnique
 	}
 
 	if rules.IsApricotPhase2 {
-		if !IsSortedAndUniqueEVMOutputs(utx.Outs) {
+		if !utils.IsSortedAndUnique(utx.Outs) {
 			return errOutputsNotSortedUnique
 		}
 	} else if rules.IsApricotPhase1 {
-		if !IsSortedEVMOutputs(utx.Outs) {
+		if !slices.IsSortedFunc(utx.Outs, EVMOutput.Compare) {
 			return errOutputsNotSorted
 		}
 	}
@@ -186,7 +188,7 @@ func (utx *UnsignedImportTx) SemanticVerify(
 	}
 
 	// Check the transaction consumes and produces the right amounts
-	fc := avax.NewFlowChecker()
+	fc := lux.NewFlowChecker()
 	switch {
 	// Apply dynamic fees to import transactions as of Apricot Phase 3
 	case rules.IsApricotPhase3:
@@ -194,15 +196,15 @@ func (utx *UnsignedImportTx) SemanticVerify(
 		if err != nil {
 			return err
 		}
-		txFee, err := calculateDynamicFee(gasUsed, baseFee)
+		txFee, err := CalculateDynamicFee(gasUsed, baseFee)
 		if err != nil {
 			return err
 		}
-		fc.Produce(vm.ctx.AVAXAssetID, txFee)
+		fc.Produce(vm.ctx.LUXAssetID, txFee)
 
 	// Apply fees to import transactions as of Apricot Phase 2
 	case rules.IsApricotPhase2:
-		fc.Produce(vm.ctx.AVAXAssetID, params.AvalancheAtomicTxFee)
+		fc.Produce(vm.ctx.LUXAssetID, params.LuxAtomicTxFee)
 	}
 	for _, out := range utx.Outs {
 		fc.Produce(out.AssetID, out.Amount)
@@ -238,7 +240,7 @@ func (utx *UnsignedImportTx) SemanticVerify(
 	for i, in := range utx.ImportedInputs {
 		utxoBytes := allUTXOBytes[i]
 
-		utxo := &avax.UTXO{}
+		utxo := &lux.UTXO{}
 		if _, err := vm.codec.Unmarshal(utxoBytes, utxo); err != nil {
 			return fmt.Errorf("failed to unmarshal UTXO: %w", err)
 		}
@@ -278,7 +280,7 @@ func (vm *VM) newImportTx(
 	chainID ids.ID, // chain to import from
 	to common.Address, // Address of recipient
 	baseFee *big.Int, // fee to use post-AP3
-	keys []*crypto.PrivateKeySECP256K1R, // Keys to import the funds
+	keys []*secp256k1.PrivateKey, // Keys to import the funds
 ) (*Tx, error) {
 	kc := secp256k1fx.NewKeychain()
 	for _, key := range keys {
@@ -299,10 +301,10 @@ func (vm *VM) newImportTxWithUTXOs(
 	to common.Address, // Address of recipient
 	baseFee *big.Int, // fee to use post-AP3
 	kc *secp256k1fx.Keychain, // Keychain to use for signing the atomic UTXOs
-	atomicUTXOs []*avax.UTXO, // UTXOs to spend
+	atomicUTXOs []*lux.UTXO, // UTXOs to spend
 ) (*Tx, error) {
-	importedInputs := []*avax.TransferableInput{}
-	signers := [][]*crypto.PrivateKeySECP256K1R{}
+	importedInputs := []*lux.TransferableInput{}
+	signers := [][]*secp256k1.PrivateKey{}
 
 	importedAmount := make(map[ids.ID]uint64)
 	now := vm.clock.Unix()
@@ -311,7 +313,7 @@ func (vm *VM) newImportTxWithUTXOs(
 		if err != nil {
 			continue
 		}
-		input, ok := inputIntf.(avax.TransferableIn)
+		input, ok := inputIntf.(lux.TransferableIn)
 		if !ok {
 			continue
 		}
@@ -320,23 +322,23 @@ func (vm *VM) newImportTxWithUTXOs(
 		if err != nil {
 			return nil, err
 		}
-		importedInputs = append(importedInputs, &avax.TransferableInput{
+		importedInputs = append(importedInputs, &lux.TransferableInput{
 			UTXOID: utxo.UTXOID,
 			Asset:  utxo.Asset,
 			In:     input,
 		})
 		signers = append(signers, utxoSigners)
 	}
-	avax.SortTransferableInputsWithSigners(importedInputs, signers)
-	importedAVAXAmount := importedAmount[vm.ctx.AVAXAssetID]
+	lux.SortTransferableInputsWithSigners(importedInputs, signers)
+	importedLUXAmount := importedAmount[vm.ctx.LUXAssetID]
 
 	outs := make([]EVMOutput, 0, len(importedAmount))
 	// This will create unique outputs (in the context of sorting)
 	// since each output will have a unique assetID
 	for assetID, amount := range importedAmount {
-		// Skip the AVAX amount since it is included separately to account for
+		// Skip the LUX amount since it is included separately to account for
 		// the fee
-		if assetID == vm.ctx.AVAXAssetID || amount == 0 {
+		if assetID == vm.ctx.LUXAssetID || amount == 0 {
 			continue
 		}
 		outs = append(outs, EVMOutput{
@@ -375,40 +377,40 @@ func (vm *VM) newImportTxWithUTXOs(
 		}
 		gasUsedWithChange := gasUsedWithoutChange + EVMOutputGas
 
-		txFeeWithoutChange, err = calculateDynamicFee(gasUsedWithoutChange, baseFee)
+		txFeeWithoutChange, err = CalculateDynamicFee(gasUsedWithoutChange, baseFee)
 		if err != nil {
 			return nil, err
 		}
-		txFeeWithChange, err = calculateDynamicFee(gasUsedWithChange, baseFee)
+		txFeeWithChange, err = CalculateDynamicFee(gasUsedWithChange, baseFee)
 		if err != nil {
 			return nil, err
 		}
 	case rules.IsApricotPhase2:
-		txFeeWithoutChange = params.AvalancheAtomicTxFee
-		txFeeWithChange = params.AvalancheAtomicTxFee
+		txFeeWithoutChange = params.LuxAtomicTxFee
+		txFeeWithChange = params.LuxAtomicTxFee
 	}
 
-	// AVAX output
-	if importedAVAXAmount < txFeeWithoutChange { // imported amount goes toward paying tx fee
+	// LUX output
+	if importedLUXAmount < txFeeWithoutChange { // imported amount goes toward paying tx fee
 		return nil, errInsufficientFundsForFee
 	}
 
-	if importedAVAXAmount > txFeeWithChange {
+	if importedLUXAmount > txFeeWithChange {
 		outs = append(outs, EVMOutput{
 			Address: to,
-			Amount:  importedAVAXAmount - txFeeWithChange,
-			AssetID: vm.ctx.AVAXAssetID,
+			Amount:  importedLUXAmount - txFeeWithChange,
+			AssetID: vm.ctx.LUXAssetID,
 		})
 	}
 
 	// If no outputs are produced, return an error.
-	// Note: this can happen if there is exactly enough AVAX to pay the
+	// Note: this can happen if there is exactly enough LUX to pay the
 	// transaction fee, but no other funds to be imported.
 	if len(outs) == 0 {
 		return nil, errNoEVMOutputs
 	}
 
-	SortEVMOutputs(outs)
+	utils.Sort(outs)
 
 	// Create the transaction
 	utx := &UnsignedImportTx{
@@ -429,9 +431,9 @@ func (vm *VM) newImportTxWithUTXOs(
 // accounts accordingly with the imported EVMOutputs
 func (utx *UnsignedImportTx) EVMStateTransfer(ctx *snow.Context, state *state.StateDB) error {
 	for _, to := range utx.Outs {
-		if to.AssetID == ctx.AVAXAssetID {
-			log.Debug("crosschain", "src", utx.SourceChain, "addr", to.Address, "amount", to.Amount, "assetID", "AVAX")
-			// If the asset is AVAX, convert the input amount in nAVAX to gWei by
+		if to.AssetID == ctx.LUXAssetID {
+			log.Debug("crosschain", "src", utx.SourceChain, "addr", to.Address, "amount", to.Amount, "assetID", "LUX")
+			// If the asset is LUX, convert the input amount in nLUX to gWei by
 			// multiplying by the x2c rate.
 			amount := new(big.Int).Mul(
 				new(big.Int).SetUint64(to.Amount), x2cRate)

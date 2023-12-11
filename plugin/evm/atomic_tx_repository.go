@@ -1,4 +1,4 @@
-// (c) 2020-2021, Ava Labs, Inc. All rights reserved.
+// (c) 2020-2021, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -7,8 +7,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"sort"
 	"time"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
@@ -18,6 +19,7 @@ import (
 	"github.com/luxdefi/node/database/prefixdb"
 	"github.com/luxdefi/node/database/versiondb"
 	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils"
 	"github.com/luxdefi/node/utils/units"
 	"github.com/luxdefi/node/utils/wrappers"
 )
@@ -272,7 +274,7 @@ func (a *atomicTxRepository) write(height uint64, txs []*Tx, bonus bool) error {
 		// with txs initialized from the txID index.
 		copyTxs := make([]*Tx, len(txs))
 		copy(copyTxs, txs)
-		sort.Slice(copyTxs, func(i, j int) bool { return copyTxs[i].ID().Hex() < copyTxs[j].ID().Hex() })
+		utils.Sort(copyTxs)
 		txs = copyTxs
 	}
 	heightBytes := make([]byte, wrappers.LongLen)
@@ -452,6 +454,6 @@ func getAtomicRepositoryRepairHeights(bonusBlocks map[uint64]ids.ID, canonicalBl
 			repairHeights = append(repairHeights, height)
 		}
 	}
-	sort.Slice(repairHeights, func(i, j int) bool { return repairHeights[i] < repairHeights[j] })
+	slices.Sort(repairHeights)
 	return repairHeights
 }

@@ -1,4 +1,4 @@
-// (c) 2019-2022, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2022, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package message
@@ -12,7 +12,7 @@ import (
 
 const (
 	Version        = uint16(0)
-	maxMessageSize = 1 * units.MiB
+	maxMessageSize = 2*units.MiB - 64*units.KiB // Subtract 64 KiB from p2p network cap to leave room for encoding overhead from LuxGo
 )
 
 var (
@@ -40,6 +40,11 @@ func init() {
 		c.RegisterType(LeafsResponse{}),
 		c.RegisterType(CodeRequest{}),
 		c.RegisterType(CodeResponse{}),
+
+		// Warp request types
+		c.RegisterType(MessageSignatureRequest{}),
+		c.RegisterType(BlockSignatureRequest{}),
+		c.RegisterType(SignatureResponse{}),
 
 		Codec.RegisterCodec(Version, c),
 	)

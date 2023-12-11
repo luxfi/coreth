@@ -6,7 +6,7 @@ set -o pipefail
 
 export GOGC=25
 
-# Avalanche root directory
+# Lux root directory
 CORETH_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )"; cd .. && pwd )
 
 # Load the versions

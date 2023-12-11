@@ -1,4 +1,4 @@
-// (c) 2020-2021, Ava Labs, Inc. All rights reserved.
+// (c) 2020-2021, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -6,13 +6,13 @@ package evm
 import (
 	"encoding/binary"
 	"fmt"
-	"sort"
 	"testing"
 
 	"github.com/luxdefi/node/chains/atomic"
 	"github.com/luxdefi/node/database"
 	"github.com/luxdefi/node/database/prefixdb"
 	"github.com/luxdefi/node/database/versiondb"
+	"github.com/luxdefi/node/utils"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/luxdefi/node/codec"
@@ -98,17 +98,12 @@ func writeTxs(t testing.TB, repo AtomicTxRepository, fromHeight uint64, toHeight
 // verifyTxs asserts [repo] can find all txs in [txMap] by height and txID
 func verifyTxs(t testing.TB, repo AtomicTxRepository, txMap map[uint64][]*Tx) {
 	// We should be able to fetch indexed txs by height:
-	getComparator := func(txs []*Tx) func(int, int) bool {
-		return func(i, j int) bool {
-			return txs[i].ID().Hex() < txs[j].ID().Hex()
-		}
-	}
 	for height, expectedTxs := range txMap {
 		txs, err := repo.GetByHeight(height)
 		assert.NoErrorf(t, err, "unexpected error on GetByHeight at height=%d", height)
 		assert.Lenf(t, txs, len(expectedTxs), "wrong len of txs at height=%d", height)
 		// txs should be stored in order of txID
-		sort.Slice(expectedTxs, getComparator(expectedTxs))
+		utils.Sort(expectedTxs)
 
 		txIDs := set.Set[ids.ID]{}
 		for i := 0; i < len(txs); i++ {

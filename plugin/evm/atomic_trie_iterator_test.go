@@ -1,4 +1,4 @@
-// (c) 2020-2021, Ava Labs, Inc. All rights reserved.
+// (c) 2020-2021, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -92,10 +92,9 @@ func TestIteratorHandlesInvalidData(t *testing.T) {
 	// handles an error when it runs into an unexpected key-value pair in the trie.
 	atomicTrieSnapshot, err := atomicTrie.OpenTrie(lastCommittedHash)
 	require.NoError(err)
-	require.NoError(atomicTrieSnapshot.TryUpdate(utils.RandomBytes(50), utils.RandomBytes(50)))
+	require.NoError(atomicTrieSnapshot.Update(utils.RandomBytes(50), utils.RandomBytes(50)))
 
-	nextRoot, nodes, err := atomicTrieSnapshot.Commit(false)
-	require.NoError(err)
+	nextRoot, nodes := atomicTrieSnapshot.Commit(false)
 	err = atomicTrie.InsertTrie(nodes, nextRoot)
 	require.NoError(err)
 	isCommit, err := atomicTrie.AcceptTrie(lastCommittedHeight+commitInterval, nextRoot)

@@ -5,7 +5,6 @@
 
 package types
 
-import "github.com/ethereum/go-ethereum/common"
 import "github.com/ethereum/go-ethereum/rlp"
 import "io"
 
@@ -45,7 +44,7 @@ func (obj *Header) EncodeRLP(_w io.Writer) error {
 	_tmp1 := obj.BaseFee != nil
 	_tmp2 := obj.ExtDataGasUsed != nil
 	_tmp3 := obj.BlockGasCost != nil
-	_tmp4 := obj.ExtraStateRoot != (common.Hash{})
+	_tmp4 := obj.ExcessDataGas != nil
 	if _tmp1 || _tmp2 || _tmp3 || _tmp4 {
 		if obj.BaseFee == nil {
 			w.Write(rlp.EmptyString)
@@ -77,7 +76,14 @@ func (obj *Header) EncodeRLP(_w io.Writer) error {
 		}
 	}
 	if _tmp4 {
-		w.WriteBytes(obj.ExtraStateRoot[:])
+		if obj.ExcessDataGas == nil {
+			w.Write(rlp.EmptyString)
+		} else {
+			if obj.ExcessDataGas.Sign() == -1 {
+				return rlp.ErrNegativeBigInt
+			}
+			w.WriteBigInt(obj.ExcessDataGas)
+		}
 	}
 	w.ListEnd(_tmp0)
 	return w.Flush()

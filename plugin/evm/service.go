@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -12,7 +12,7 @@ import (
 
 	"github.com/luxdefi/node/api"
 	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/utils/crypto"
+	"github.com/luxdefi/node/utils/crypto/secp256k1"
 	"github.com/luxdefi/node/utils/formatting"
 	"github.com/luxdefi/node/utils/json"
 	"github.com/luxdefi/node/utils/set"
@@ -67,15 +67,15 @@ func (api *SnowmanAPI) IssueBlock(ctx context.Context) error {
 	return nil
 }
 
-// AvaxAPI offers Avalanche network related API methods
-type AvaxAPI struct{ vm *VM }
+// LuxAPI offers Lux network related API methods
+type LuxAPI struct{ vm *VM }
 
 // parseAssetID parses an assetID string into an ID
-func (service *AvaxAPI) parseAssetID(assetID string) (ids.ID, error) {
+func (service *LuxAPI) parseAssetID(assetID string) (ids.ID, error) {
 	if assetID == "" {
 		return ids.ID{}, fmt.Errorf("assetID is required")
-	} else if assetID == "AVAX" {
-		return service.vm.ctx.AVAXAssetID, nil
+	} else if assetID == "LUX" {
+		return service.vm.ctx.LUXAssetID, nil
 	} else {
 		return ids.FromString(assetID)
 	}
@@ -86,7 +86,7 @@ type VersionReply struct {
 }
 
 // ClientVersion returns the version of the VM running
-func (service *AvaxAPI) Version(r *http.Request, args *struct{}, reply *VersionReply) error {
+func (service *LuxAPI) Version(r *http.Request, _ *struct{}, reply *VersionReply) error {
 	reply.Version = Version
 	return nil
 }
@@ -100,12 +100,12 @@ type ExportKeyArgs struct {
 // ExportKeyReply is the response for ExportKey
 type ExportKeyReply struct {
 	// The decrypted PrivateKey for the Address provided in the arguments
-	PrivateKey    *crypto.PrivateKeySECP256K1R `json:"privateKey"`
-	PrivateKeyHex string                       `json:"privateKeyHex"`
+	PrivateKey    *secp256k1.PrivateKey `json:"privateKey"`
+	PrivateKeyHex string                `json:"privateKeyHex"`
 }
 
 // ExportKey returns a private key from the provided user
-func (service *AvaxAPI) ExportKey(r *http.Request, args *ExportKeyArgs, reply *ExportKeyReply) error {
+func (service *LuxAPI) ExportKey(r *http.Request, args *ExportKeyArgs, reply *ExportKeyReply) error {
 	log.Info("EVM: ExportKey called")
 
 	address, err := ParseEthAddress(args.Address)
@@ -113,16 +113,16 @@ func (service *AvaxAPI) ExportKey(r *http.Request, args *ExportKeyArgs, reply *E
 		return fmt.Errorf("couldn't parse %s to address: %s", args.Address, err)
 	}
 
+	service.vm.ctx.Lock.Lock()
+	defer service.vm.ctx.Lock.Unlock()
+
 	db, err := service.vm.ctx.Keystore.GetDatabase(args.Username, args.Password)
 	if err != nil {
 		return fmt.Errorf("problem retrieving user '%s': %w", args.Username, err)
 	}
 	defer db.Close()
 
-	user := user{
-		secpFactory: &service.vm.secpFactory,
-		db:          db,
-	}
+	user := user{db: db}
 	reply.PrivateKey, err = user.getKey(address)
 	if err != nil {
 		return fmt.Errorf("problem retrieving private key: %w", err)
@@ -134,11 +134,11 @@ func (service *AvaxAPI) ExportKey(r *http.Request, args *ExportKeyArgs, reply *E
 // ImportKeyArgs are arguments for ImportKey
 type ImportKeyArgs struct {
 	api.UserPass
-	PrivateKey *crypto.PrivateKeySECP256K1R `json:"privateKey"`
+	PrivateKey *secp256k1.PrivateKey `json:"privateKey"`
 }
 
 // ImportKey adds a private key to the provided user
-func (service *AvaxAPI) ImportKey(r *http.Request, args *ImportKeyArgs, reply *api.JSONAddress) error {
+func (service *LuxAPI) ImportKey(r *http.Request, args *ImportKeyArgs, reply *api.JSONAddress) error {
 	log.Info("EVM: ImportKey called", "username", args.Username)
 
 	if args.PrivateKey == nil {
@@ -147,16 +147,16 @@ func (service *AvaxAPI) ImportKey(r *http.Request, args *ImportKeyArgs, reply *a
 
 	reply.Address = GetEthAddress(args.PrivateKey).Hex()
 
+	service.vm.ctx.Lock.Lock()
+	defer service.vm.ctx.Lock.Unlock()
+
 	db, err := service.vm.ctx.Keystore.GetDatabase(args.Username, args.Password)
 	if err != nil {
 		return fmt.Errorf("problem retrieving data: %w", err)
 	}
 	defer db.Close()
 
-	user := user{
-		secpFactory: &service.vm.secpFactory,
-		db:          db,
-	}
+	user := user{db: db}
 	if err := user.putAddress(args.PrivateKey); err != nil {
 		return fmt.Errorf("problem saving key %w", err)
 	}
@@ -174,28 +174,26 @@ type ImportArgs struct {
 	SourceChain string `json:"sourceChain"`
 
 	// The address that will receive the imported funds
-	To string `json:"to"`
+	To common.Address `json:"to"`
 }
 
-// ImportAVAX is a deprecated name for Import.
-func (service *AvaxAPI) ImportAVAX(_ *http.Request, args *ImportArgs, response *api.JSONTxID) error {
+// ImportLUX is a deprecated name for Import.
+func (service *LuxAPI) ImportLUX(_ *http.Request, args *ImportArgs, response *api.JSONTxID) error {
 	return service.Import(nil, args, response)
 }
 
-// Import issues a transaction to import AVAX from the X-chain. The AVAX
+// Import issues a transaction to import LUX from the X-chain. The LUX
 // must have already been exported from the X-Chain.
-func (service *AvaxAPI) Import(_ *http.Request, args *ImportArgs, response *api.JSONTxID) error {
-	log.Info("EVM: ImportAVAX called")
+func (service *LuxAPI) Import(_ *http.Request, args *ImportArgs, response *api.JSONTxID) error {
+	log.Info("EVM: ImportLUX called")
 
 	chainID, err := service.vm.ctx.BCLookup.Lookup(args.SourceChain)
 	if err != nil {
 		return fmt.Errorf("problem parsing chainID %q: %w", args.SourceChain, err)
 	}
 
-	to, err := ParseEthAddress(args.To)
-	if err != nil { // Parse address
-		return fmt.Errorf("couldn't parse argument 'to' to an address: %w", err)
-	}
+	service.vm.ctx.Lock.Lock()
+	defer service.vm.ctx.Lock.Unlock()
 
 	// Get the user's info
 	db, err := service.vm.ctx.Keystore.GetDatabase(args.Username, args.Password)
@@ -204,10 +202,7 @@ func (service *AvaxAPI) Import(_ *http.Request, args *ImportArgs, response *api.
 	}
 	defer db.Close()
 
-	user := user{
-		secpFactory: &service.vm.secpFactory,
-		db:          db,
-	}
+	user := user{db: db}
 	privKeys, err := user.getKeys()
 	if err != nil { // Get keys
 		return fmt.Errorf("couldn't get keys controlled by the user: %w", err)
@@ -224,17 +219,17 @@ func (service *AvaxAPI) Import(_ *http.Request, args *ImportArgs, response *api.
 		baseFee = args.BaseFee.ToInt()
 	}
 
-	tx, err := service.vm.newImportTx(chainID, to, baseFee, privKeys)
+	tx, err := service.vm.newImportTx(chainID, args.To, baseFee, privKeys)
 	if err != nil {
 		return err
 	}
 
 	response.TxID = tx.ID()
-	return service.vm.issueTx(tx, true /*=local*/)
+	return service.vm.mempool.AddLocalTx(tx)
 }
 
-// ExportAVAXArgs are the arguments to ExportAVAX
-type ExportAVAXArgs struct {
+// ExportLUXArgs are the arguments to ExportLUX
+type ExportLUXArgs struct {
 	api.UserPass
 
 	// Fee that should be used when creating the tx
@@ -243,30 +238,34 @@ type ExportAVAXArgs struct {
 	// Amount of asset to send
 	Amount json.Uint64 `json:"amount"`
 
-	// ID of the address that will receive the AVAX. This address includes the
-	// chainID, which is used to determine what the destination chain is.
+	// Chain the funds are going to. Optional. Used if To address does not
+	// include the chainID.
+	TargetChain string `json:"targetChain"`
+
+	// ID of the address that will receive the LUX. This address may include
+	// the chainID, which is used to determine what the destination chain is.
 	To string `json:"to"`
 }
 
-// ExportAVAX exports AVAX from the C-Chain to the X-Chain
+// ExportLUX exports LUX from the C-Chain to the X-Chain
 // It must be imported on the X-Chain to complete the transfer
-func (service *AvaxAPI) ExportAVAX(_ *http.Request, args *ExportAVAXArgs, response *api.JSONTxID) error {
+func (service *LuxAPI) ExportLUX(_ *http.Request, args *ExportLUXArgs, response *api.JSONTxID) error {
 	return service.Export(nil, &ExportArgs{
-		ExportAVAXArgs: *args,
-		AssetID:        service.vm.ctx.AVAXAssetID.String(),
+		ExportLUXArgs: *args,
+		AssetID:        service.vm.ctx.LUXAssetID.String(),
 	}, response)
 }
 
 // ExportArgs are the arguments to Export
 type ExportArgs struct {
-	ExportAVAXArgs
+	ExportLUXArgs
 	// AssetID of the tokens
 	AssetID string `json:"assetID"`
 }
 
 // Export exports an asset from the C-Chain to the X-Chain
 // It must be imported on the X-Chain to complete the transfer
-func (service *AvaxAPI) Export(_ *http.Request, args *ExportArgs, response *api.JSONTxID) error {
+func (service *LuxAPI) Export(_ *http.Request, args *ExportArgs, response *api.JSONTxID) error {
 	log.Info("EVM: Export called")
 
 	assetID, err := service.parseAssetID(args.AssetID)
@@ -278,10 +277,21 @@ func (service *AvaxAPI) Export(_ *http.Request, args *ExportArgs, response *api.
 		return errors.New("argument 'amount' must be > 0")
 	}
 
+	// Get the chainID and parse the to address
 	chainID, to, err := service.vm.ParseAddress(args.To)
 	if err != nil {
-		return err
+		chainID, err = service.vm.ctx.BCLookup.Lookup(args.TargetChain)
+		if err != nil {
+			return err
+		}
+		to, err = ids.ShortFromString(args.To)
+		if err != nil {
+			return err
+		}
 	}
+
+	service.vm.ctx.Lock.Lock()
+	defer service.vm.ctx.Lock.Unlock()
 
 	// Get this user's data
 	db, err := service.vm.ctx.Keystore.GetDatabase(args.Username, args.Password)
@@ -290,10 +300,7 @@ func (service *AvaxAPI) Export(_ *http.Request, args *ExportArgs, response *api.
 	}
 	defer db.Close()
 
-	user := user{
-		secpFactory: &service.vm.secpFactory,
-		db:          db,
-	}
+	user := user{db: db}
 	privKeys, err := user.getKeys()
 	if err != nil {
 		return fmt.Errorf("couldn't get addresses controlled by the user: %w", err)
@@ -324,11 +331,11 @@ func (service *AvaxAPI) Export(_ *http.Request, args *ExportArgs, response *api.
 	}
 
 	response.TxID = tx.ID()
-	return service.vm.issueTx(tx, true /*=local*/)
+	return service.vm.mempool.AddLocalTx(tx)
 }
 
 // GetUTXOs gets all utxos for passed in addresses
-func (service *AvaxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *api.GetUTXOsReply) error {
+func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *api.GetUTXOsReply) error {
 	log.Info("EVM: GetUTXOs called", "Addresses", args.Addresses)
 
 	if len(args.Addresses) == 0 {
@@ -350,7 +357,7 @@ func (service *AvaxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply 
 
 	addrSet := set.Set[ids.ShortID]{}
 	for _, addrStr := range args.Addresses {
-		addr, err := service.vm.ParseLocalAddress(addrStr)
+		addr, err := service.vm.ParseServiceAddress(addrStr)
 		if err != nil {
 			return fmt.Errorf("couldn't parse address %q: %w", addrStr, err)
 		}
@@ -360,7 +367,7 @@ func (service *AvaxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply 
 	startAddr := ids.ShortEmpty
 	startUTXO := ids.Empty
 	if args.StartIndex.Address != "" || args.StartIndex.UTXO != "" {
-		startAddr, err = service.vm.ParseLocalAddress(args.StartIndex.Address)
+		startAddr, err = service.vm.ParseServiceAddress(args.StartIndex.Address)
 		if err != nil {
 			return fmt.Errorf("couldn't parse start index address %q: %w", args.StartIndex.Address, err)
 		}
@@ -369,6 +376,9 @@ func (service *AvaxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply 
 			return fmt.Errorf("couldn't parse start index utxo: %w", err)
 		}
 	}
+
+	service.vm.ctx.Lock.Lock()
+	defer service.vm.ctx.Lock.Unlock()
 
 	utxos, endAddr, endUTXOID, err := service.vm.GetAtomicUTXOs(
 		sourceChain,
@@ -406,8 +416,7 @@ func (service *AvaxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply 
 	return nil
 }
 
-// IssueTx ...
-func (service *AvaxAPI) IssueTx(r *http.Request, args *api.FormattedTx, response *api.JSONTxID) error {
+func (service *LuxAPI) IssueTx(r *http.Request, args *api.FormattedTx, response *api.JSONTxID) error {
 	log.Info("EVM: IssueTx called")
 
 	txBytes, err := formatting.Decode(args.Encoding, args.Tx)
@@ -424,7 +433,11 @@ func (service *AvaxAPI) IssueTx(r *http.Request, args *api.FormattedTx, response
 	}
 
 	response.TxID = tx.ID()
-	return service.vm.issueTx(tx, true /*=local*/)
+
+	service.vm.ctx.Lock.Lock()
+	defer service.vm.ctx.Lock.Unlock()
+
+	return service.vm.mempool.AddLocalTx(tx)
 }
 
 // GetAtomicTxStatusReply defines the GetAtomicTxStatus replies returned from the API
@@ -434,12 +447,15 @@ type GetAtomicTxStatusReply struct {
 }
 
 // GetAtomicTxStatus returns the status of the specified transaction
-func (service *AvaxAPI) GetAtomicTxStatus(r *http.Request, args *api.JSONTxID, reply *GetAtomicTxStatusReply) error {
+func (service *LuxAPI) GetAtomicTxStatus(r *http.Request, args *api.JSONTxID, reply *GetAtomicTxStatusReply) error {
 	log.Info("EVM: GetAtomicTxStatus called", "txID", args.TxID)
 
 	if args.TxID == ids.Empty {
 		return errNilTxID
 	}
+
+	service.vm.ctx.Lock.Lock()
+	defer service.vm.ctx.Lock.Unlock()
 
 	_, status, height, _ := service.vm.getAtomicTx(args.TxID)
 
@@ -457,12 +473,15 @@ type FormattedTx struct {
 }
 
 // GetAtomicTx returns the specified transaction
-func (service *AvaxAPI) GetAtomicTx(r *http.Request, args *api.GetTxArgs, reply *FormattedTx) error {
+func (service *LuxAPI) GetAtomicTx(r *http.Request, args *api.GetTxArgs, reply *FormattedTx) error {
 	log.Info("EVM: GetAtomicTx called", "txID", args.TxID)
 
 	if args.TxID == ids.Empty {
 		return errNilTxID
 	}
+
+	service.vm.ctx.Lock.Lock()
+	defer service.vm.ctx.Lock.Unlock()
 
 	tx, status, height, err := service.vm.getAtomicTx(args.TxID)
 	if err != nil {

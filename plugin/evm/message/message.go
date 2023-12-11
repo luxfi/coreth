@@ -1,4 +1,4 @@
-// (c) 2019-2021, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2021, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package message
@@ -9,8 +9,6 @@ import (
 
 	"github.com/luxdefi/node/codec"
 
-	"github.com/ethereum/go-ethereum/common"
-
 	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/node/utils/units"
 )
@@ -20,7 +18,7 @@ const (
 	// any [EthTxsGossip] or [AtomicTxGossip] message. We do not limit inbound messages to
 	// this size, however. Max inbound message size is enforced by the codec
 	// (512KB).
-	EthMsgSoftCapSize = common.StorageSize(64 * units.KiB)
+	EthMsgSoftCapSize = 64 * units.KiB
 )
 
 var (

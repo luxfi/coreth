@@ -1,4 +1,4 @@
-// (c) 2019-2021, Ava Labs, Inc.
+// (c) 2019-2021, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -89,9 +89,9 @@ func executeStateTransitionTest(t *testing.T, st stateTransitionTest) {
 			},
 			GasLimit: params.ApricotPhase1GasLimit,
 		}
-		genesis       = gspec.MustCommit(db)
+		genesis       = gspec.ToBlock()
 		engine        = dummy.NewFaker()
-		blockchain, _ = NewBlockChain(db, DefaultCacheConfig, gspec.Config, engine, vm.Config{}, common.Hash{})
+		blockchain, _ = NewBlockChain(db, DefaultCacheConfig, gspec, engine, vm.Config{}, common.Hash{}, false)
 	)
 	defer blockchain.Stop()
 

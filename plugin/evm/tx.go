@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -20,7 +20,7 @@ import (
 	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/node/snow"
 	"github.com/luxdefi/node/utils"
-	"github.com/luxdefi/node/utils/crypto"
+	"github.com/luxdefi/node/utils/crypto/secp256k1"
 	"github.com/luxdefi/node/utils/hashing"
 	"github.com/luxdefi/node/utils/set"
 	"github.com/luxdefi/node/utils/wrappers"
@@ -55,12 +55,28 @@ type EVMOutput struct {
 	AssetID ids.ID         `serialize:"true" json:"assetID"`
 }
 
+func (o EVMOutput) Compare(other EVMOutput) int {
+	addrComp := bytes.Compare(o.Address.Bytes(), other.Address.Bytes())
+	if addrComp != 0 {
+		return addrComp
+	}
+	return bytes.Compare(o.AssetID[:], other.AssetID[:])
+}
+
 // EVMInput defines an input created from the EVM state to fund export transactions
 type EVMInput struct {
 	Address common.Address `serialize:"true" json:"address"`
 	Amount  uint64         `serialize:"true" json:"amount"`
 	AssetID ids.ID         `serialize:"true" json:"assetID"`
 	Nonce   uint64         `serialize:"true" json:"nonce"`
+}
+
+func (i EVMInput) Compare(other EVMInput) int {
+	addrComp := bytes.Compare(i.Address.Bytes(), other.Address.Bytes())
+	if addrComp != 0 {
+		return addrComp
+	}
+	return bytes.Compare(i.AssetID[:], other.AssetID[:])
 }
 
 // Verify ...
@@ -126,8 +142,21 @@ type Tx struct {
 	Creds []verify.Verifiable `serialize:"true" json:"credentials"`
 }
 
+func (tx *Tx) Compare(other *Tx) int {
+	txHex := tx.ID().Hex()
+	otherHex := other.ID().Hex()
+	switch {
+	case txHex < otherHex:
+		return -1
+	case txHex > otherHex:
+		return 1
+	default:
+		return 0
+	}
+}
+
 // Sign this transaction with the provided signers
-func (tx *Tx) Sign(c codec.Manager, signers [][]*crypto.PrivateKeySECP256K1R) error {
+func (tx *Tx) Sign(c codec.Manager, signers [][]*secp256k1.PrivateKey) error {
 	unsignedBytes, err := c.Marshal(codecVersion, &tx.UnsignedAtomicTx)
 	if err != nil {
 		return fmt.Errorf("couldn't marshal UnsignedAtomicTx: %w", err)
@@ -137,7 +166,7 @@ func (tx *Tx) Sign(c codec.Manager, signers [][]*crypto.PrivateKeySECP256K1R) er
 	hash := hashing.ComputeHash256(unsignedBytes)
 	for _, keys := range signers {
 		cred := &secp256k1fx.Credential{
-			Sigs: make([][crypto.SECP256K1RSigLen]byte, len(keys)),
+			Sigs: make([][secp256k1.SignatureLen]byte, len(keys)),
 		}
 		for i, key := range keys {
 			sig, err := key.SignHash(hash) // Sign hash
@@ -157,11 +186,11 @@ func (tx *Tx) Sign(c codec.Manager, signers [][]*crypto.PrivateKeySECP256K1R) er
 	return nil
 }
 
-// BlockFeeContribution calculates how much AVAX towards the block fee contribution was paid
-// for via this transaction denominated in [avaxAssetID] with [baseFee] used to calculate the
+// BlockFeeContribution calculates how much LUX towards the block fee contribution was paid
+// for via this transaction denominated in [luxAssetID] with [baseFee] used to calculate the
 // cost of this transaction. This function also returns the [gasUsed] by the
 // transaction for inclusion in the [baseFee] algorithm.
-func (tx *Tx) BlockFeeContribution(fixedFee bool, avaxAssetID ids.ID, baseFee *big.Int) (*big.Int, *big.Int, error) {
+func (tx *Tx) BlockFeeContribution(fixedFee bool, luxAssetID ids.ID, baseFee *big.Int) (*big.Int, *big.Int, error) {
 	if baseFee == nil {
 		return nil, nil, errNilBaseFee
 	}
@@ -172,20 +201,20 @@ func (tx *Tx) BlockFeeContribution(fixedFee bool, avaxAssetID ids.ID, baseFee *b
 	if err != nil {
 		return nil, nil, err
 	}
-	txFee, err := calculateDynamicFee(gasUsed, baseFee)
+	txFee, err := CalculateDynamicFee(gasUsed, baseFee)
 	if err != nil {
 		return nil, nil, err
 	}
-	burned, err := tx.Burned(avaxAssetID)
+	burned, err := tx.Burned(luxAssetID)
 	if err != nil {
 		return nil, nil, err
 	}
 	if txFee > burned {
-		return nil, nil, fmt.Errorf("insufficient AVAX burned (%d) to cover import tx fee (%d)", burned, txFee)
+		return nil, nil, fmt.Errorf("insufficient LUX burned (%d) to cover import tx fee (%d)", burned, txFee)
 	}
 	excessBurned := burned - txFee
 
-	// Calculate the amount of AVAX that has been burned above the required fee denominated
+	// Calculate the amount of LUX that has been burned above the required fee denominated
 	// in C-Chain native 18 decimal places
 	blockFeeContribution := new(big.Int).Mul(new(big.Int).SetUint64(excessBurned), x2cRate)
 	return blockFeeContribution, new(big.Int).SetUint64(gasUsed), nil
@@ -194,7 +223,7 @@ func (tx *Tx) BlockFeeContribution(fixedFee bool, avaxAssetID ids.ID, baseFee *b
 // innerSortInputsAndSigners implements sort.Interface for EVMInput
 type innerSortInputsAndSigners struct {
 	inputs  []EVMInput
-	signers [][]*crypto.PrivateKeySECP256K1R
+	signers [][]*secp256k1.PrivateKey
 }
 
 func (ins *innerSortInputsAndSigners) Less(i, j int) bool {
@@ -213,68 +242,25 @@ func (ins *innerSortInputsAndSigners) Swap(i, j int) {
 }
 
 // SortEVMInputsAndSigners sorts the list of EVMInputs based on the addresses and assetIDs
-func SortEVMInputsAndSigners(inputs []EVMInput, signers [][]*crypto.PrivateKeySECP256K1R) {
+func SortEVMInputsAndSigners(inputs []EVMInput, signers [][]*secp256k1.PrivateKey) {
 	sort.Sort(&innerSortInputsAndSigners{inputs: inputs, signers: signers})
 }
 
-// IsSortedAndUniqueEVMInputs returns true if the EVM Inputs are sorted and unique
-// based on the account addresses
-func IsSortedAndUniqueEVMInputs(inputs []EVMInput) bool {
-	return utils.IsSortedAndUnique(&innerSortInputsAndSigners{inputs: inputs})
-}
-
-// innerSortEVMOutputs implements sort.Interface for EVMOutput
-type innerSortEVMOutputs struct {
-	outputs []EVMOutput
-}
-
-func (outs *innerSortEVMOutputs) Less(i, j int) bool {
-	addrComp := bytes.Compare(outs.outputs[i].Address.Bytes(), outs.outputs[j].Address.Bytes())
-	if addrComp != 0 {
-		return addrComp < 0
-	}
-	return bytes.Compare(outs.outputs[i].AssetID[:], outs.outputs[j].AssetID[:]) < 0
-}
-
-func (outs *innerSortEVMOutputs) Len() int { return len(outs.outputs) }
-
-func (outs *innerSortEVMOutputs) Swap(i, j int) {
-	outs.outputs[j], outs.outputs[i] = outs.outputs[i], outs.outputs[j]
-}
-
-// SortEVMOutputs sorts the list of EVMOutputs based on the addresses and assetIDs
-// of the outputs
-func SortEVMOutputs(outputs []EVMOutput) {
-	sort.Sort(&innerSortEVMOutputs{outputs: outputs})
-}
-
-// IsSortedEVMOutputs returns true if the EVMOutputs are sorted
-// based on the account addresses and assetIDs
-func IsSortedEVMOutputs(outputs []EVMOutput) bool {
-	return sort.IsSorted(&innerSortEVMOutputs{outputs: outputs})
-}
-
-// IsSortedAndUniqueEVMOutputs returns true if the EVMOutputs are sorted
-// and unique based on the account addresses and assetIDs
-func IsSortedAndUniqueEVMOutputs(outputs []EVMOutput) bool {
-	return utils.IsSortedAndUnique(&innerSortEVMOutputs{outputs: outputs})
-}
-
-// calculates the amount of AVAX that must be burned by an atomic transaction
+// calculates the amount of LUX that must be burned by an atomic transaction
 // that consumes [cost] at [baseFee].
-func calculateDynamicFee(cost uint64, baseFee *big.Int) (uint64, error) {
+func CalculateDynamicFee(cost uint64, baseFee *big.Int) (uint64, error) {
 	if baseFee == nil {
 		return 0, errNilBaseFee
 	}
 	bigCost := new(big.Int).SetUint64(cost)
 	fee := new(big.Int).Mul(bigCost, baseFee)
 	feeToRoundUp := new(big.Int).Add(fee, x2cRateMinus1)
-	feeInNAVAX := new(big.Int).Div(feeToRoundUp, x2cRate)
-	if !feeInNAVAX.IsUint64() {
+	feeInNLUX := new(big.Int).Div(feeToRoundUp, x2cRate)
+	if !feeInNLUX.IsUint64() {
 		// the fee is more than can fit in a uint64
 		return 0, errFeeOverflow
 	}
-	return feeInNAVAX.Uint64(), nil
+	return feeInNLUX.Uint64(), nil
 }
 
 func calcBytesCost(len int) uint64 {
@@ -289,7 +275,7 @@ func mergeAtomicOps(txs []*Tx) (map[ids.ID]*atomic.Requests, error) {
 		// with txs initialized from the txID index.
 		copyTxs := make([]*Tx, len(txs))
 		copy(copyTxs, txs)
-		sort.Slice(copyTxs, func(i, j int) bool { return copyTxs[i].ID().Hex() < copyTxs[j].ID().Hex() })
+		utils.Sort(copyTxs)
 		txs = copyTxs
 	}
 	output := make(map[ids.ID]*atomic.Requests)

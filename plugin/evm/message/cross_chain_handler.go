@@ -1,4 +1,4 @@
-// (c) 2021-2022, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2022, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package message
@@ -45,7 +45,15 @@ func (c *crossChainHandler) HandleEthCallRequest(ctx context.Context, requesting
 		return nil, nil
 	}
 
-	result, err := ethapi.DoCall(ctx, c.backend, transactionArgs, lastAcceptedBlockNumberOrHash, nil, c.backend.RPCEVMTimeout(), c.backend.RPCGasCap())
+	result, err := ethapi.DoCall(
+		ctx,
+		c.backend,
+		transactionArgs,
+		lastAcceptedBlockNumberOrHash,
+		nil,
+		nil,
+		c.backend.RPCEVMTimeout(),
+		c.backend.RPCGasCap())
 	if err != nil {
 		log.Debug("error occurred with EthCall", "err", err, "transactionArgs", ethCallRequest.RequestArgs, "blockNumberOrHash", lastAcceptedBlockNumberOrHash)
 		return nil, nil
