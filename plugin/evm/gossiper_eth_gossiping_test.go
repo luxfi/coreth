@@ -1,4 +1,4 @@
-// (c) 2019-2021, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2021, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -8,6 +8,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"math/big"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -26,6 +27,7 @@ import (
 	"github.com/luxdefi/coreth/core/types"
 	"github.com/luxdefi/coreth/params"
 	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxdefi/coreth/utils"
 )
 
 func fundAddressByGenesis(addrs []common.Address) (string, error) {
@@ -43,11 +45,11 @@ func fundAddressByGenesis(addrs []common.Address) (string, error) {
 	genesis.Alloc = funds
 
 	genesis.Config = &params.ChainConfig{
-		ChainID:                     params.AvalancheLocalChainID,
-		ApricotPhase1BlockTimestamp: big.NewInt(0),
-		ApricotPhase2BlockTimestamp: big.NewInt(0),
-		ApricotPhase3BlockTimestamp: big.NewInt(0),
-		ApricotPhase4BlockTimestamp: big.NewInt(0),
+		ChainID:                     params.LuxLocalChainID,
+		ApricotPhase1BlockTimestamp: utils.NewUint64(0),
+		ApricotPhase2BlockTimestamp: utils.NewUint64(0),
+		ApricotPhase3BlockTimestamp: utils.NewUint64(0),
+		ApricotPhase4BlockTimestamp: utils.NewUint64(0),
 	}
 
 	bytes, err := json.Marshal(genesis)
@@ -82,7 +84,9 @@ func getValidEthTxs(key *ecdsa.PrivateKey, count int, gasPrice *big.Int) []*type
 // to ease up UT, which target only VM behaviors in response to coreth mempool
 // signals
 func TestMempoolEthTxsAddedTxsGossipedAfterActivation(t *testing.T) {
-	t.Skip("FLAKY")
+	if os.Getenv("RUN_FLAKY_TESTS") != "true" {
+		t.Skip("FLAKY")
+	}
 	assert := assert.New(t)
 
 	key, err := crypto.GenerateKey()
@@ -168,7 +172,9 @@ func TestMempoolEthTxsAddedTxsGossipedAfterActivation(t *testing.T) {
 
 // show that locally issued eth txs are chunked correctly
 func TestMempoolEthTxsAddedTxsGossipedAfterActivationChunking(t *testing.T) {
-	t.Skip("FLAKY")
+	if os.Getenv("RUN_FLAKY_TESTS") != "true" {
+		t.Skip("FLAKY")
+	}
 	assert := assert.New(t)
 
 	key, err := crypto.GenerateKey()
@@ -228,7 +234,9 @@ func TestMempoolEthTxsAddedTxsGossipedAfterActivationChunking(t *testing.T) {
 // show that a geth tx discovered from gossip is requested to the same node that
 // gossiped it
 func TestMempoolEthTxsAppGossipHandling(t *testing.T) {
-	t.Skip("FLAKY")
+	if os.Getenv("RUN_FLAKY_TESTS") != "true" {
+		t.Skip("FLAKY")
+	}
 	assert := assert.New(t)
 
 	key, err := crypto.GenerateKey()

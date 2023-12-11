@@ -1,11 +1,11 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
 
 import (
 	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/node/utils/logging"
 	"github.com/luxdefi/node/vms"
 )
 
@@ -18,6 +18,6 @@ var (
 
 type Factory struct{}
 
-func (f *Factory) New(*snow.Context) (interface{}, error) {
+func (*Factory) New(logging.Logger) (interface{}, error) {
 	return &VM{}, nil
 }

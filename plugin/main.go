@@ -1,9 +1,10 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -29,5 +30,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	rpcchainvm.Serve(&evm.VM{IsPlugin: true})
+	rpcchainvm.Serve(context.Background(), &evm.VM{IsPlugin: true})
 }

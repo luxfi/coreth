@@ -1,4 +1,4 @@
-// (c) 2021-2022, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2022, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package statesyncclient
@@ -325,14 +325,14 @@ func (c *client) get(ctx context.Context, request message.Request, parseFn parse
 			start    time.Time = time.Now()
 		)
 		if len(c.stateSyncNodes) == 0 {
-			response, nodeID, err = c.networkClient.SendAppRequestAny(StateSyncVersion, requestBytes)
+			response, nodeID, err = c.networkClient.SendAppRequestAny(ctx, StateSyncVersion, requestBytes)
 		} else {
 			// get the next nodeID using the nodeIdx offset. If we're out of nodes, loop back to 0
 			// we do this every attempt to ensure we get a different node each time if possible.
 			nodeIdx := atomic.AddUint32(&c.stateSyncNodeIdx, 1)
 			nodeID = c.stateSyncNodes[nodeIdx%uint32(len(c.stateSyncNodes))]
 
-			response, err = c.networkClient.SendAppRequest(nodeID, requestBytes)
+			response, err = c.networkClient.SendAppRequest(ctx, nodeID, requestBytes)
 		}
 		metric.UpdateRequestLatency(time.Since(start))
 

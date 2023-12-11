@@ -1,27 +1,25 @@
 # ============= Compilation Stage ================
-FROM golang:1.18.5-buster AS builder
+FROM golang:1.20.10-bullseye AS builder
 
-RUN apt-get update && apt-get install -y --no-install-recommends bash=5.0-4 git=1:2.20.1-2+deb10u3 make=4.2.1-1.2 gcc=4:8.3.0-1 musl-dev=1.1.21-2 ca-certificates=20200601~deb10u2 linux-headers-amd64
-
-ARG AVALANCHE_VERSION
+ARG LUX_VERSION
 
 RUN mkdir -p $GOPATH/src/github.com/luxdefi
 WORKDIR $GOPATH/src/github.com/luxdefi
 
-RUN git clone -b $AVALANCHE_VERSION --single-branch https://github.com/luxdefi/node.git
+RUN git clone -b $LUX_VERSION --single-branch https://github.com/luxdefi/node.git
 
 # Copy coreth repo into desired location
 COPY . coreth
 
-# Set the workdir to AvalancheGo and update coreth dependency to local version
+# Set the workdir to LuxGo and update coreth dependency to local version
 WORKDIR $GOPATH/src/github.com/luxdefi/node
-# Run go mod download here to improve caching of AvalancheGo specific depednencies
+# Run go mod download here to improve caching of LuxGo specific depednencies
 RUN go mod download
 # Replace the coreth dependency
 RUN go mod edit -replace github.com/luxdefi/coreth=../coreth
-RUN go mod download && go mod tidy -compat=1.18
+RUN go mod download && go mod tidy -compat=1.20
 
-# Build the AvalancheGo binary with local version of coreth.
+# Build the LuxGo binary with local version of coreth.
 RUN ./scripts/build_avalanche.sh
 # Create the plugins directory in the standard location so the build directory will be recognized
 # as valid.

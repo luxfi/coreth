@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package vm
@@ -73,7 +73,7 @@ func TestPackNativeAssetCallInput(t *testing.T) {
 func TestStatefulPrecompile(t *testing.T) {
 	vmCtx := BlockContext{
 		BlockNumber:       big.NewInt(0),
-		Time:              big.NewInt(0),
+		Time:              0,
 		CanTransfer:       CanTransfer,
 		CanTransferMC:     CanTransferMC,
 		Transfer:          Transfer,

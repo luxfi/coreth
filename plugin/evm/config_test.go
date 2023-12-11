@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -12,6 +12,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 )
+
+// newTrue returns a pointer to a bool that is true
+func newTrue() *bool {
+	b := true
+	return &b
+}
 
 func TestUnmarshalConfig(t *testing.T) {
 	tests := []struct {
@@ -63,7 +69,7 @@ func TestUnmarshalConfig(t *testing.T) {
 		{
 			"state sync enabled",
 			[]byte(`{"state-sync-enabled":true}`),
-			Config{StateSyncEnabled: true},
+			Config{StateSyncEnabled: newTrue()},
 			false,
 		},
 		{

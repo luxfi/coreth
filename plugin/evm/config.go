@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxdefi/coreth/core"
+	"github.com/luxdefi/coreth/core/txpool"
 	"github.com/luxdefi/coreth/eth"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cast"
@@ -19,13 +19,14 @@ const (
 	defaultPruningEnabled                             = true
 	defaultCommitInterval                             = 4096
 	defaultTrieCleanCache                             = 512
-	defaultTrieDirtyCache                             = 256
+	defaultTrieDirtyCache                             = 512
 	defaultTrieDirtyCommitTarget                      = 20
+	defaultTriePrefetcherParallelism                  = 16
 	defaultSnapshotCache                              = 256
 	defaultSyncableCommitInterval                     = defaultCommitInterval * 4
-	defaultSnapshotAsync                              = true
+	defaultSnapshotWait                               = false
 	defaultRpcGasCap                                  = 50_000_000 // Default to 50M Gas Limit
-	defaultRpcTxFeeCap                                = 100        // 100 AVAX
+	defaultRpcTxFeeCap                                = 100        // 100 LUX
 	defaultMetricsExpensiveEnabled                    = true
 	defaultApiMaxDuration                             = 0 // Default to no maximum API call duration
 	defaultWsCpuRefillRate                            = 0 // Default to no maximum WS CPU usage
@@ -51,7 +52,8 @@ const (
 	// time assumptions:
 	// - normal bootstrap processing time: ~14 blocks / second
 	// - state sync time: ~6 hrs.
-	defaultStateSyncMinBlocks = 300_000
+	defaultStateSyncMinBlocks   = 300_000
+	defaultStateSyncRequestSize = 1024 // the number of key/values to ask peers for per request
 )
 
 var (
@@ -77,8 +79,11 @@ type Duration struct {
 type Config struct {
 	// Coreth APIs
 	SnowmanAPIEnabled     bool   `json:"snowman-api-enabled"`
-	CorethAdminAPIEnabled bool   `json:"coreth-admin-api-enabled"`
-	CorethAdminAPIDir     string `json:"coreth-admin-api-dir"`
+	AdminAPIEnabled       bool   `json:"admin-api-enabled"`
+	AdminAPIDir           string `json:"admin-api-dir"`
+	CorethAdminAPIEnabled bool   `json:"coreth-admin-api-enabled"` // Deprecated: use AdminAPIEnabled instead
+	CorethAdminAPIDir     string `json:"coreth-admin-api-dir"`     // Deprecated: use AdminAPIDir instead
+	WarpAPIEnabled        bool   `json:"warp-api-enabled"`
 
 	// EnabledEthAPIs is a list of Ethereum services that should be enabled
 	// If none is specified, then we use the default list [defaultEnabledAPIs]
@@ -94,16 +99,17 @@ type Config struct {
 	RPCTxFeeCap float64 `json:"rpc-tx-fee-cap"`
 
 	// Cache settings
-	TrieCleanCache        int      `json:"trie-clean-cache"`         // Size of the trie clean cache (MB)
-	TrieCleanJournal      string   `json:"trie-clean-journal"`       // Directory to use to save the trie clean cache (must be populated to enable journaling the trie clean cache)
-	TrieCleanRejournal    Duration `json:"trie-clean-rejournal"`     // Frequency to re-journal the trie clean cache to disk (minimum 1 minute, must be populated to enable journaling the trie clean cache)
-	TrieDirtyCache        int      `json:"trie-dirty-cache"`         // Size of the trie dirty cache (MB)
-	TrieDirtyCommitTarget int      `json:"trie-dirty-commit-target"` // Memory limit to target in the dirty cache before performing a commit (MB)
-	SnapshotCache         int      `json:"snapshot-cache"`           // Size of the snapshot disk layer clean cache (MB)
+	TrieCleanCache            int      `json:"trie-clean-cache"`            // Size of the trie clean cache (MB)
+	TrieCleanJournal          string   `json:"trie-clean-journal"`          // Directory to use to save the trie clean cache (must be populated to enable journaling the trie clean cache)
+	TrieCleanRejournal        Duration `json:"trie-clean-rejournal"`        // Frequency to re-journal the trie clean cache to disk (minimum 1 minute, must be populated to enable journaling the trie clean cache)
+	TrieDirtyCache            int      `json:"trie-dirty-cache"`            // Size of the trie dirty cache (MB)
+	TrieDirtyCommitTarget     int      `json:"trie-dirty-commit-target"`    // Memory limit to target in the dirty cache before performing a commit (MB)
+	TriePrefetcherParallelism int      `json:"trie-prefetcher-parallelism"` // Max concurrent disk reads trie prefetcher should perform at once
+	SnapshotCache             int      `json:"snapshot-cache"`              // Size of the snapshot disk layer clean cache (MB)
 
 	// Eth Settings
 	Preimages      bool `json:"preimages-enabled"`
-	SnapshotAsync  bool `json:"snapshot-async"`
+	SnapshotWait   bool `json:"snapshot-wait"`
 	SnapshotVerify bool `json:"snapshot-verification-enabled"`
 
 	// Pruning Settings
@@ -113,6 +119,7 @@ type Config struct {
 	AllowMissingTries               bool    `json:"allow-missing-tries"`                // If enabled, warnings preventing an incomplete trie index are suppressed
 	PopulateMissingTries            *uint64 `json:"populate-missing-tries,omitempty"`   // Sets the starting point for re-populating missing tries. Disables re-generation if nil.
 	PopulateMissingTriesParallelism int     `json:"populate-missing-tries-parallelism"` // Number of concurrent readers to use when re-populating missing tries on startup.
+	PruneWarpDB                     bool    `json:"prune-warp-db-enabled"`              // Determines if the warpDB should be cleared on startup
 
 	// Metric Settings
 	MetricsExpensiveEnabled bool `json:"metrics-expensive-enabled"` // Debug-level metrics that might impact runtime performance
@@ -143,9 +150,12 @@ type Config struct {
 	KeystoreInsecureUnlockAllowed bool   `json:"keystore-insecure-unlock-allowed"`
 
 	// Gossip Settings
-	RemoteTxGossipOnlyEnabled bool     `json:"remote-tx-gossip-only-enabled"`
-	TxRegossipFrequency       Duration `json:"tx-regossip-frequency"`
-	TxRegossipMaxSize         int      `json:"tx-regossip-max-size"`
+	RemoteGossipOnlyEnabled   bool     `json:"remote-gossip-only-enabled"`
+	RegossipFrequency         Duration `json:"regossip-frequency"`
+	RegossipMaxTxs            int      `json:"regossip-max-txs"`
+	RemoteTxGossipOnlyEnabled bool     `json:"remote-tx-gossip-only-enabled"` // Deprecated: use RemoteGossipOnlyEnabled instead
+	TxRegossipFrequency       Duration `json:"tx-regossip-frequency"`         // Deprecated: use RegossipFrequency instead
+	TxRegossipMaxSize         int      `json:"tx-regossip-max-size"`          // Deprecated: use RegossipMaxTxs instead
 
 	// Log
 	LogLevel      string `json:"log-level"`
@@ -161,12 +171,13 @@ type Config struct {
 	MaxOutboundActiveCrossChainRequests int64 `json:"max-outbound-active-cross-chain-requests"`
 
 	// Sync settings
-	StateSyncEnabled         bool   `json:"state-sync-enabled"`
+	StateSyncEnabled         *bool  `json:"state-sync-enabled"`     // Pointer distinguishes false (no state sync) and not set (state sync only at genesis).
 	StateSyncSkipResume      bool   `json:"state-sync-skip-resume"` // Forces state sync to use the highest available summary block
 	StateSyncServerTrieCache int    `json:"state-sync-server-trie-cache"`
 	StateSyncIDs             string `json:"state-sync-ids"`
 	StateSyncCommitInterval  uint64 `json:"state-sync-commit-interval"`
 	StateSyncMinBlocks       uint64 `json:"state-sync-min-blocks"`
+	StateSyncRequestSize     uint16 `json:"state-sync-request-size"`
 
 	// Database Settings
 	InspectDatabase bool `json:"inspect-database"` // Inspects the database on startup if enabled.
@@ -189,6 +200,11 @@ type Config struct {
 	//  * 0:   means no limit
 	//  * N:   means N block limit [HEAD-N+1, HEAD] and delete extra indexes
 	TxLookupLimit uint64 `json:"tx-lookup-limit"`
+
+	// SkipTxIndexing skips indexing transactions.
+	// This is useful for validators that don't need to index transactions.
+	// TxLookupLimit can be still used to control unindexing old transactions.
+	SkipTxIndexing bool `json:"skip-tx-indexing"`
 }
 
 // EthAPIs returns an array of strings representing the Eth APIs that should be enabled
@@ -206,14 +222,14 @@ func (c *Config) SetDefaults() {
 	c.RPCTxFeeCap = defaultRpcTxFeeCap
 	c.MetricsExpensiveEnabled = defaultMetricsExpensiveEnabled
 
-	c.TxPoolJournal = core.DefaultTxPoolConfig.Journal
-	c.TxPoolRejournal = Duration{core.DefaultTxPoolConfig.Rejournal}
-	c.TxPoolPriceLimit = core.DefaultTxPoolConfig.PriceLimit
-	c.TxPoolPriceBump = core.DefaultTxPoolConfig.PriceBump
-	c.TxPoolAccountSlots = core.DefaultTxPoolConfig.AccountSlots
-	c.TxPoolGlobalSlots = core.DefaultTxPoolConfig.GlobalSlots
-	c.TxPoolAccountQueue = core.DefaultTxPoolConfig.AccountQueue
-	c.TxPoolGlobalQueue = core.DefaultTxPoolConfig.GlobalQueue
+	c.TxPoolJournal = txpool.DefaultConfig.Journal
+	c.TxPoolRejournal = Duration{txpool.DefaultConfig.Rejournal}
+	c.TxPoolPriceLimit = txpool.DefaultConfig.PriceLimit
+	c.TxPoolPriceBump = txpool.DefaultConfig.PriceBump
+	c.TxPoolAccountSlots = txpool.DefaultConfig.AccountSlots
+	c.TxPoolGlobalSlots = txpool.DefaultConfig.GlobalSlots
+	c.TxPoolAccountQueue = txpool.DefaultConfig.AccountQueue
+	c.TxPoolGlobalQueue = txpool.DefaultConfig.GlobalQueue
 
 	c.APIMaxDuration.Duration = defaultApiMaxDuration
 	c.WSCPURefillRate.Duration = defaultWsCpuRefillRate
@@ -225,11 +241,12 @@ func (c *Config) SetDefaults() {
 	c.TrieCleanCache = defaultTrieCleanCache
 	c.TrieDirtyCache = defaultTrieDirtyCache
 	c.TrieDirtyCommitTarget = defaultTrieDirtyCommitTarget
+	c.TriePrefetcherParallelism = defaultTriePrefetcherParallelism
 	c.SnapshotCache = defaultSnapshotCache
 	c.AcceptorQueueLimit = defaultAcceptorQueueLimit
-	c.SnapshotAsync = defaultSnapshotAsync
-	c.TxRegossipFrequency.Duration = defaultTxRegossipFrequency
-	c.TxRegossipMaxSize = defaultTxRegossipMaxSize
+	c.SnapshotWait = defaultSnapshotWait
+	c.RegossipFrequency.Duration = defaultTxRegossipFrequency
+	c.RegossipMaxTxs = defaultTxRegossipMaxSize
 	c.OfflinePruningBloomFilterSize = defaultOfflinePruningBloomFilterSize
 	c.LogLevel = defaultLogLevel
 	c.PopulateMissingTriesParallelism = defaultPopulateMissingTriesParallelism
@@ -240,6 +257,7 @@ func (c *Config) SetDefaults() {
 	c.CommitInterval = defaultCommitInterval
 	c.StateSyncCommitInterval = defaultSyncableCommitInterval
 	c.StateSyncMinBlocks = defaultStateSyncMinBlocks
+	c.StateSyncRequestSize = defaultStateSyncRequestSize
 	c.AllowUnprotectedTxHashes = defaultAllowUnprotectedTxHashes
 	c.AcceptedCacheSize = defaultAcceptedCacheSize
 }
@@ -279,6 +297,32 @@ func (c *Config) Validate() error {
 	if c.Pruning && c.CommitInterval == 0 {
 		return fmt.Errorf("cannot use commit interval of 0 with pruning enabled")
 	}
-
 	return nil
+}
+
+func (c *Config) Deprecate() string {
+	msg := ""
+	// Deprecate the old config options and set the new ones.
+	if c.CorethAdminAPIEnabled {
+		msg += "coreth-admin-api-enabled is deprecated, use admin-api-enabled instead. "
+		c.AdminAPIEnabled = c.CorethAdminAPIEnabled
+	}
+	if c.CorethAdminAPIDir != "" {
+		msg += "coreth-admin-api-dir is deprecated, use admin-api-dir instead. "
+		c.AdminAPIDir = c.CorethAdminAPIDir
+	}
+	if c.RemoteTxGossipOnlyEnabled {
+		msg += "remote-tx-gossip-only-enabled is deprecated, use tx-gossip-enabled instead. "
+		c.RemoteGossipOnlyEnabled = c.RemoteTxGossipOnlyEnabled
+	}
+	if c.TxRegossipFrequency != (Duration{}) {
+		msg += "tx-regossip-frequency is deprecated, use regossip-frequency instead. "
+		c.RegossipFrequency = c.TxRegossipFrequency
+	}
+	if c.TxRegossipMaxSize != 0 {
+		msg += "tx-regossip-max-size is deprecated, use regossip-max-txs instead. "
+		c.RegossipMaxTxs = c.TxRegossipMaxSize
+	}
+
+	return msg
 }
