@@ -1,9 +1,9 @@
 # Coreth and the C-Chain
 
-[Lux](https://docs.lux.network/learn/platform-overview) is a network composed of multiple blockchains.
+[Lux](https://docs.avax.network/learn/platform-overview) is a network composed of multiple blockchains.
 Each blockchain is an instance of a Virtual Machine (VM), much like an object in an object-oriented language is an instance of a class.
 That is, the VM defines the behavior of the blockchain.
-Coreth (from core Ethereum) is the [Virtual Machine (VM)](https://docs.lux.network/learn/platform-overview#virtual-machines) that defines the Contract Chain (C-Chain).
+Coreth (from core Ethereum) is the [Virtual Machine (VM)](https://docs.avax.network/learn/platform-overview#virtual-machines) that defines the Contract Chain (C-Chain).
 This chain implements the Ethereum Virtual Machine and supports Solidity smart contracts as well as most other Ethereum client functionality.
 
 ## Building
@@ -34,12 +34,12 @@ The C-Chain supports the following API namespaces:
 - `debug`
 
 Only the `eth` namespace is enabled by default. 
-To enable the other namespaces see the instructions for passing the C-Chain config to LuxGo [here.](https://docs.lux.network/nodes/maintain/chain-config-flags/#c-chain-configs)
-Full documentation for the C-Chain's API can be found [here.](https://docs.lux.network/apis/node/apis/c-chain/)
+To enable the other namespaces see the instructions for passing the C-Chain config to LuxGo [here.](https://docs.avax.network/nodes/maintain/chain-config-flags/#c-chain-configs)
+Full documentation for the C-Chain's API can be found [here.](https://docs.avax.network/apis/node/apis/c-chain/)
 
 ## Compatibility
 
-The C-Chain is compatible with almost all Ethereum tooling, including [Remix,](https://docs.lux.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-avalanche-using-remix-and-metamask) [Metamask](https://docs.lux.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-avalanche-using-remix-and-metamask) and [Truffle.](https://docs.lux.network/build/tutorials/smart-contracts/using-truffle-with-the-avalanche-c-chain)
+The C-Chain is compatible with almost all Ethereum tooling, including [Remix,](https://docs.avax.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-lux-using-remix-and-metamask) [Metamask](https://docs.avax.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-lux-using-remix-and-metamask) and [Truffle.](https://docs.avax.network/build/tutorials/smart-contracts/using-truffle-with-the-lux-c-chain)
 
 ## Differences Between Lux C-Chain and Ethereum
 
@@ -51,7 +51,7 @@ As a network composed of multiple blockchains, Lux uses *atomic transactions* to
 
 The C-Chain supports Lux Native Tokens, which are created on the X-Chain using precompiled contracts. These precompiled contracts *nativeAssetCall* and *nativeAssetBalance* support the same interface for ANTs as *CALL* and *BALANCE* do for LUX with the added parameter of *assetID* to specify the asset.
 
-For the full documentation of precompiles for interacting with ANTs and using them in ARC-20s, see [here](https://docs.lux.network/build/references/coreth-arc20s).
+For the full documentation of precompiles for interacting with ANTs and using them in ARC-20s, see [here](https://docs.avax.network/build/references/coreth-arc20s).
 
 ### Block Timing
 

@@ -50,7 +50,7 @@ type client struct {
 // NewClient returns a Client for interacting with EVM [chain]
 func NewClient(uri, chain string) Client {
 	return &client{
-		requester:      rpc.NewEndpointRequester(fmt.Sprintf("%s/ext/bc/%s/lux", uri, chain)),
+		requester:      rpc.NewEndpointRequester(fmt.Sprintf("%s/ext/bc/%s/avax", uri, chain)),
 		adminRequester: rpc.NewEndpointRequester(fmt.Sprintf("%s/ext/bc/%s/admin", uri, chain)),
 	}
 }
@@ -67,7 +67,7 @@ func (c *client) IssueTx(ctx context.Context, txBytes []byte, options ...rpc.Opt
 	if err != nil {
 		return res.TxID, fmt.Errorf("problem hex encoding bytes: %w", err)
 	}
-	err = c.requester.SendRequest(ctx, "lux.issueTx", &api.FormattedTx{
+	err = c.requester.SendRequest(ctx, "avax.issueTx", &api.FormattedTx{
 		Tx:       txStr,
 		Encoding: formatting.Hex,
 	}, res, options...)
@@ -77,7 +77,7 @@ func (c *client) IssueTx(ctx context.Context, txBytes []byte, options ...rpc.Opt
 // GetAtomicTxStatus returns the status of [txID]
 func (c *client) GetAtomicTxStatus(ctx context.Context, txID ids.ID, options ...rpc.Option) (Status, error) {
 	res := &GetAtomicTxStatusReply{}
-	err := c.requester.SendRequest(ctx, "lux.getAtomicTxStatus", &api.JSONTxID{
+	err := c.requester.SendRequest(ctx, "avax.getAtomicTxStatus", &api.JSONTxID{
 		TxID: txID,
 	}, res, options...)
 	return res.Status, err
@@ -86,7 +86,7 @@ func (c *client) GetAtomicTxStatus(ctx context.Context, txID ids.ID, options ...
 // GetAtomicTx returns the byte representation of [txID]
 func (c *client) GetAtomicTx(ctx context.Context, txID ids.ID, options ...rpc.Option) ([]byte, error) {
 	res := &api.FormattedTx{}
-	err := c.requester.SendRequest(ctx, "lux.getAtomicTx", &api.GetTxArgs{
+	err := c.requester.SendRequest(ctx, "avax.getAtomicTx", &api.GetTxArgs{
 		TxID:     txID,
 		Encoding: formatting.Hex,
 	}, res, options...)
@@ -101,7 +101,7 @@ func (c *client) GetAtomicTx(ctx context.Context, txID ids.ID, options ...rpc.Op
 // from [sourceChain]
 func (c *client) GetAtomicUTXOs(ctx context.Context, addrs []ids.ShortID, sourceChain string, limit uint32, startAddress ids.ShortID, startUTXOID ids.ID, options ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error) {
 	res := &api.GetUTXOsReply{}
-	err := c.requester.SendRequest(ctx, "lux.getUTXOs", &api.GetUTXOsArgs{
+	err := c.requester.SendRequest(ctx, "avax.getUTXOs", &api.GetUTXOsArgs{
 		Addresses:   ids.ShortIDsToStrings(addrs),
 		SourceChain: sourceChain,
 		Limit:       json.Uint32(limit),
@@ -135,7 +135,7 @@ func (c *client) GetAtomicUTXOs(ctx context.Context, addrs []ids.ShortID, source
 // in both Lux standard format and hex format
 func (c *client) ExportKey(ctx context.Context, user api.UserPass, addr common.Address, options ...rpc.Option) (*secp256k1.PrivateKey, string, error) {
 	res := &ExportKeyReply{}
-	err := c.requester.SendRequest(ctx, "lux.exportKey", &ExportKeyArgs{
+	err := c.requester.SendRequest(ctx, "avax.exportKey", &ExportKeyArgs{
 		UserPass: user,
 		Address:  addr.Hex(),
 	}, res, options...)
@@ -145,7 +145,7 @@ func (c *client) ExportKey(ctx context.Context, user api.UserPass, addr common.A
 // ImportKey imports [privateKey] to [user]
 func (c *client) ImportKey(ctx context.Context, user api.UserPass, privateKey *secp256k1.PrivateKey, options ...rpc.Option) (common.Address, error) {
 	res := &api.JSONAddress{}
-	err := c.requester.SendRequest(ctx, "lux.importKey", &ImportKeyArgs{
+	err := c.requester.SendRequest(ctx, "avax.importKey", &ImportKeyArgs{
 		UserPass:   user,
 		PrivateKey: privateKey,
 	}, res, options...)
@@ -159,7 +159,7 @@ func (c *client) ImportKey(ctx context.Context, user api.UserPass, privateKey *s
 // returns the ID of the newly created transaction
 func (c *client) Import(ctx context.Context, user api.UserPass, to common.Address, sourceChain string, options ...rpc.Option) (ids.ID, error) {
 	res := &api.JSONTxID{}
-	err := c.requester.SendRequest(ctx, "lux.import", &ImportArgs{
+	err := c.requester.SendRequest(ctx, "avax.import", &ImportArgs{
 		UserPass:    user,
 		To:          to,
 		SourceChain: sourceChain,
@@ -193,7 +193,7 @@ func (c *client) Export(
 	options ...rpc.Option,
 ) (ids.ID, error) {
 	res := &api.JSONTxID{}
-	err := c.requester.SendRequest(ctx, "lux.export", &ExportArgs{
+	err := c.requester.SendRequest(ctx, "avax.export", &ExportArgs{
 		ExportLUXArgs: ExportLUXArgs{
 			UserPass:    user,
 			Amount:      json.Uint64(amount),

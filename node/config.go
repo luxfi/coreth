@@ -66,7 +66,7 @@ type Config struct {
 // ExtRPCEnabled returns the indicator whether node enables the external
 // RPC(http, ws or graphql).
 func (c *Config) ExtRPCEnabled() bool {
-	// In avalanche, we always disable the external RPC.
+	// In lux, we always disable the external RPC.
 	return false
 }
 

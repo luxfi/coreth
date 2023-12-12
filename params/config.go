@@ -487,7 +487,7 @@ var (
 )
 
 // UpgradeConfig includes the following configs that may be specified in upgradeBytes:
-// - Timestamps that enable avalanche network upgrades,
+// - Timestamps that enable lux network upgrades,
 // - Enabling or disabling precompiles as network upgrades.
 type UpgradeConfig struct {
 	// Config for enabling and disabling precompiles as network upgrades.
@@ -553,7 +553,7 @@ type ChainConfig struct {
 	// Cancun activates the Cancun upgrade from Ethereum. (nil = no fork, 0 = already activated)
 	CancunTime *uint64 `json:"cancunTime,omitempty"`
 
-	UpgradeConfig `json:"-"` // Config specified in upgradeBytes (avalanche network upgrades or enable/disabling precompiles). Skip encoding/decoding directly into ChainConfig.
+	UpgradeConfig `json:"-"` // Config specified in upgradeBytes (lux network upgrades or enable/disabling precompiles). Skip encoding/decoding directly into ChainConfig.
 }
 
 // Description returns a human-readable description of ChainConfig.
@@ -856,7 +856,7 @@ func (c *ChainConfig) CheckConfigForkOrder() error {
 			lastFork = cur
 		}
 	}
-	// TODO(aaronbuchwald) check that avalanche block timestamps are at least possible with the other rule set changes
+	// TODO(aaronbuchwald) check that lux block timestamps are at least possible with the other rule set changes
 	// additional change: require that block number hard forks are either 0 or nil since they should not
 	// be enabled at a specific block number.
 

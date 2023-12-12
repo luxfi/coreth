@@ -65,7 +65,7 @@ import (
 
 	"github.com/luxdefi/coreth/metrics"
 
-	avalancheRPC "github.com/gorilla/rpc/v2"
+	luxRPC "github.com/gorilla/rpc/v2"
 
 	"github.com/luxdefi/node/cache"
 	"github.com/luxdefi/node/codec"
@@ -88,13 +88,13 @@ import (
 	"github.com/luxdefi/node/utils/set"
 	"github.com/luxdefi/node/utils/timer/mockable"
 	"github.com/luxdefi/node/utils/units"
-	"github.com/luxdefi/node/vms/components/lux"
+	"github.com/luxdefi/node/vms/components/avax"
 	"github.com/luxdefi/node/vms/components/chain"
 	"github.com/luxdefi/node/vms/secp256k1fx"
 
 	commonEng "github.com/luxdefi/node/snow/engine/common"
 
-	avalancheJSON "github.com/luxdefi/node/utils/json"
+	luxJSON "github.com/luxdefi/node/utils/json"
 )
 
 const (
@@ -173,7 +173,7 @@ var (
 
 // Define the API endpoints for the VM
 const (
-	luxEndpoint   = "/lux"
+	avaxEndpoint   = "/avax"
 	adminEndpoint  = "/admin"
 	ethRPCEndpoint = "/rpc"
 	ethWSEndpoint  = "/ws"
@@ -1352,9 +1352,9 @@ func (vm *VM) Version(context.Context) (string, error) {
 //     [service] should be a gorilla RPC service (see https://www.gorillatoolkit.org/pkg/rpc/v2)
 //   - The name of the service is [name]
 func newHandler(name string, service interface{}) (http.Handler, error) {
-	server := avalancheRPC.NewServer()
-	server.RegisterCodec(avalancheJSON.NewCodec(), "application/json")
-	server.RegisterCodec(avalancheJSON.NewCodec(), "application/json;charset=UTF-8")
+	server := luxRPC.NewServer()
+	server.RegisterCodec(luxJSON.NewCodec(), "application/json")
+	server.RegisterCodec(luxJSON.NewCodec(), "application/json;charset=UTF-8")
 	return server, server.RegisterService(service, name)
 }
 
@@ -1371,12 +1371,12 @@ func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 		return nil, fmt.Errorf("failed to get primary alias for chain due to %w", err)
 	}
 	apis := make(map[string]http.Handler)
-	luxAPI, err := newHandler("lux", &LuxAPI{vm})
+	avaxAPI, err := newHandler("avax", &LuxAPI{vm})
 	if err != nil {
 		return nil, fmt.Errorf("failed to register service for LUX API due to %w", err)
 	}
-	enabledAPIs = append(enabledAPIs, "lux")
-	apis[luxEndpoint] = luxAPI
+	enabledAPIs = append(enabledAPIs, "avax")
+	apis[avaxEndpoint] = avaxAPI
 
 	if vm.config.AdminAPIEnabled {
 		adminAPI, err := newHandler("admin", NewAdminService(vm, os.ExpandEnv(fmt.Sprintf("%s_coreth_performance_%s", vm.config.AdminAPIDir, primaryAlias))))
@@ -1624,7 +1624,7 @@ func (vm *VM) GetAtomicUTXOs(
 	startAddr ids.ShortID,
 	startUTXOID ids.ID,
 	limit int,
-) ([]*lux.UTXO, ids.ShortID, ids.ID, error) {
+) ([]*avax.UTXO, ids.ShortID, ids.ID, error) {
 	if limit <= 0 || limit > maxUTXOsToFetch {
 		limit = maxUTXOsToFetch
 	}
@@ -1654,9 +1654,9 @@ func (vm *VM) GetAtomicUTXOs(
 		lastUTXOID = ids.Empty
 	}
 
-	utxos := make([]*lux.UTXO, len(allUTXOBytes))
+	utxos := make([]*avax.UTXO, len(allUTXOBytes))
 	for i, utxoBytes := range allUTXOBytes {
-		utxo := &lux.UTXO{}
+		utxo := &avax.UTXO{}
 		if _, err := vm.codec.Unmarshal(utxoBytes, utxo); err != nil {
 			return nil, ids.ShortID{}, ids.ID{}, fmt.Errorf("error parsing UTXO: %w", err)
 		}

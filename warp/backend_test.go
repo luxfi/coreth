@@ -16,7 +16,7 @@ import (
 	"github.com/luxdefi/node/snow/engine/snowman/block"
 	"github.com/luxdefi/node/utils/crypto/bls"
 	"github.com/luxdefi/node/utils/hashing"
-	avalancheWarp "github.com/luxdefi/node/vms/platformvm/warp"
+	luxWarp "github.com/luxdefi/node/vms/platformvm/warp"
 	"github.com/luxdefi/node/vms/platformvm/warp/payload"
 	"github.com/stretchr/testify/require"
 )
@@ -32,7 +32,7 @@ func TestClearDB(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := avalancheWarp.NewSigner(sk, networkID, sourceChainID)
+	warpSigner := luxWarp.NewSigner(sk, networkID, sourceChainID)
 	backendIntf := NewBackend(networkID, sourceChainID, warpSigner, nil, db, 500)
 	backend, ok := backendIntf.(*backend)
 	require.True(t, ok)
@@ -43,7 +43,7 @@ func TestClearDB(t *testing.T) {
 
 	// add all messages
 	for _, payload := range payloads {
-		unsignedMsg, err := avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, payload)
+		unsignedMsg, err := luxWarp.NewUnsignedMessage(networkID, sourceChainID, payload)
 		require.NoError(t, err)
 		messageID := hashing.ComputeHash256Array(unsignedMsg.Bytes())
 		messageIDs = append(messageIDs, messageID)
@@ -75,11 +75,11 @@ func TestAddAndGetValidMessage(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := avalancheWarp.NewSigner(sk, networkID, sourceChainID)
+	warpSigner := luxWarp.NewSigner(sk, networkID, sourceChainID)
 	backend := NewBackend(networkID, sourceChainID, warpSigner, nil, db, 500)
 
 	// Create a new unsigned message and add it to the warp backend.
-	unsignedMsg, err := avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, testPayload)
+	unsignedMsg, err := luxWarp.NewUnsignedMessage(networkID, sourceChainID, testPayload)
 	require.NoError(t, err)
 	err = backend.AddMessage(unsignedMsg)
 	require.NoError(t, err)
@@ -99,9 +99,9 @@ func TestAddAndGetUnknownMessage(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := avalancheWarp.NewSigner(sk, networkID, sourceChainID)
+	warpSigner := luxWarp.NewSigner(sk, networkID, sourceChainID)
 	backend := NewBackend(networkID, sourceChainID, warpSigner, nil, db, 500)
-	unsignedMsg, err := avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, testPayload)
+	unsignedMsg, err := luxWarp.NewUnsignedMessage(networkID, sourceChainID, testPayload)
 	require.NoError(t, err)
 
 	// Try getting a signature for a message that was not added.
@@ -132,12 +132,12 @@ func TestGetBlockSignature(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(err)
-	warpSigner := avalancheWarp.NewSigner(sk, networkID, sourceChainID)
+	warpSigner := luxWarp.NewSigner(sk, networkID, sourceChainID)
 	backend := NewBackend(networkID, sourceChainID, warpSigner, testVM, db, 500)
 
 	blockHashPayload, err := payload.NewHash(blkID)
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := luxWarp.NewUnsignedMessage(networkID, sourceChainID, blockHashPayload.Bytes())
 	require.NoError(err)
 	expectedSig, err := warpSigner.Sign(unsignedMessage)
 	require.NoError(err)
@@ -155,13 +155,13 @@ func TestZeroSizedCache(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := avalancheWarp.NewSigner(sk, networkID, sourceChainID)
+	warpSigner := luxWarp.NewSigner(sk, networkID, sourceChainID)
 
 	// Verify zero sized cache works normally, because the lru cache will be initialized to size 1 for any size parameter <= 0.
 	backend := NewBackend(networkID, sourceChainID, warpSigner, nil, db, 0)
 
 	// Create a new unsigned message and add it to the warp backend.
-	unsignedMsg, err := avalancheWarp.NewUnsignedMessage(networkID, sourceChainID, testPayload)
+	unsignedMsg, err := luxWarp.NewUnsignedMessage(networkID, sourceChainID, testPayload)
 	require.NoError(t, err)
 	err = backend.AddMessage(unsignedMsg)
 	require.NoError(t, err)

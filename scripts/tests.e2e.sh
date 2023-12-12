@@ -27,7 +27,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-echo "checking out target LuxGo version ${avalanche_version}"
+echo "checking out target LuxGo version ${lux_version}"
 if [[ -d "${LUXGO_CLONE_PATH}" ]]; then
   echo "updating existing clone"
   cd "${LUXGO_CLONE_PATH}"
@@ -37,8 +37,8 @@ else
   git clone https://github.com/luxdefi/node.git "${LUXGO_CLONE_PATH}"
   cd "${LUXGO_CLONE_PATH}"
 fi
-# Branch will be reset to $avalanche_version if it already exists
-git checkout -B "test-${avalanche_version}" "${avalanche_version}"
+# Branch will be reset to $lux_version if it already exists
+git checkout -B "test-${lux_version}" "${lux_version}"
 
 echo "updating coreth dependency to point to ${CORETH_PATH}"
 go mod edit -replace "github.com/luxdefi/coreth=${CORETH_PATH}"

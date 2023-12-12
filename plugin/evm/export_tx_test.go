@@ -15,7 +15,7 @@ import (
 	"github.com/luxdefi/node/utils/constants"
 	"github.com/luxdefi/node/utils/crypto/secp256k1"
 	"github.com/luxdefi/node/utils/units"
-	"github.com/luxdefi/node/vms/components/lux"
+	"github.com/luxdefi/node/vms/components/avax"
 	"github.com/luxdefi/node/vms/secp256k1fx"
 	"github.com/luxdefi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
@@ -25,9 +25,9 @@ import (
 // that attempt to send the funds to each of the test keys (list of length 3).
 func createExportTxOptions(t *testing.T, vm *VM, issuer chan engCommon.Message, sharedMemory *atomic.Memory) []*Tx {
 	// Add a UTXO to shared memory
-	utxo := &lux.UTXO{
-		UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-		Asset:  lux.Asset{ID: vm.ctx.LUXAssetID},
+	utxo := &avax.UTXO{
+		UTXOID: avax.UTXOID{TxID: ids.GenerateTestID()},
+		Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 		Out: &secp256k1fx.TransferOutput{
 			Amt: uint64(50000000),
 			OutputOwners: secp256k1fx.OutputOwners{
@@ -100,22 +100,22 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 	addr := key.PublicKey().Address()
 	ethAddr := GetEthAddress(key)
 
-	luxAmount := 50 * units.MilliLux
-	luxUTXOID := lux.UTXOID{
+	avaxAmount := 50 * units.MilliLux
+	avaxUTXOID := avax.UTXOID{
 		OutputIndex: 0,
 	}
-	luxInputID := luxUTXOID.InputID()
+	avaxInputID := avaxUTXOID.InputID()
 
 	customAmount := uint64(100)
 	customAssetID := ids.ID{1, 2, 3, 4, 5, 7}
-	customUTXOID := lux.UTXOID{
+	customUTXOID := avax.UTXOID{
 		OutputIndex: 1,
 	}
 	customInputID := customUTXOID.InputID()
 
-	customUTXO := &lux.UTXO{
+	customUTXO := &avax.UTXO{
 		UTXOID: customUTXOID,
-		Asset:  lux.Asset{ID: customAssetID},
+		Asset:  avax.Asset{ID: customAssetID},
 		Out: &secp256k1fx.TransferOutput{
 			Amt: customAmount,
 			OutputOwners: secp256k1fx.OutputOwners{
@@ -128,7 +128,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 	tests := []struct {
 		name          string
 		tx            []EVMInput
-		luxBalance   *big.Int
+		avaxBalance   *big.Int
 		balances      map[ids.ID]*big.Int
 		expectedNonce uint64
 		shouldErr     bool
@@ -136,7 +136,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 		{
 			name:        "no transfers",
 			tx:          nil,
-			luxBalance: big.NewInt(int64(luxAmount) * x2cRateInt64),
+			avaxBalance: big.NewInt(int64(avaxAmount) * x2cRateInt64),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(int64(customAmount)),
 			},
@@ -148,12 +148,12 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 			tx: []EVMInput{
 				{
 					Address: ethAddr,
-					Amount:  luxAmount / 2,
+					Amount:  avaxAmount / 2,
 					AssetID: testLuxAssetID,
 					Nonce:   0,
 				},
 			},
-			luxBalance: big.NewInt(int64(luxAmount/2) * x2cRateInt64),
+			avaxBalance: big.NewInt(int64(avaxAmount/2) * x2cRateInt64),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(int64(customAmount)),
 			},
@@ -165,12 +165,12 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 			tx: []EVMInput{
 				{
 					Address: ethAddr,
-					Amount:  luxAmount,
+					Amount:  avaxAmount,
 					AssetID: testLuxAssetID,
 					Nonce:   0,
 				},
 			},
-			luxBalance: big.NewInt(0),
+			avaxBalance: big.NewInt(0),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(int64(customAmount)),
 			},
@@ -182,12 +182,12 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 			tx: []EVMInput{
 				{
 					Address: ethAddr,
-					Amount:  luxAmount + 1,
+					Amount:  avaxAmount + 1,
 					AssetID: testLuxAssetID,
 					Nonce:   0,
 				},
 			},
-			luxBalance: big.NewInt(0),
+			avaxBalance: big.NewInt(0),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(int64(customAmount)),
 			},
@@ -204,7 +204,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 					Nonce:   0,
 				},
 			},
-			luxBalance: big.NewInt(int64(luxAmount) * x2cRateInt64),
+			avaxBalance: big.NewInt(int64(avaxAmount) * x2cRateInt64),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(int64(customAmount / 2)),
 			},
@@ -221,7 +221,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 					Nonce:   0,
 				},
 			},
-			luxBalance: big.NewInt(int64(luxAmount) * x2cRateInt64),
+			avaxBalance: big.NewInt(int64(avaxAmount) * x2cRateInt64),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(0),
 			},
@@ -238,7 +238,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 					Nonce:   0,
 				},
 			},
-			luxBalance: big.NewInt(int64(luxAmount) * x2cRateInt64),
+			avaxBalance: big.NewInt(int64(avaxAmount) * x2cRateInt64),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(0),
 			},
@@ -256,12 +256,12 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				},
 				{
 					Address: ethAddr,
-					Amount:  luxAmount,
+					Amount:  avaxAmount,
 					AssetID: testLuxAssetID,
 					Nonce:   0,
 				},
 			},
-			luxBalance: big.NewInt(0),
+			avaxBalance: big.NewInt(0),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(0),
 			},
@@ -279,12 +279,12 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				},
 				{
 					Address: ethAddr,
-					Amount:  luxAmount,
+					Amount:  avaxAmount,
 					AssetID: testLuxAssetID,
 					Nonce:   1,
 				},
 			},
-			luxBalance: big.NewInt(0),
+			avaxBalance: big.NewInt(0),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(0),
 			},
@@ -302,12 +302,12 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				},
 				{
 					Address: ethAddr,
-					Amount:  luxAmount,
+					Amount:  avaxAmount,
 					AssetID: testLuxAssetID,
 					Nonce:   1,
 				},
 			},
-			luxBalance: big.NewInt(0),
+			avaxBalance: big.NewInt(0),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(0),
 			},
@@ -324,11 +324,11 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				}
 			}()
 
-			luxUTXO := &lux.UTXO{
-				UTXOID: luxUTXOID,
-				Asset:  lux.Asset{ID: vm.ctx.LUXAssetID},
+			avaxUTXO := &avax.UTXO{
+				UTXOID: avaxUTXOID,
+				Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 				Out: &secp256k1fx.TransferOutput{
-					Amt: luxAmount,
+					Amt: avaxAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
 						Threshold: 1,
 						Addrs:     []ids.ShortID{addr},
@@ -336,7 +336,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				},
 			}
 
-			luxUTXOBytes, err := vm.codec.Marshal(codecVersion, luxUTXO)
+			avaxUTXOBytes, err := vm.codec.Marshal(codecVersion, avaxUTXO)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -349,8 +349,8 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 			xChainSharedMemory := sharedMemory.NewSharedMemory(vm.ctx.XChainID)
 			if err := xChainSharedMemory.Apply(map[ids.ID]*atomic.Requests{vm.ctx.ChainID: {PutRequests: []*atomic.Element{
 				{
-					Key:   luxInputID[:],
-					Value: luxUTXOBytes,
+					Key:   avaxInputID[:],
+					Value: avaxUTXOBytes,
 					Traits: [][]byte{
 						addr.Bytes(),
 					},
@@ -414,14 +414,14 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			luxBalance := stateDB.GetBalance(ethAddr)
-			if luxBalance.Cmp(test.luxBalance) != 0 {
-				t.Fatalf("address balance %s equal %s not %s", addr.String(), luxBalance, test.luxBalance)
+			avaxBalance := stateDB.GetBalance(ethAddr)
+			if avaxBalance.Cmp(test.avaxBalance) != 0 {
+				t.Fatalf("address balance %s equal %s not %s", addr.String(), avaxBalance, test.avaxBalance)
 			}
 
 			for assetID, expectedBalance := range test.balances {
 				balance := stateDB.GetBalanceMultiCoin(ethAddr, common.Hash(assetID))
-				if luxBalance.Cmp(test.luxBalance) != 0 {
+				if avaxBalance.Cmp(test.avaxBalance) != 0 {
 					t.Fatalf("%s address balance %s equal %s not %s", assetID, addr.String(), balance, expectedBalance)
 				}
 			}
@@ -449,7 +449,7 @@ func TestExportTxSemanticVerify(t *testing.T) {
 	ethAddr := testEthAddrs[0]
 
 	var (
-		luxBalance           = 10 * units.Lux
+		avaxBalance           = 10 * units.Lux
 		custom0Balance uint64 = 100
 		custom0AssetID        = ids.ID{1, 2, 3, 4, 5}
 		custom1Balance uint64 = 1000
@@ -463,7 +463,7 @@ func TestExportTxSemanticVerify(t *testing.T) {
 		Ins: []EVMInput{
 			{
 				Address: ethAddr,
-				Amount:  luxBalance,
+				Amount:  avaxBalance,
 				AssetID: vm.ctx.LUXAssetID,
 				Nonce:   0,
 			},
@@ -480,9 +480,9 @@ func TestExportTxSemanticVerify(t *testing.T) {
 				Nonce:   0,
 			},
 		},
-		ExportedOutputs: []*lux.TransferableOutput{
+		ExportedOutputs: []*avax.TransferableOutput{
 			{
-				Asset: lux.Asset{ID: custom0AssetID},
+				Asset: avax.Asset{ID: custom0AssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: custom0Balance,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -501,16 +501,16 @@ func TestExportTxSemanticVerify(t *testing.T) {
 		Ins: []EVMInput{
 			{
 				Address: ethAddr,
-				Amount:  luxBalance,
+				Amount:  avaxBalance,
 				AssetID: vm.ctx.LUXAssetID,
 				Nonce:   0,
 			},
 		},
-		ExportedOutputs: []*lux.TransferableOutput{
+		ExportedOutputs: []*avax.TransferableOutput{
 			{
-				Asset: lux.Asset{ID: vm.ctx.LUXAssetID},
+				Asset: avax.Asset{ID: vm.ctx.LUXAssetID},
 				Out: &secp256k1fx.TransferOutput{
-					Amt: luxBalance / 2,
+					Amt: avaxBalance / 2,
 					OutputOwners: secp256k1fx.OutputOwners{
 						Threshold: 1,
 						Addrs:     []ids.ShortID{addr},
@@ -699,8 +699,8 @@ func TestExportTxSemanticVerify(t *testing.T) {
 			name: "invalid output",
 			tx: func() *Tx {
 				validExportTx := *validExportTx
-				validExportTx.ExportedOutputs = []*lux.TransferableOutput{{
-					Asset: lux.Asset{ID: custom0AssetID},
+				validExportTx.ExportedOutputs = []*avax.TransferableOutput{{
+					Asset: avax.Asset{ID: custom0AssetID},
 					Out: &secp256k1fx.TransferOutput{
 						Amt: custom0Balance,
 						OutputOwners: secp256k1fx.OutputOwners{
@@ -724,9 +724,9 @@ func TestExportTxSemanticVerify(t *testing.T) {
 			name: "unsorted outputs",
 			tx: func() *Tx {
 				validExportTx := *validExportTx
-				exportOutputs := []*lux.TransferableOutput{
+				exportOutputs := []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: custom0AssetID},
+						Asset: avax.Asset{ID: custom0AssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: custom0Balance/2 + 1,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -736,7 +736,7 @@ func TestExportTxSemanticVerify(t *testing.T) {
 						},
 					},
 					{
-						Asset: lux.Asset{ID: custom0AssetID},
+						Asset: avax.Asset{ID: custom0AssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: custom0Balance/2 - 1,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -747,7 +747,7 @@ func TestExportTxSemanticVerify(t *testing.T) {
 					},
 				}
 				// Sort the outputs and then swap the ordering to ensure that they are ordered incorrectly
-				lux.SortTransferableOutputs(exportOutputs, Codec)
+				avax.SortTransferableOutputs(exportOutputs, Codec)
 				exportOutputs[0], exportOutputs[1] = exportOutputs[1], exportOutputs[0]
 				validExportTx.ExportedOutputs = exportOutputs
 				return &Tx{UnsignedAtomicTx: &validExportTx}
@@ -782,9 +782,9 @@ func TestExportTxSemanticVerify(t *testing.T) {
 			name: "custom asset insufficient funds",
 			tx: func() *Tx {
 				validExportTx := *validExportTx
-				validExportTx.ExportedOutputs = []*lux.TransferableOutput{
+				validExportTx.ExportedOutputs = []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: custom0AssetID},
+						Asset: avax.Asset{ID: custom0AssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: custom0Balance + 1,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -806,14 +806,14 @@ func TestExportTxSemanticVerify(t *testing.T) {
 			shouldErr: true,
 		},
 		{
-			name: "lux insufficient funds",
+			name: "avax insufficient funds",
 			tx: func() *Tx {
 				validExportTx := *validExportTx
-				validExportTx.ExportedOutputs = []*lux.TransferableOutput{
+				validExportTx.ExportedOutputs = []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: vm.ctx.LUXAssetID},
+						Asset: avax.Asset{ID: vm.ctx.LUXAssetID},
 						Out: &secp256k1fx.TransferOutput{
-							Amt: luxBalance, // after fees this should be too much
+							Amt: avaxBalance, // after fees this should be too much
 							OutputOwners: secp256k1fx.OutputOwners{
 								Threshold: 1,
 								Addrs:     []ids.ShortID{addr},
@@ -937,7 +937,7 @@ func TestExportTxAccept(t *testing.T) {
 	ethAddr := testEthAddrs[0]
 
 	var (
-		luxBalance           = 10 * units.Lux
+		avaxBalance           = 10 * units.Lux
 		custom0Balance uint64 = 100
 		custom0AssetID        = ids.ID{1, 2, 3, 4, 5}
 	)
@@ -949,7 +949,7 @@ func TestExportTxAccept(t *testing.T) {
 		Ins: []EVMInput{
 			{
 				Address: ethAddr,
-				Amount:  luxBalance,
+				Amount:  avaxBalance,
 				AssetID: vm.ctx.LUXAssetID,
 				Nonce:   0,
 			},
@@ -960,11 +960,11 @@ func TestExportTxAccept(t *testing.T) {
 				Nonce:   0,
 			},
 		},
-		ExportedOutputs: []*lux.TransferableOutput{
+		ExportedOutputs: []*avax.TransferableOutput{
 			{
-				Asset: lux.Asset{ID: vm.ctx.LUXAssetID},
+				Asset: avax.Asset{ID: vm.ctx.LUXAssetID},
 				Out: &secp256k1fx.TransferOutput{
-					Amt: luxBalance,
+					Amt: avaxBalance,
 					OutputOwners: secp256k1fx.OutputOwners{
 						Threshold: 1,
 						Addrs:     []ids.ShortID{addr},
@@ -972,7 +972,7 @@ func TestExportTxAccept(t *testing.T) {
 				},
 			},
 			{
-				Asset: lux.Asset{ID: custom0AssetID},
+				Asset: avax.Asset{ID: custom0AssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: custom0Balance,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1017,13 +1017,13 @@ func TestExportTxAccept(t *testing.T) {
 		t.Fatalf("expected 2 values but got %d", len(indexedValues))
 	}
 
-	luxUTXOID := lux.UTXOID{
+	avaxUTXOID := avax.UTXOID{
 		TxID:        tx.ID(),
 		OutputIndex: 0,
 	}
-	luxInputID := luxUTXOID.InputID()
+	avaxInputID := avaxUTXOID.InputID()
 
-	customUTXOID := lux.UTXOID{
+	customUTXOID := avax.UTXOID{
 		TxID:        tx.ID(),
 		OutputIndex: 1,
 	}
@@ -1031,7 +1031,7 @@ func TestExportTxAccept(t *testing.T) {
 
 	fetchedValues, err := xChainSharedMemory.Get(vm.ctx.ChainID, [][]byte{
 		customInputID[:],
-		luxInputID[:],
+		avaxInputID[:],
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1044,18 +1044,18 @@ func TestExportTxAccept(t *testing.T) {
 		t.Fatalf("inconsistent values returned fetched %x indexed %x", fetchedValues[1], indexedValues[1])
 	}
 
-	customUTXOBytes, err := Codec.Marshal(codecVersion, &lux.UTXO{
+	customUTXOBytes, err := Codec.Marshal(codecVersion, &avax.UTXO{
 		UTXOID: customUTXOID,
-		Asset:  lux.Asset{ID: custom0AssetID},
+		Asset:  avax.Asset{ID: custom0AssetID},
 		Out:    exportTx.ExportedOutputs[1].Out,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	luxUTXOBytes, err := Codec.Marshal(codecVersion, &lux.UTXO{
-		UTXOID: luxUTXOID,
-		Asset:  lux.Asset{ID: vm.ctx.LUXAssetID},
+	avaxUTXOBytes, err := Codec.Marshal(codecVersion, &avax.UTXO{
+		UTXOID: avaxUTXOID,
+		Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 		Out:    exportTx.ExportedOutputs[0].Out,
 	})
 	if err != nil {
@@ -1065,8 +1065,8 @@ func TestExportTxAccept(t *testing.T) {
 	if !bytes.Equal(fetchedValues[0], customUTXOBytes) {
 		t.Fatalf("incorrect values returned expected %x got %x", customUTXOBytes, fetchedValues[0])
 	}
-	if !bytes.Equal(fetchedValues[1], luxUTXOBytes) {
-		t.Fatalf("incorrect values returned expected %x got %x", luxUTXOBytes, fetchedValues[1])
+	if !bytes.Equal(fetchedValues[1], avaxUTXOBytes) {
+		t.Fatalf("incorrect values returned expected %x got %x", avaxUTXOBytes, fetchedValues[1])
 	}
 }
 
@@ -1090,9 +1090,9 @@ func TestExportTxVerify(t *testing.T) {
 				Nonce:   0,
 			},
 		},
-		ExportedOutputs: []*lux.TransferableOutput{
+		ExportedOutputs: []*avax.TransferableOutput{
 			{
-				Asset: lux.Asset{ID: testLuxAssetID},
+				Asset: avax.Asset{ID: testLuxAssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: exportAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1103,7 +1103,7 @@ func TestExportTxVerify(t *testing.T) {
 				},
 			},
 			{
-				Asset: lux.Asset{ID: testLuxAssetID},
+				Asset: avax.Asset{ID: testLuxAssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: exportAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1117,7 +1117,7 @@ func TestExportTxVerify(t *testing.T) {
 	}
 
 	// Sort the inputs and outputs to ensure the transaction is canonical
-	lux.SortTransferableOutputs(exportTx.ExportedOutputs, Codec)
+	avax.SortTransferableOutputs(exportTx.ExportedOutputs, Codec)
 	// Pass in a list of signers here with the appropriate length
 	// to avoid causing a nil-pointer error in the helper method
 	emptySigners := make([][]*secp256k1.PrivateKey, 2)
@@ -1193,7 +1193,7 @@ func TestExportTxVerify(t *testing.T) {
 		"unsorted outputs": {
 			generate: func(t *testing.T) UnsignedAtomicTx {
 				tx := *exportTx
-				tx.ExportedOutputs = []*lux.TransferableOutput{
+				tx.ExportedOutputs = []*avax.TransferableOutput{
 					tx.ExportedOutputs[1],
 					tx.ExportedOutputs[0],
 				}
@@ -1206,7 +1206,7 @@ func TestExportTxVerify(t *testing.T) {
 		"invalid exported output": {
 			generate: func(t *testing.T) UnsignedAtomicTx {
 				tx := *exportTx
-				tx.ExportedOutputs = []*lux.TransferableOutput{tx.ExportedOutputs[0], nil}
+				tx.ExportedOutputs = []*avax.TransferableOutput{tx.ExportedOutputs[0], nil}
 				return &tx
 			},
 			ctx:         ctx,
@@ -1296,9 +1296,9 @@ func TestExportTxVerify(t *testing.T) {
 		"non-LUX output Apricot Phase 6": {
 			generate: func(t *testing.T) UnsignedAtomicTx {
 				tx := *exportTx
-				tx.ExportedOutputs = []*lux.TransferableOutput{
+				tx.ExportedOutputs = []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: nonExistentID},
+						Asset: avax.Asset{ID: nonExistentID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1335,9 +1335,9 @@ func TestExportTxVerify(t *testing.T) {
 		"non-LUX output Banff": {
 			generate: func(t *testing.T) UnsignedAtomicTx {
 				tx := *exportTx
-				tx.ExportedOutputs = []*lux.TransferableOutput{
+				tx.ExportedOutputs = []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: nonExistentID},
+						Asset: avax.Asset{ID: nonExistentID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1366,7 +1366,7 @@ func TestExportTxVerify(t *testing.T) {
 // Note: this is a brittle test to ensure that the gas cost of a transaction does
 // not change
 func TestExportTxGasCost(t *testing.T) {
-	luxAssetID := ids.GenerateTestID()
+	avaxAssetID := ids.GenerateTestID()
 	chainID := ids.GenerateTestID()
 	xChainID := ids.GenerateTestID()
 	networkID := uint32(5)
@@ -1390,13 +1390,13 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: avaxAssetID,
 						Nonce:   0,
 					},
 				},
-				ExportedOutputs: []*lux.TransferableOutput{
+				ExportedOutputs: []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: avax.Asset{ID: avaxAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1422,13 +1422,13 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: avaxAssetID,
 						Nonce:   0,
 					},
 				},
-				ExportedOutputs: []*lux.TransferableOutput{
+				ExportedOutputs: []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: avax.Asset{ID: avaxAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1455,13 +1455,13 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: avaxAssetID,
 						Nonce:   0,
 					},
 				},
-				ExportedOutputs: []*lux.TransferableOutput{
+				ExportedOutputs: []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: avax.Asset{ID: avaxAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1487,13 +1487,13 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: avaxAssetID,
 						Nonce:   0,
 					},
 				},
-				ExportedOutputs: []*lux.TransferableOutput{
+				ExportedOutputs: []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: avax.Asset{ID: avaxAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1519,25 +1519,25 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: avaxAssetID,
 						Nonce:   0,
 					},
 					{
 						Address: testEthAddrs[1],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: avaxAssetID,
 						Nonce:   0,
 					},
 					{
 						Address: testEthAddrs[2],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: avaxAssetID,
 						Nonce:   0,
 					},
 				},
-				ExportedOutputs: []*lux.TransferableOutput{
+				ExportedOutputs: []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: avax.Asset{ID: avaxAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount * 3,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1563,25 +1563,25 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: avaxAssetID,
 						Nonce:   0,
 					},
 					{
 						Address: testEthAddrs[1],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: avaxAssetID,
 						Nonce:   0,
 					},
 					{
 						Address: testEthAddrs[2],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: avaxAssetID,
 						Nonce:   0,
 					},
 				},
-				ExportedOutputs: []*lux.TransferableOutput{
+				ExportedOutputs: []*avax.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: avax.Asset{ID: avaxAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount * 3,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1691,11 +1691,11 @@ func TestNewExportTx(t *testing.T) {
 
 			parent := vm.LastAcceptedBlockInternal().(*Block)
 			importAmount := uint64(50000000)
-			utxoID := lux.UTXOID{TxID: ids.GenerateTestID()}
+			utxoID := avax.UTXOID{TxID: ids.GenerateTestID()}
 
-			utxo := &lux.UTXO{
+			utxo := &avax.UTXO{
 				UTXOID: utxoID,
-				Asset:  lux.Asset{ID: vm.ctx.LUXAssetID},
+				Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: importAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1851,11 +1851,11 @@ func TestNewExportTxMulticoin(t *testing.T) {
 
 			parent := vm.LastAcceptedBlockInternal().(*Block)
 			importAmount := uint64(50000000)
-			utxoID := lux.UTXOID{TxID: ids.GenerateTestID()}
+			utxoID := avax.UTXOID{TxID: ids.GenerateTestID()}
 
-			utxo := &lux.UTXO{
+			utxo := &avax.UTXO{
 				UTXOID: utxoID,
-				Asset:  lux.Asset{ID: vm.ctx.LUXAssetID},
+				Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: importAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1873,10 +1873,10 @@ func TestNewExportTxMulticoin(t *testing.T) {
 
 			tid := ids.GenerateTestID()
 			importAmount2 := uint64(30000000)
-			utxoID2 := lux.UTXOID{TxID: ids.GenerateTestID()}
-			utxo2 := &lux.UTXO{
+			utxoID2 := avax.UTXOID{TxID: ids.GenerateTestID()}
+			utxo2 := &avax.UTXO{
 				UTXOID: utxoID2,
-				Asset:  lux.Asset{ID: tid},
+				Asset:  avax.Asset{ID: tid},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: importAmount2,
 					OutputOwners: secp256k1fx.OutputOwners{

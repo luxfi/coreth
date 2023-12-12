@@ -12,7 +12,7 @@ import (
 	"github.com/luxdefi/node/snow/validators"
 	"github.com/luxdefi/node/utils/crypto/bls"
 	"github.com/luxdefi/node/utils/set"
-	avalancheWarp "github.com/luxdefi/node/vms/platformvm/warp"
+	luxWarp "github.com/luxdefi/node/vms/platformvm/warp"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -30,17 +30,17 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 1,
 			quorumDen: 2,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
 				)
 				require.NoError(err)
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{},
+					&luxWarp.BitSetSignature{},
 				)
 				require.NoError(err)
 				return msg
@@ -57,17 +57,17 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 1,
 			quorumDen: 2,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
 				)
 				require.NoError(err)
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{},
+					&luxWarp.BitSetSignature{},
 				)
 				require.NoError(err)
 				return msg
@@ -95,24 +95,24 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 1,
 			quorumDen: 2,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
 				)
 				require.NoError(err)
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers: make([]byte, 8),
 					},
 				)
 				require.NoError(err)
 				return msg
 			},
-			err: avalancheWarp.ErrWeightOverflow,
+			err: luxWarp.ErrWeightOverflow,
 		},
 		{
 			name: "invalid bit set index",
@@ -124,17 +124,17 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 1,
 			quorumDen: 2,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
 				)
 				require.NoError(err)
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   make([]byte, 1),
 						Signature: [bls.SignatureLen]byte{},
 					},
@@ -142,7 +142,7 @@ func TestSignatureVerification(t *testing.T) {
 				require.NoError(err)
 				return msg
 			},
-			err: avalancheWarp.ErrInvalidBitSet,
+			err: luxWarp.ErrInvalidBitSet,
 		},
 		{
 			name: "unknown index",
@@ -154,8 +154,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 1,
 			quorumDen: 2,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -165,9 +165,9 @@ func TestSignatureVerification(t *testing.T) {
 				signers := set.NewBits()
 				signers.Add(3) // vdr oob
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   signers.Bytes(),
 						Signature: [bls.SignatureLen]byte{},
 					},
@@ -175,7 +175,7 @@ func TestSignatureVerification(t *testing.T) {
 				require.NoError(err)
 				return msg
 			},
-			err: avalancheWarp.ErrUnknownValidator,
+			err: luxWarp.ErrUnknownValidator,
 		},
 		{
 			name: "insufficient weight",
@@ -187,8 +187,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 1,
 			quorumDen: 1,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -209,9 +209,9 @@ func TestSignatureVerification(t *testing.T) {
 				aggSigBytes := [bls.SignatureLen]byte{}
 				copy(aggSigBytes[:], bls.SignatureToBytes(aggSig))
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   signers.Bytes(),
 						Signature: aggSigBytes,
 					},
@@ -219,7 +219,7 @@ func TestSignatureVerification(t *testing.T) {
 				require.NoError(err)
 				return msg
 			},
-			err: avalancheWarp.ErrInsufficientWeight,
+			err: luxWarp.ErrInsufficientWeight,
 		},
 		{
 			name: "can't parse sig",
@@ -231,8 +231,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 1,
 			quorumDen: 2,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -243,9 +243,9 @@ func TestSignatureVerification(t *testing.T) {
 				signers.Add(0)
 				signers.Add(1)
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   signers.Bytes(),
 						Signature: [bls.SignatureLen]byte{},
 					},
@@ -253,7 +253,7 @@ func TestSignatureVerification(t *testing.T) {
 				require.NoError(err)
 				return msg
 			},
-			err: avalancheWarp.ErrParseSignature,
+			err: luxWarp.ErrParseSignature,
 		},
 		{
 			name: "no validators",
@@ -265,8 +265,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 1,
 			quorumDen: 2,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -278,9 +278,9 @@ func TestSignatureVerification(t *testing.T) {
 				aggSigBytes := [bls.SignatureLen]byte{}
 				copy(aggSigBytes[:], bls.SignatureToBytes(vdr0Sig))
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   nil,
 						Signature: aggSigBytes,
 					},
@@ -300,8 +300,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 3,
 			quorumDen: 5,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -322,9 +322,9 @@ func TestSignatureVerification(t *testing.T) {
 				aggSigBytes := [bls.SignatureLen]byte{}
 				copy(aggSigBytes[:], bls.SignatureToBytes(aggSig))
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   signers.Bytes(),
 						Signature: aggSigBytes,
 					},
@@ -332,7 +332,7 @@ func TestSignatureVerification(t *testing.T) {
 				require.NoError(err)
 				return msg
 			},
-			err: avalancheWarp.ErrInvalidSignature,
+			err: luxWarp.ErrInvalidSignature,
 		},
 		{
 			name: "invalid signature (missing one)",
@@ -344,8 +344,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 3,
 			quorumDen: 5,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -362,9 +362,9 @@ func TestSignatureVerification(t *testing.T) {
 				aggSigBytes := [bls.SignatureLen]byte{}
 				copy(aggSigBytes[:], bls.SignatureToBytes(vdr0Sig))
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   signers.Bytes(),
 						Signature: aggSigBytes,
 					},
@@ -372,7 +372,7 @@ func TestSignatureVerification(t *testing.T) {
 				require.NoError(err)
 				return msg
 			},
-			err: avalancheWarp.ErrInvalidSignature,
+			err: luxWarp.ErrInvalidSignature,
 		},
 		{
 			name: "invalid signature (extra one)",
@@ -384,8 +384,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 3,
 			quorumDen: 5,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -407,9 +407,9 @@ func TestSignatureVerification(t *testing.T) {
 				aggSigBytes := [bls.SignatureLen]byte{}
 				copy(aggSigBytes[:], bls.SignatureToBytes(aggSig))
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   signers.Bytes(),
 						Signature: aggSigBytes,
 					},
@@ -417,7 +417,7 @@ func TestSignatureVerification(t *testing.T) {
 				require.NoError(err)
 				return msg
 			},
-			err: avalancheWarp.ErrInvalidSignature,
+			err: luxWarp.ErrInvalidSignature,
 		},
 		{
 			name: "valid signature",
@@ -429,8 +429,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 1,
 			quorumDen: 2,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -451,9 +451,9 @@ func TestSignatureVerification(t *testing.T) {
 				aggSigBytes := [bls.SignatureLen]byte{}
 				copy(aggSigBytes[:], bls.SignatureToBytes(aggSig))
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   signers.Bytes(),
 						Signature: aggSigBytes,
 					},
@@ -473,8 +473,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 2,
 			quorumDen: 3,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -495,9 +495,9 @@ func TestSignatureVerification(t *testing.T) {
 				aggSigBytes := [bls.SignatureLen]byte{}
 				copy(aggSigBytes[:], bls.SignatureToBytes(aggSig))
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   signers.Bytes(),
 						Signature: aggSigBytes,
 					},
@@ -533,8 +533,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 1,
 			quorumDen: 3,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -556,9 +556,9 @@ func TestSignatureVerification(t *testing.T) {
 				aggSigBytes := [bls.SignatureLen]byte{}
 				copy(aggSigBytes[:], bls.SignatureToBytes(aggSig))
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   signers.Bytes(),
 						Signature: aggSigBytes,
 					},
@@ -594,8 +594,8 @@ func TestSignatureVerification(t *testing.T) {
 			},
 			quorumNum: 2,
 			quorumDen: 3,
-			msgF: func(require *require.Assertions) *avalancheWarp.Message {
-				unsignedMsg, err := avalancheWarp.NewUnsignedMessage(
+			msgF: func(require *require.Assertions) *luxWarp.Message {
+				unsignedMsg, err := luxWarp.NewUnsignedMessage(
 					networkID,
 					sourceChainID,
 					addressedPayloadBytes,
@@ -615,9 +615,9 @@ func TestSignatureVerification(t *testing.T) {
 				aggSigBytes := [bls.SignatureLen]byte{}
 				copy(aggSigBytes[:], bls.SignatureToBytes(vdr2Sig))
 
-				msg, err := avalancheWarp.NewMessage(
+				msg, err := luxWarp.NewMessage(
 					unsignedMsg,
-					&avalancheWarp.BitSetSignature{
+					&luxWarp.BitSetSignature{
 						Signers:   signers.Bytes(),
 						Signature: aggSigBytes,
 					},
