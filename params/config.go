@@ -43,8 +43,8 @@ import (
 var (
 	// LuxMainnetChainID ...
 	LuxMainnetChainID = big.NewInt(43114)
-	// LuxFujiChainID ...
-	LuxFujiChainID = big.NewInt(43113)
+	// LuxTestnetChainID ...
+	LuxTestnetChainID = big.NewInt(43113)
 	// LuxLocalChainID ...
 	LuxLocalChainID = big.NewInt(43112)
 
@@ -79,9 +79,9 @@ var (
 		// TODO Add DUpgrade timestamp
 	}
 
-	// LuxFujiChainConfig is the configuration for the Fuji Test Network
-	LuxFujiChainConfig = &ChainConfig{
-		ChainID:                         LuxFujiChainID,
+	// LuxTestnetChainConfig is the configuration for the Testnet Test Network
+	LuxTestnetChainConfig = &ChainConfig{
+		ChainID:                         LuxTestnetChainID,
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    big.NewInt(0),
 		DAOForkSupport:                  true,

@@ -454,16 +454,16 @@ func (vm *VM) Initialize(
 	}
 
 	var extDataHashes map[common.Hash]common.Hash
-	// Set the chain config for mainnet/fuji chain IDs
+	// Set the chain config for mainnet/testnet chain IDs
 	switch {
 	case g.Config.ChainID.Cmp(params.LuxMainnetChainID) == 0:
 		config := *params.LuxMainnetChainConfig
 		g.Config = &config
 		extDataHashes = mainnetExtDataHashes
-	case g.Config.ChainID.Cmp(params.LuxFujiChainID) == 0:
-		config := *params.LuxFujiChainConfig
+	case g.Config.ChainID.Cmp(params.LuxTestnetChainID) == 0:
+		config := *params.LuxTestnetChainConfig
 		g.Config = &config
-		extDataHashes = fujiExtDataHashes
+		extDataHashes = testnetExtDataHashes
 	case g.Config.ChainID.Cmp(params.LuxLocalChainID) == 0:
 		config := *params.LuxLocalChainConfig
 		g.Config = &config
@@ -491,8 +491,8 @@ func (vm *VM) Initialize(
 	}
 
 	// Free the memory of the extDataHash map that is not used (i.e. if mainnet
-	// config, free fuji)
-	fujiExtDataHashes = nil
+	// config, free testnet)
+	testnetExtDataHashes = nil
 	mainnetExtDataHashes = nil
 
 	vm.chainID = g.Config.ChainID
