@@ -155,6 +155,12 @@ func (tx *Tx) Compare(other *Tx) int {
 	}
 }
 
+func (tx *Tx) Less(other *Tx) bool {
+	txHex := tx.ID().Hex()
+	otherHex := other.ID().Hex()
+	return txHex < otherHex
+}
+
 // Sign this transaction with the provided signers
 func (tx *Tx) Sign(c codec.Manager, signers [][]*secp256k1.PrivateKey) error {
 	unsignedBytes, err := c.Marshal(codecVersion, &tx.UnsignedAtomicTx)
