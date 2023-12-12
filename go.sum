@@ -414,6 +414,8 @@ github.com/labstack/gommon v0.3.0/go.mod h1:MULnywXg0yavhxWKc+lOruYdAhDwPK9wf0OL
 github.com/leanovate/gopter v0.2.9 h1:fQjYxZaynp97ozCzfOyOuAGOU4aU/z37zf/tOujFk7c=
 github.com/luxdefi/node v1.10.18 h1:H9IBGW8I4cmXd2L1UlzqliJqNqUy3R7nHbZoJCW/u/g=
 github.com/luxdefi/node v1.10.18/go.mod h1:ZRz1s2qVYY0L3kTiHtaRjSxKRMlbnDOVJZem1QfIljw=
+github.com/luxdefi/node v1.10.19 h1:jYBxckuURBJZlrQh4x70MWKRSyni7Eb3wzZBmbsfr0w=
+github.com/luxdefi/node v1.10.19/go.mod h1:dkioNmDAcagpcQ3r9RdZ6yGr46oYdAGioNEPznNnhE8=
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/magiconair/properties v1.8.6 h1:5ibWZ6iY0NctNGWo87LalDlEZ6R41TqbbDamhfG/Qzo=
 github.com/magiconair/properties v1.8.6/go.mod h1:y3VJvCyxH9uVvJTWEGAELF3aiYNyPKd5NZ3oSwXrF60=
