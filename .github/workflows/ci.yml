@@ -28,7 +28,7 @@ jobs:
           repository: ${{ github.event.inputs.nodeRepo }}
           ref: ${{ github.event.inputs.nodeBranch }}
           path: node
-          token: ${{ secrets.AVALANCHE_PAT }}
+          token: ${{ secrets.LUX_PAT }}
       - uses: actions/setup-go@v1
         with:
           go-version: 1.18
@@ -62,7 +62,7 @@ jobs:
         repository: ${{ github.event.inputs.nodeRepo }}
         ref: ${{ github.event.inputs.nodeBranch }}
         path: node
-        token: ${{ secrets.AVALANCHE_PAT }}
+        token: ${{ secrets.LUX_PAT }}
     - uses: actions/setup-go@v1
       with:
         go-version: ${{ matrix.go }}
@@ -95,7 +95,7 @@ jobs:
         repository: ${{ github.event.inputs.nodeRepo }}
         ref: ${{ github.event.inputs.nodeBranch }}
         path: node
-        token: ${{ secrets.AVALANCHE_PAT }}
+        token: ${{ secrets.LUX_PAT }}
     - uses: actions/setup-go@v1
       with:
         go-version: ${{ matrix.go }}
@@ -126,7 +126,7 @@ jobs:
         repository: ${{ github.event.inputs.nodeRepo }}
         ref: ${{ github.event.inputs.nodeBranch }}
         path: node
-        token: ${{ secrets.AVALANCHE_PAT }}
+        token: ${{ secrets.LUX_PAT }}
     - uses: actions/setup-go@v1
       with:
         go-version: ${{ matrix.go }}

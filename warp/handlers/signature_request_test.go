@@ -16,7 +16,7 @@ import (
 	"github.com/luxdefi/node/snow/engine/common"
 	"github.com/luxdefi/node/snow/engine/snowman/block"
 	"github.com/luxdefi/node/utils/crypto/bls"
-	avalancheWarp "github.com/luxdefi/node/vms/platformvm/warp"
+	luxWarp "github.com/luxdefi/node/vms/platformvm/warp"
 	"github.com/luxdefi/coreth/plugin/evm/message"
 	"github.com/luxdefi/coreth/warp"
 	"github.com/stretchr/testify/require"
@@ -28,10 +28,10 @@ func TestMessageSignatureHandler(t *testing.T) {
 	blsSecretKey, err := bls.NewSecretKey()
 	require.NoError(t, err)
 
-	warpSigner := avalancheWarp.NewSigner(blsSecretKey, snowCtx.NetworkID, snowCtx.ChainID)
+	warpSigner := luxWarp.NewSigner(blsSecretKey, snowCtx.NetworkID, snowCtx.ChainID)
 	backend := warp.NewBackend(snowCtx.NetworkID, snowCtx.ChainID, warpSigner, &block.TestVM{TestVM: common.TestVM{T: t}}, database, 100)
 
-	msg, err := avalancheWarp.NewUnsignedMessage(snowCtx.NetworkID, snowCtx.ChainID, []byte("test"))
+	msg, err := luxWarp.NewUnsignedMessage(snowCtx.NetworkID, snowCtx.ChainID, []byte("test"))
 	require.NoError(t, err)
 
 	messageID := msg.ID()
@@ -109,7 +109,7 @@ func TestBlockSignatureHandler(t *testing.T) {
 	blsSecretKey, err := bls.NewSecretKey()
 	require.NoError(t, err)
 
-	warpSigner := avalancheWarp.NewSigner(blsSecretKey, snowCtx.NetworkID, snowCtx.ChainID)
+	warpSigner := luxWarp.NewSigner(blsSecretKey, snowCtx.NetworkID, snowCtx.ChainID)
 	blkID := ids.GenerateTestID()
 	testVM := &block.TestVM{
 		TestVM: common.TestVM{T: t},

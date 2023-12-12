@@ -20,7 +20,7 @@ RUN go mod edit -replace github.com/luxdefi/coreth=../coreth
 RUN go mod download && go mod tidy -compat=1.20
 
 # Build the LuxGo binary with local version of coreth.
-RUN ./scripts/build_avalanche.sh
+RUN ./scripts/build_lux.sh
 # Create the plugins directory in the standard location so the build directory will be recognized
 # as valid.
 RUN mkdir build/plugins
