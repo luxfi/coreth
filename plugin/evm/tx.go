@@ -63,6 +63,12 @@ func (o EVMOutput) Compare(other EVMOutput) int {
 	return bytes.Compare(o.AssetID[:], other.AssetID[:])
 }
 
+// Less returns an integer comparing two EVMOutput values.
+// The result will be 0 if o==other, -1 if o < other, and +1 if o > other.
+func (o EVMOutput) Less(other EVMOutput) int {
+	return o.Compare(other)
+}
+
 // EVMInput defines an input created from the EVM state to fund export transactions
 type EVMInput struct {
 	Address common.Address `serialize:"true" json:"address"`
@@ -77,6 +83,12 @@ func (i EVMInput) Compare(other EVMInput) int {
 		return addrComp
 	}
 	return bytes.Compare(i.AssetID[:], other.AssetID[:])
+}
+
+// Less returns an integer comparing two EVMInput values.
+// The result will be 0 if i==other, -1 if i < other, and +1 if i > other.
+func (i EVMInput) Less(other EVMInput) int {
+	return i.Compare(other)
 }
 
 // Verify ...
@@ -156,9 +168,15 @@ func (tx *Tx) Compare(other *Tx) int {
 }
 
 func (tx *Tx) Less(other *Tx) bool {
-	txHex := tx.ID().Hex()
-	otherHex := other.ID().Hex()
-	return txHex < otherHex
+	return tx.ID().Hex() < other.ID().Hex()
+}
+
+func (input EVMInput) Less(other EVMInput) bool {
+	return i.Compare(other) < 0
+}
+
+func (output EVMOutput) Less(other EVMOutput) bool {
+	return o.Compare(other) < 0
 }
 
 // Sign this transaction with the provided signers
