@@ -65,8 +65,8 @@ func (o EVMOutput) Compare(other EVMOutput) int {
 
 // Less returns an integer comparing two EVMOutput values.
 // The result will be 0 if o==other, -1 if o < other, and +1 if o > other.
-func (o EVMOutput) Less(other EVMOutput) int {
-	return o.Compare(other)
+func (o EVMOutput) Less(other EVMOutput) bool {
+	return o.Compare(other) < 0
 }
 
 // EVMInput defines an input created from the EVM state to fund export transactions
@@ -87,8 +87,8 @@ func (i EVMInput) Compare(other EVMInput) int {
 
 // Less returns an integer comparing two EVMInput values.
 // The result will be 0 if i==other, -1 if i < other, and +1 if i > other.
-func (i EVMInput) Less(other EVMInput) int {
-	return i.Compare(other)
+func (i EVMInput) Less(other EVMInput) bool {
+	return i.Compare(other) < 0
 }
 
 // Verify ...
