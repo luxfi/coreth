@@ -58,7 +58,7 @@
 ## [v0.12.0](https://github.com/luxdefi/coreth/releases/tag/v0.12.0)
 
 - Increase C-Chain block gas limit to 15M in Cortina
-- Add Mainnet and Fuji Cortina Activation timestamps
+- Add Mainnet and Testnet Cortina Activation timestamps
 
 ## [v0.11.9](https://github.com/luxdefi/coreth/releases/tag/v0.11.9)
 
@@ -128,7 +128,7 @@
 
 - Update Chain Config compatibility check to compare against last accepted block timestamp
 - Bump go-ethereum dependency to v1.10.25
-- Add Banff activation times for Mainnet and Fuji for October 18 4pm UTC and October 3 2pm UTC respectively
+- Add Banff activation times for Mainnet and Testnet for October 18 4pm UTC and October 3 2pm UTC respectively
 - Banff cleanup
 
 ## [v0.10.0](https://github.com/luxdefi/coreth/releases/tag/v0.10.0)
