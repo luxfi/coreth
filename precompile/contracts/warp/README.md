@@ -69,7 +69,7 @@ This pre-verification is performed using the ProposerVM Block header during [blo
 
 This is different from the conventional Ethereum ChainID registered to [ChainList](https://chainlist.org/).
 
-The `blockchainID` in Lux refers to the txID that created the blockchain on the Lux P-Chain ([docs](https://docs.avax.network/specs/platform-transaction-serialization#unsigned-create-chain-tx)).
+The `blockchainID` in Lux refers to the txID that created the blockchain on the Lux P-Chain ([docs](https://docs.lux.network/specs/platform-transaction-serialization#unsigned-create-chain-tx)).
 
 ### Predicate Encoding
 
