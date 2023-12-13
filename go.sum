@@ -410,10 +410,8 @@ github.com/labstack/echo/v4 v4.2.1/go.mod h1:AA49e0DZ8kk5jTOOCKNuPR6oTnBS0dYiM4F
 github.com/labstack/echo/v4 v4.5.0/go.mod h1:czIriw4a0C1dFun+ObrXp7ok03xON0N1awStJ6ArI7Y=
 github.com/labstack/gommon v0.3.0/go.mod h1:MULnywXg0yavhxWKc+lOruYdAhDwPK9wf0OL7NoOu+k=
 github.com/leanovate/gopter v0.2.9 h1:fQjYxZaynp97ozCzfOyOuAGOU4aU/z37zf/tOujFk7c=
-github.com/luxdefi/node v1.10.18 h1:H9IBGW8I4cmXd2L1UlzqliJqNqUy3R7nHbZoJCW/u/g=
-github.com/luxdefi/node v1.10.18/go.mod h1:ZRz1s2qVYY0L3kTiHtaRjSxKRMlbnDOVJZem1QfIljw=
-github.com/luxdefi/node v1.10.19 h1:jYBxckuURBJZlrQh4x70MWKRSyni7Eb3wzZBmbsfr0w=
-github.com/luxdefi/node v1.10.19/go.mod h1:dkioNmDAcagpcQ3r9RdZ6yGr46oYdAGioNEPznNnhE8=
+github.com/luxdefi/node v1.10.20 h1:eyM4mxyE3aHFCeP6vEs9t6acjPTdCkOybNExN4VRm9s=
+github.com/luxdefi/node v1.10.20/go.mod h1:Vhj8be24VSw9Naj8G4Qa+qvX2AclJa97qj12y9N9a7k=
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/magiconair/properties v1.8.6 h1:5ibWZ6iY0NctNGWo87LalDlEZ6R41TqbbDamhfG/Qzo=
 github.com/magiconair/properties v1.8.6/go.mod h1:y3VJvCyxH9uVvJTWEGAELF3aiYNyPKd5NZ3oSwXrF60=
