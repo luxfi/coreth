@@ -8,7 +8,7 @@ This chain implements the Ethereum Virtual Machine and supports Solidity smart c
 
 ## Building
 
-Coreth is a dependency of LuxGo which is used to implement the EVM based Virtual Machine for the Lux C-Chain. In order to run with a local version of Coreth, users must update their Coreth dependency within LuxGo to point to their local Coreth directory. If Coreth and LuxGo are at the standard location within your GOPATH, this will look like the following:
+Coreth is a dependency of Lux Node which is used to implement the EVM based Virtual Machine for the Lux C-Chain. In order to run with a local version of Coreth, users must update their Coreth dependency within Lux Node to point to their local Coreth directory. If Coreth and Lux Node are at the standard location within your GOPATH, this will look like the following:
 
 ```bash
 cd $GOPATH/src/github.com/luxdefi/node
@@ -34,7 +34,7 @@ The C-Chain supports the following API namespaces:
 - `debug`
 
 Only the `eth` namespace is enabled by default.
-To enable the other namespaces see the instructions for passing the C-Chain config to LuxGo [here.](https://docs.lux.network/nodes/maintain/chain-config-flags/#c-chain-configs)
+To enable the other namespaces see the instructions for passing the C-Chain config to Lux Node [here.](https://docs.lux.network/nodes/maintain/chain-config-flags/#c-chain-configs)
 Full documentation for the C-Chain's API can be found [here.](https://docs.lux.network/apis/node/apis/c-chain/)
 
 ## Compatibility
