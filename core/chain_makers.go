@@ -1,16 +1,16 @@
 // (c) 2021-2024, Lux Partners Limited.
-// This file is a derived work, based on the go-ethereum library whose original
-// notices appear below.
+//
+// This file is a derived work, based on coreth and the go-ethereum library
+// whose original notices appear below.
 //
 // It is distributed under a license compatible with the licensing terms of the
 // original code from which it is derived.
 //
 // Much love to the original authors for their work.
-
-// (c) 2019-2020, Ava Labs, Inc.
 //
-
-********** Copyright 2015
+// **********
+// Copyright 2019-2020, Ava Labs, Inc.
+// Copyright 2015 The go-ethereum Authors
 // The go-ethereum Authors This file is part of the go-ethereum library.
 //
 // The go-ethereum library is free software: you can redistribute it and/or
@@ -29,8 +29,11 @@
 
 package core
 
-import ( "fmt" "math/big"
+import (
+	"fmt"
+	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxdefi/coreth/consensus"
 	"github.com/luxdefi/coreth/consensus/dummy"
 	"github.com/luxdefi/coreth/core/rawdb"
@@ -40,7 +43,6 @@ import ( "fmt" "math/big"
 	"github.com/luxdefi/coreth/ethdb"
 	"github.com/luxdefi/coreth/params"
 	"github.com/luxdefi/coreth/trie"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // BlockGen creates blocks for testing.
