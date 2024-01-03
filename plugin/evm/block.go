@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -131,7 +131,6 @@ func init() {
 		if ids.ID(ethBlock.Hash()) != expectedHash {
 			panic(fmt.Sprintf("block ID mismatch at (%s != %s)", ids.ID(ethBlock.Hash()), expectedHash))
 		}
-
 		mainnetBonusBlocksParsed[height] = &ethBlock
 	}
 	if len(mainnetBonusBlocksParsed) != len(bonusBlockMainnetHeights) {

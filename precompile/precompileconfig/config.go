@@ -1,16 +1,16 @@
-// (c) 2023, Ava Labs, Inc. All rights reserved.
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 // Defines the stateless interface for unmarshalling an arbitrary config of a precompile
 package precompileconfig
 
 import (
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxdefi/node/chains/atomic"
 	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/node/snow"
 	"github.com/luxdefi/node/snow/engine/snowman/block"
 	"github.com/luxdefi/node/vms/platformvm/warp"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // StatefulPrecompileConfig defines the interface for a stateful precompile to

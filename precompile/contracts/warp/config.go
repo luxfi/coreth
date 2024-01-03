@@ -1,4 +1,4 @@
-// (c) 2023, Ava Labs, Inc. All rights reserved.
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -8,15 +8,15 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxdefi/node/vms/platformvm/warp"
-	"github.com/luxdefi/node/vms/platformvm/warp/payload"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/luxdefi/coreth/params"
 	"github.com/luxdefi/coreth/precompile/precompileconfig"
 	"github.com/luxdefi/coreth/predicate"
 	warpValidators "github.com/luxdefi/coreth/warp/validators"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/node/vms/platformvm/warp"
+	"github.com/luxdefi/node/vms/platformvm/warp/payload"
 )
 
 var (

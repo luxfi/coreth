@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package vm
@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxdefi/coreth/precompile/contract"
-	"github.com/luxdefi/coreth/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/holiman/uint256"
+	"github.com/luxdefi/coreth/precompile/contract"
+	"github.com/luxdefi/coreth/vmerrs"
 )
 
 // PrecompiledContractsApricot contains the default set of pre-compiled Ethereum

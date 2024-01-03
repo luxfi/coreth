@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -262,6 +262,11 @@ func (m *Mempool) addTx(tx *Tx, force bool) error {
 	}
 	if _, exists := m.txHeap.Get(txID); exists {
 		return fmt.Errorf("%w: tx %s is pending", errTxAlreadyKnown, tx.ID())
+	}
+	if !force && m.verify != nil {
+		if err := m.verify(tx); err != nil {
+			return err
+		}
 	}
 	if !force && m.verify != nil {
 		if err := m.verify(tx); err != nil {

@@ -1,5 +1,4 @@
 // (c) 2023-2024, Lux Partners Limited. All rights reserved.
-// (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -9,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/coreth/ethdb"
 	"github.com/luxdefi/node/cache"
 	"github.com/luxdefi/node/database"
 	"github.com/luxdefi/node/ids"
@@ -17,8 +18,6 @@ import (
 	"github.com/luxdefi/node/utils/crypto/bls"
 	luxWarp "github.com/luxdefi/node/vms/platformvm/warp"
 	"github.com/luxdefi/node/vms/platformvm/warp/payload"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 var (
@@ -196,7 +195,6 @@ func (b *backend) GetMessage(messageID ids.ID) (*luxWarp.UnsignedMessage, error)
 	if message, ok := b.offchainAddressedCallMsgs[messageID]; ok {
 		return message, nil
 	}
-
 	unsignedMessageBytes, err := b.db.Get(messageID[:])
 	if err != nil {
 		return nil, fmt.Errorf("failed to get warp message %s from db: %w", messageID.String(), err)

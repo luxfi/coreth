@@ -1,4 +1,4 @@
-// (c) 2021-2022, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2022, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -265,7 +265,7 @@ func TestVMShutdownWhileSyncing(t *testing.T) {
 func createSyncServerAndClientVMs(t *testing.T, test syncTest) *syncVMSetup {
 	var (
 		require      = require.New(t)
-		importAmount = 2000000 * units.Lux // 2M avax
+		importAmount = 2000000 * units.Lux // 2M lux
 		alloc        = map[ids.ShortID]uint64{
 			testShortIDAddrs[0]: importAmount,
 		}

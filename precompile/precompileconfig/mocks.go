@@ -7,10 +7,10 @@ package precompileconfig
 import (
 	reflect "reflect"
 
+	common "github.com/ethereum/go-ethereum/common"
 	atomic "github.com/luxdefi/node/chains/atomic"
 	ids "github.com/luxdefi/node/ids"
 	warp "github.com/luxdefi/node/vms/platformvm/warp"
-	common "github.com/ethereum/go-ethereum/common"
 	gomock "go.uber.org/mock/gomock"
 )
 

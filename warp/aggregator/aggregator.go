@@ -1,5 +1,4 @@
 // (c) 2023-2024, Lux Partners Limited. All rights reserved.
-// (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package aggregator
@@ -41,6 +40,7 @@ type Aggregator struct {
 }
 
 // New returns a signature aggregator that will attempt to aggregate signatures from [validators].
+
 func New(client SignatureGetter, validators []*luxWarp.Validator, totalWeight uint64) *Aggregator {
 	return &Aggregator{
 		client:      client,
@@ -146,6 +146,7 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *l
 
 	// If I failed to fetch sufficient signature stake, return an error
 	if !signaturesPassedThreshold {
+
 		return nil, luxWarp.ErrInsufficientWeight
 	}
 

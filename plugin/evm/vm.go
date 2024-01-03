@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -71,10 +71,6 @@ import (
 	"github.com/luxdefi/node/codec"
 	"github.com/luxdefi/node/codec/linearcodec"
 	"github.com/luxdefi/node/database"
-<<<<<<< HEAD
-=======
-	"github.com/luxdefi/node/database/manager"
->>>>>>> 1c6259116 (Update imports)
 	"github.com/luxdefi/node/database/prefixdb"
 	"github.com/luxdefi/node/database/versiondb"
 	"github.com/luxdefi/node/ids"
@@ -92,7 +88,7 @@ import (
 	"github.com/luxdefi/node/utils/set"
 	"github.com/luxdefi/node/utils/timer/mockable"
 	"github.com/luxdefi/node/utils/units"
-	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/components/lux"
 	"github.com/luxdefi/node/vms/components/chain"
 	"github.com/luxdefi/node/vms/secp256k1fx"
 
@@ -158,7 +154,7 @@ const (
 
 // Define the API endpoints for the VM
 const (
-	avaxEndpoint            = "/avax"
+	luxEndpoint            = "/lux"
 	adminEndpoint           = "/admin"
 	ethRPCEndpoint          = "/rpc"
 	ethWSEndpoint           = "/ws"
@@ -317,10 +313,6 @@ type VM struct {
 
 	// Metrics
 	multiGatherer nodeMetrics.MultiGatherer
-<<<<<<< HEAD
-	sdkMetrics    *prometheus.Registry
-=======
->>>>>>> 1c6259116 (Update imports)
 
 	bootstrapped bool
 	IsPlugin     bool
@@ -329,19 +321,6 @@ type VM struct {
 	// State sync server and client
 	StateSyncServer
 	StateSyncClient
-
-	// Lux Warp Messaging backend
-	// Used to serve BLS signatures of warp messages over RPC
-	warpBackend warp.Backend
-
-	// Initialize only sets these if nil so they can be overridden in tests
-	p2pSender             commonEng.AppSender
-	ethTxGossipHandler    p2p.Handler
-	atomicTxGossipHandler p2p.Handler
-	ethTxPullGossiper     gossip.Gossiper
-	atomicTxPullGossiper  gossip.Gossiper
-	ethTxPushGossiper     gossip.Accumulator[*GossipEthTx]
-	atomicTxPushGossiper  gossip.Accumulator[*GossipAtomicTx]
 }
 
 // Codec implements the secp256k1fx interface
@@ -583,35 +562,9 @@ func (vm *VM) Initialize(
 	}
 
 	// initialize peer network
-	if vm.p2pSender == nil {
-		vm.p2pSender = appSender
-	}
-
-	p2pNetwork, err := p2p.NewNetwork(vm.ctx.Log, vm.p2pSender, vm.sdkMetrics, "p2p")
-	if err != nil {
-		return fmt.Errorf("failed to initialize p2p network: %w", err)
-	}
-	vm.validators = p2p.NewValidators(p2pNetwork.Peers, vm.ctx.Log, vm.ctx.SubnetID, vm.ctx.ValidatorState, maxValidatorSetStaleness)
 	vm.networkCodec = message.Codec
 	vm.Network = peer.NewNetwork(p2pNetwork, appSender, vm.networkCodec, message.CrossChainCodec, chainCtx.NodeID, vm.config.MaxOutboundActiveRequests, vm.config.MaxOutboundActiveCrossChainRequests)
 	vm.client = peer.NewNetworkClient(vm.Network)
-
-	// Initialize warp backend
-	offchainWarpMessages := make([][]byte, len(vm.config.WarpOffChainMessages))
-	for i, hexMsg := range vm.config.WarpOffChainMessages {
-		offchainWarpMessages[i] = []byte(hexMsg)
-	}
-	vm.warpBackend, err = warp.NewBackend(vm.ctx.NetworkID, vm.ctx.ChainID, vm.ctx.WarpSigner, vm, vm.warpDB, warpSignatureCacheSize, offchainWarpMessages)
-	if err != nil {
-		return err
-	}
-
-	// clear warpdb on initialization if config enabled
-	if vm.config.PruneWarpDB {
-		if err := vm.warpBackend.Clear(); err != nil {
-			return fmt.Errorf("failed to prune warpDB: %w", err)
-		}
-	}
 
 	if err := vm.initializeChain(lastAcceptedHash); err != nil {
 		return err
@@ -1074,44 +1027,7 @@ func (vm *VM) SetState(_ context.Context, state snow.State) error {
 }
 
 // initBlockBuilding starts goroutines to manage block building
-func (vm *VM) initBlockBuilding() error {
-	ctx, cancel := context.WithCancel(context.TODO())
-	vm.cancel = cancel
-
-	ethTxGossipMarshaller := GossipEthTxMarshaller{}
-	atomicTxGossipMarshaller := GossipAtomicTxMarshaller{}
-
-	ethTxGossipClient := vm.Network.NewClient(ethTxGossipProtocol, p2p.WithValidatorSampling(vm.validators))
-	atomicTxGossipClient := vm.Network.NewClient(atomicTxGossipProtocol, p2p.WithValidatorSampling(vm.validators))
-
-	ethTxGossipMetrics, err := gossip.NewMetrics(vm.sdkMetrics, ethTxGossipNamespace)
-	if err != nil {
-		return fmt.Errorf("failed to initialize eth tx gossip metrics: %w", err)
-	}
-
-	atomicTxGossipMetrics, err := gossip.NewMetrics(vm.sdkMetrics, atomicTxGossipNamespace)
-	if err != nil {
-		return fmt.Errorf("failed to initialize atomic tx gossip metrics: %w", err)
-	}
-
-	if vm.ethTxPushGossiper == nil {
-		vm.ethTxPushGossiper = gossip.NewPushGossiper[*GossipEthTx](
-			ethTxGossipMarshaller,
-			ethTxGossipClient,
-			ethTxGossipMetrics,
-			txGossipTargetMessageSize,
-		)
-	}
-
-	if vm.atomicTxPushGossiper == nil {
-		vm.atomicTxPushGossiper = gossip.NewPushGossiper[*GossipAtomicTx](
-			atomicTxGossipMarshaller,
-			atomicTxGossipClient,
-			atomicTxGossipMetrics,
-			txGossipTargetMessageSize,
-		)
-	}
-
+func (vm *VM) initBlockBuilding() {
 	// NOTE: gossip network must be initialized first otherwise ETH tx gossip will not work.
 	gossipStats := NewGossipStats()
 	vm.gossiper = vm.createGossiper(gossipStats, vm.ethTxPushGossiper, vm.atomicTxPushGossiper)
@@ -1128,89 +1044,6 @@ func (vm *VM) initBlockBuilding() error {
 		ethTxPool.Subscribe(ctx)
 		vm.shutdownWg.Done()
 	}()
-
-	if vm.ethTxGossipHandler == nil {
-		vm.ethTxGossipHandler = newTxGossipHandler[*GossipEthTx](
-			vm.ctx.Log,
-			ethTxGossipMarshaller,
-			ethTxPool,
-			ethTxGossipMetrics,
-			txGossipTargetMessageSize,
-			txGossipThrottlingPeriod,
-			txGossipThrottlingLimit,
-			vm.validators,
-		)
-	}
-
-	if err := vm.Network.AddHandler(ethTxGossipProtocol, vm.ethTxGossipHandler); err != nil {
-		return err
-	}
-
-	if vm.atomicTxGossipHandler == nil {
-		vm.atomicTxGossipHandler = newTxGossipHandler[*GossipAtomicTx](
-			vm.ctx.Log,
-			atomicTxGossipMarshaller,
-			vm.mempool,
-			atomicTxGossipMetrics,
-			txGossipTargetMessageSize,
-			txGossipThrottlingPeriod,
-			txGossipThrottlingLimit,
-			vm.validators,
-		)
-	}
-
-	if err := vm.Network.AddHandler(atomicTxGossipProtocol, vm.atomicTxGossipHandler); err != nil {
-		return err
-	}
-
-	if vm.ethTxPullGossiper == nil {
-		ethTxPullGossiper := gossip.NewPullGossiper[*GossipEthTx](
-			vm.ctx.Log,
-			ethTxGossipMarshaller,
-			ethTxPool,
-			ethTxGossipClient,
-			ethTxGossipMetrics,
-			txGossipPollSize,
-		)
-
-		vm.ethTxPullGossiper = gossip.ValidatorGossiper{
-			Gossiper:   ethTxPullGossiper,
-			NodeID:     vm.ctx.NodeID,
-			Validators: vm.validators,
-		}
-	}
-
-	vm.shutdownWg.Add(1)
-	go func() {
-		gossip.Every(ctx, vm.ctx.Log, vm.ethTxPullGossiper, gossipFrequency)
-		vm.shutdownWg.Done()
-	}()
-
-	if vm.atomicTxPullGossiper == nil {
-		atomicTxPullGossiper := gossip.NewPullGossiper[*GossipAtomicTx](
-			vm.ctx.Log,
-			atomicTxGossipMarshaller,
-			vm.mempool,
-			atomicTxGossipClient,
-			atomicTxGossipMetrics,
-			txGossipPollSize,
-		)
-
-		vm.atomicTxPullGossiper = &gossip.ValidatorGossiper{
-			Gossiper:   atomicTxPullGossiper,
-			NodeID:     vm.ctx.NodeID,
-			Validators: vm.validators,
-		}
-	}
-
-	vm.shutdownWg.Add(1)
-	go func() {
-		gossip.Every(ctx, vm.ctx.Log, vm.atomicTxPullGossiper, gossipFrequency)
-		vm.shutdownWg.Done()
-	}()
-
-	return nil
-}
 
 // setAppRequestHandlers sets the request handlers for the VM to serve state sync
 // requests.
@@ -1401,12 +1234,16 @@ func (vm *VM) Version(context.Context) (string, error) {
 //   - The handler's functionality is defined by [service]
 //     [service] should be a gorilla RPC service (see https://www.gorillatoolkit.org/pkg/rpc/v2)
 //   - The name of the service is [name]
-func newHandler(name string, service interface{}) (http.Handler, error) {
+//   - The LockOption is the first element of [lockOption]
+//     By default the LockOption is WriteLock
+//     [lockOption] should have either 0 or 1 elements. Elements beside the first are ignored.
+func newHandler(name string, service interface{}, lockOption ...commonEng.LockOption) (*commonEng.HTTPHandler, error) {
 	server := luxRPC.NewServer()
 	server.RegisterCodec(luxJSON.NewCodec(), "application/json")
 	server.RegisterCodec(luxJSON.NewCodec(), "application/json;charset=UTF-8")
-	return server, server.RegisterService(service, name)
-}
+	if err := server.RegisterService(service, name); err != nil {
+		return nil, err
+	}
 
 // CreateHandlers makes new http handlers that can handle API calls
 func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
@@ -1420,13 +1257,13 @@ func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get primary alias for chain due to %w", err)
 	}
-	apis := make(map[string]http.Handler)
-	avaxAPI, err := newHandler("avax", &LuxAPI{vm})
+	apis := make(map[string]*commonEng.HTTPHandler)
+	luxAPI, err := newHandler("lux", &LuxAPI{vm})
 	if err != nil {
 		return nil, fmt.Errorf("failed to register service for LUX API due to %w", err)
 	}
-	enabledAPIs = append(enabledAPIs, "avax")
-	apis[avaxEndpoint] = avaxAPI
+	enabledAPIs = append(enabledAPIs, "lux")
+	apis[luxEndpoint] = luxAPI
 
 	if vm.config.AdminAPIEnabled {
 		adminAPI, err := newHandler("admin", NewAdminService(vm, os.ExpandEnv(fmt.Sprintf("%s_coreth_performance_%s", vm.config.AdminAPIDir, primaryAlias))))
@@ -1674,7 +1511,7 @@ func (vm *VM) GetAtomicUTXOs(
 	startAddr ids.ShortID,
 	startUTXOID ids.ID,
 	limit int,
-) ([]*avax.UTXO, ids.ShortID, ids.ID, error) {
+) ([]*lux.UTXO, ids.ShortID, ids.ID, error) {
 	if limit <= 0 || limit > maxUTXOsToFetch {
 		limit = maxUTXOsToFetch
 	}
@@ -1704,9 +1541,9 @@ func (vm *VM) GetAtomicUTXOs(
 		lastUTXOID = ids.Empty
 	}
 
-	utxos := make([]*avax.UTXO, len(allUTXOBytes))
+	utxos := make([]*lux.UTXO, len(allUTXOBytes))
 	for i, utxoBytes := range allUTXOBytes {
-		utxo := &avax.UTXO{}
+		utxo := &lux.UTXO{}
 		if _, err := vm.codec.Unmarshal(utxoBytes, utxo); err != nil {
 			return nil, ids.ShortID{}, ids.ID{}, fmt.Errorf("error parsing UTXO: %w", err)
 		}

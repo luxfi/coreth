@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -187,10 +187,10 @@ func (tx *Tx) Sign(c codec.Manager, signers [][]*secp256k1.PrivateKey) error {
 }
 
 // BlockFeeContribution calculates how much LUX towards the block fee contribution was paid
-// for via this transaction denominated in [avaxAssetID] with [baseFee] used to calculate the
+// for via this transaction denominated in [luxAssetID] with [baseFee] used to calculate the
 // cost of this transaction. This function also returns the [gasUsed] by the
 // transaction for inclusion in the [baseFee] algorithm.
-func (tx *Tx) BlockFeeContribution(fixedFee bool, avaxAssetID ids.ID, baseFee *big.Int) (*big.Int, *big.Int, error) {
+func (tx *Tx) BlockFeeContribution(fixedFee bool, luxAssetID ids.ID, baseFee *big.Int) (*big.Int, *big.Int, error) {
 	if baseFee == nil {
 		return nil, nil, errNilBaseFee
 	}
@@ -205,7 +205,7 @@ func (tx *Tx) BlockFeeContribution(fixedFee bool, avaxAssetID ids.ID, baseFee *b
 	if err != nil {
 		return nil, nil, err
 	}
-	burned, err := tx.Burned(avaxAssetID)
+	burned, err := tx.Burned(luxAssetID)
 	if err != nil {
 		return nil, nil, err
 	}

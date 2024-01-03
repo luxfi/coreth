@@ -32,10 +32,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/interfaces"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/interfaces"
 	"golang.org/x/crypto/sha3"
 )
 

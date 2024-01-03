@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package contract
@@ -8,10 +8,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/luxdefi/coreth/accounts/abi"
-	"github.com/luxdefi/coreth/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/luxdefi/coreth/accounts/abi"
+	"github.com/luxdefi/coreth/vmerrs"
 )
 
 // Gas costs for stateful precompiles

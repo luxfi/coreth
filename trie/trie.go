@@ -33,10 +33,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/trie/trienode"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/trie/trienode"
 )
 
 // Trie is a Merkle Patricia Trie. Use New to create a trie that sits on

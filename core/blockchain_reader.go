@@ -1,7 +1,7 @@
-// (c) 2019-2021, Ava Labs, Inc.
+// (c) 2021-2024, Lux Partners Limited.
 //
-// This file is a derived work, based on the go-ethereum library whose original
-// notices appear below.
+// This file is a derived work, based on the coreth and go-ethereum library
+// whose original notices appear below.
 //
 // It is distributed under a license compatible with the licensing terms of the
 // original code from which it is derived.

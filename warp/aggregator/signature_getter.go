@@ -1,5 +1,4 @@
 // (c) 2023-2024, Lux Partners Limited. All rights reserved.
-// (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package aggregator
@@ -9,11 +8,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/luxdefi/coreth/plugin/evm/message"
 	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/node/utils/crypto/bls"
 	luxWarp "github.com/luxdefi/node/vms/platformvm/warp"
 	"github.com/luxdefi/node/vms/platformvm/warp/payload"
-	"github.com/luxdefi/coreth/plugin/evm/message"
 )
 
 const (

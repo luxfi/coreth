@@ -1,4 +1,4 @@
-// (c) 2023, Ava Labs, Inc. All rights reserved.
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -6,8 +6,6 @@ package evm
 import (
 	"context"
 
-	"github.com/luxdefi/node/codec"
-	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/coreth/ethdb"
 	"github.com/luxdefi/coreth/metrics"
 	"github.com/luxdefi/coreth/plugin/evm/message"
@@ -16,6 +14,8 @@ import (
 	"github.com/luxdefi/coreth/trie"
 	"github.com/luxdefi/coreth/warp"
 	warpHandlers "github.com/luxdefi/coreth/warp/handlers"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/ids"
 )
 
 var _ message.RequestHandler = &networkHandler{}

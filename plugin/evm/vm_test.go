@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -15,6 +15,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -50,7 +52,8 @@ import (
 	"github.com/luxdefi/node/utils/logging"
 	"github.com/luxdefi/node/utils/set"
 	"github.com/luxdefi/node/utils/units"
-	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/version"
+	"github.com/luxdefi/node/vms/components/lux"
 	"github.com/luxdefi/node/vms/components/chain"
 	"github.com/luxdefi/node/vms/secp256k1fx"
 
@@ -76,7 +79,7 @@ var (
 	testKeys         []*secp256k1.PrivateKey
 	testEthAddrs     []common.Address // testEthAddrs[i] corresponds to testKeys[i]
 	testShortIDAddrs []ids.ShortID
-	testLuxAssetID   = ids.ID{1, 2, 3}
+	testLuxAssetID  = ids.ID{1, 2, 3}
 	username         = "Johns"
 	password         = "CjasdjhiPeirbSenfeI13" // #nosec G101
 	// Use chainId: 43111, so that it does not overlap with any Lux ChainIDs, which may have their
@@ -187,12 +190,8 @@ func NewContext() *snow.Context {
 			return subnetID, nil
 		},
 	}
-	blsSecretKey, err := bls.NewSecretKey()
-	if err != nil {
-		panic(err)
-	}
-	ctx.WarpSigner = luxWarp.NewSigner(blsSecretKey, ctx.NetworkID, ctx.ChainID)
-	ctx.PublicKey = bls.PublicFromSecretKey(blsSecretKey)
+	return ctx
+}
 
 	return ctx
 }
@@ -275,13 +274,13 @@ func GenesisVM(t *testing.T,
 	return issuer, vm, db, m, appSender
 }
 
-func addUTXO(sharedMemory *atomic.Memory, ctx *snow.Context, txID ids.ID, index uint32, assetID ids.ID, amount uint64, addr ids.ShortID) (*avax.UTXO, error) {
-	utxo := &avax.UTXO{
-		UTXOID: avax.UTXOID{
+func addUTXO(sharedMemory *atomic.Memory, ctx *snow.Context, txID ids.ID, index uint32, assetID ids.ID, amount uint64, addr ids.ShortID) (*lux.UTXO, error) {
+	utxo := &lux.UTXO{
+		UTXOID: lux.UTXOID{
 			TxID:        txID,
 			OutputIndex: index,
 		},
-		Asset: avax.Asset{ID: assetID},
+		Asset: lux.Asset{ID: assetID},
 		Out: &secp256k1fx.TransferOutput{
 			Amt: amount,
 			OutputOwners: secp256k1fx.OutputOwners{
@@ -315,12 +314,12 @@ func addUTXO(sharedMemory *atomic.Memory, ctx *snow.Context, txID ids.ID, index 
 // If [genesisJSON] is empty, defaults to using [genesisJSONLatest]
 func GenesisVMWithUTXOs(t *testing.T, finishBootstrapping bool, genesisJSON string, configJSON string, upgradeJSON string, utxos map[ids.ShortID]uint64) (chan engCommon.Message, *VM, database.Database, *atomic.Memory, *engCommon.SenderTest) {
 	issuer, vm, db, sharedMemory, sender := GenesisVM(t, finishBootstrapping, genesisJSON, configJSON, upgradeJSON)
-	for addr, avaxAmount := range utxos {
+	for addr, luxAmount := range utxos {
 		txID, err := ids.ToID(hashing.ComputeHash256(addr.Bytes()))
 		if err != nil {
 			t.Fatalf("Failed to generate txID from addr: %s", err)
 		}
-		if _, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.LUXAssetID, avaxAmount, addr); err != nil {
+		if _, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.LUXAssetID, luxAmount, addr); err != nil {
 			t.Fatalf("Failed to add UTXO to shared memory: %s", err)
 		}
 	}
@@ -1183,11 +1182,11 @@ func TestReissueAtomicTxHigherGasPrice(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			tx1, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], initialBaseFee, kc, []*avax.UTXO{utxo})
+			tx1, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], initialBaseFee, kc, []*lux.UTXO{utxo})
 			if err != nil {
 				t.Fatal(err)
 			}
-			tx2, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], new(big.Int).Mul(common.Big2, initialBaseFee), kc, []*avax.UTXO{utxo})
+			tx2, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], new(big.Int).Mul(common.Big2, initialBaseFee), kc, []*lux.UTXO{utxo})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1210,11 +1209,11 @@ func TestReissueAtomicTxHigherGasPrice(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			tx1, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], initialBaseFee, kc, []*avax.UTXO{utxo1, utxo2})
+			tx1, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], initialBaseFee, kc, []*lux.UTXO{utxo1, utxo2})
 			if err != nil {
 				t.Fatal(err)
 			}
-			tx2, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], new(big.Int).Mul(common.Big2, initialBaseFee), kc, []*avax.UTXO{utxo1})
+			tx2, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], new(big.Int).Mul(common.Big2, initialBaseFee), kc, []*lux.UTXO{utxo1})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1238,17 +1237,17 @@ func TestReissueAtomicTxHigherGasPrice(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			importTx1, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], initialBaseFee, kc, []*avax.UTXO{utxo1})
+			importTx1, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], initialBaseFee, kc, []*lux.UTXO{utxo1})
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			importTx2, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], new(big.Int).Mul(big.NewInt(3), initialBaseFee), kc, []*avax.UTXO{utxo2})
+			importTx2, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], new(big.Int).Mul(big.NewInt(3), initialBaseFee), kc, []*lux.UTXO{utxo2})
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			reissuanceTx1, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], new(big.Int).Mul(big.NewInt(2), initialBaseFee), kc, []*avax.UTXO{utxo1, utxo2})
+			reissuanceTx1, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], new(big.Int).Mul(big.NewInt(2), initialBaseFee), kc, []*lux.UTXO{utxo1, utxo2})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1268,7 +1267,7 @@ func TestReissueAtomicTxHigherGasPrice(t *testing.T) {
 			assert.True(t, vm.mempool.has(importTx2.ID()))
 			assert.False(t, vm.mempool.has(reissuanceTx1.ID()))
 
-			reissuanceTx2, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], new(big.Int).Mul(big.NewInt(4), initialBaseFee), kc, []*avax.UTXO{utxo1, utxo2})
+			reissuanceTx2, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], new(big.Int).Mul(big.NewInt(4), initialBaseFee), kc, []*lux.UTXO{utxo1, utxo2})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1703,11 +1702,11 @@ func TestBonusBlocksTxs(t *testing.T) {
 	}()
 
 	importAmount := uint64(10000000)
-	utxoID := avax.UTXOID{TxID: ids.GenerateTestID()}
+	utxoID := lux.UTXOID{TxID: ids.GenerateTestID()}
 
-	utxo := &avax.UTXO{
+	utxo := &lux.UTXO{
 		UTXOID: utxoID,
-		Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
+		Asset:  lux.Asset{ID: vm.ctx.LUXAssetID},
 		Out: &secp256k1fx.TransferOutput{
 			Amt: importAmount,
 			OutputOwners: secp256k1fx.OutputOwners{
@@ -3338,9 +3337,9 @@ func TestBuildInvalidBlockHead(t *testing.T) {
 			Amount:  1 * units.Lux,
 			AssetID: vm.ctx.LUXAssetID,
 		}},
-		ImportedInputs: []*avax.TransferableInput{
+		ImportedInputs: []*lux.TransferableInput{
 			{
-				Asset: avax.Asset{ID: vm.ctx.LUXAssetID},
+				Asset: lux.Asset{ID: vm.ctx.LUXAssetID},
 				In: &secp256k1fx.TransferInput{
 					Amt: 1 * units.Lux,
 					Input: secp256k1fx.Input{
@@ -3473,11 +3472,11 @@ func TestBuildApricotPhase4Block(t *testing.T) {
 	address := testEthAddrs[0]
 
 	importAmount := uint64(1000000000)
-	utxoID := avax.UTXOID{TxID: ids.GenerateTestID()}
+	utxoID := lux.UTXOID{TxID: ids.GenerateTestID()}
 
-	utxo := &avax.UTXO{
+	utxo := &lux.UTXO{
 		UTXOID: utxoID,
-		Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
+		Asset:  lux.Asset{ID: vm.ctx.LUXAssetID},
 		Out: &secp256k1fx.TransferOutput{
 			Amt: importAmount,
 			OutputOwners: secp256k1fx.OutputOwners{
@@ -3655,11 +3654,11 @@ func TestBuildApricotPhase5Block(t *testing.T) {
 	address := testEthAddrs[0]
 
 	importAmount := uint64(1000000000)
-	utxoID := avax.UTXOID{TxID: ids.GenerateTestID()}
+	utxoID := lux.UTXOID{TxID: ids.GenerateTestID()}
 
-	utxo := &avax.UTXO{
+	utxo := &lux.UTXO{
 		UTXOID: utxoID,
-		Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
+		Asset:  lux.Asset{ID: vm.ctx.LUXAssetID},
 		Out: &secp256k1fx.TransferOutput{
 			Amt: importAmount,
 			OutputOwners: secp256k1fx.OutputOwners{
@@ -3961,7 +3960,7 @@ func TestBuildBlockDoesNotExceedAtomicGasLimit(t *testing.T) {
 		utxo, err := addUTXO(sharedMemory, vm.ctx, txID, uint32(i), vm.ctx.LUXAssetID, importAmount, testShortIDAddrs[0])
 		assert.NoError(t, err)
 
-		importTx, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], initialBaseFee, kc, []*avax.UTXO{utxo})
+		importTx, err := vm.newImportTxWithUTXOs(vm.ctx.XChainID, testEthAddrs[0], initialBaseFee, kc, []*lux.UTXO{utxo})
 		if err != nil {
 			t.Fatal(err)
 		}
