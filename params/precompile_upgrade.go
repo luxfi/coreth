@@ -1,4 +1,4 @@
-// (c) 2023 Ava Labs, Inc. All rights reserved.
+// (c) 2023-2024 Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package params
@@ -8,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxdefi/coreth/precompile/modules"
 	"github.com/luxdefi/coreth/precompile/precompileconfig"
 	"github.com/luxdefi/coreth/utils"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 var errNoKey = errors.New("PrecompileUpgrade cannot be empty")

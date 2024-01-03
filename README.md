@@ -1,15 +1,14 @@
-# Coreth and the Lux EVM Chain
+# Coreth and the C-Chain
 
 [Lux](https://docs.lux.network/learn/platform-overview) is a network composed of multiple blockchains.
 Each blockchain is an instance of a Virtual Machine (VM), much like an object in an object-oriented language is an instance of a class.
 That is, the VM defines the behavior of the blockchain.
-
-Coreth (from core Ethereum) is the [Virtual Machine (VM)](https://docs.lux.network/learn/platform-overview#virtual-machines) that defines the Smart Contract Chain (C-Chain).
+Coreth (from core Ethereum) is the [Virtual Machine (VM)](https://docs.lux.network/learn/platform-overview#virtual-machines) that defines the Contract Chain (C-Chain).
 This chain implements the Ethereum Virtual Machine and supports Solidity smart contracts as well as most other Ethereum client functionality.
 
 ## Building
 
-Coreth is a dependency of Node which is used to implement the EVM based Virtual Machine for the Lux C-Chain. In order to run with a local version of Coreth, users must update their Coreth dependency within Node to point to their local Coreth directory. If Coreth and Node are at the standard location within your GOPATH, this will look like the following:
+Coreth is a dependency of LuxGo which is used to implement the EVM based Virtual Machine for the Lux C-Chain. In order to run with a local version of Coreth, users must update their Coreth dependency within LuxGo to point to their local Coreth directory. If Coreth and LuxGo are at the standard location within your GOPATH, this will look like the following:
 
 ```bash
 cd $GOPATH/src/github.com/luxdefi/node
@@ -35,14 +34,14 @@ The C-Chain supports the following API namespaces:
 - `debug`
 
 Only the `eth` namespace is enabled by default.
-To enable the other namespaces see the instructions for passing the C-Chain config to Lux Node [here.](https://docs.lux.network/nodes/maintain/chain-config-flags/#c-chain-configs)
+To enable the other namespaces see the instructions for passing the C-Chain config to LuxGo [here.](https://docs.lux.network/nodes/maintain/chain-config-flags/#c-chain-configs)
 Full documentation for the C-Chain's API can be found [here.](https://docs.lux.network/apis/node/apis/c-chain/)
 
 ## Compatibility
 
 EVM-Chain is compatible with almost all Ethereum tooling, including [Remix,](https://docs.lux.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-lux-using-remix-and-metamask) [Metamask](https://docs.lux.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-lux-using-remix-and-metamask) and [Truffle.](https://docs.lux.network/build/tutorials/smart-contracts/using-truffle-with-the-lux-c-chain)
 
-## Differences Between LUX C-Chain and Ethereum
+## Differences Between Lux C-Chain and Ethereum
 
 ### Atomic Transactions
 

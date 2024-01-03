@@ -1,4 +1,4 @@
-// (c) 2023, Ava Labs, Inc. All rights reserved.
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package core
@@ -7,12 +7,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/luxdefi/node/snow/engine/snowman/block"
-	"github.com/luxdefi/node/utils/set"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxdefi/coreth/core/types"
 	"github.com/luxdefi/coreth/params"
 	"github.com/luxdefi/coreth/precompile/precompileconfig"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxdefi/node/snow/engine/snowman/block"
+	"github.com/luxdefi/node/utils/set"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

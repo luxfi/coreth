@@ -1,4 +1,4 @@
-// (c) 2023, Ava Labs, Inc. All rights reserved.
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -7,12 +7,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxdefi/node/vms/platformvm/warp"
-	"github.com/luxdefi/node/vms/platformvm/warp/payload"
 	"github.com/luxdefi/coreth/accounts/abi"
 	"github.com/luxdefi/coreth/params"
 	"github.com/luxdefi/coreth/precompile/contract"
 	"github.com/luxdefi/coreth/vmerrs"
+	"github.com/luxdefi/node/vms/platformvm/warp"
+	"github.com/luxdefi/node/vms/platformvm/warp/payload"
 
 	_ "embed"
 

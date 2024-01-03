@@ -1,4 +1,4 @@
-// (c) 2023, Ava Labs, Inc.
+// (c) 2023-2024, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -19,14 +19,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/luxdefi/coreth/core"
 	"github.com/luxdefi/coreth/core/rawdb"
 	"github.com/luxdefi/coreth/core/types"
 	"github.com/luxdefi/coreth/core/vm"
 	"github.com/luxdefi/coreth/tests"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/rlp"
 
 	// Force-load the native, to trigger registration
 	"github.com/luxdefi/coreth/eth/tracers"

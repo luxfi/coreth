@@ -1,4 +1,4 @@
-// (c) 2019-2022, Ava Labs, Inc. All rights reserved.
+// (c) 2019-2022, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -12,6 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxdefi/node/database/versiondb"
 	"github.com/luxdefi/node/utils/wrappers"
+
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/luxdefi/coreth/plugin/evm/message"
 	syncclient "github.com/luxdefi/coreth/sync/client"

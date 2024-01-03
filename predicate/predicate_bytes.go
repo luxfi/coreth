@@ -1,4 +1,4 @@
-// (c) 2023, Ava Labs, Inc. All rights reserved.
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package predicate
@@ -6,8 +6,8 @@ package predicate
 import (
 	"fmt"
 
-	"github.com/luxdefi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxdefi/coreth/params"
 )
 
 // EndByte is used as a delimiter for the bytes packed into a precompile predicate.

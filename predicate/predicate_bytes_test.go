@@ -1,4 +1,4 @@
-// (c) 2023, Ava Labs, Inc. All rights reserved.
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package predicate
@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/luxdefi/node/utils"
 	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/node/utils"
 	"github.com/stretchr/testify/require"
 )
 

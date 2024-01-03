@@ -1,4 +1,4 @@
-// (c) 2023, Ava Labs, Inc. All rights reserved.
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -15,13 +15,13 @@ import (
 	luxWarp "github.com/luxdefi/node/vms/platformvm/warp"
 	"github.com/luxdefi/node/vms/platformvm/warp/payload"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxdefi/coreth/core/state"
 	"github.com/luxdefi/coreth/precompile/contract"
 	"github.com/luxdefi/coreth/precompile/testutils"
 	"github.com/luxdefi/coreth/predicate"
 	"github.com/luxdefi/coreth/utils"
 	"github.com/luxdefi/coreth/vmerrs"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
 

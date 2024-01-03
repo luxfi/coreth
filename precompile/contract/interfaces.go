@@ -1,4 +1,4 @@
-// (c) 2023, Ava Labs, Inc. All rights reserved.
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 // Defines the interface for the configuration and execution of a precompile contract
@@ -6,7 +6,9 @@ package contract
 
 import (
 	"math/big"
-
+jj;q
+;q
+;
 	"github.com/luxdefi/node/snow"
 	"github.com/luxdefi/coreth/precompile/precompileconfig"
 	"github.com/ethereum/go-ethereum/common"

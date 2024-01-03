@@ -1,4 +1,4 @@
-// (c) 2019-2022, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package peer
@@ -606,9 +606,7 @@ func TestNetworkPropagatesRequestHandlerError(t *testing.T) {
 	requestID := uint32(1)
 	sender := testAppSender{}
 
-	p2pNetwork, err := p2p.NewNetwork(logging.NoLog{}, nil, prometheus.NewRegistry(), "")
-	require.NoError(t, err)
-	clientNetwork := NewNetwork(p2pNetwork, sender, codecManager, crossChainCodecManager, ids.EmptyNodeID, 1, 1)
+	clientNetwork := NewNetwork(p2p.NewNetwork(logging.NoLog{}, nil, prometheus.NewRegistry(), ""), sender, codecManager, crossChainCodecManager, ids.EmptyNodeID, 1, 1)
 	clientNetwork.SetGossipHandler(message.NoopMempoolGossipHandler{})
 	clientNetwork.SetRequestHandler(&testRequestHandler{err: errors.New("fail")}) // Return an error from the request handler
 

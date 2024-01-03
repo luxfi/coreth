@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -23,7 +23,7 @@ import (
 	"github.com/luxdefi/node/utils/math"
 	"github.com/luxdefi/node/utils/set"
 	"github.com/luxdefi/node/utils/wrappers"
-	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/components/lux"
 	"github.com/luxdefi/node/vms/components/verify"
 	"github.com/luxdefi/node/vms/secp256k1fx"
 )
@@ -37,7 +37,7 @@ var (
 
 // UnsignedExportTx is an unsigned ExportTx
 type UnsignedExportTx struct {
-	avax.Metadata
+	lux.Metadata
 	// ID of the network on which this tx was issued
 	NetworkID uint32 `serialize:"true" json:"networkID"`
 	// ID of this blockchain.
@@ -47,7 +47,7 @@ type UnsignedExportTx struct {
 	// Inputs
 	Ins []EVMInput `serialize:"true" json:"inputs"`
 	// Outputs that are exported to the chain
-	ExportedOutputs []*avax.TransferableOutput `serialize:"true" json:"exportedOutputs"`
+	ExportedOutputs []*lux.TransferableOutput `serialize:"true" json:"exportedOutputs"`
 }
 
 // InputUTXOs returns a set of all the hash(address:nonce) exporting funds.
@@ -115,7 +115,7 @@ func (utx *UnsignedExportTx) Verify(
 			return errExportNonLUXOutputBanff
 		}
 	}
-	if !avax.IsSortedTransferableOutputs(utx.ExportedOutputs, Codec) {
+	if !lux.IsSortedTransferableOutputs(utx.ExportedOutputs, Codec) {
 		return errOutputsNotSorted
 	}
 	if rules.IsApricotPhase1 && !utils.IsSortedAndUnique(utx.Ins) {
@@ -186,7 +186,7 @@ func (utx *UnsignedExportTx) SemanticVerify(
 	}
 
 	// Check the transaction consumes and produces the right amounts
-	fc := avax.NewFlowChecker()
+	fc := lux.NewFlowChecker()
 	switch {
 	// Apply dynamic fees to export transactions as of Apricot Phase 3
 	case rules.IsApricotPhase3:
@@ -248,12 +248,12 @@ func (utx *UnsignedExportTx) AtomicOps() (ids.ID, *atomic.Requests, error) {
 
 	elems := make([]*atomic.Element, len(utx.ExportedOutputs))
 	for i, out := range utx.ExportedOutputs {
-		utxo := &avax.UTXO{
-			UTXOID: avax.UTXOID{
+		utxo := &lux.UTXO{
+			UTXOID: lux.UTXOID{
 				TxID:        txID,
 				OutputIndex: uint32(i),
 			},
-			Asset: avax.Asset{ID: out.AssetID()},
+			Asset: lux.Asset{ID: out.AssetID()},
 			Out:   out.Out,
 		}
 
@@ -266,7 +266,7 @@ func (utx *UnsignedExportTx) AtomicOps() (ids.ID, *atomic.Requests, error) {
 			Key:   utxoID[:],
 			Value: utxoBytes,
 		}
-		if out, ok := utxo.Out.(avax.Addressable); ok {
+		if out, ok := utxo.Out.(lux.Addressable); ok {
 			elem.Traits = out.Addresses()
 		}
 
@@ -285,8 +285,8 @@ func (vm *VM) newExportTx(
 	baseFee *big.Int, // fee to use post-AP3
 	keys []*secp256k1.PrivateKey, // Pay the fee and provide the tokens
 ) (*Tx, error) {
-	outs := []*avax.TransferableOutput{{
-		Asset: avax.Asset{ID: assetID},
+	outs := []*lux.TransferableOutput{{
+		Asset: lux.Asset{ID: assetID},
 		Out: &secp256k1fx.TransferOutput{
 			Amt: amount,
 			OutputOwners: secp256k1fx.OutputOwners{
@@ -298,9 +298,9 @@ func (vm *VM) newExportTx(
 	}}
 
 	var (
-		avaxNeeded           uint64 = 0
-		ins, avaxIns         []EVMInput
-		signers, avaxSigners [][]*secp256k1.PrivateKey
+		luxNeeded           uint64 = 0
+		ins, luxIns         []EVMInput
+		signers, luxSigners [][]*secp256k1.PrivateKey
 		err                  error
 	)
 
@@ -311,7 +311,7 @@ func (vm *VM) newExportTx(
 			return nil, fmt.Errorf("couldn't generate tx inputs/signers: %w", err)
 		}
 	} else {
-		avaxNeeded = amount
+		luxNeeded = amount
 	}
 
 	rules := vm.currentRules()
@@ -335,22 +335,22 @@ func (vm *VM) newExportTx(
 			return nil, err
 		}
 
-		avaxIns, avaxSigners, err = vm.GetSpendableLUXWithFee(keys, avaxNeeded, cost, baseFee)
+		luxIns, luxSigners, err = vm.GetSpendableLUXWithFee(keys, luxNeeded, cost, baseFee)
 	default:
 		var newLuxNeeded uint64
-		newLuxNeeded, err = math.Add64(avaxNeeded, params.LuxAtomicTxFee)
+		newLuxNeeded, err = math.Add64(luxNeeded, params.LuxAtomicTxFee)
 		if err != nil {
 			return nil, errOverflowExport
 		}
-		avaxIns, avaxSigners, err = vm.GetSpendableFunds(keys, vm.ctx.LUXAssetID, newLuxNeeded)
+		luxIns, luxSigners, err = vm.GetSpendableFunds(keys, vm.ctx.LUXAssetID, newLuxNeeded)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("couldn't generate tx inputs/signers: %w", err)
 	}
-	ins = append(ins, avaxIns...)
-	signers = append(signers, avaxSigners...)
+	ins = append(ins, luxIns...)
+	signers = append(signers, luxSigners...)
 
-	avax.SortTransferableOutputs(outs, vm.codec)
+	lux.SortTransferableOutputs(outs, vm.codec)
 	SortEVMInputsAndSigners(ins, signers)
 
 	// Create the transaction

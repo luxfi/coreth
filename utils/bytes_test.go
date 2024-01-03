@@ -1,5 +1,4 @@
 // (c) 2023-2024, Lux Partners Limited. All rights reserved.
-// (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package utils
@@ -8,8 +7,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/luxdefi/node/utils"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxdefi/node/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

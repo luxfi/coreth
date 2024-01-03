@@ -1,4 +1,4 @@
-// (c) 2023, Ava Labs, Inc.
+// (c) 2023-2024, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -34,11 +34,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxdefi/coreth/core/state"
 	"github.com/luxdefi/coreth/core/vm"
 	"github.com/luxdefi/coreth/eth/tracers"
 	"github.com/luxdefi/coreth/params"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 type account struct{}

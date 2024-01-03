@@ -81,6 +81,88 @@
 
 - Bump Lux Node to v1.9.6
 
+## [v0.12.9](https://github.com/luxdefi/coreth/releases/tag/v0.12.9)
+
+- Add concurrent prefetching of trie nodes during block processing
+- Add `skip-tx-indexing` flag to disable transaction indexing and unindexing
+- Update acceptor tip before sending chain events to subscribers
+- Add soft cap on total block data size for state sync block requests
+
+## [v0.12.8](https://github.com/luxdefi/coreth/releases/tag/v0.12.8)
+
+- Bump LuxGo to v1.10.15
+- Fix crash in prestate tracer on memory read
+
+## [v0.12.7](https://github.com/luxdefi/coreth/releases/tag/v0.12.7)
+
+- Bump LuxGo to v1.10.14
+
+## [v0.12.6](https://github.com/luxdefi/coreth/releases/tag/v0.12.6)
+
+- Remove lock options from HTTP handlers
+- Fix deadlock in `eth_getLogs` when matcher session hits a missing block
+- Replace Kurtosis E2E tests with avctl test framework
+
+## [v0.12.5](https://github.com/luxdefi/coreth/releases/tag/v0.12.5)
+
+- Add P2P SDK Pull Gossip to mempool
+- Fix hanging requests on shutdown that could cause ungraceful shutdown
+- Increase batch size writing snapshot diff to disk
+- Migrate geth changes from v1.11.4 through v1.12.0
+- Bump LuxGo dependency to v1.10.10
+
+## [v0.12.4](https://github.com/luxdefi/coreth/releases/tag/v0.12.4)
+
+- Fix API handler crash for `lookupState` in `prestate` tracer
+- Fix API handler crash for LOG edge cases in the `callTracer`
+- Fix regression in `eth_getLogs` serving request for blocks containing no Ethereum transactions
+- Export `CalculateDynamicFee`
+
+## [v0.12.3](https://github.com/luxdefi/coreth/releases/tag/v0.12.3)
+
+- Migrate go-ethereum changes through v1.11.4
+- Downgrade API error log from `Warn` to `Info`
+
+## [v0.12.2](https://github.com/luxdefi/coreth/releases/tag/v0.12.2)
+
+- Increase default trie dirty cache size from 256MB to 512MB
+
+## [v0.12.1](https://github.com/luxdefi/coreth/releases/tag/v0.12.1)
+
+- Bump LuxGo dependency to v1.10.1
+- Improve block building logic
+- Use shorter ctx while reading snapshot to serve state sync requests
+- Remove proposer activation time from gossiper
+- Fail outstanding requests on shutdown
+- Make state sync request sizes configurable
+
+## [v0.12.0](https://github.com/luxdefi/coreth/releases/tag/v0.12.0)
+
+- Increase C-Chain block gas limit to 15M in Cortina
+- Add Mainnet and Fuji Cortina Activation timestamps
+
+## [v0.11.9](https://github.com/luxdefi/coreth/releases/tag/v0.11.9)
+
+- Downgrade SetPreference log from warn to debug
+
+## [v0.11.8](https://github.com/luxdefi/coreth/releases/tag/v0.11.8)
+
+- Fix shutdown hanging during state sync
+- Add pre-check for imported UTXOs
+- Fix bug in `BadBlockReason` output to display error string correctly
+- Update golangci-lint version to v1.51.2
+
+## [v0.11.7](https://github.com/luxdefi/coreth/releases/tag/v0.11.7)
+
+- Enable state sync by default when syncing from an empty database
+- Increase block gas limit to 15M for Cortina Network Upgrade
+- Add back file tracer endpoint
+- Add back JS tracer
+
+## [v0.11.6](https://github.com/luxdefi/coreth/releases/tag/v0.11.6)
+
+- Bump LuxGo to v1.9.6
+
 ## [v0.11.5](https://github.com/luxdefi/coreth/releases/tag/v0.11.5)
 
 - Add support for eth_call over VM2VM messaging

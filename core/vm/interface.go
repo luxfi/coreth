@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc.
+// (c) 2021-2024, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -27,11 +27,10 @@
 package vm
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxdefi/coreth/core/types"
 	"github.com/luxdefi/coreth/params"
+	"math/big"
 )
 
 // StateDB is an EVM database for full state querying.

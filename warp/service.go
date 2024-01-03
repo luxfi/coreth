@@ -1,5 +1,4 @@
 // (c) 2023-2024, Lux Partners Limited. All rights reserved.
-// (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -9,14 +8,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/vms/platformvm/warp"
-	"github.com/luxdefi/node/vms/platformvm/warp/payload"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/luxdefi/coreth/peer"
 	"github.com/luxdefi/coreth/warp/aggregator"
 	"github.com/luxdefi/coreth/warp/validators"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/vms/platformvm/warp"
+	"github.com/luxdefi/node/vms/platformvm/warp/payload"
 )
 
 var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")

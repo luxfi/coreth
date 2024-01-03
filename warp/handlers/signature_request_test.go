@@ -1,5 +1,4 @@
 // (c) 2023-2024, Lux Partners Limited. All rights reserved.
-// (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package handlers
@@ -9,6 +8,9 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxdefi/coreth/utils"
+	"github.com/luxdefi/coreth/warp"
 	"github.com/luxdefi/node/database/memdb"
 	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/node/snow/choices"
@@ -18,9 +20,6 @@ import (
 	"github.com/luxdefi/node/utils/crypto/bls"
 	luxWarp "github.com/luxdefi/node/vms/platformvm/warp"
 	"github.com/luxdefi/node/vms/platformvm/warp/payload"
-	"github.com/luxdefi/coreth/plugin/evm/message"
-	"github.com/luxdefi/coreth/utils"
-	"github.com/luxdefi/coreth/warp"
 	"github.com/stretchr/testify/require"
 )
 

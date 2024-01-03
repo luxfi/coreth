@@ -1,5 +1,4 @@
 // (c) 2023-2024, Lux Partners Limited. All rights reserved.
-// (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -8,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/coreth/rpc"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/luxdefi/coreth/rpc"
+	"github.com/luxdefi/node/ids"
 )
 
 var _ Client = (*client)(nil)

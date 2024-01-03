@@ -7,7 +7,6 @@ RUN mkdir -p $GOPATH/src/github.com/luxdefi
 WORKDIR $GOPATH/src/github.com/luxdefi
 
 RUN git clone -b $LUX_VERSION --single-branch https://github.com/luxdefi/node.git
-=======
 
 # Copy coreth repo into desired location
 COPY . coreth
@@ -22,6 +21,7 @@ RUN go mod download && go mod tidy -compat=1.20
 
 # Build the Lux Node binary with local version of coreth.
 RUN ./scripts/build_node.sh
+
 # Create the plugins directory in the standard location so the build directory will be recognized
 # as valid.
 RUN mkdir build/plugins

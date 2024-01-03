@@ -1,4 +1,4 @@
-// (c) 2019-2020, Ava Labs, Inc. All rights reserved.
+// (c) 2021-2024, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -23,7 +23,8 @@ import (
 	"github.com/luxdefi/node/utils/crypto/secp256k1"
 	"github.com/luxdefi/node/utils/math"
 	"github.com/luxdefi/node/utils/set"
-	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/components/lux"
+	"github.com/luxdefi/node/vms/components/lux"
 	"github.com/luxdefi/node/vms/components/verify"
 	"github.com/luxdefi/node/vms/secp256k1fx"
 )
@@ -37,7 +38,7 @@ var (
 
 // UnsignedImportTx is an unsigned ImportTx
 type UnsignedImportTx struct {
-	avax.Metadata
+	lux.Metadata
 	// ID of the network on which this tx was issued
 	NetworkID uint32 `serialize:"true" json:"networkID"`
 	// ID of this blockchain.
@@ -45,7 +46,7 @@ type UnsignedImportTx struct {
 	// Which chain to consume the funds from
 	SourceChain ids.ID `serialize:"true" json:"sourceChain"`
 	// Inputs that consume UTXOs produced on the chain
-	ImportedInputs []*avax.TransferableInput `serialize:"true" json:"importedInputs"`
+	ImportedInputs []*lux.TransferableInput `serialize:"true" json:"importedInputs"`
 	// Outputs
 	Outs []EVMOutput `serialize:"true" json:"outputs"`
 }
@@ -188,7 +189,7 @@ func (utx *UnsignedImportTx) SemanticVerify(
 	}
 
 	// Check the transaction consumes and produces the right amounts
-	fc := avax.NewFlowChecker()
+	fc := lux.NewFlowChecker()
 	switch {
 	// Apply dynamic fees to import transactions as of Apricot Phase 3
 	case rules.IsApricotPhase3:
@@ -240,7 +241,7 @@ func (utx *UnsignedImportTx) SemanticVerify(
 	for i, in := range utx.ImportedInputs {
 		utxoBytes := allUTXOBytes[i]
 
-		utxo := &avax.UTXO{}
+		utxo := &lux.UTXO{}
 		if _, err := vm.codec.Unmarshal(utxoBytes, utxo); err != nil {
 			return fmt.Errorf("failed to unmarshal UTXO: %w", err)
 		}
@@ -301,9 +302,9 @@ func (vm *VM) newImportTxWithUTXOs(
 	to common.Address, // Address of recipient
 	baseFee *big.Int, // fee to use post-AP3
 	kc *secp256k1fx.Keychain, // Keychain to use for signing the atomic UTXOs
-	atomicUTXOs []*avax.UTXO, // UTXOs to spend
+	atomicUTXOs []*lux.UTXO, // UTXOs to spend
 ) (*Tx, error) {
-	importedInputs := []*avax.TransferableInput{}
+	importedInputs := []*lux.TransferableInput{}
 	signers := [][]*secp256k1.PrivateKey{}
 
 	importedAmount := make(map[ids.ID]uint64)
@@ -313,7 +314,7 @@ func (vm *VM) newImportTxWithUTXOs(
 		if err != nil {
 			continue
 		}
-		input, ok := inputIntf.(avax.TransferableIn)
+		input, ok := inputIntf.(lux.TransferableIn)
 		if !ok {
 			continue
 		}
@@ -322,14 +323,14 @@ func (vm *VM) newImportTxWithUTXOs(
 		if err != nil {
 			return nil, err
 		}
-		importedInputs = append(importedInputs, &avax.TransferableInput{
+		importedInputs = append(importedInputs, &lux.TransferableInput{
 			UTXOID: utxo.UTXOID,
 			Asset:  utxo.Asset,
 			In:     input,
 		})
 		signers = append(signers, utxoSigners)
 	}
-	avax.SortTransferableInputsWithSigners(importedInputs, signers)
+	lux.SortTransferableInputsWithSigners(importedInputs, signers)
 	importedLUXAmount := importedAmount[vm.ctx.LUXAssetID]
 
 	outs := make([]EVMOutput, 0, len(importedAmount))
