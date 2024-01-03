@@ -252,7 +252,7 @@ type ExportLUXArgs struct {
 func (service *LuxAPI) ExportLUX(_ *http.Request, args *ExportLUXArgs, response *api.JSONTxID) error {
 	return service.Export(nil, &ExportArgs{
 		ExportLUXArgs: *args,
-		AssetID:        service.vm.ctx.LUXAssetID.String(),
+		AssetID:       service.vm.ctx.LUXAssetID.String(),
 	}, response)
 }
 

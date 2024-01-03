@@ -12,7 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/luxdefi/node/ids"
 	"github.com/luxdefi/coreth/core/rawdb"
 	"github.com/luxdefi/coreth/core/state/snapshot"
 	"github.com/luxdefi/coreth/core/types"
@@ -22,6 +21,7 @@ import (
 	"github.com/luxdefi/coreth/sync/handlers/stats"
 	"github.com/luxdefi/coreth/sync/syncutils"
 	"github.com/luxdefi/coreth/trie"
+	"github.com/luxdefi/node/ids"
 	"github.com/stretchr/testify/assert"
 )
 

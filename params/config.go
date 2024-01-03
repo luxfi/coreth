@@ -134,7 +134,7 @@ var (
 	}
 
 	TestChainConfig = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -161,7 +161,7 @@ var (
 	}
 
 	TestLaunchConfig = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -188,7 +188,7 @@ var (
 	}
 
 	TestApricotPhase1Config = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -215,7 +215,7 @@ var (
 	}
 
 	TestApricotPhase2Config = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -242,7 +242,7 @@ var (
 	}
 
 	TestApricotPhase3Config = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -269,7 +269,7 @@ var (
 	}
 
 	TestApricotPhase4Config = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -296,7 +296,7 @@ var (
 	}
 
 	TestApricotPhase5Config = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -323,7 +323,7 @@ var (
 	}
 
 	TestApricotPhasePre6Config = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -350,7 +350,7 @@ var (
 	}
 
 	TestApricotPhase6Config = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -377,7 +377,7 @@ var (
 	}
 
 	TestApricotPhasePost6Config = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -404,7 +404,7 @@ var (
 	}
 
 	TestBanffChainConfig = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -431,7 +431,7 @@ var (
 	}
 
 	TestCortinaChainConfig = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -458,7 +458,7 @@ var (
 	}
 
 	TestDUpgradeChainConfig = &ChainConfig{
-		LuxContext:                LuxContext{utils.TestSnowContext()},
+		LuxContext:                      LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,

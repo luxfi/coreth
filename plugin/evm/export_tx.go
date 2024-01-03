@@ -29,8 +29,8 @@ import (
 )
 
 var (
-	_                           UnsignedAtomicTx       = &UnsignedExportTx{}
-	_                           secp256k1fx.UnsignedTx = &UnsignedExportTx{}
+	_                          UnsignedAtomicTx       = &UnsignedExportTx{}
+	_                          secp256k1fx.UnsignedTx = &UnsignedExportTx{}
 	errExportNonLUXInputBanff                         = errors.New("export input cannot contain non-LUX in Banff")
 	errExportNonLUXOutputBanff                        = errors.New("export output cannot contain non-LUX in Banff")
 )

@@ -9,10 +9,9 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxdefi/node/database/versiondb"
 	"github.com/luxdefi/node/utils/wrappers"
-
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/luxdefi/coreth/plugin/evm/message"
 	syncclient "github.com/luxdefi/coreth/sync/client"

@@ -1630,52 +1630,52 @@ func TestExportTxGasCost(t *testing.T) {
 
 func TestNewExportTx(t *testing.T) {
 	tests := []struct {
-		name               string
-		genesis            string
-		rules              params.Rules
-		bal                uint64
+		name              string
+		genesis           string
+		rules             params.Rules
+		bal               uint64
 		expectedBurnedLUX uint64
 	}{
 		{
-			name:               "apricot phase 0",
-			genesis:            genesisJSONApricotPhase0,
-			rules:              apricotRulesPhase0,
-			bal:                44000000,
+			name:              "apricot phase 0",
+			genesis:           genesisJSONApricotPhase0,
+			rules:             apricotRulesPhase0,
+			bal:               44000000,
 			expectedBurnedLUX: 1000000,
 		},
 		{
-			name:               "apricot phase 1",
-			genesis:            genesisJSONApricotPhase1,
-			rules:              apricotRulesPhase1,
-			bal:                44000000,
+			name:              "apricot phase 1",
+			genesis:           genesisJSONApricotPhase1,
+			rules:             apricotRulesPhase1,
+			bal:               44000000,
 			expectedBurnedLUX: 1000000,
 		},
 		{
-			name:               "apricot phase 2",
-			genesis:            genesisJSONApricotPhase2,
-			rules:              apricotRulesPhase2,
-			bal:                43000000,
+			name:              "apricot phase 2",
+			genesis:           genesisJSONApricotPhase2,
+			rules:             apricotRulesPhase2,
+			bal:               43000000,
 			expectedBurnedLUX: 1000000,
 		},
 		{
-			name:               "apricot phase 3",
-			genesis:            genesisJSONApricotPhase3,
-			rules:              apricotRulesPhase3,
-			bal:                44446500,
+			name:              "apricot phase 3",
+			genesis:           genesisJSONApricotPhase3,
+			rules:             apricotRulesPhase3,
+			bal:               44446500,
 			expectedBurnedLUX: 276750,
 		},
 		{
-			name:               "apricot phase 4",
-			genesis:            genesisJSONApricotPhase4,
-			rules:              apricotRulesPhase4,
-			bal:                44446500,
+			name:              "apricot phase 4",
+			genesis:           genesisJSONApricotPhase4,
+			rules:             apricotRulesPhase4,
+			bal:               44446500,
 			expectedBurnedLUX: 276750,
 		},
 		{
-			name:               "apricot phase 5",
-			genesis:            genesisJSONApricotPhase5,
-			rules:              apricotRulesPhase5,
-			bal:                39946500,
+			name:              "apricot phase 5",
+			genesis:           genesisJSONApricotPhase5,
+			rules:             apricotRulesPhase5,
+			bal:               39946500,
 			expectedBurnedLUX: 2526750,
 		},
 	}
