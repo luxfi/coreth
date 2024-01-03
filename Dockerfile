@@ -7,6 +7,7 @@ RUN mkdir -p $GOPATH/src/github.com/luxdefi
 WORKDIR $GOPATH/src/github.com/luxdefi
 
 RUN git clone -b $LUX_VERSION --single-branch https://github.com/luxdefi/node.git
+=======
 
 # Copy coreth repo into desired location
 COPY . coreth

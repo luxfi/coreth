@@ -24,18 +24,11 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 
-<<<<<<< HEAD
 	"github.com/luxdefi/coreth/core"
 	"github.com/luxdefi/coreth/core/state"
 	"github.com/luxdefi/coreth/core/txpool"
 	"github.com/luxdefi/coreth/core/types"
 	"github.com/luxdefi/coreth/plugin/evm/message"
-=======
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/state"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/plugin/evm/message"
->>>>>>> 264cd01fb (Update imports)
 )
 
 const (

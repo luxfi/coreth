@@ -36,7 +36,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/node/utils/timer/mockable"
 	"github.com/luxdefi/coreth/accounts"
 	"github.com/luxdefi/coreth/consensus"
 	"github.com/luxdefi/coreth/consensus/dummy"
@@ -58,6 +57,7 @@ import (
 	"github.com/luxdefi/coreth/node"
 	"github.com/luxdefi/coreth/params"
 	"github.com/luxdefi/coreth/rpc"
+	"github.com/luxdefi/node/utils/timer/mockable"
 )
 
 // Config contains the configuration options of the ETH protocol.

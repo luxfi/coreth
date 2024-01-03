@@ -71,6 +71,10 @@ import (
 	"github.com/luxdefi/node/codec"
 	"github.com/luxdefi/node/codec/linearcodec"
 	"github.com/luxdefi/node/database"
+<<<<<<< HEAD
+=======
+	"github.com/luxdefi/node/database/manager"
+>>>>>>> 1c6259116 (Update imports)
 	"github.com/luxdefi/node/database/prefixdb"
 	"github.com/luxdefi/node/database/versiondb"
 	"github.com/luxdefi/node/ids"
@@ -313,7 +317,10 @@ type VM struct {
 
 	// Metrics
 	multiGatherer nodeMetrics.MultiGatherer
+<<<<<<< HEAD
 	sdkMetrics    *prometheus.Registry
+=======
+>>>>>>> 1c6259116 (Update imports)
 
 	bootstrapped bool
 	IsPlugin     bool

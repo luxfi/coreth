@@ -39,8 +39,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/node/utils/timer/mockable"
-	"github.com/luxdefi/node/utils/units"
 	"github.com/luxdefi/coreth/consensus"
 	"github.com/luxdefi/coreth/consensus/dummy"
 	"github.com/luxdefi/coreth/core"
@@ -50,6 +48,8 @@ import (
 	"github.com/luxdefi/coreth/params"
 	"github.com/luxdefi/coreth/precompile/precompileconfig"
 	"github.com/luxdefi/coreth/predicate"
+	"github.com/luxdefi/node/utils/timer/mockable"
+	"github.com/luxdefi/node/utils/units"
 )
 
 const (

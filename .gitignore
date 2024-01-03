@@ -47,3 +47,4 @@ build/
 
 # Used for e2e testing
 luxd
+*.orig
