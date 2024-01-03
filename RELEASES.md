@@ -90,12 +90,12 @@
 
 ## [v0.12.8](https://github.com/luxdefi/coreth/releases/tag/v0.12.8)
 
-- Bump LuxGo to v1.10.15
+- Bump Lux Node to v1.10.15
 - Fix crash in prestate tracer on memory read
 
 ## [v0.12.7](https://github.com/luxdefi/coreth/releases/tag/v0.12.7)
 
-- Bump LuxGo to v1.10.14
+- Bump Lux Node to v1.10.14
 
 ## [v0.12.6](https://github.com/luxdefi/coreth/releases/tag/v0.12.6)
 
@@ -109,7 +109,7 @@
 - Fix hanging requests on shutdown that could cause ungraceful shutdown
 - Increase batch size writing snapshot diff to disk
 - Migrate geth changes from v1.11.4 through v1.12.0
-- Bump LuxGo dependency to v1.10.10
+- Bump Lux Node dependency to v1.10.10
 
 ## [v0.12.4](https://github.com/luxdefi/coreth/releases/tag/v0.12.4)
 
@@ -129,7 +129,7 @@
 
 ## [v0.12.1](https://github.com/luxdefi/coreth/releases/tag/v0.12.1)
 
-- Bump LuxGo dependency to v1.10.1
+- Bump Lux Node dependency to v1.10.1
 - Improve block building logic
 - Use shorter ctx while reading snapshot to serve state sync requests
 - Remove proposer activation time from gossiper
@@ -161,7 +161,7 @@
 
 ## [v0.11.6](https://github.com/luxdefi/coreth/releases/tag/v0.11.6)
 
-- Bump LuxGo to v1.9.6
+- Bump Lux Node to v1.9.6
 
 ## [v0.11.5](https://github.com/luxdefi/coreth/releases/tag/v0.11.5)
 
