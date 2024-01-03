@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/set"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils/set"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -23,11 +23,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ava-labs/coreth/core"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/plugin/evm/message"
-	"github.com/ava-labs/coreth/utils"
+	"github.com/luxdefi/coreth/core"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxdefi/coreth/utils"
 )
 
 func fundAddressByGenesis(addrs []common.Address) (string, error) {
@@ -45,7 +45,7 @@ func fundAddressByGenesis(addrs []common.Address) (string, error) {
 	genesis.Alloc = funds
 
 	genesis.Config = &params.ChainConfig{
-		ChainID:                     params.AvalancheLocalChainID,
+		ChainID:                     params.LuxLocalChainID,
 		ApricotPhase1BlockTimestamp: utils.NewUint64(0),
 		ApricotPhase2BlockTimestamp: utils.NewUint64(0),
 		ApricotPhase3BlockTimestamp: utils.NewUint64(0),

@@ -6,8 +6,8 @@ package predicate
 import (
 	"math/big"
 
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/utils"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/utils"
 	"github.com/ethereum/go-ethereum/common"
 )
 

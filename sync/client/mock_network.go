@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/coreth/peer"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/coreth/peer"
 
-	"github.com/ava-labs/avalanchego/version"
+	"github.com/luxdefi/node/version"
 )
 
 var _ peer.NetworkClient = &mockNetwork{}

@@ -6,10 +6,10 @@ package evm
 import (
 	"errors"
 
-	"github.com/ava-labs/avalanchego/database/encdb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxdefi/node/database/encdb"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils/crypto/secp256k1"
 )
 
 // Key in the database whose corresponding value is the list of

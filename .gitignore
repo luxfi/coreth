@@ -46,4 +46,4 @@ bin/
 build/
 
 # Used for e2e testing
-avalanchego
+luxd

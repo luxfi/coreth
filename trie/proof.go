@@ -31,9 +31,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ava-labs/coreth/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/coreth/ethdb"
 )
 
 // Prove constructs a merkle proof for key. The result contains all encoded nodes

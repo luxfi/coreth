@@ -31,10 +31,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ava-labs/coreth/accounts"
-	"github.com/ava-labs/coreth/accounts/external"
-	"github.com/ava-labs/coreth/accounts/keystore"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/coreth/accounts"
+	"github.com/luxdefi/coreth/accounts/external"
+	"github.com/luxdefi/coreth/accounts/keystore"
 )
 
 // Config represents a small collection of configuration values to fine tune the
@@ -66,7 +66,7 @@ type Config struct {
 // ExtRPCEnabled returns the indicator whether node enables the external
 // RPC(http, ws or graphql).
 func (c *Config) ExtRPCEnabled() bool {
-	// In avalanche, we always disable the external RPC.
+	// In lux, we always disable the external RPC.
 	return false
 }
 

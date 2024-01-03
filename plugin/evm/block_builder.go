@@ -7,14 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ava-labs/avalanchego/utils/timer"
-	"github.com/ava-labs/coreth/core/txpool"
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/coreth/core/txpool"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/node/utils/timer"
 
-	"github.com/ava-labs/avalanchego/snow"
-	commonEng "github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/coreth/core"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/coreth/core"
+	"github.com/luxdefi/node/snow"
+	commonEng "github.com/luxdefi/node/snow/engine/common"
 )
 
 const (

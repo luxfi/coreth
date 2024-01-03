@@ -1,4 +1,7 @@
-// (c) 2020-2021, Ava Labs, Inc.
+// (c) 2021-2024, Lux Partners Limited.
+//
+// This file is a derived work, based on coreth and the go-ethereum library
+// whose original notices appear below.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -8,6 +11,7 @@
 //
 // Much love to the original authors for their work.
 // **********
+// Copyright 2020-2021, Ava Labs, Inc.
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -29,11 +33,11 @@ package trie
 import (
 	"fmt"
 
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/ethdb"
-	"github.com/ava-labs/coreth/trie/trienode"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxdefi/coreth/trie/trienode"
 )
 
 // makeTestTrie create a sample test trie to test node-wise reconstruction.

@@ -15,35 +15,35 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ava-labs/avalanchego/chains/atomic"
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/prefixdb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	commonEng "github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
-	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
-	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/avalanchego/utils/units"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/database"
+	"github.com/luxdefi/node/database/prefixdb"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/node/snow/choices"
+	commonEng "github.com/luxdefi/node/snow/engine/common"
+	"github.com/luxdefi/node/snow/engine/snowman/block"
+	"github.com/luxdefi/node/utils/crypto/secp256k1"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/utils/units"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/ava-labs/coreth/accounts/keystore"
-	"github.com/ava-labs/coreth/consensus/dummy"
-	"github.com/ava-labs/coreth/constants"
-	"github.com/ava-labs/coreth/core"
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/ethdb"
-	"github.com/ava-labs/coreth/metrics"
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/predicate"
-	statesyncclient "github.com/ava-labs/coreth/sync/client"
-	"github.com/ava-labs/coreth/sync/statesync"
-	"github.com/ava-labs/coreth/trie"
+	"github.com/luxdefi/coreth/accounts/keystore"
+	"github.com/luxdefi/coreth/consensus/dummy"
+	"github.com/luxdefi/coreth/constants"
+	"github.com/luxdefi/coreth/core"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxdefi/coreth/metrics"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/predicate"
+	statesyncclient "github.com/luxdefi/coreth/sync/client"
+	"github.com/luxdefi/coreth/sync/statesync"
+	"github.com/luxdefi/coreth/trie"
 )
 
 func TestSkipStateSync(t *testing.T) {
@@ -265,7 +265,7 @@ func TestVMShutdownWhileSyncing(t *testing.T) {
 func createSyncServerAndClientVMs(t *testing.T, test syncTest) *syncVMSetup {
 	var (
 		require      = require.New(t)
-		importAmount = 2000000 * units.Avax // 2M avax
+		importAmount = 2000000 * units.Lux // 2M avax
 		alloc        = map[ids.ShortID]uint64{
 			testShortIDAddrs[0]: importAmount,
 		}
@@ -297,7 +297,7 @@ func createSyncServerAndClientVMs(t *testing.T, test syncTest) *syncVMSetup {
 		case 1:
 			// export some of the imported UTXOs to test exportTx is properly synced
 			exportTx, err = serverVM.newExportTx(
-				serverVM.ctx.AVAXAssetID,
+				serverVM.ctx.LUXAssetID,
 				importAmount/2,
 				serverVM.ctx.XChainID,
 				testShortIDAddrs[0],

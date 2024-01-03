@@ -1,3 +1,4 @@
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
@@ -7,8 +8,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/coreth/rpc"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/coreth/rpc"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 

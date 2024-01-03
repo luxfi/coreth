@@ -7,9 +7,9 @@ package precompileconfig
 import (
 	reflect "reflect"
 
-	atomic "github.com/ava-labs/avalanchego/chains/atomic"
-	ids "github.com/ava-labs/avalanchego/ids"
-	warp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
+	atomic "github.com/luxdefi/node/chains/atomic"
+	ids "github.com/luxdefi/node/ids"
+	warp "github.com/luxdefi/node/vms/platformvm/warp"
 	common "github.com/ethereum/go-ethereum/common"
 	gomock "go.uber.org/mock/gomock"
 )

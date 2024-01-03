@@ -6,16 +6,16 @@ package evm
 import (
 	"context"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/coreth/ethdb"
-	"github.com/ava-labs/coreth/metrics"
-	"github.com/ava-labs/coreth/plugin/evm/message"
-	syncHandlers "github.com/ava-labs/coreth/sync/handlers"
-	syncStats "github.com/ava-labs/coreth/sync/handlers/stats"
-	"github.com/ava-labs/coreth/trie"
-	"github.com/ava-labs/coreth/warp"
-	warpHandlers "github.com/ava-labs/coreth/warp/handlers"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxdefi/coreth/metrics"
+	"github.com/luxdefi/coreth/plugin/evm/message"
+	syncHandlers "github.com/luxdefi/coreth/sync/handlers"
+	syncStats "github.com/luxdefi/coreth/sync/handlers/stats"
+	"github.com/luxdefi/coreth/trie"
+	"github.com/luxdefi/coreth/warp"
+	warpHandlers "github.com/luxdefi/coreth/warp/handlers"
 )
 
 var _ message.RequestHandler = &networkHandler{}

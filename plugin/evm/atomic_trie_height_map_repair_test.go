@@ -6,9 +6,9 @@ package evm
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/memdb"
-	"github.com/ava-labs/avalanchego/database/versiondb"
+	"github.com/luxdefi/node/database"
+	"github.com/luxdefi/node/database/memdb"
+	"github.com/luxdefi/node/database/versiondb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )

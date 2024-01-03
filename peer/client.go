@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/luxdefi/node/ids"
 
-	"github.com/ava-labs/avalanchego/version"
+	"github.com/luxdefi/node/version"
 )
 
 var (

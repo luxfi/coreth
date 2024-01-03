@@ -6,10 +6,10 @@ package evm
 import (
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/trie/trienode"
+	"github.com/luxdefi/node/database"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/trie/trienode"
 	"github.com/ethereum/go-ethereum/log"
 )
 

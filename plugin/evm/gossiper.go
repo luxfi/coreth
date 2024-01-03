@@ -10,25 +10,32 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/network/p2p/gossip"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/network/p2p/gossip"
 
-	"github.com/ava-labs/coreth/peer"
+	"github.com/luxdefi/coreth/peer"
 
-	"github.com/ava-labs/avalanchego/cache"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
+	"github.com/luxdefi/node/cache"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/node/utils/wrappers"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/ava-labs/coreth/core"
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/core/txpool"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/plugin/evm/message"
+<<<<<<< HEAD
+	"github.com/luxdefi/coreth/core"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/core/txpool"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/plugin/evm/message"
+=======
+	"github.com/luxdefi/coreth/core"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/plugin/evm/message"
+>>>>>>> 264cd01fb (Update imports)
 )
 
 const (

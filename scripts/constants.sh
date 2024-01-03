@@ -4,10 +4,10 @@
 GOPATH="$(go env GOPATH)"
 
 # Set binary location
-binary_path=${CORETH_BINARY_PATH:-"$GOPATH/src/github.com/ava-labs/avalanchego/build/plugins/evm"}
+binary_path=${CORETH_BINARY_PATH:-"$GOPATH/src/github.com/luxdefi/node/build/plugins/evm"}
 
-# Avalabs docker hub
-dockerhub_repo="avaplatform/avalanchego"
+# Lux docker hub
+dockerhub_repo="luxdefi/node"
 
 # Current branch
 current_branch=${CURRENT_BRANCH:-$(git describe --tags --exact-match 2> /dev/null || git symbolic-ref -q --short HEAD || git rev-parse --short HEAD)}
@@ -20,7 +20,7 @@ echo "Using branch: ${current_branch}"
 coreth_commit="$(git --git-dir="$CORETH_PATH/.git" rev-parse HEAD)"
 coreth_commit_id="${coreth_commit::8}"
 
-build_image_id=${BUILD_IMAGE_ID:-"$avalanche_version-$coreth_commit_id"}
+build_image_id=${BUILD_IMAGE_ID:-"$lux_version-$coreth_commit_id"}
 
 # Set the CGO flags to use the portable version of BLST
 #

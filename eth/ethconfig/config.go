@@ -29,11 +29,11 @@ package ethconfig
 import (
 	"time"
 
-	"github.com/ava-labs/coreth/core"
-	"github.com/ava-labs/coreth/core/txpool"
-	"github.com/ava-labs/coreth/eth/gasprice"
-	"github.com/ava-labs/coreth/miner"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxdefi/coreth/core"
+	"github.com/luxdefi/coreth/core/txpool"
+	"github.com/luxdefi/coreth/eth/gasprice"
+	"github.com/luxdefi/coreth/miner"
 )
 
 // DefaultFullGPOConfig contains default gasprice oracle settings for full node.
@@ -48,7 +48,7 @@ var DefaultFullGPOConfig = gasprice.Config{
 	MinGasUsed:          gasprice.DefaultMinGasUsed,
 }
 
-// DefaultConfig contains default settings for use on the Avalanche main net.
+// DefaultConfig contains default settings for use on the Lux main net.
 var DefaultConfig = NewDefaultConfig()
 
 func NewDefaultConfig() Config {
@@ -65,7 +65,7 @@ func NewDefaultConfig() Config {
 		RPCGasCap:                 25000000,
 		RPCEVMTimeout:             5 * time.Second,
 		GPO:                       DefaultFullGPOConfig,
-		RPCTxFeeCap:               1, // 1 AVAX
+		RPCTxFeeCap:               1, // 1 LUX
 	}
 }
 

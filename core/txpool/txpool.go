@@ -36,18 +36,18 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ava-labs/coreth/consensus/dummy"
-	"github.com/ava-labs/coreth/core"
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/metrics"
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/utils"
-	"github.com/ava-labs/coreth/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/prque"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/coreth/consensus/dummy"
+	"github.com/luxdefi/coreth/core"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/metrics"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/utils"
+	"github.com/luxdefi/coreth/vmerrs"
 )
 
 const (
@@ -1520,7 +1520,7 @@ func (pool *TxPool) reset(oldHead, newHead *types.Header) {
 
 	// Update all fork indicator by next pending block number.
 	next := new(big.Int).Add(newHead.Number, big.NewInt(1))
-	rules := pool.chainconfig.AvalancheRules(next, newHead.Time)
+	rules := pool.chainconfig.LuxRules(next, newHead.Time)
 
 	pool.rules.Store(&rules)
 	pool.eip2718.Store(rules.IsApricotPhase2)

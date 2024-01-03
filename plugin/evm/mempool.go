@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ava-labs/avalanchego/cache"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/network/p2p/gossip"
-	"github.com/ava-labs/avalanchego/snow"
+	"github.com/luxdefi/node/cache"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/network/p2p/gossip"
+	"github.com/luxdefi/node/snow"
 
-	"github.com/ava-labs/coreth/metrics"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/coreth/metrics"
 )
 
 const (
@@ -127,7 +127,7 @@ func (m *Mempool) has(txID ids.ID) bool {
 }
 
 // atomicTxGasPrice is the [gasPrice] paid by a transaction to burn a given
-// amount of [AVAXAssetID] given the value of [gasUsed].
+// amount of [LUXAssetID] given the value of [gasUsed].
 func (m *Mempool) atomicTxGasPrice(tx *Tx) (uint64, error) {
 	gasUsed, err := tx.GasUsed(true)
 	if err != nil {
@@ -136,7 +136,7 @@ func (m *Mempool) atomicTxGasPrice(tx *Tx) (uint64, error) {
 	if gasUsed == 0 {
 		return 0, errNoGasUsed
 	}
-	burned, err := tx.Burned(m.ctx.AVAXAssetID)
+	burned, err := tx.Burned(m.ctx.LUXAssetID)
 	if err != nil {
 		return 0, err
 	}

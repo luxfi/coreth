@@ -1,6 +1,6 @@
 # Coreth and the Lux EVM Chain
 
-[Lux](https://docs.avax.network/learn/platform-overview) is a network composed of multiple blockchains.
+[Lux](https://docs.lux.network/learn/platform-overview) is a network composed of multiple blockchains.
 Each blockchain is an instance of a Virtual Machine (VM), much like an object in an object-oriented language is an instance of a class.
 That is, the VM defines the behavior of the blockchain.
 
@@ -23,7 +23,7 @@ Now that Lux Node depends on the local version of Coreth, we can build with the 
 ./build/luxd
 ```
 
-Note: the C-Chain originally ran in a separate process from the main AvalancheGo process and communicated with it over a local gRPC connection. When this was the case, AvalancheGo's build script would download Coreth, compile it, and place the binary into the `avalanchego/build/plugins` directory.
+Note: the C-Chain originally ran in a separate process from the main Lux Node process and communicated with it over a local gRPC connection. When this was the case, Lux Node's build script would download Coreth, compile it, and place the binary into the `node/build/plugins` directory.
 
 ## API
 
@@ -40,23 +40,23 @@ Full documentation for the C-Chain's API can be found [here.](https://docs.lux.n
 
 ## Compatibility
 
-EVM-Chain is compatible with almost all Ethereum tooling, including [Remix,](https://docs.avax.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-avalanche-using-remix-and-metamask) [Metamask](https://docs.avax.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-avalanche-using-remix-and-metamask) and [Truffle.](https://docs.avax.network/build/tutorials/smart-contracts/using-truffle-with-the-avalanche-c-chain)
+EVM-Chain is compatible with almost all Ethereum tooling, including [Remix,](https://docs.lux.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-lux-using-remix-and-metamask) [Metamask](https://docs.lux.network/build/tutorials/smart-contracts/deploy-a-smart-contract-on-lux-using-remix-and-metamask) and [Truffle.](https://docs.lux.network/build/tutorials/smart-contracts/using-truffle-with-the-lux-c-chain)
 
 ## Differences Between LUX C-Chain and Ethereum
 
 ### Atomic Transactions
 
-As a network composed of multiple blockchains, Avalanche uses *atomic transactions* to move assets between chains. Coreth modifies the Ethereum block format by adding an *ExtraData* field, which contains the atomic transactions.
+As a network composed of multiple blockchains, Lux uses *atomic transactions* to move assets between chains. Coreth modifies the Ethereum block format by adding an *ExtraData* field, which contains the atomic transactions.
 
-### Avalanche Native Tokens (ANTs)
+### Lux Native Tokens (ANTs)
 
-ETHChain supports Avalanche Native Tokens, which are created on the X-Chain using precompiled contracts. These precompiled contracts *nativeAssetCall* and *nativeAssetBalance* support the same interface for ANTs as *CALL* and *BALANCE* do for AVAX with the added parameter of *assetID* to specify the asset.
+ETHChain supports Lux Native Tokens, which are created on the X-Chain using precompiled contracts. These precompiled contracts *nativeAssetCall* and *nativeAssetBalance* support the same interface for ANTs as *CALL* and *BALANCE* do for LUX with the added parameter of *assetID* to specify the asset.
 
-For the full documentation of precompiles for interacting with ANTs and using them in ARC-20s, see [here](https://docs.avax.network/build/references/coreth-arc20s).
+For the full documentation of precompiles for interacting with ANTs and using them in ARC-20s, see [here](https://docs.lux.network/build/references/coreth-arc20s).
 
 ### Block Timing
 
-Blocks are produced asynchronously in Snowman Consensus, so the timing assumptions that apply to Ethereum do not apply to Coreth. To support block production in an async environment, a block is permitted to have the same timestamp as its parent. Since there is no general assumption that a block will be produced every 10 seconds, smart contracts built on Avalanche should use the block timestamp instead of the block number for their timing assumptions.
+Blocks are produced asynchronously in Snowman Consensus, so the timing assumptions that apply to Ethereum do not apply to Coreth. To support block production in an async environment, a block is permitted to have the same timestamp as its parent. Since there is no general assumption that a block will be produced every 10 seconds, smart contracts built on Lux should use the block timestamp instead of the block number for their timing assumptions.
 
 A block with a timestamp more than 10 seconds in the future will not be considered valid. However, a block with a timestamp more than 10 seconds in the past will still be considered valid as long as its timestamp is greater than or equal to the timestamp of its parent block.
 

@@ -17,38 +17,38 @@ import (
 	"sync"
 	"time"
 
-	avalanchegoMetrics "github.com/ava-labs/avalanchego/api/metrics"
-	"github.com/ava-labs/avalanchego/network/p2p"
-	"github.com/ava-labs/avalanchego/network/p2p/gossip"
+	nodeMetrics "github.com/luxdefi/node/api/metrics"
+	"github.com/luxdefi/node/network/p2p"
+	"github.com/luxdefi/node/network/p2p/gossip"
 
-	"github.com/ava-labs/coreth/consensus/dummy"
-	corethConstants "github.com/ava-labs/coreth/constants"
-	"github.com/ava-labs/coreth/core"
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/core/txpool"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/eth"
-	"github.com/ava-labs/coreth/eth/ethconfig"
-	"github.com/ava-labs/coreth/ethdb"
-	corethPrometheus "github.com/ava-labs/coreth/metrics/prometheus"
-	"github.com/ava-labs/coreth/miner"
-	"github.com/ava-labs/coreth/node"
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/peer"
-	"github.com/ava-labs/coreth/plugin/evm/message"
+	"github.com/luxdefi/coreth/consensus/dummy"
+	corethConstants "github.com/luxdefi/coreth/constants"
+	"github.com/luxdefi/coreth/core"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/core/txpool"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/eth"
+	"github.com/luxdefi/coreth/eth/ethconfig"
+	"github.com/luxdefi/coreth/ethdb"
+	corethPrometheus "github.com/luxdefi/coreth/metrics/prometheus"
+	"github.com/luxdefi/coreth/miner"
+	"github.com/luxdefi/coreth/node"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/peer"
+	"github.com/luxdefi/coreth/plugin/evm/message"
 
 	// Force-load precompiles to trigger registration
-	warpPrecompile "github.com/ava-labs/coreth/precompile/contracts/warp"
-	"github.com/ava-labs/coreth/precompile/precompileconfig"
-	_ "github.com/ava-labs/coreth/precompile/registry"
-	"github.com/ava-labs/coreth/rpc"
-	statesyncclient "github.com/ava-labs/coreth/sync/client"
-	"github.com/ava-labs/coreth/sync/client/stats"
-	"github.com/ava-labs/coreth/trie"
-	"github.com/ava-labs/coreth/utils"
-	"github.com/ava-labs/coreth/warp"
-	warpValidators "github.com/ava-labs/coreth/warp/validators"
+	warpPrecompile "github.com/luxdefi/coreth/precompile/contracts/warp"
+	"github.com/luxdefi/coreth/precompile/precompileconfig"
+	_ "github.com/luxdefi/coreth/precompile/registry"
+	"github.com/luxdefi/coreth/rpc"
+	statesyncclient "github.com/luxdefi/coreth/sync/client"
+	"github.com/luxdefi/coreth/sync/client/stats"
+	"github.com/luxdefi/coreth/trie"
+	"github.com/luxdefi/coreth/utils"
+	"github.com/luxdefi/coreth/warp"
+	warpValidators "github.com/luxdefi/coreth/warp/validators"
 
 	"github.com/prometheus/client_golang/prometheus"
 	// Force-load tracer engine to trigger registration
@@ -56,45 +56,45 @@ import (
 	// We must import this package (not referenced elsewhere) so that the native "callTracer"
 	// is added to a map of client-accessible tracers. In geth, this is done
 	// inside of cmd/geth.
-	_ "github.com/ava-labs/coreth/eth/tracers/js"
-	_ "github.com/ava-labs/coreth/eth/tracers/native"
+	_ "github.com/luxdefi/coreth/eth/tracers/js"
+	_ "github.com/luxdefi/coreth/eth/tracers/native"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/ava-labs/coreth/metrics"
+	"github.com/luxdefi/coreth/metrics"
 
-	avalancheRPC "github.com/gorilla/rpc/v2"
+	luxRPC "github.com/gorilla/rpc/v2"
 
-	"github.com/ava-labs/avalanchego/cache"
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/codec/linearcodec"
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/prefixdb"
-	"github.com/ava-labs/avalanchego/database/versiondb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
-	"github.com/ava-labs/avalanchego/utils/formatting/address"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/utils/math"
-	"github.com/ava-labs/avalanchego/utils/perms"
-	"github.com/ava-labs/avalanchego/utils/profiler"
-	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-	"github.com/ava-labs/avalanchego/utils/units"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/components/chain"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/luxdefi/node/cache"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/codec/linearcodec"
+	"github.com/luxdefi/node/database"
+	"github.com/luxdefi/node/database/prefixdb"
+	"github.com/luxdefi/node/database/versiondb"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/node/snow/choices"
+	"github.com/luxdefi/node/snow/consensus/snowman"
+	"github.com/luxdefi/node/snow/engine/snowman/block"
+	"github.com/luxdefi/node/utils/constants"
+	"github.com/luxdefi/node/utils/crypto/secp256k1"
+	"github.com/luxdefi/node/utils/formatting/address"
+	"github.com/luxdefi/node/utils/logging"
+	"github.com/luxdefi/node/utils/math"
+	"github.com/luxdefi/node/utils/perms"
+	"github.com/luxdefi/node/utils/profiler"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/utils/timer/mockable"
+	"github.com/luxdefi/node/utils/units"
+	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/components/chain"
+	"github.com/luxdefi/node/vms/secp256k1fx"
 
-	commonEng "github.com/ava-labs/avalanchego/snow/engine/common"
+	commonEng "github.com/luxdefi/node/snow/engine/common"
 
-	avalancheJSON "github.com/ava-labs/avalanchego/utils/json"
+	luxJSON "github.com/luxdefi/node/utils/json"
 )
 
 const (
@@ -108,8 +108,8 @@ const (
 
 var (
 	// x2cRate is the conversion rate between the smallest denomination on the X-Chain
-	// 1 nAVAX and the smallest denomination on the C-Chain 1 wei. Where 1 nAVAX = 1 gWei.
-	// This is only required for AVAX because the denomination of 1 AVAX is 9 decimal
+	// 1 nLUX and the smallest denomination on the C-Chain 1 wei. Where 1 nLUX = 1 gWei.
+	// This is only required for LUX because the denomination of 1 LUX is 9 decimal
 	// places on the X and P chains, but is 18 decimal places within the EVM.
 	x2cRate       = big.NewInt(x2cRateInt64)
 	x2cRateMinus1 = big.NewInt(x2cRateMinus1Int64)
@@ -195,7 +195,7 @@ var (
 	errConflictingAtomicInputs        = errors.New("invalid block due to conflicting atomic inputs")
 	errUnclesUnsupported              = errors.New("uncles unsupported")
 	errRejectedParent                 = errors.New("rejected parent")
-	errInsufficientFundsForFee        = errors.New("insufficient AVAX funds to pay transaction fee")
+	errInsufficientFundsForFee        = errors.New("insufficient LUX funds to pay transaction fee")
 	errNoEVMOutputs                   = errors.New("tx has no EVM outputs")
 	errNilBaseFeeApricotPhase3        = errors.New("nil base fee is invalid after apricotPhase3")
 	errNilExtDataGasUsedApricotPhase4 = errors.New("nil extDataGasUsed is invalid after apricotPhase4")
@@ -312,7 +312,7 @@ type VM struct {
 	validators *p2p.Validators
 
 	// Metrics
-	multiGatherer avalanchegoMetrics.MultiGatherer
+	multiGatherer nodeMetrics.MultiGatherer
 	sdkMetrics    *prometheus.Registry
 
 	bootstrapped bool
@@ -323,7 +323,7 @@ type VM struct {
 	StateSyncServer
 	StateSyncClient
 
-	// Avalanche Warp Messaging backend
+	// Lux Warp Messaging backend
 	// Used to serve BLS signatures of warp messages over RPC
 	warpBackend warp.Backend
 
@@ -448,16 +448,16 @@ func (vm *VM) Initialize(
 	var extDataHashes map[common.Hash]common.Hash
 	// Set the chain config for mainnet/fuji chain IDs
 	switch {
-	case g.Config.ChainID.Cmp(params.AvalancheMainnetChainID) == 0:
-		config := *params.AvalancheMainnetChainConfig
+	case g.Config.ChainID.Cmp(params.LuxMainnetChainID) == 0:
+		config := *params.LuxMainnetChainConfig
 		g.Config = &config
 		extDataHashes = mainnetExtDataHashes
-	case g.Config.ChainID.Cmp(params.AvalancheFujiChainID) == 0:
-		config := *params.AvalancheFujiChainConfig
+	case g.Config.ChainID.Cmp(params.LuxFujiChainID) == 0:
+		config := *params.LuxFujiChainConfig
 		g.Config = &config
 		extDataHashes = fujiExtDataHashes
-	case g.Config.ChainID.Cmp(params.AvalancheLocalChainID) == 0:
-		config := *params.AvalancheLocalChainConfig
+	case g.Config.ChainID.Cmp(params.LuxLocalChainID) == 0:
+		config := *params.LuxLocalChainConfig
 		g.Config = &config
 	}
 	// If the DUpgrade is activated, activate the Warp Precompile at the same time
@@ -466,14 +466,14 @@ func (vm *VM) Initialize(
 			Config: warpPrecompile.NewDefaultConfig(g.Config.DUpgradeBlockTimestamp),
 		})
 	}
-	// Set the Avalanche Context on the ChainConfig
-	g.Config.AvalancheContext = params.AvalancheContext{
+	// Set the Lux Context on the ChainConfig
+	g.Config.LuxContext = params.LuxContext{
 		SnowCtx: chainCtx,
 	}
 	vm.syntacticBlockValidator = NewBlockValidator(extDataHashes)
 
 	// Ensure that non-standard commit interval is only allowed for the local network
-	if g.Config.ChainID.Cmp(params.AvalancheLocalChainID) != 0 {
+	if g.Config.ChainID.Cmp(params.LuxLocalChainID) != 0 {
 		if vm.config.CommitInterval != defaultCommitInterval {
 			return fmt.Errorf("cannot start non-local network with commit interval %d", vm.config.CommitInterval)
 		}
@@ -614,7 +614,7 @@ func (vm *VM) Initialize(
 		bonusBlockHeights map[uint64]ids.ID
 		bonusBlockRepair  map[uint64]*types.Block
 	)
-	if vm.chainID.Cmp(params.AvalancheMainnetChainID) == 0 {
+	if vm.chainID.Cmp(params.LuxMainnetChainID) == 0 {
 		bonusBlockHeights = bonusBlockMainnetHeights
 		bonusBlockRepair = mainnetBonusBlocksParsed
 	}
@@ -644,8 +644,8 @@ func (vm *VM) Initialize(
 
 	// Run the atomic trie height map repair in the background on mainnet/fuji
 	// TODO: remove after DUpgrade
-	if vm.chainID.Cmp(params.AvalancheMainnetChainID) == 0 ||
-		vm.chainID.Cmp(params.AvalancheFujiChainID) == 0 {
+	if vm.chainID.Cmp(params.LuxMainnetChainID) == 0 ||
+		vm.chainID.Cmp(params.LuxFujiChainID) == 0 {
 		_, lastCommitted := vm.atomicTrie.LastCommitted()
 		go vm.atomicTrie.RepairHeightMap(lastCommitted)
 	}
@@ -668,7 +668,7 @@ func (vm *VM) Initialize(
 
 func (vm *VM) initializeMetrics() error {
 	vm.sdkMetrics = prometheus.NewRegistry()
-	vm.multiGatherer = avalanchegoMetrics.NewMultiGatherer()
+	vm.multiGatherer = nodeMetrics.NewMultiGatherer()
 	// If metrics are enabled, register the default metrics regitry
 	if metrics.Enabled {
 		gatherer := corethPrometheus.Gatherer(metrics.DefaultRegistry)
@@ -835,7 +835,7 @@ func (vm *VM) preBatchOnFinalizeAndAssemble(header *types.Header, state *state.S
 		// Note: snapshot is taken inside the loop because you cannot revert to the same snapshot more than
 		// once.
 		snapshot := state.Snapshot()
-		rules := vm.chainConfig.AvalancheRules(header.Number, header.Time)
+		rules := vm.chainConfig.LuxRules(header.Number, header.Time)
 		if err := vm.verifyTx(tx, header.ParentHash, header.BaseFee, state, rules); err != nil {
 			// Discard the transaction from the mempool on failed verification.
 			log.Debug("discarding tx from mempool on failed verification", "txID", tx.ID(), "err", err)
@@ -854,7 +854,7 @@ func (vm *VM) preBatchOnFinalizeAndAssemble(header *types.Header, state *state.S
 		}
 		var contribution, gasUsed *big.Int
 		if rules.IsApricotPhase4 {
-			contribution, gasUsed, err = tx.BlockFeeContribution(rules.IsApricotPhase5, vm.ctx.AVAXAssetID, header.BaseFee)
+			contribution, gasUsed, err = tx.BlockFeeContribution(rules.IsApricotPhase5, vm.ctx.LUXAssetID, header.BaseFee)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -877,7 +877,7 @@ func (vm *VM) postBatchOnFinalizeAndAssemble(header *types.Header, state *state.
 		batchAtomicUTXOs  set.Set[ids.ID]
 		batchContribution *big.Int = new(big.Int).Set(common.Big0)
 		batchGasUsed      *big.Int = new(big.Int).Set(common.Big0)
-		rules                      = vm.chainConfig.AvalancheRules(header.Number, header.Time)
+		rules                      = vm.chainConfig.LuxRules(header.Number, header.Time)
 		size              int
 	)
 
@@ -902,7 +902,7 @@ func (vm *VM) postBatchOnFinalizeAndAssemble(header *types.Header, state *state.
 		// Note: we do not need to check if we are in at least ApricotPhase4 here because
 		// we assume that this function will only be called when the block is in at least
 		// ApricotPhase5.
-		txContribution, txGasUsed, err = tx.BlockFeeContribution(true, vm.ctx.AVAXAssetID, header.BaseFee)
+		txContribution, txGasUsed, err = tx.BlockFeeContribution(true, vm.ctx.LUXAssetID, header.BaseFee)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -983,7 +983,7 @@ func (vm *VM) onExtraStateChange(block *types.Block, state *state.StateDB) (*big
 		batchContribution *big.Int = big.NewInt(0)
 		batchGasUsed      *big.Int = big.NewInt(0)
 		header                     = block.Header()
-		rules                      = vm.chainConfig.AvalancheRules(header.Number, header.Time)
+		rules                      = vm.chainConfig.LuxRules(header.Number, header.Time)
 	)
 
 	txs, err := ExtractAtomicTxs(block.ExtData(), rules.IsApricotPhase5, vm.codec)
@@ -1022,7 +1022,7 @@ func (vm *VM) onExtraStateChange(block *types.Block, state *state.StateDB) (*big
 		}
 		// If ApricotPhase4 is enabled, calculate the block fee contribution
 		if rules.IsApricotPhase4 {
-			contribution, gasUsed, err := tx.BlockFeeContribution(rules.IsApricotPhase5, vm.ctx.AVAXAssetID, block.BaseFee())
+			contribution, gasUsed, err := tx.BlockFeeContribution(rules.IsApricotPhase5, vm.ctx.LUXAssetID, block.BaseFee())
 			if err != nil {
 				return nil, nil, err
 			}
@@ -1395,9 +1395,9 @@ func (vm *VM) Version(context.Context) (string, error) {
 //     [service] should be a gorilla RPC service (see https://www.gorillatoolkit.org/pkg/rpc/v2)
 //   - The name of the service is [name]
 func newHandler(name string, service interface{}) (http.Handler, error) {
-	server := avalancheRPC.NewServer()
-	server.RegisterCodec(avalancheJSON.NewCodec(), "application/json")
-	server.RegisterCodec(avalancheJSON.NewCodec(), "application/json;charset=UTF-8")
+	server := luxRPC.NewServer()
+	server.RegisterCodec(luxJSON.NewCodec(), "application/json")
+	server.RegisterCodec(luxJSON.NewCodec(), "application/json;charset=UTF-8")
 	return server, server.RegisterService(service, name)
 }
 
@@ -1414,9 +1414,9 @@ func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 		return nil, fmt.Errorf("failed to get primary alias for chain due to %w", err)
 	}
 	apis := make(map[string]http.Handler)
-	avaxAPI, err := newHandler("avax", &AvaxAPI{vm})
+	avaxAPI, err := newHandler("avax", &LuxAPI{vm})
 	if err != nil {
-		return nil, fmt.Errorf("failed to register service for AVAX API due to %w", err)
+		return nil, fmt.Errorf("failed to register service for LUX API due to %w", err)
 	}
 	enabledAPIs = append(enabledAPIs, "avax")
 	apis[avaxEndpoint] = avaxAPI
@@ -1733,9 +1733,9 @@ func (vm *VM) GetSpendableFunds(
 		}
 		addr := GetEthAddress(key)
 		var balance uint64
-		if assetID == vm.ctx.AVAXAssetID {
-			// If the asset is AVAX, we divide by the x2cRate to convert back to the correct
-			// denomination of AVAX that can be exported.
+		if assetID == vm.ctx.LUXAssetID {
+			// If the asset is LUX, we divide by the x2cRate to convert back to the correct
+			// denomination of LUX that can be exported.
 			balance = new(big.Int).Div(state.GetBalance(addr), x2cRate).Uint64()
 		} else {
 			balance = state.GetBalanceMultiCoin(addr, common.Hash(assetID)).Uint64()
@@ -1767,15 +1767,15 @@ func (vm *VM) GetSpendableFunds(
 	return inputs, signers, nil
 }
 
-// GetSpendableAVAXWithFee returns a list of EVMInputs and keys (in corresponding
-// order) to total [amount] + [fee] of [AVAX] owned by [keys].
+// GetSpendableLUXWithFee returns a list of EVMInputs and keys (in corresponding
+// order) to total [amount] + [fee] of [LUX] owned by [keys].
 // This function accounts for the added cost of the additional inputs needed to
 // create the transaction and makes sure to skip any keys with a balance that is
 // insufficient to cover the additional fee.
 // Note: we return [][]*secp256k1.PrivateKey even though each input
 // corresponds to a single key, so that the signers can be passed in to
 // [tx.Sign] which supports multiple keys on a single input.
-func (vm *VM) GetSpendableAVAXWithFee(
+func (vm *VM) GetSpendableLUXWithFee(
 	keys []*secp256k1.PrivateKey,
 	amount uint64,
 	cost uint64,
@@ -1821,8 +1821,8 @@ func (vm *VM) GetSpendableAVAXWithFee(
 		additionalFee := newFee - prevFee
 
 		addr := GetEthAddress(key)
-		// Since the asset is AVAX, we divide by the x2cRate to convert back to
-		// the correct denomination of AVAX that can be exported.
+		// Since the asset is LUX, we divide by the x2cRate to convert back to
+		// the correct denomination of LUX that can be exported.
 		balance := new(big.Int).Div(state.GetBalance(addr), x2cRate).Uint64()
 		// If the balance for [addr] is insufficient to cover the additional cost
 		// of adding an input to the transaction, skip adding the input altogether
@@ -1853,7 +1853,7 @@ func (vm *VM) GetSpendableAVAXWithFee(
 		inputs = append(inputs, EVMInput{
 			Address: addr,
 			Amount:  inputAmount,
-			AssetID: vm.ctx.AVAXAssetID,
+			AssetID: vm.ctx.LUXAssetID,
 			Nonce:   nonce,
 		})
 		signers = append(signers, []*secp256k1.PrivateKey{key})
@@ -1881,7 +1881,7 @@ func (vm *VM) GetCurrentNonce(address common.Address) (uint64, error) {
 // currentRules returns the chain rules for the current block.
 func (vm *VM) currentRules() params.Rules {
 	header := vm.eth.APIBackend.CurrentHeader()
-	return vm.chainConfig.AvalancheRules(header.Number, header.Time)
+	return vm.chainConfig.LuxRules(header.Number, header.Time)
 }
 
 func (vm *VM) startContinuousProfiler() {

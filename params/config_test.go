@@ -33,7 +33,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ava-labs/coreth/utils"
+	"github.com/luxdefi/coreth/utils"
 )
 
 func TestCheckCompatible(t *testing.T) {
@@ -148,15 +148,15 @@ func TestConfigRules(t *testing.T) {
 		CortinaBlockTimestamp: utils.NewUint64(500),
 	}
 	var stamp uint64
-	if r := c.AvalancheRules(big.NewInt(0), stamp); r.IsCortina {
+	if r := c.LuxRules(big.NewInt(0), stamp); r.IsCortina {
 		t.Errorf("expected %v to not be cortina", stamp)
 	}
 	stamp = 500
-	if r := c.AvalancheRules(big.NewInt(0), stamp); !r.IsCortina {
+	if r := c.LuxRules(big.NewInt(0), stamp); !r.IsCortina {
 		t.Errorf("expected %v to be cortina", stamp)
 	}
 	stamp = math.MaxInt64
-	if r := c.AvalancheRules(big.NewInt(0), stamp); !r.IsCortina {
+	if r := c.LuxRules(big.NewInt(0), stamp); !r.IsCortina {
 		t.Errorf("expected %v to be cortina", stamp)
 	}
 }

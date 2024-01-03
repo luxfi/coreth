@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/utils"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/utils"
 )
 
 func TestBlockBuilderShutsDown(t *testing.T) {

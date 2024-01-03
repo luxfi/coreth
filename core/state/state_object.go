@@ -34,12 +34,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/metrics"
-	"github.com/ava-labs/coreth/trie/trienode"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/metrics"
+	"github.com/luxdefi/coreth/trie/trienode"
 )
 
 type Code []byte

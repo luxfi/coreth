@@ -29,9 +29,9 @@ package core
 import (
 	"sync/atomic"
 
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/core/vm"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/core/vm"
 )
 
 // Validator is an interface which defines the standard for block validation. It
