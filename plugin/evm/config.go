@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ava-labs/coreth/core/txpool"
-	"github.com/ava-labs/coreth/eth"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/luxdefi/coreth/core/txpool"
+	"github.com/luxdefi/coreth/eth"
 	"github.com/spf13/cast"
 )
 
@@ -27,7 +27,7 @@ const (
 	defaultSyncableCommitInterval                     = defaultCommitInterval * 4
 	defaultSnapshotWait                               = false
 	defaultRpcGasCap                                  = 50_000_000 // Default to 50M Gas Limit
-	defaultRpcTxFeeCap                                = 100        // 100 AVAX
+	defaultRpcTxFeeCap                                = 100        // 100 LUX
 	defaultMetricsExpensiveEnabled                    = true
 	defaultApiMaxDuration                             = 0 // Default to no maximum API call duration
 	defaultWsCpuRefillRate                            = 0 // Default to no maximum WS CPU usage
@@ -210,7 +210,7 @@ type Config struct {
 	// WarpOffChainMessages encodes off-chain messages (unrelated to any on-chain event ie. block or AddressedCall)
 	// that the node should be willing to sign.
 	// Note: only supports AddressedCall payloads as defined here:
-	// https://github.com/ava-labs/avalanchego/tree/7623ffd4be915a5185c9ed5e11fa9be15a6e1f00/vms/platformvm/warp/payload#addressedcall
+	// https://github.com/luxdefi/node/tree/7623ffd4be915a5185c9ed5e11fa9be15a6e1f00/vms/platformvm/warp/payload#addressedcall
 	WarpOffChainMessages []hexutil.Bytes `json:"warp-off-chain-messages"`
 }
 

@@ -7,12 +7,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/vms/platformvm/warp"
-	"github.com/ava-labs/avalanchego/vms/platformvm/warp/payload"
-	"github.com/ava-labs/coreth/accounts/abi"
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/precompile/contract"
-	"github.com/ava-labs/coreth/vmerrs"
+	"github.com/luxdefi/node/vms/platformvm/warp"
+	"github.com/luxdefi/node/vms/platformvm/warp/payload"
+	"github.com/luxdefi/coreth/accounts/abi"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/precompile/contract"
+	"github.com/luxdefi/coreth/vmerrs"
 
 	_ "embed"
 
@@ -224,7 +224,7 @@ func UnpackSendWarpMessageOutput(output []byte) (common.Hash, error) {
 	return unpacked, nil
 }
 
-// sendWarpMessage constructs an Avalanche Warp Message containing an AddressedPayload and emits a log to signal validators that they should
+// sendWarpMessage constructs an Lux Warp Message containing an AddressedPayload and emits a log to signal validators that they should
 // be willing to sign this message.
 func sendWarpMessage(accessibleState contract.AccessibleState, caller common.Address, addr common.Address, input []byte, suppliedGas uint64, readOnly bool) (ret []byte, remainingGas uint64, err error) {
 	if remainingGas, err = contract.DeductGas(suppliedGas, SendWarpMessageGasCost); err != nil {

@@ -10,12 +10,12 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/utils/wrappers"
-	"github.com/ava-labs/coreth/accounts/keystore"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/ethdb"
-	"github.com/ava-labs/coreth/trie"
-	"github.com/ava-labs/coreth/trie/trienode"
+	"github.com/luxdefi/coreth/accounts/keystore"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxdefi/coreth/trie"
+	"github.com/luxdefi/coreth/trie/trienode"
+	"github.com/luxdefi/node/utils/wrappers"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"

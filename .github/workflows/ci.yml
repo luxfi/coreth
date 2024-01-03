@@ -6,12 +6,12 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      avalanchegoRepo:
-        description: 'avalanchego github repository'
+      luxdRepo:
+        description: 'lux node github repository'
         required: true
-        default: 'ava-labs/avalanchego'
-      avalanchegoBranch:
-        description: 'avalanchego branch'
+        default: 'luxdefi/node'
+      luxdBranch:
+        description: 'lux branch'
         required: true
         default: 'master'
 
@@ -21,22 +21,22 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - name: check out ${{ github.event.inputs.avalanchegoRepo }} ${{ github.event.inputs.avalanchegoBranch }}
+      - name: check out ${{ github.event.inputs.luxdRepo }} ${{ github.event.inputs.luxdBranch }}
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/checkout@v3
         with:
-          repository: ${{ github.event.inputs.avalanchegoRepo }}
-          ref: ${{ github.event.inputs.avalanchegoBranch }}
-          path: avalanchego
-          token: ${{ secrets.AVALANCHE_PAT }}
+          repository: ${{ github.event.inputs.luxdRepo }}
+          ref: ${{ github.event.inputs.luxdBranch }}
+          path: luxd
+          token: ${{ secrets.LUX_PAT }}
       - uses: actions/setup-go@v3
         with:
           go-version: '~1.20.10'
           check-latest: true
-      - name: change avalanchego dep
+      - name: change luxd dep
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
-          go mod edit -replace github.com/ava-labs/avalanchego=./avalanchego
+          go mod edit -replace github.com/luxdefi/node=./node
           go mod tidy
           go clean -modcache # avoid conflicts with the golangci-lint-action cache
       - run: ./scripts/lint_allowed_geth_imports.sh
@@ -55,22 +55,22 @@ jobs:
         os: [macos-11.0, ubuntu-20.04, windows-latest]
     steps:
     - uses: actions/checkout@v3
-    - name: check out ${{ github.event.inputs.avalanchegoRepo }} ${{ github.event.inputs.avalanchegoBranch }}
+    - name: check out ${{ github.event.inputs.luxdRepo }} ${{ github.event.inputs.luxdBranch }}
       if: ${{ github.event_name == 'workflow_dispatch' }}
       uses: actions/checkout@v3
       with:
-        repository: ${{ github.event.inputs.avalanchegoRepo }}
-        ref: ${{ github.event.inputs.avalanchegoBranch }}
-        path: avalanchego
-        token: ${{ secrets.AVALANCHE_PAT }}
+        repository: ${{ github.event.inputs.luxdRepo }}
+        ref: ${{ github.event.inputs.luxdBranch }}
+        path: luxd
+        token: ${{ secrets.LUX_PAT }}
     - uses: actions/setup-go@v3
       with:
         go-version: '~1.20.10'
         check-latest: true
-    - name: change avalanchego dep
+    - name: change luxd dep
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: |
-        go mod edit -replace github.com/ava-labs/avalanchego=./avalanchego
+        go mod edit -replace github.com/luxdefi/node=./node
         go mod tidy
     - run: go mod download
       shell: bash
@@ -88,22 +88,22 @@ jobs:
         os: [ubuntu-20.04]
     steps:
     - uses: actions/checkout@v3
-    - name: check out ${{ github.event.inputs.avalanchegoRepo }} ${{ github.event.inputs.avalanchegoBranch }}
+    - name: check out ${{ github.event.inputs.luxdRepo }} ${{ github.event.inputs.luxdBranch }}
       if: ${{ github.event_name == 'workflow_dispatch' }}
       uses: actions/checkout@v3
       with:
-        repository: ${{ github.event.inputs.avalanchegoRepo }}
-        ref: ${{ github.event.inputs.avalanchegoBranch }}
-        path: avalanchego
-        token: ${{ secrets.AVALANCHE_PAT }}
+        repository: ${{ github.event.inputs.luxdRepo }}
+        ref: ${{ github.event.inputs.luxdBranch }}
+        path: luxd
+        token: ${{ secrets.LUX_PAT }}
     - uses: actions/setup-go@v3
       with:
         go-version: '~1.20.10'
         check-latest: true
-    - name: change avalanchego dep
+    - name: change luxd dep
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: |
-        go mod edit -replace github.com/ava-labs/avalanchego=./avalanchego
+        go mod edit -replace github.com/luxdefi/node=./node
         go mod tidy
     - run: go mod download
       shell: bash
@@ -111,22 +111,22 @@ jobs:
       shell: bash
     - run: ./scripts/build_test.sh -race
       shell: bash
-  avalanchego_e2e:
-    name: AvalancheGo E2E Tests v${{ matrix.go }} (${{ matrix.os }})
+  luxd_e2e:
+    name: luxd E2E Tests v${{ matrix.go }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-20.04 ]
     steps:
     - uses: actions/checkout@v3
-    - name: check out ${{ github.event.inputs.avalanchegoRepo }} ${{ github.event.inputs.avalanchegoBranch }}
+    - name: check out ${{ github.event.inputs.luxdRepo }} ${{ github.event.inputs.luxdBranch }}
       if: ${{ github.event_name == 'workflow_dispatch' }}
       uses: actions/checkout@v3
       with:
-        repository: ${{ github.event.inputs.avalanchegoRepo }}
-        ref: ${{ github.event.inputs.avalanchegoBranch }}
-        path: avalanchego
-        token: ${{ secrets.AVALANCHE_PAT }}
+        repository: ${{ github.event.inputs.luxdRepo }}
+        ref: ${{ github.event.inputs.luxdBranch }}
+        path: luxd
+        token: ${{ secrets.LUX_PAT }}
     - uses: actions/setup-go@v3
       with:
         go-version: '~1.20.10'

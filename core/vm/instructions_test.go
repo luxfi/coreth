@@ -34,13 +34,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/holiman/uint256"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/params"
 )
 
 type TwoOperandTestcase struct {

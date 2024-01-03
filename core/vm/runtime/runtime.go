@@ -30,13 +30,13 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/core/vm"
-	"github.com/ava-labs/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/core/vm"
+	"github.com/luxdefi/coreth/params"
 )
 
 // Config is a basic type specifying certain configuration flags for running
@@ -125,7 +125,7 @@ func Execute(code, input []byte, cfg *Config) ([]byte, *state.StateDB, error) {
 		address = common.BytesToAddress([]byte("contract"))
 		vmenv   = NewEnv(cfg)
 		sender  = vm.AccountRef(cfg.Origin)
-		rules   = cfg.ChainConfig.AvalancheRules(vmenv.Context.BlockNumber, vmenv.Context.Time)
+		rules   = cfg.ChainConfig.LuxRules(vmenv.Context.BlockNumber, vmenv.Context.Time)
 	)
 	// Execute the preparatory steps for state transition which includes:
 	// - prepare accessList(post-berlin/ApricotPhase2)
@@ -159,7 +159,7 @@ func Create(input []byte, cfg *Config) ([]byte, common.Address, uint64, error) {
 	var (
 		vmenv  = NewEnv(cfg)
 		sender = vm.AccountRef(cfg.Origin)
-		rules  = cfg.ChainConfig.AvalancheRules(vmenv.Context.BlockNumber, vmenv.Context.Time)
+		rules  = cfg.ChainConfig.LuxRules(vmenv.Context.BlockNumber, vmenv.Context.Time)
 	)
 	// Execute the preparatory steps for state transition which includes:
 	// - prepare accessList(post-berlin/ApricotPhase2)
@@ -188,7 +188,7 @@ func Call(address common.Address, input []byte, cfg *Config) ([]byte, uint64, er
 		vmenv   = NewEnv(cfg)
 		sender  = cfg.State.GetOrNewStateObject(cfg.Origin)
 		statedb = cfg.State
-		rules   = cfg.ChainConfig.AvalancheRules(vmenv.Context.BlockNumber, vmenv.Context.Time)
+		rules   = cfg.ChainConfig.LuxRules(vmenv.Context.BlockNumber, vmenv.Context.Time)
 	)
 	// Execute the preparatory steps for state transition which includes:
 	// - prepare accessList(post-berlin/ApricotPhase2)

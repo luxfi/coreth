@@ -31,8 +31,8 @@ import (
 	"container/heap"
 	"errors"
 
-	"github.com/ava-labs/coreth/core/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxdefi/coreth/core/types"
 )
 
 // NodeResolver is used for looking up trie nodes before reaching into the real

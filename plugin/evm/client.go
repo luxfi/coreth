@@ -10,13 +10,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/ava-labs/avalanchego/api"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
-	"github.com/ava-labs/avalanchego/utils/formatting"
-	"github.com/ava-labs/avalanchego/utils/formatting/address"
-	"github.com/ava-labs/avalanchego/utils/json"
-	"github.com/ava-labs/avalanchego/utils/rpc"
+	"github.com/luxdefi/node/api"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils/crypto/secp256k1"
+	"github.com/luxdefi/node/utils/formatting"
+	"github.com/luxdefi/node/utils/formatting/address"
+	"github.com/luxdefi/node/utils/json"
+	"github.com/luxdefi/node/utils/rpc"
 )
 
 // Interface compliance
@@ -31,7 +31,7 @@ type Client interface {
 	ExportKey(ctx context.Context, userPass api.UserPass, addr common.Address, options ...rpc.Option) (*secp256k1.PrivateKey, string, error)
 	ImportKey(ctx context.Context, userPass api.UserPass, privateKey *secp256k1.PrivateKey, options ...rpc.Option) (common.Address, error)
 	Import(ctx context.Context, userPass api.UserPass, to common.Address, sourceChain string, options ...rpc.Option) (ids.ID, error)
-	ExportAVAX(ctx context.Context, userPass api.UserPass, amount uint64, to ids.ShortID, targetChain string, options ...rpc.Option) (ids.ID, error)
+	ExportLUX(ctx context.Context, userPass api.UserPass, amount uint64, to ids.ShortID, targetChain string, options ...rpc.Option) (ids.ID, error)
 	Export(ctx context.Context, userPass api.UserPass, amount uint64, to ids.ShortID, targetChain string, assetID string, options ...rpc.Option) (ids.ID, error)
 	StartCPUProfiler(ctx context.Context, options ...rpc.Option) error
 	StopCPUProfiler(ctx context.Context, options ...rpc.Option) error
@@ -132,7 +132,7 @@ func (c *client) GetAtomicUTXOs(ctx context.Context, addrs []ids.ShortID, source
 }
 
 // ExportKey returns the private key corresponding to [addr] controlled by [user]
-// in both Avalanche standard format and hex format
+// in both Lux standard format and hex format
 func (c *client) ExportKey(ctx context.Context, user api.UserPass, addr common.Address, options ...rpc.Option) (*secp256k1.PrivateKey, string, error) {
 	res := &ExportKeyReply{}
 	err := c.requester.SendRequest(ctx, "avax.exportKey", &ExportKeyArgs{
@@ -167,9 +167,9 @@ func (c *client) Import(ctx context.Context, user api.UserPass, to common.Addres
 	return res.TxID, err
 }
 
-// ExportAVAX sends AVAX from this chain to the address specified by [to].
+// ExportLUX sends LUX from this chain to the address specified by [to].
 // Returns the ID of the newly created atomic transaction
-func (c *client) ExportAVAX(
+func (c *client) ExportLUX(
 	ctx context.Context,
 	user api.UserPass,
 	amount uint64,
@@ -177,11 +177,11 @@ func (c *client) ExportAVAX(
 	targetChain string,
 	options ...rpc.Option,
 ) (ids.ID, error) {
-	return c.Export(ctx, user, amount, to, targetChain, "AVAX", options...)
+	return c.Export(ctx, user, amount, to, targetChain, "LUX", options...)
 }
 
 // Export sends an asset from this chain to the P/C-Chain.
-// After this tx is accepted, the AVAX must be imported to the P/C-chain with an importTx.
+// After this tx is accepted, the LUX must be imported to the P/C-chain with an importTx.
 // Returns the ID of the newly created atomic transaction
 func (c *client) Export(
 	ctx context.Context,
@@ -194,7 +194,7 @@ func (c *client) Export(
 ) (ids.ID, error) {
 	res := &api.JSONTxID{}
 	err := c.requester.SendRequest(ctx, "avax.export", &ExportArgs{
-		ExportAVAXArgs: ExportAVAXArgs{
+		ExportLUXArgs: ExportLUXArgs{
 			UserPass:    user,
 			Amount:      json.Uint64(amount),
 			TargetChain: targetChain,

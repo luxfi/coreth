@@ -1,3 +1,4 @@
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
@@ -7,13 +8,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/coreth/params"
 
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	"github.com/ava-labs/avalanchego/utils/set"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
+	"github.com/luxdefi/node/utils/crypto/bls"
+	"github.com/luxdefi/node/utils/set"
+	luxWarp "github.com/luxdefi/node/vms/platformvm/warp"
 )
 
 type AggregateSignatureResult struct {
@@ -22,7 +23,7 @@ type AggregateSignatureResult struct {
 	// Total weight of all validators in the subnet.
 	TotalWeight uint64
 	// The message with the aggregate signature.
-	Message *avalancheWarp.Message
+	Message *luxWarp.Message
 }
 
 type signatureFetchResult struct {
@@ -34,13 +35,13 @@ type signatureFetchResult struct {
 // Aggregator requests signatures from validators and
 // aggregates them into a single signature.
 type Aggregator struct {
-	validators  []*avalancheWarp.Validator
+	validators  []*luxWarp.Validator
 	totalWeight uint64
 	client      SignatureGetter
 }
 
 // New returns a signature aggregator that will attempt to aggregate signatures from [validators].
-func New(client SignatureGetter, validators []*avalancheWarp.Validator, totalWeight uint64) *Aggregator {
+func New(client SignatureGetter, validators []*luxWarp.Validator, totalWeight uint64) *Aggregator {
 	return &Aggregator{
 		client:      client,
 		validators:  validators,
@@ -50,7 +51,7 @@ func New(client SignatureGetter, validators []*avalancheWarp.Validator, totalWei
 
 // Returns an aggregate signature over [unsignedMessage].
 // The returned signature's weight exceeds the threshold given by [quorumNum].
-func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *avalancheWarp.UnsignedMessage, quorumNum uint64) (*AggregateSignatureResult, error) {
+func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *luxWarp.UnsignedMessage, quorumNum uint64) (*AggregateSignatureResult, error) {
 	// Create a child context to cancel signature fetching if we reach signature threshold.
 	signatureFetchCtx, signatureFetchCancel := context.WithCancel(ctx)
 	defer signatureFetchCancel()
@@ -130,7 +131,7 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *a
 		)
 
 		// If the signature weight meets the requested threshold, cancel signature fetching
-		if err := avalancheWarp.VerifyWeight(signaturesWeight, a.totalWeight, quorumNum, params.WarpQuorumDenominator); err == nil {
+		if err := luxWarp.VerifyWeight(signaturesWeight, a.totalWeight, quorumNum, params.WarpQuorumDenominator); err == nil {
 			log.Debug("Verify weight passed, exiting aggregation early",
 				"quorumNum", quorumNum,
 				"totalWeight", a.totalWeight,
@@ -145,7 +146,7 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *a
 
 	// If I failed to fetch sufficient signature stake, return an error
 	if !signaturesPassedThreshold {
-		return nil, avalancheWarp.ErrInsufficientWeight
+		return nil, luxWarp.ErrInsufficientWeight
 	}
 
 	// Otherwise, return the aggregate signature
@@ -154,12 +155,12 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *a
 		return nil, fmt.Errorf("failed to aggregate BLS signatures: %w", err)
 	}
 
-	warpSignature := &avalancheWarp.BitSetSignature{
+	warpSignature := &luxWarp.BitSetSignature{
 		Signers: signersBitset.Bytes(),
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
 
-	msg, err := avalancheWarp.NewMessage(unsignedMessage, warpSignature)
+	msg, err := luxWarp.NewMessage(unsignedMessage, warpSignature)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct warp message: %w", err)
 	}

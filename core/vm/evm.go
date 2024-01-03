@@ -31,17 +31,17 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/coreth/constants"
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/precompile/contract"
-	"github.com/ava-labs/coreth/precompile/modules"
-	"github.com/ava-labs/coreth/precompile/precompileconfig"
-	"github.com/ava-labs/coreth/predicate"
-	"github.com/ava-labs/coreth/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/holiman/uint256"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/coreth/constants"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/precompile/contract"
+	"github.com/luxdefi/coreth/precompile/modules"
+	"github.com/luxdefi/coreth/precompile/precompileconfig"
+	"github.com/luxdefi/coreth/predicate"
+	"github.com/luxdefi/coreth/vmerrs"
 )
 
 var (
@@ -205,7 +205,7 @@ func NewEVM(blockCtx BlockContext, txCtx TxContext, statedb StateDB, chainConfig
 		StateDB:     statedb,
 		Config:      config,
 		chainConfig: chainConfig,
-		chainRules:  chainConfig.AvalancheRules(blockCtx.BlockNumber, blockCtx.Time),
+		chainRules:  chainConfig.LuxRules(blockCtx.BlockNumber, blockCtx.Time),
 	}
 	evm.interpreter = NewEVMInterpreter(evm)
 	return evm
@@ -231,7 +231,7 @@ func (evm *EVM) Cancelled() bool {
 
 // GetSnowContext returns the evm's snow.Context.
 func (evm *EVM) GetSnowContext() *snow.Context {
-	return evm.chainConfig.AvalancheContext.SnowCtx
+	return evm.chainConfig.LuxContext.SnowCtx
 }
 
 // GetStateDB returns the evm's StateDB
@@ -253,7 +253,7 @@ func (evm *EVM) Interpreter() *EVMInterpreter {
 func (evm *EVM) SetBlockContext(blockCtx BlockContext) {
 	evm.Context = blockCtx
 	num := blockCtx.BlockNumber
-	evm.chainRules = evm.chainConfig.AvalancheRules(num, blockCtx.Time)
+	evm.chainRules = evm.chainConfig.LuxRules(num, blockCtx.Time)
 }
 
 // Call executes the contract associated with the addr with the given input as

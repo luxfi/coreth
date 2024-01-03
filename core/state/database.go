@@ -30,13 +30,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/ethdb"
-	"github.com/ava-labs/coreth/trie"
-	"github.com/ava-labs/coreth/trie/trienode"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/lru"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxdefi/coreth/trie"
+	"github.com/luxdefi/coreth/trie/trienode"
 )
 
 const (

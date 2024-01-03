@@ -1,3 +1,4 @@
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
@@ -7,11 +8,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	"github.com/ava-labs/coreth/plugin/evm/message"
-	"github.com/ava-labs/coreth/warp"
+	"github.com/luxdefi/node/codec"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils/crypto/bls"
+	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxdefi/coreth/warp"
 	"github.com/ethereum/go-ethereum/log"
 )
 

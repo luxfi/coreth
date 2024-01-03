@@ -8,8 +8,8 @@ import (
 	big "math/big"
 	reflect "reflect"
 
-	snow "github.com/ava-labs/avalanchego/snow"
-	precompileconfig "github.com/ava-labs/coreth/precompile/precompileconfig"
+	snow "github.com/luxdefi/node/snow"
+	precompileconfig "github.com/luxdefi/coreth/precompile/precompileconfig"
 	common "github.com/ethereum/go-ethereum/common"
 	gomock "go.uber.org/mock/gomock"
 )

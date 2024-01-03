@@ -7,17 +7,17 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ava-labs/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxdefi/coreth/params"
 
-	"github.com/ava-labs/avalanchego/chains/atomic"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
-	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils"
+	"github.com/luxdefi/node/utils/constants"
+	"github.com/luxdefi/node/utils/crypto/secp256k1"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/secp256k1fx"
 )
 
 // createImportTxOptions adds a UTXO to shared memory and generates a list of import transactions sending this UTXO
@@ -25,7 +25,7 @@ import (
 func createImportTxOptions(t *testing.T, vm *VM, sharedMemory *atomic.Memory) []*Tx {
 	utxo := &avax.UTXO{
 		UTXOID: avax.UTXOID{TxID: ids.GenerateTestID()},
-		Asset:  avax.Asset{ID: vm.ctx.AVAXAssetID},
+		Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 		Out: &secp256k1fx.TransferOutput{
 			Amt: uint64(50000000),
 			OutputOwners: secp256k1fx.OutputOwners{
@@ -78,7 +78,7 @@ func TestImportTxVerify(t *testing.T) {
 					TxID:        txID,
 					OutputIndex: uint32(0),
 				},
-				Asset: avax.Asset{ID: ctx.AVAXAssetID},
+				Asset: avax.Asset{ID: ctx.LUXAssetID},
 				In: &secp256k1fx.TransferInput{
 					Amt: importAmount,
 					Input: secp256k1fx.Input{
@@ -91,7 +91,7 @@ func TestImportTxVerify(t *testing.T) {
 					TxID:        txID,
 					OutputIndex: uint32(1),
 				},
-				Asset: avax.Asset{ID: ctx.AVAXAssetID},
+				Asset: avax.Asset{ID: ctx.LUXAssetID},
 				In: &secp256k1fx.TransferInput{
 					Amt: importAmount,
 					Input: secp256k1fx.Input{
@@ -103,13 +103,13 @@ func TestImportTxVerify(t *testing.T) {
 		Outs: []EVMOutput{
 			{
 				Address: testEthAddrs[0],
-				Amount:  importAmount - params.AvalancheAtomicTxFee,
-				AssetID: ctx.AVAXAssetID,
+				Amount:  importAmount - params.LuxAtomicTxFee,
+				AssetID: ctx.LUXAssetID,
 			},
 			{
 				Address: testEthAddrs[1],
 				Amount:  importAmount,
-				AssetID: ctx.AVAXAssetID,
+				AssetID: ctx.LUXAssetID,
 			},
 		},
 	}
@@ -314,7 +314,7 @@ func TestImportTxVerify(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  0,
-						AssetID: testAvaxAssetID,
+						AssetID: testLuxAssetID,
 					},
 				}
 				return &tx
@@ -333,7 +333,7 @@ func TestImportTxVerify(t *testing.T) {
 			rules:       apricotRulesPhase3,
 			expectedErr: errNoEVMOutputs.Error(),
 		},
-		"non-AVAX input Apricot Phase 6": {
+		"non-LUX input Apricot Phase 6": {
 			generate: func(t *testing.T) UnsignedAtomicTx {
 				tx := *importTx
 				tx.ImportedInputs = []*avax.TransferableInput{
@@ -357,7 +357,7 @@ func TestImportTxVerify(t *testing.T) {
 			rules:       apricotRulesPhase6,
 			expectedErr: "",
 		},
-		"non-AVAX output Apricot Phase 6": {
+		"non-LUX output Apricot Phase 6": {
 			generate: func(t *testing.T) UnsignedAtomicTx {
 				tx := *importTx
 				tx.Outs = []EVMOutput{
@@ -373,7 +373,7 @@ func TestImportTxVerify(t *testing.T) {
 			rules:       apricotRulesPhase6,
 			expectedErr: "",
 		},
-		"non-AVAX input Banff": {
+		"non-LUX input Banff": {
 			generate: func(t *testing.T) UnsignedAtomicTx {
 				tx := *importTx
 				tx.ImportedInputs = []*avax.TransferableInput{
@@ -395,9 +395,9 @@ func TestImportTxVerify(t *testing.T) {
 			},
 			ctx:         ctx,
 			rules:       banffRules,
-			expectedErr: errImportNonAVAXInputBanff.Error(),
+			expectedErr: errImportNonLUXInputBanff.Error(),
 		},
-		"non-AVAX output Banff": {
+		"non-LUX output Banff": {
 			generate: func(t *testing.T) UnsignedAtomicTx {
 				tx := *importTx
 				tx.Outs = []EVMOutput{
@@ -411,7 +411,7 @@ func TestImportTxVerify(t *testing.T) {
 			},
 			ctx:         ctx,
 			rules:       banffRules,
-			expectedErr: errImportNonAVAXOutputBanff.Error(),
+			expectedErr: errImportNonLUXOutputBanff.Error(),
 		},
 	}
 	for name, test := range tests {
@@ -423,11 +423,11 @@ func TestImportTxVerify(t *testing.T) {
 
 func TestNewImportTx(t *testing.T) {
 	importAmount := uint64(5000000)
-	// createNewImportAVAXTx adds a UTXO to shared memory and then constructs a new import transaction
+	// createNewImportLUXTx adds a UTXO to shared memory and then constructs a new import transaction
 	// and checks that it has the correct fee for the base fee that has been used
-	createNewImportAVAXTx := func(t *testing.T, vm *VM, sharedMemory *atomic.Memory) *Tx {
+	createNewImportLUXTx := func(t *testing.T, vm *VM, sharedMemory *atomic.Memory) *Tx {
 		txID := ids.GenerateTestID()
-		_, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.AVAXAssetID, importAmount, testShortIDAddrs[0])
+		_, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.LUXAssetID, importAmount, testShortIDAddrs[0])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -438,7 +438,7 @@ func TestNewImportTx(t *testing.T) {
 		}
 		importTx := tx.UnsignedAtomicTx
 		var actualFee uint64
-		actualAVAXBurned, err := importTx.Burned(vm.ctx.AVAXAssetID)
+		actualLUXBurned, err := importTx.Burned(vm.ctx.LUXAssetID)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -459,8 +459,8 @@ func TestNewImportTx(t *testing.T) {
 			actualFee = 0
 		}
 
-		if actualAVAXBurned != actualFee {
-			t.Fatalf("AVAX burned (%d) != actual fee (%d)", actualAVAXBurned, actualFee)
+		if actualLUXBurned != actualFee {
+			t.Fatalf("LUX burned (%d) != actual fee (%d)", actualLUXBurned, actualFee)
 		}
 
 		return tx
@@ -472,7 +472,7 @@ func TestNewImportTx(t *testing.T) {
 		}
 
 		tx := txs[0]
-		actualAVAXBurned, err := tx.UnsignedAtomicTx.Burned(vm.ctx.AVAXAssetID)
+		actualLUXBurned, err := tx.UnsignedAtomicTx.Burned(vm.ctx.LUXAssetID)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -494,7 +494,7 @@ func TestNewImportTx(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		expectedRemainingBalance := new(big.Int).Mul(new(big.Int).SetUint64(importAmount-actualAVAXBurned), x2cRate)
+		expectedRemainingBalance := new(big.Int).Mul(new(big.Int).SetUint64(importAmount-actualLUXBurned), x2cRate)
 		addr := GetEthAddress(testKeys[0])
 		if actualBalance := sdb.GetBalance(addr); actualBalance.Cmp(expectedRemainingBalance) != 0 {
 			t.Fatalf("address remaining balance %s equal %s not %s", addr.String(), actualBalance, expectedRemainingBalance)
@@ -502,22 +502,22 @@ func TestNewImportTx(t *testing.T) {
 	}
 	tests2 := map[string]atomicTxTest{
 		"apricot phase 0": {
-			setup:       createNewImportAVAXTx,
+			setup:       createNewImportLUXTx,
 			checkState:  checkState,
 			genesisJSON: genesisJSONApricotPhase0,
 		},
 		"apricot phase 1": {
-			setup:       createNewImportAVAXTx,
+			setup:       createNewImportLUXTx,
 			checkState:  checkState,
 			genesisJSON: genesisJSONApricotPhase1,
 		},
 		"apricot phase 2": {
-			setup:       createNewImportAVAXTx,
+			setup:       createNewImportLUXTx,
 			checkState:  checkState,
 			genesisJSON: genesisJSONApricotPhase2,
 		},
 		"apricot phase 3": {
-			setup:       createNewImportAVAXTx,
+			setup:       createNewImportLUXTx,
 			checkState:  checkState,
 			genesisJSON: genesisJSONApricotPhase3,
 		},
@@ -876,7 +876,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 						UTXOID: avax.UTXOID{
 							TxID: ids.GenerateTestID(),
 						},
-						Asset: avax.Asset{ID: vm.ctx.AVAXAssetID},
+						Asset: avax.Asset{ID: vm.ctx.LUXAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   1,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -885,7 +885,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					Outs: []EVMOutput{{
 						Address: testEthAddrs[0],
 						Amount:  1,
-						AssetID: vm.ctx.AVAXAssetID,
+						AssetID: vm.ctx.LUXAssetID,
 					}},
 				}}
 				if err := tx.Sign(vm.codec, [][]*secp256k1.PrivateKey{{testKeys[0]}}); err != nil {
@@ -905,7 +905,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 						UTXOID: avax.UTXOID{
 							TxID: ids.GenerateTestID(),
 						},
-						Asset: avax.Asset{ID: vm.ctx.AVAXAssetID},
+						Asset: avax.Asset{ID: vm.ctx.LUXAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   1,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -914,7 +914,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					Outs: []EVMOutput{{
 						Address: testEthAddrs[0],
 						Amount:  1,
-						AssetID: vm.ctx.AVAXAssetID,
+						AssetID: vm.ctx.LUXAssetID,
 					}},
 				}}
 				if err := tx.Sign(vm.codec, [][]*secp256k1.PrivateKey{{testKeys[0]}}); err != nil {
@@ -945,7 +945,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					SourceChain:  vm.ctx.XChainID,
 					ImportedInputs: []*avax.TransferableInput{{
 						UTXOID: utxoID,
-						Asset:  avax.Asset{ID: vm.ctx.AVAXAssetID},
+						Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   1,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -954,7 +954,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					Outs: []EVMOutput{{
 						Address: testEthAddrs[0],
 						Amount:  1,
-						AssetID: vm.ctx.AVAXAssetID,
+						AssetID: vm.ctx.LUXAssetID,
 					}},
 				}}
 				if err := tx.Sign(vm.codec, [][]*secp256k1.PrivateKey{{testKeys[0]}}); err != nil {
@@ -979,7 +979,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					SourceChain:  vm.ctx.XChainID,
 					ImportedInputs: []*avax.TransferableInput{{
 						UTXOID: utxo.UTXOID,
-						Asset:  avax.Asset{ID: vm.ctx.AVAXAssetID}, // Use a different assetID then the actual UTXO
+						Asset:  avax.Asset{ID: vm.ctx.LUXAssetID}, // Use a different assetID then the actual UTXO
 						In: &secp256k1fx.TransferInput{
 							Amt:   1,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -988,7 +988,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					Outs: []EVMOutput{{
 						Address: testEthAddrs[0],
 						Amount:  1,
-						AssetID: vm.ctx.AVAXAssetID,
+						AssetID: vm.ctx.LUXAssetID,
 					}},
 				}}
 				if err := tx.Sign(vm.codec, [][]*secp256k1.PrivateKey{{testKeys[0]}}); err != nil {
@@ -998,10 +998,10 @@ func TestImportTxSemanticVerify(t *testing.T) {
 			},
 			semanticVerifyErr: errAssetIDMismatch.Error(),
 		},
-		"insufficient AVAX funds": {
+		"insufficient LUX funds": {
 			setup: func(t *testing.T, vm *VM, sharedMemory *atomic.Memory) *Tx {
 				txID := ids.GenerateTestID()
-				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.AVAXAssetID, 1, testShortIDAddrs[0])
+				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.LUXAssetID, 1, testShortIDAddrs[0])
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -1012,7 +1012,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					SourceChain:  vm.ctx.XChainID,
 					ImportedInputs: []*avax.TransferableInput{{
 						UTXOID: utxo.UTXOID,
-						Asset:  avax.Asset{ID: vm.ctx.AVAXAssetID},
+						Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   1,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -1021,7 +1021,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					Outs: []EVMOutput{{
 						Address: testEthAddrs[0],
 						Amount:  2, // Produce more output than is consumed by the transaction
-						AssetID: vm.ctx.AVAXAssetID,
+						AssetID: vm.ctx.LUXAssetID,
 					}},
 				}}
 				if err := tx.Sign(vm.codec, [][]*secp256k1.PrivateKey{{testKeys[0]}}); err != nil {
@@ -1031,7 +1031,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 			},
 			semanticVerifyErr: "import tx flow check failed due to",
 		},
-		"insufficient non-AVAX funds": {
+		"insufficient non-LUX funds": {
 			setup: func(t *testing.T, vm *VM, sharedMemory *atomic.Memory) *Tx {
 				txID := ids.GenerateTestID()
 				assetID := ids.GenerateTestID()
@@ -1068,7 +1068,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 		"no signatures": {
 			setup: func(t *testing.T, vm *VM, sharedMemory *atomic.Memory) *Tx {
 				txID := ids.GenerateTestID()
-				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.AVAXAssetID, 1, testShortIDAddrs[0])
+				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.LUXAssetID, 1, testShortIDAddrs[0])
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -1079,7 +1079,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					SourceChain:  vm.ctx.XChainID,
 					ImportedInputs: []*avax.TransferableInput{{
 						UTXOID: utxo.UTXOID,
-						Asset:  avax.Asset{ID: vm.ctx.AVAXAssetID},
+						Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   1,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -1088,7 +1088,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					Outs: []EVMOutput{{
 						Address: testEthAddrs[0],
 						Amount:  1,
-						AssetID: vm.ctx.AVAXAssetID,
+						AssetID: vm.ctx.LUXAssetID,
 					}},
 				}}
 				if err := tx.Sign(vm.codec, nil); err != nil {
@@ -1101,7 +1101,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 		"incorrect signature": {
 			setup: func(t *testing.T, vm *VM, sharedMemory *atomic.Memory) *Tx {
 				txID := ids.GenerateTestID()
-				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.AVAXAssetID, 1, testShortIDAddrs[0])
+				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.LUXAssetID, 1, testShortIDAddrs[0])
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -1112,7 +1112,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					SourceChain:  vm.ctx.XChainID,
 					ImportedInputs: []*avax.TransferableInput{{
 						UTXOID: utxo.UTXOID,
-						Asset:  avax.Asset{ID: vm.ctx.AVAXAssetID},
+						Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   1,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -1121,7 +1121,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					Outs: []EVMOutput{{
 						Address: testEthAddrs[0],
 						Amount:  1,
-						AssetID: vm.ctx.AVAXAssetID,
+						AssetID: vm.ctx.LUXAssetID,
 					}},
 				}}
 				// Sign the transaction with the incorrect key
@@ -1135,7 +1135,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 		"non-unique EVM Outputs": {
 			setup: func(t *testing.T, vm *VM, sharedMemory *atomic.Memory) *Tx {
 				txID := ids.GenerateTestID()
-				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.AVAXAssetID, 2, testShortIDAddrs[0])
+				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.LUXAssetID, 2, testShortIDAddrs[0])
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -1146,7 +1146,7 @@ func TestImportTxSemanticVerify(t *testing.T) {
 					SourceChain:  vm.ctx.XChainID,
 					ImportedInputs: []*avax.TransferableInput{{
 						UTXOID: utxo.UTXOID,
-						Asset:  avax.Asset{ID: vm.ctx.AVAXAssetID},
+						Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   2,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -1156,12 +1156,12 @@ func TestImportTxSemanticVerify(t *testing.T) {
 						{
 							Address: testEthAddrs[0],
 							Amount:  1,
-							AssetID: vm.ctx.AVAXAssetID,
+							AssetID: vm.ctx.LUXAssetID,
 						},
 						{
 							Address: testEthAddrs[0],
 							Amount:  1,
-							AssetID: vm.ctx.AVAXAssetID,
+							AssetID: vm.ctx.LUXAssetID,
 						},
 					},
 				}}
@@ -1185,10 +1185,10 @@ func TestImportTxSemanticVerify(t *testing.T) {
 func TestImportTxEVMStateTransfer(t *testing.T) {
 	assetID := ids.GenerateTestID()
 	tests := map[string]atomicTxTest{
-		"AVAX UTXO": {
+		"LUX UTXO": {
 			setup: func(t *testing.T, vm *VM, sharedMemory *atomic.Memory) *Tx {
 				txID := ids.GenerateTestID()
-				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.AVAXAssetID, 1, testShortIDAddrs[0])
+				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, vm.ctx.LUXAssetID, 1, testShortIDAddrs[0])
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -1199,7 +1199,7 @@ func TestImportTxEVMStateTransfer(t *testing.T) {
 					SourceChain:  vm.ctx.XChainID,
 					ImportedInputs: []*avax.TransferableInput{{
 						UTXOID: utxo.UTXOID,
-						Asset:  avax.Asset{ID: vm.ctx.AVAXAssetID},
+						Asset:  avax.Asset{ID: vm.ctx.LUXAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   1,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -1208,7 +1208,7 @@ func TestImportTxEVMStateTransfer(t *testing.T) {
 					Outs: []EVMOutput{{
 						Address: testEthAddrs[0],
 						Amount:  1,
-						AssetID: vm.ctx.AVAXAssetID,
+						AssetID: vm.ctx.LUXAssetID,
 					}},
 				}}
 				if err := tx.Sign(vm.codec, [][]*secp256k1.PrivateKey{{testKeys[0]}}); err != nil {
@@ -1226,11 +1226,11 @@ func TestImportTxEVMStateTransfer(t *testing.T) {
 
 				avaxBalance := sdb.GetBalance(testEthAddrs[0])
 				if avaxBalance.Cmp(x2cRate) != 0 {
-					t.Fatalf("Expected AVAX balance to be %d, found balance: %d", x2cRate, avaxBalance)
+					t.Fatalf("Expected LUX balance to be %d, found balance: %d", x2cRate, avaxBalance)
 				}
 			},
 		},
-		"non-AVAX UTXO": {
+		"non-LUX UTXO": {
 			setup: func(t *testing.T, vm *VM, sharedMemory *atomic.Memory) *Tx {
 				txID := ids.GenerateTestID()
 				utxo, err := addUTXO(sharedMemory, vm.ctx, txID, 0, assetID, 1, testShortIDAddrs[0])
@@ -1275,7 +1275,7 @@ func TestImportTxEVMStateTransfer(t *testing.T) {
 				}
 				avaxBalance := sdb.GetBalance(testEthAddrs[0])
 				if avaxBalance.Cmp(common.Big0) != 0 {
-					t.Fatalf("Expected AVAX balance to be 0, found balance: %d", avaxBalance)
+					t.Fatalf("Expected LUX balance to be 0, found balance: %d", avaxBalance)
 				}
 			},
 		},

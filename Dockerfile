@@ -1,26 +1,26 @@
 # ============= Compilation Stage ================
 FROM golang:1.20.10-bullseye AS builder
 
-ARG AVALANCHE_VERSION
+ARG LUX_VERSION
 
-RUN mkdir -p $GOPATH/src/github.com/ava-labs
-WORKDIR $GOPATH/src/github.com/ava-labs
+RUN mkdir -p $GOPATH/src/github.com/luxdefi
+WORKDIR $GOPATH/src/github.com/luxdefi
 
-RUN git clone -b $AVALANCHE_VERSION --single-branch https://github.com/ava-labs/avalanchego.git
+RUN git clone -b $LUX_VERSION --single-branch https://github.com/luxdefi/node.git
 
 # Copy coreth repo into desired location
 COPY . coreth
 
-# Set the workdir to AvalancheGo and update coreth dependency to local version
-WORKDIR $GOPATH/src/github.com/ava-labs/avalanchego
-# Run go mod download here to improve caching of AvalancheGo specific depednencies
+# Set the workdir to Lux Node and update coreth dependency to local version
+WORKDIR $GOPATH/src/github.com/luxdefi/node
+# Run go mod download here to improve caching of Lux Node specific depednencies
 RUN go mod download
 # Replace the coreth dependency
-RUN go mod edit -replace github.com/ava-labs/coreth=../coreth
+RUN go mod edit -replace github.com/luxdefi/coreth=../coreth
 RUN go mod download && go mod tidy -compat=1.20
 
-# Build the AvalancheGo binary with local version of coreth.
-RUN ./scripts/build_avalanche.sh
+# Build the Lux Node binary with local version of coreth.
+RUN ./scripts/build_node.sh
 # Create the plugins directory in the standard location so the build directory will be recognized
 # as valid.
 RUN mkdir build/plugins
@@ -29,10 +29,10 @@ RUN mkdir build/plugins
 FROM debian:11-slim AS execution
 
 # Maintain compatibility with previous images
-RUN mkdir -p /avalanchego/build
-WORKDIR /avalanchego/build
+RUN mkdir -p /node/build
+WORKDIR /node/build
 
 # Copy the executables into the container
-COPY --from=builder /go/src/github.com/ava-labs/avalanchego/build .
+COPY --from=builder /go/src/github.com/luxdefi/node/build .
 
-CMD [ "./avalanchego" ]
+CMD [ "./luxd" ]

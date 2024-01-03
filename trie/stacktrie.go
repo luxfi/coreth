@@ -1,4 +1,7 @@
-// (c) 2020-2021, Ava Labs, Inc.
+// (c) 2021-2024, Lux Partners Limited.
+//
+// This file is a derived work, based on coreth and the go-ethereum library
+// whose original notices appear below.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -8,6 +11,7 @@
 //
 // Much love to the original authors for their work.
 // **********
+// Copyright 2020-2021, Ava Labs, Inc.
 // Copyright 2020 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -34,9 +38,9 @@ import (
 	"io"
 	"sync"
 
-	"github.com/ava-labs/coreth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/coreth/core/types"
 )
 
 var ErrCommitDisabled = errors.New("no database for committing")

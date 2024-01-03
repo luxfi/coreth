@@ -12,24 +12,24 @@ import (
 
 	_ "embed"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/avalanchego/vms/components/chain"
-	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
-	"github.com/ava-labs/avalanchego/vms/platformvm/warp/payload"
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/eth/tracers"
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/plugin/evm/message"
-	"github.com/ava-labs/coreth/precompile/contract"
-	"github.com/ava-labs/coreth/precompile/contracts/warp"
-	"github.com/ava-labs/coreth/predicate"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow/choices"
+	"github.com/luxdefi/node/snow/engine/snowman/block"
+	"github.com/luxdefi/node/snow/validators"
+	"github.com/luxdefi/node/utils"
+	"github.com/luxdefi/node/utils/crypto/bls"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/vms/components/chain"
+	luxWarp "github.com/luxdefi/node/vms/platformvm/warp"
+	"github.com/luxdefi/node/vms/platformvm/warp/payload"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/eth/tracers"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxdefi/coreth/precompile/contract"
+	"github.com/luxdefi/coreth/precompile/contracts/warp"
+	"github.com/luxdefi/coreth/predicate"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
@@ -63,7 +63,7 @@ func TestSendWarpMessage(t *testing.T) {
 		payloadData,
 	)
 	require.NoError(err)
-	expectedUnsignedMessage, err := avalancheWarp.NewUnsignedMessage(
+	expectedUnsignedMessage, err := luxWarp.NewUnsignedMessage(
 		vm.ctx.NetworkID,
 		vm.ctx.ChainID,
 		addressedPayload.Bytes(),
@@ -139,7 +139,7 @@ func TestSendWarpMessage(t *testing.T) {
 
 	blockHashPayload, err := payload.NewHash(blk.ID())
 	require.NoError(err)
-	unsignedMessage, err = avalancheWarp.NewUnsignedMessage(vm.ctx.NetworkID, vm.ctx.ChainID, blockHashPayload.Bytes())
+	unsignedMessage, err = luxWarp.NewUnsignedMessage(vm.ctx.NetworkID, vm.ctx.ChainID, blockHashPayload.Bytes())
 	require.NoError(err)
 
 	// Verify the produced message signature is valid
@@ -156,7 +156,7 @@ func TestValidateWarpMessage(t *testing.T) {
 		payloadData,
 	)
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(testNetworkID, sourceChainID, addressedPayload.Bytes())
+	unsignedMessage, err := luxWarp.NewUnsignedMessage(testNetworkID, sourceChainID, addressedPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -182,7 +182,7 @@ func TestValidateInvalidWarpMessage(t *testing.T) {
 		payloadData,
 	)
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(testNetworkID, sourceChainID, addressedPayload.Bytes())
+	unsignedMessage, err := luxWarp.NewUnsignedMessage(testNetworkID, sourceChainID, addressedPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -201,7 +201,7 @@ func TestValidateWarpBlockHash(t *testing.T) {
 	blockHash := ids.GenerateTestID()
 	blockHashPayload, err := payload.NewHash(blockHash)
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(testNetworkID, sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := luxWarp.NewUnsignedMessage(testNetworkID, sourceChainID, blockHashPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -222,7 +222,7 @@ func TestValidateInvalidWarpBlockHash(t *testing.T) {
 	blockHash := ids.GenerateTestID()
 	blockHashPayload, err := payload.NewHash(blockHash)
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(testNetworkID, sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := luxWarp.NewUnsignedMessage(testNetworkID, sourceChainID, blockHashPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -235,7 +235,7 @@ func TestValidateInvalidWarpBlockHash(t *testing.T) {
 	testWarpVMTransaction(t, unsignedMessage, false, exampleWarpPayload)
 }
 
-func testWarpVMTransaction(t *testing.T, unsignedMessage *avalancheWarp.UnsignedMessage, validSignature bool, txPayload []byte) {
+func testWarpVMTransaction(t *testing.T, unsignedMessage *luxWarp.UnsignedMessage, validSignature bool, txPayload []byte) {
 	require := require.New(t)
 	issuer, vm, _, _, _ := GenesisVM(t, true, genesisJSONDUpgrade, "", "")
 
@@ -293,14 +293,14 @@ func testWarpVMTransaction(t *testing.T, unsignedMessage *avalancheWarp.Unsigned
 	signersBitSet.Add(0)
 	signersBitSet.Add(1)
 
-	warpSignature := &avalancheWarp.BitSetSignature{
+	warpSignature := &luxWarp.BitSetSignature{
 		Signers: signersBitSet.Bytes(),
 	}
 
 	blsAggregatedSignatureBytes := bls.SignatureToBytes(blsAggregatedSignature)
 	copy(warpSignature.Signature[:], blsAggregatedSignatureBytes)
 
-	signedMessage, err := avalancheWarp.NewMessage(
+	signedMessage, err := luxWarp.NewMessage(
 		unsignedMessage,
 		warpSignature,
 	)
@@ -404,7 +404,7 @@ func TestReceiveWarpMessage(t *testing.T) {
 		payloadData,
 	)
 	require.NoError(err)
-	unsignedMessage, err := avalancheWarp.NewUnsignedMessage(
+	unsignedMessage, err := luxWarp.NewUnsignedMessage(
 		vm.ctx.NetworkID,
 		vm.ctx.ChainID,
 		addressedPayload.Bytes(),
@@ -456,14 +456,14 @@ func TestReceiveWarpMessage(t *testing.T) {
 	signersBitSet.Add(0)
 	signersBitSet.Add(1)
 
-	warpSignature := &avalancheWarp.BitSetSignature{
+	warpSignature := &luxWarp.BitSetSignature{
 		Signers: signersBitSet.Bytes(),
 	}
 
 	blsAggregatedSignatureBytes := bls.SignatureToBytes(blsAggregatedSignature)
 	copy(warpSignature.Signature[:], blsAggregatedSignatureBytes)
 
-	signedMessage, err := avalancheWarp.NewMessage(
+	signedMessage, err := luxWarp.NewMessage(
 		unsignedMessage,
 		warpSignature,
 	)
@@ -571,7 +571,7 @@ func TestMessageSignatureRequestsToVM(t *testing.T) {
 	}()
 
 	// Generate a new warp unsigned message and add to warp backend
-	warpMessage, err := avalancheWarp.NewUnsignedMessage(vm.ctx.NetworkID, vm.ctx.ChainID, []byte{1, 2, 3})
+	warpMessage, err := luxWarp.NewUnsignedMessage(vm.ctx.NetworkID, vm.ctx.ChainID, []byte{1, 2, 3})
 	require.NoError(t, err)
 
 	// Add the known message and get its signature to confirm.

@@ -34,10 +34,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/core/vm"
-	"github.com/ava-labs/coreth/eth/tracers"
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/core/vm"
+	"github.com/luxdefi/coreth/eth/tracers"
+	"github.com/luxdefi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 

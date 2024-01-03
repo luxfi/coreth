@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/precompile/precompileconfig"
-	"github.com/ava-labs/coreth/precompile/testutils"
-	"github.com/ava-labs/coreth/utils"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/precompile/precompileconfig"
+	"github.com/luxdefi/coreth/precompile/testutils"
+	"github.com/luxdefi/coreth/utils"
 	"go.uber.org/mock/gomock"
 )
 

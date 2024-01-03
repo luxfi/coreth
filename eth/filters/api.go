@@ -35,13 +35,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/interfaces"
-	"github.com/ava-labs/coreth/internal/ethapi"
-	"github.com/ava-labs/coreth/rpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/interfaces"
+	"github.com/luxdefi/coreth/internal/ethapi"
+	"github.com/luxdefi/coreth/rpc"
 )
 
 var (

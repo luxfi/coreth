@@ -19,8 +19,8 @@ package logger
 import (
 	"math/big"
 
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/core/vm"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/core/vm"
 	"github.com/ethereum/go-ethereum/common"
 )
 

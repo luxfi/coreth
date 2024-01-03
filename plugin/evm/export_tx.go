@@ -9,30 +9,30 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ava-labs/coreth/core/state"
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxdefi/coreth/params"
 
-	"github.com/ava-labs/avalanchego/chains/atomic"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
-	"github.com/ava-labs/avalanchego/utils/math"
-	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/components/verify"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/node/utils"
+	"github.com/luxdefi/node/utils/constants"
+	"github.com/luxdefi/node/utils/crypto/secp256k1"
+	"github.com/luxdefi/node/utils/math"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/utils/wrappers"
+	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/components/verify"
+	"github.com/luxdefi/node/vms/secp256k1fx"
 )
 
 var (
 	_                           UnsignedAtomicTx       = &UnsignedExportTx{}
 	_                           secp256k1fx.UnsignedTx = &UnsignedExportTx{}
-	errExportNonAVAXInputBanff                         = errors.New("export input cannot contain non-AVAX in Banff")
-	errExportNonAVAXOutputBanff                        = errors.New("export output cannot contain non-AVAX in Banff")
+	errExportNonLUXInputBanff                         = errors.New("export input cannot contain non-LUX in Banff")
+	errExportNonLUXOutputBanff                        = errors.New("export output cannot contain non-LUX in Banff")
 )
 
 // UnsignedExportTx is an unsigned ExportTx
@@ -98,8 +98,8 @@ func (utx *UnsignedExportTx) Verify(
 		if err := in.Verify(); err != nil {
 			return err
 		}
-		if rules.IsBanff && in.AssetID != ctx.AVAXAssetID {
-			return errExportNonAVAXInputBanff
+		if rules.IsBanff && in.AssetID != ctx.LUXAssetID {
+			return errExportNonLUXInputBanff
 		}
 	}
 
@@ -108,11 +108,11 @@ func (utx *UnsignedExportTx) Verify(
 			return err
 		}
 		assetID := out.AssetID()
-		if assetID != ctx.AVAXAssetID && utx.DestinationChain == constants.PlatformChainID {
+		if assetID != ctx.LUXAssetID && utx.DestinationChain == constants.PlatformChainID {
 			return errWrongChainID
 		}
-		if rules.IsBanff && assetID != ctx.AVAXAssetID {
-			return errExportNonAVAXOutputBanff
+		if rules.IsBanff && assetID != ctx.LUXAssetID {
+			return errExportNonLUXOutputBanff
 		}
 	}
 	if !avax.IsSortedTransferableOutputs(utx.ExportedOutputs, Codec) {
@@ -198,10 +198,10 @@ func (utx *UnsignedExportTx) SemanticVerify(
 		if err != nil {
 			return err
 		}
-		fc.Produce(vm.ctx.AVAXAssetID, txFee)
+		fc.Produce(vm.ctx.LUXAssetID, txFee)
 	// Apply fees to export transactions before Apricot Phase 3
 	default:
-		fc.Produce(vm.ctx.AVAXAssetID, params.AvalancheAtomicTxFee)
+		fc.Produce(vm.ctx.LUXAssetID, params.LuxAtomicTxFee)
 	}
 	for _, out := range utx.ExportedOutputs {
 		fc.Produce(out.AssetID(), out.Output().Amount())
@@ -304,8 +304,8 @@ func (vm *VM) newExportTx(
 		err                  error
 	)
 
-	// consume non-AVAX
-	if assetID != vm.ctx.AVAXAssetID {
+	// consume non-LUX
+	if assetID != vm.ctx.LUXAssetID {
 		ins, signers, err = vm.GetSpendableFunds(keys, assetID, amount)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't generate tx inputs/signers: %w", err)
@@ -335,14 +335,14 @@ func (vm *VM) newExportTx(
 			return nil, err
 		}
 
-		avaxIns, avaxSigners, err = vm.GetSpendableAVAXWithFee(keys, avaxNeeded, cost, baseFee)
+		avaxIns, avaxSigners, err = vm.GetSpendableLUXWithFee(keys, avaxNeeded, cost, baseFee)
 	default:
-		var newAvaxNeeded uint64
-		newAvaxNeeded, err = math.Add64(avaxNeeded, params.AvalancheAtomicTxFee)
+		var newLuxNeeded uint64
+		newLuxNeeded, err = math.Add64(avaxNeeded, params.LuxAtomicTxFee)
 		if err != nil {
 			return nil, errOverflowExport
 		}
-		avaxIns, avaxSigners, err = vm.GetSpendableFunds(keys, vm.ctx.AVAXAssetID, newAvaxNeeded)
+		avaxIns, avaxSigners, err = vm.GetSpendableFunds(keys, vm.ctx.LUXAssetID, newLuxNeeded)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("couldn't generate tx inputs/signers: %w", err)
@@ -372,9 +372,9 @@ func (vm *VM) newExportTx(
 func (utx *UnsignedExportTx) EVMStateTransfer(ctx *snow.Context, state *state.StateDB) error {
 	addrs := map[[20]byte]uint64{}
 	for _, from := range utx.Ins {
-		if from.AssetID == ctx.AVAXAssetID {
-			log.Debug("crosschain", "dest", utx.DestinationChain, "addr", from.Address, "amount", from.Amount, "assetID", "AVAX")
-			// We multiply the input amount by x2cRate to convert AVAX back to the appropriate
+		if from.AssetID == ctx.LUXAssetID {
+			log.Debug("crosschain", "dest", utx.DestinationChain, "addr", from.Address, "amount", from.Amount, "assetID", "LUX")
+			// We multiply the input amount by x2cRate to convert LUX back to the appropriate
 			// denomination before export.
 			amount := new(big.Int).Mul(
 				new(big.Int).SetUint64(from.Amount), x2cRate)

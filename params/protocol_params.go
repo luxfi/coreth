@@ -167,7 +167,7 @@ const (
 	BlobTxMinDataGasprice            = 1       // Minimum gas price for data blobs
 	BlobTxDataGaspriceUpdateFraction = 2225652 // Controls the maximum rate of change for data gas price
 
-	// Avalanche Stateful Precompile Params
+	// Lux Stateful Precompile Params
 	// Gas price for native asset balance lookup. Based on the cost of an SLOAD operation since native
 	// asset balances are kept in state storage.
 	AssetBalanceApricot uint64 = 2100

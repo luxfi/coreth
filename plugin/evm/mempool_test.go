@@ -6,8 +6,8 @@ package evm
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow"
 	"github.com/stretchr/testify/require"
 )
 

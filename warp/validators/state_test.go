@@ -1,3 +1,4 @@
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
@@ -7,10 +8,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/coreth/utils"
+	"github.com/luxdefi/coreth/utils"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow/validators"
+	"github.com/luxdefi/node/utils/constants"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

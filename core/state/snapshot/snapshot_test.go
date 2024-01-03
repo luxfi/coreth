@@ -29,15 +29,14 @@ package snapshot
 import (
 	crand "crypto/rand"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/core/types"
 	"math/big"
 	"math/rand"
 	"testing"
 	"time"
-
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // randomHash generates a random blob of data and returns it as a hash.

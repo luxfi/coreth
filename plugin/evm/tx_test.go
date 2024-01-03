@@ -13,11 +13,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/ava-labs/coreth/params"
+	"github.com/luxdefi/coreth/params"
 
-	"github.com/ava-labs/avalanchego/chains/atomic"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/snow"
 )
 
 func TestCalculateDynamicFee(t *testing.T) {

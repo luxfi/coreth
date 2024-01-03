@@ -7,8 +7,8 @@ package contract
 import (
 	"math/big"
 
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/coreth/precompile/precompileconfig"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/coreth/precompile/precompileconfig"
 	"github.com/ethereum/go-ethereum/common"
 )
 

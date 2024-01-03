@@ -27,9 +27,9 @@
 package trie
 
 import (
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/ethdb"
-	"github.com/ava-labs/coreth/trie/triedb/hashdb"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxdefi/coreth/trie/triedb/hashdb"
 )
 
 // newTestDatabase initializes the trie database with specified scheme.

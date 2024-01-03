@@ -14,27 +14,27 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ava-labs/avalanchego/chains/atomic"
-	"github.com/ava-labs/avalanchego/database/memdb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/network/p2p"
-	"github.com/ava-labs/avalanchego/network/p2p/gossip"
-	"github.com/ava-labs/avalanchego/proto/pb/sdk"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	agoUtils "github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/luxdefi/node/chains/atomic"
+	"github.com/luxdefi/node/database/memdb"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/network/p2p"
+	"github.com/luxdefi/node/network/p2p/gossip"
+	"github.com/luxdefi/node/proto/pb/sdk"
+	"github.com/luxdefi/node/snow"
+	"github.com/luxdefi/node/snow/engine/common"
+	"github.com/luxdefi/node/snow/validators"
+	agoUtils "github.com/luxdefi/node/utils"
+	"github.com/luxdefi/node/utils/crypto/secp256k1"
+	"github.com/luxdefi/node/utils/logging"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/node/vms/components/avax"
+	"github.com/luxdefi/node/vms/secp256k1fx"
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/utils"
+	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxdefi/coreth/params"
+	"github.com/luxdefi/coreth/utils"
 )
 
 func TestEthTxGossip(t *testing.T) {
@@ -162,7 +162,7 @@ func TestAtomicTxGossip(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 	snowCtx := utils.TestSnowContext()
-	snowCtx.AVAXAssetID = ids.GenerateTestID()
+	snowCtx.LUXAssetID = ids.GenerateTestID()
 	snowCtx.XChainID = ids.GenerateTestID()
 	validatorState := &validators.TestState{
 		GetSubnetIDF: func(context.Context, ids.ID) (ids.ID, error) {
@@ -258,7 +258,7 @@ func TestAtomicTxGossip(t *testing.T) {
 		snowCtx,
 		ids.GenerateTestID(),
 		0,
-		snowCtx.AVAXAssetID,
+		snowCtx.LUXAssetID,
 		100_000_000_000,
 		pk.PublicKey().Address(),
 	)
@@ -424,7 +424,7 @@ func TestAtomicTxPushGossipOutbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 	snowCtx := utils.TestSnowContext()
-	snowCtx.AVAXAssetID = ids.GenerateTestID()
+	snowCtx.LUXAssetID = ids.GenerateTestID()
 	snowCtx.XChainID = ids.GenerateTestID()
 	validatorState := &validators.TestState{
 		GetSubnetIDF: func(context.Context, ids.ID) (ids.ID, error) {
@@ -470,7 +470,7 @@ func TestAtomicTxPushGossipOutbound(t *testing.T) {
 		snowCtx,
 		ids.GenerateTestID(),
 		0,
-		snowCtx.AVAXAssetID,
+		snowCtx.LUXAssetID,
 		100_000_000_000,
 		pk.PublicKey().Address(),
 	)
@@ -497,7 +497,7 @@ func TestAtomicTxPushGossipInbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 	snowCtx := utils.TestSnowContext()
-	snowCtx.AVAXAssetID = ids.GenerateTestID()
+	snowCtx.LUXAssetID = ids.GenerateTestID()
 	snowCtx.XChainID = ids.GenerateTestID()
 	validatorState := &validators.TestState{
 		GetSubnetIDF: func(context.Context, ids.ID) (ids.ID, error) {
@@ -543,7 +543,7 @@ func TestAtomicTxPushGossipInbound(t *testing.T) {
 		snowCtx,
 		ids.GenerateTestID(),
 		0,
-		snowCtx.AVAXAssetID,
+		snowCtx.LUXAssetID,
 		100_000_000_000,
 		pk.PublicKey().Address(),
 	)

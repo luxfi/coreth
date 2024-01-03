@@ -1,3 +1,4 @@
+// (c) 2023-2024, Lux Partners Limited. All rights reserved.
 // (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
@@ -6,7 +7,7 @@ package handlers
 import (
 	"time"
 
-	"github.com/ava-labs/coreth/metrics"
+	"github.com/luxdefi/coreth/metrics"
 )
 
 type handlerStats struct {

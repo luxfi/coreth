@@ -6,7 +6,7 @@ For more information on the motivation for encoding the results of predicate ver
 
 ## Serialization
 
-Note: PredicateResults are encoded using the AvalancheGo codec, which serializes a map by serializing the length of the map as a uint32 and then serializes each key-value pair sequentially.
+Note: PredicateResults are encoded using the Lux Node codec, which serializes a map by serializing the length of the map as a uint32 and then serializes each key-value pair sequentially.
 
 PredicateResults:
 ```

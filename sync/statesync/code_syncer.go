@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/coreth/core/rawdb"
-	"github.com/ava-labs/coreth/ethdb"
-	"github.com/ava-labs/coreth/params"
-	statesyncclient "github.com/ava-labs/coreth/sync/client"
+	"github.com/luxdefi/node/ids"
+	"github.com/luxdefi/node/utils/set"
+	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxdefi/coreth/params"
+	statesyncclient "github.com/luxdefi/coreth/sync/client"
 	"github.com/ethereum/go-ethereum/common"
 )
 
