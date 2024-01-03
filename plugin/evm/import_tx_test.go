@@ -17,7 +17,6 @@ import (
 	"github.com/luxdefi/node/utils/crypto/secp256k1"
 	"github.com/luxdefi/node/utils/set"
 	"github.com/luxdefi/node/vms/components/lux"
-	"github.com/luxdefi/node/vms/components/lux"
 	"github.com/luxdefi/node/vms/secp256k1fx"
 )
 

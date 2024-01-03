@@ -18,7 +18,6 @@ import (
 	"github.com/luxdefi/node/utils/crypto/secp256k1"
 	"github.com/luxdefi/node/utils/units"
 	"github.com/luxdefi/node/vms/components/lux"
-	"github.com/luxdefi/node/vms/components/lux"
 	"github.com/luxdefi/node/vms/secp256k1fx"
 )
 
@@ -450,7 +449,7 @@ func TestExportTxSemanticVerify(t *testing.T) {
 	ethAddr := testEthAddrs[0]
 
 	var (
-		luxBalance           = 10 * units.Lux
+		luxBalance            = 10 * units.Lux
 		custom0Balance uint64 = 100
 		custom0AssetID        = ids.ID{1, 2, 3, 4, 5}
 		custom1Balance uint64 = 1000
@@ -938,7 +937,7 @@ func TestExportTxAccept(t *testing.T) {
 	ethAddr := testEthAddrs[0]
 
 	var (
-		luxBalance           = 10 * units.Lux
+		luxBalance            = 10 * units.Lux
 		custom0Balance uint64 = 100
 		custom0AssetID        = ids.ID{1, 2, 3, 4, 5}
 	)

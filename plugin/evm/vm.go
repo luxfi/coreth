@@ -154,7 +154,7 @@ const (
 
 // Define the API endpoints for the VM
 const (
-	luxEndpoint            = "/lux"
+	luxEndpoint             = "/lux"
 	adminEndpoint           = "/admin"
 	ethRPCEndpoint          = "/rpc"
 	ethWSEndpoint           = "/ws"
