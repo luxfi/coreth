@@ -17,7 +17,7 @@
 package trie
 
 import (
-	"github.com/luxdefi/coreth/trie/trienode"
+	"github.com/luxfi/coreth/trie/trienode"
 	"github.com/ethereum/go-ethereum/common"
 )
 

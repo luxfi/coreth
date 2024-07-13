@@ -34,16 +34,16 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/luxdefi/coreth/accounts"
-	"github.com/luxdefi/coreth/consensus"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/bloombits"
-	"github.com/luxdefi/coreth/core/state"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/rpc"
+	"github.com/luxfi/coreth/accounts"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/bloombits"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // Backend interface provides the common API services (that are provided by

@@ -32,8 +32,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/luxdefi/coreth/ethdb/memorydb"
-	"github.com/luxdefi/coreth/utils"
+	"github.com/luxfi/coreth/ethdb/memorydb"
+	"github.com/luxfi/coreth/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )

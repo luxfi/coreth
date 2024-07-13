@@ -8,9 +8,9 @@ import (
 	reflect "reflect"
 
 	common "github.com/ethereum/go-ethereum/common"
-	atomic "github.com/luxdefi/node/chains/atomic"
-	ids "github.com/luxdefi/node/ids"
-	warp "github.com/luxdefi/node/vms/platformvm/warp"
+	atomic "github.com/luxfi/node/chains/atomic"
+	ids "github.com/luxfi/node/ids"
+	warp "github.com/luxfi/node/vms/platformvm/warp"
 	gomock "go.uber.org/mock/gomock"
 )
 

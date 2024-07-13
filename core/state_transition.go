@@ -33,11 +33,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	cmath "github.com/ethereum/go-ethereum/common/math"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/utils"
-	"github.com/luxdefi/coreth/vmerrs"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/coreth/vmerrs"
 )
 
 // ExecutionResult includes all output after executing given evm

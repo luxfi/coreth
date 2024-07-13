@@ -4,9 +4,9 @@
 package evm
 
 import (
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
-	"github.com/luxdefi/node/chains/atomic"
-	"github.com/luxdefi/node/ids"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/node/chains/atomic"
+	"github.com/luxfi/node/ids"
 )
 
 var _ precompileconfig.SharedMemoryWriter = &sharedMemoryWriter{}

@@ -40,7 +40,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxfi/coreth/core/types"
 )
 
 var ErrCommitDisabled = errors.New("no database for committing")

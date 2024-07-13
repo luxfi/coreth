@@ -32,8 +32,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/metrics"
-	"github.com/luxdefi/coreth/utils"
+	"github.com/luxfi/coreth/metrics"
+	"github.com/luxfi/coreth/utils"
 )
 
 // triePrefetchMetricsPrefix is the prefix under which to publish the metrics.

@@ -30,8 +30,8 @@ import (
 	"bytes"
 	"time"
 
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

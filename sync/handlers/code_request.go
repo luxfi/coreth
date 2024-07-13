@@ -7,14 +7,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/luxdefi/node/codec"
-	"github.com/luxdefi/node/ids"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/ids"
 
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/plugin/evm/message"
-	"github.com/luxdefi/coreth/sync/handlers/stats"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/sync/handlers/stats"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

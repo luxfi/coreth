@@ -24,7 +24,7 @@ The Block type wraps the stateless block type [here](../../core/types/block.go) 
 
 ## Atomic Transactions
 
-Atomic transactions utilize Shared Memory (documented [here](https://github.com/luxdefi/node/blob/master/chains/atomic/README.md)) to send assets to the P-Chain and X-Chain.
+Atomic transactions utilize Shared Memory (documented [here](https://github.com/luxfi/node/blob/master/chains/atomic/README.md)) to send assets to the P-Chain and X-Chain.
 
 Operations on shared memory cannot be reverted, so atomic transactions must separate their verification and processing into two stages: verifying the transaction as valid to be performed within its block and actually performing the operation. For example, once an export transaction is accepted, there is no way for the C-Chain to take that asset back and it can be imported immediately by the recipient chain.
 

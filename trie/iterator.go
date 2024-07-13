@@ -32,7 +32,7 @@ import (
 	"errors"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxfi/coreth/core/types"
 )
 
 // NodeResolver is used for looking up trie nodes before reaching into the real

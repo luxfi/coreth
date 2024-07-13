@@ -37,7 +37,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxdefi/coreth/accounts"
+	"github.com/luxfi/coreth/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"

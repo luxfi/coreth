@@ -4,8 +4,8 @@
 package syncutils
 
 import (
-	"github.com/luxdefi/coreth/core/state/snapshot"
-	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxfi/coreth/core/state/snapshot"
+	"github.com/luxfi/coreth/ethdb"
 )
 
 var (

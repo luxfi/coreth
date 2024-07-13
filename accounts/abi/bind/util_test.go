@@ -33,10 +33,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxdefi/coreth/accounts/abi/bind"
-	"github.com/luxdefi/coreth/accounts/abi/bind/backends"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxfi/coreth/accounts/abi/bind"
+	"github.com/luxfi/coreth/accounts/abi/bind/backends"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )

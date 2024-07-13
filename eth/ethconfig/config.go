@@ -30,10 +30,10 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/txpool"
-	"github.com/luxdefi/coreth/eth/gasprice"
-	"github.com/luxdefi/coreth/miner"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/eth/gasprice"
+	"github.com/luxfi/coreth/miner"
 )
 
 // DefaultFullGPOConfig contains default gasprice oracle settings for full node.

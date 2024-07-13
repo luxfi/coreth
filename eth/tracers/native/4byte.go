@@ -32,8 +32,8 @@ import (
 	"strconv"
 	"sync/atomic"
 
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/eth/tracers"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/eth/tracers"
 	"github.com/ethereum/go-ethereum/common"
 )
 

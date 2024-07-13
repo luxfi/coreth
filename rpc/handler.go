@@ -35,7 +35,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxdefi/coreth/metrics"
+	"github.com/luxfi/coreth/metrics"
 	"github.com/ethereum/go-ethereum/log"
 	"golang.org/x/time/rate"
 )

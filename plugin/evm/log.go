@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"time"
 
@@ -43,11 +44,11 @@ func InitLogger(alias string, level string, jsonFormat bool, writer io.Writer) (
 // SetLogLevel sets the log level of initialized log handler.
 func (c *CorethLogger) SetLogLevel(level string) error {
 	// Set log level
-	logLevel, err := log.LvlFromString(level)
+	logLevel, err := log.LevelFromString(level)
 	if err != nil {
 		return err
 	}
-	log.Root().SetHandler(log.LvlFilterHandler(logLevel, c))
+	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, logLevel, false)))
 	return nil
 }
 

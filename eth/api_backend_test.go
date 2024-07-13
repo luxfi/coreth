@@ -30,7 +30,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/assert"

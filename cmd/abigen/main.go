@@ -34,8 +34,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/luxdefi/coreth/accounts/abi/bind"
-	"github.com/luxdefi/coreth/internal/flags"
+	"github.com/luxfi/coreth/accounts/abi/bind"
+	"github.com/luxfi/coreth/internal/flags"
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/common/compiler"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -242,7 +242,7 @@ func abigen(c *cli.Context) error {
 }
 
 func main() {
-	log.Root().SetHandler(log.LvlFilterHandler(log.LvlInfo, log.StreamHandler(os.Stderr, log.TerminalFormat(true))))
+	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelInfo, true)))
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)

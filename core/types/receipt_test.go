@@ -34,7 +34,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/holiman/uint256"

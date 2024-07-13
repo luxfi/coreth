@@ -31,4 +31,4 @@ Which OS you used to reveal the bug.
 **Additional context**
 Add any other context about the problem here.
 
-Lux Bug Bounty program can be found [here](https://hackenproof.com/luxdefi).
+Lux Bug Bounty program can be found [here](https://hackenproof.com/luxfi).

@@ -7,9 +7,9 @@ import (
 	"errors"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/node/database/encdb"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/node/database/encdb"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/utils/crypto/secp256k1"
 )
 
 // Key in the database whose corresponding value is the list of

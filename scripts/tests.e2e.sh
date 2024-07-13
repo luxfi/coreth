@@ -34,14 +34,14 @@ if [[ -d "${LUXD_CLONE_PATH}" ]]; then
   git fetch
 else
   echo "creating new clone"
-  git clone https://github.com/luxdefi/node.git "${LUXD_CLONE_PATH}"
+  git clone https://github.com/luxfi/node.git "${LUXD_CLONE_PATH}"
   cd "${LUXD_CLONE_PATH}"
 fi
 # Branch will be reset to $lux_version if it already exists
 git checkout -B "test-${lux_version}" "${lux_version}"
 
 echo "updating coreth dependency to point to ${CORETH_PATH}"
-go mod edit -replace "github.com/luxdefi/coreth=${CORETH_PATH}"
+go mod edit -replace "github.com/luxfi/coreth=${CORETH_PATH}"
 go mod tidy
 
 echo "building node"

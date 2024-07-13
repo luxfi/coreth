@@ -9,12 +9,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/luxdefi/coreth/accounts/abi"
-	"github.com/luxdefi/coreth/consensus/dummy"
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/accounts/abi"
+	"github.com/luxfi/coreth/consensus/dummy"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/params"
 	"github.com/stretchr/testify/require"
 )
 

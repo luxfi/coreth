@@ -33,7 +33,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxdefi/coreth/utils"
+	"github.com/luxfi/coreth/utils"
 )
 
 func TestCheckCompatible(t *testing.T) {

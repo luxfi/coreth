@@ -13,21 +13,21 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/luxdefi/node/ids"
+	"github.com/luxfi/node/ids"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/luxdefi/coreth/consensus/dummy"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/ethdb/memorydb"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/plugin/evm/message"
-	clientstats "github.com/luxdefi/coreth/sync/client/stats"
-	"github.com/luxdefi/coreth/sync/handlers"
-	handlerstats "github.com/luxdefi/coreth/sync/handlers/stats"
-	"github.com/luxdefi/coreth/sync/syncutils"
-	"github.com/luxdefi/coreth/trie"
+	"github.com/luxfi/coreth/consensus/dummy"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/ethdb/memorydb"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	clientstats "github.com/luxfi/coreth/sync/client/stats"
+	"github.com/luxfi/coreth/sync/handlers"
+	handlerstats "github.com/luxfi/coreth/sync/handlers/stats"
+	"github.com/luxfi/coreth/sync/syncutils"
+	"github.com/luxfi/coreth/trie"
 )
 
 func TestGetCode(t *testing.T) {

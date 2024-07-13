@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/precompile/contract"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/stretchr/testify/require"
 )
 

@@ -6,7 +6,7 @@ package testutils
 import (
 	"testing"
 
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

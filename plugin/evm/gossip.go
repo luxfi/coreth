@@ -9,16 +9,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/utils/logging"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/utils/logging"
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/luxdefi/node/network/p2p"
-	"github.com/luxdefi/node/network/p2p/gossip"
+	"github.com/luxfi/node/network/p2p"
+	"github.com/luxfi/node/network/p2p/gossip"
 
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/txpool"
-	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/core/types"
 )
 
 var (

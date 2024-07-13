@@ -12,19 +12,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/luxdefi/node/database"
-	"github.com/luxdefi/node/database/memdb"
-	"github.com/luxdefi/node/database/versiondb"
+	"github.com/luxfi/node/database"
+	"github.com/luxfi/node/database/memdb"
+	"github.com/luxfi/node/database/versiondb"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/ethdb/memorydb"
-	"github.com/luxdefi/coreth/plugin/evm/message"
-	syncclient "github.com/luxdefi/coreth/sync/client"
-	"github.com/luxdefi/coreth/sync/handlers"
-	handlerstats "github.com/luxdefi/coreth/sync/handlers/stats"
-	"github.com/luxdefi/coreth/sync/syncutils"
-	"github.com/luxdefi/coreth/trie"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/ethdb/memorydb"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	syncclient "github.com/luxfi/coreth/sync/client"
+	"github.com/luxfi/coreth/sync/handlers"
+	handlerstats "github.com/luxfi/coreth/sync/handlers/stats"
+	"github.com/luxfi/coreth/sync/syncutils"
+	"github.com/luxfi/coreth/trie"
 )
 
 const commitInterval = 1024

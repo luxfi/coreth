@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/utils/set"
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/params"
-	statesyncclient "github.com/luxdefi/coreth/sync/client"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/params"
+	statesyncclient "github.com/luxfi/coreth/sync/client"
 	"github.com/ethereum/go-ethereum/common"
 )
 

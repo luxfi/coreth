@@ -6,10 +6,10 @@ package evm
 import (
 	"fmt"
 
-	"github.com/luxdefi/node/database"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/trie/trienode"
+	"github.com/luxfi/node/database"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/trie/trienode"
 	"github.com/ethereum/go-ethereum/log"
 )
 

@@ -32,8 +32,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/holiman/uint256"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/vmerrs"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/vmerrs"
 )
 
 func opAdd(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byte, error) {

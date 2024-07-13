@@ -8,12 +8,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxfi/coreth/core/types"
 
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/snow"
-	"github.com/luxdefi/node/utils/crypto/secp256k1"
-	"github.com/luxdefi/node/vms/components/verify"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/snow"
+	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/node/vms/components/verify"
 )
 
 func TestGossipAtomicTxMarshaller(t *testing.T) {

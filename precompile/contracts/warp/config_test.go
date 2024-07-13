@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
-	"github.com/luxdefi/coreth/precompile/testutils"
-	"github.com/luxdefi/coreth/utils"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/coreth/precompile/testutils"
+	"github.com/luxfi/coreth/utils"
 	"go.uber.org/mock/gomock"
 )
 

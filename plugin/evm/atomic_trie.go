@@ -7,20 +7,20 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxdefi/node/chains/atomic"
-	"github.com/luxdefi/node/codec"
-	"github.com/luxdefi/node/database"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/utils/units"
-	"github.com/luxdefi/node/utils/wrappers"
+	"github.com/luxfi/node/chains/atomic"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/database"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/utils/units"
+	"github.com/luxfi/node/utils/wrappers"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/trie"
-	"github.com/luxdefi/coreth/trie/trienode"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/coreth/trie/trienode"
 )
 
 const (

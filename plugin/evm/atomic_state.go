@@ -6,9 +6,9 @@ package evm
 import (
 	"fmt"
 
-	"github.com/luxdefi/node/chains/atomic"
-	"github.com/luxdefi/node/database"
-	"github.com/luxdefi/node/ids"
+	"github.com/luxfi/node/chains/atomic"
+	"github.com/luxfi/node/database"
+	"github.com/luxfi/node/ids"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

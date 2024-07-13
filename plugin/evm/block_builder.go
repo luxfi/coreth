@@ -7,14 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxdefi/coreth/core/txpool"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/node/utils/timer"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/node/utils/timer"
 
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/node/snow"
-	commonEng "github.com/luxdefi/node/snow/engine/common"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/node/snow"
+	commonEng "github.com/luxfi/node/snow/engine/common"
 )
 
 const (

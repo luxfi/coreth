@@ -36,11 +36,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/trie"
-	"github.com/luxdefi/coreth/trie/trienode"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/coreth/trie/trienode"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -555,7 +555,7 @@ func TestGenerateWithExtraAccounts(t *testing.T) {
 }
 
 func enableLogging() {
-	log.Root().SetHandler(log.LvlFilterHandler(log.LvlTrace, log.StreamHandler(os.Stderr, log.TerminalFormat(true))))
+	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
 }
 
 // Tests that snapshot generation when an extra account with storage exists in the snap state.

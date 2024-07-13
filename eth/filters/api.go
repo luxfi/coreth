@@ -38,10 +38,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/interfaces"
-	"github.com/luxdefi/coreth/internal/ethapi"
-	"github.com/luxdefi/coreth/rpc"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/interfaces"
+	"github.com/luxfi/coreth/internal/ethapi"
+	"github.com/luxfi/coreth/rpc"
 )
 
 var (

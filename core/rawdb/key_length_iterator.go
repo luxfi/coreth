@@ -26,7 +26,7 @@
 
 package rawdb
 
-import "github.com/luxdefi/coreth/ethdb"
+import "github.com/luxfi/coreth/ethdb"
 
 // KeyLengthIterator is a wrapper for a database iterator that ensures only key-value pairs
 // with a specific key length will be returned.

@@ -35,10 +35,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/accounts/abi"
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/eth/tracers"
-	"github.com/luxdefi/coreth/vmerrs"
+	"github.com/luxfi/coreth/accounts/abi"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/eth/tracers"
+	"github.com/luxfi/coreth/vmerrs"
 )
 
 //go:generate go run github.com/fjl/gencodec -type callFrame -field-override callFrameMarshaling -out gen_callframe_json.go

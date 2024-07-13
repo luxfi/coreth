@@ -30,7 +30,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxfi/coreth/ethdb"
 )
 
 func TestTableDatabase(t *testing.T)            { testTableDatabase(t, "prefix") }

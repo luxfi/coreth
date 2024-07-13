@@ -10,13 +10,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/luxdefi/node/api"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/utils/crypto/secp256k1"
-	"github.com/luxdefi/node/utils/formatting"
-	"github.com/luxdefi/node/utils/formatting/address"
-	"github.com/luxdefi/node/utils/json"
-	"github.com/luxdefi/node/utils/rpc"
+	"github.com/luxfi/node/api"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/node/utils/formatting"
+	"github.com/luxfi/node/utils/formatting/address"
+	"github.com/luxfi/node/utils/json"
+	"github.com/luxfi/node/utils/rpc"
 )
 
 // Interface compliance
@@ -37,7 +37,7 @@ type Client interface {
 	StopCPUProfiler(ctx context.Context, options ...rpc.Option) error
 	MemoryProfile(ctx context.Context, options ...rpc.Option) error
 	LockProfile(ctx context.Context, options ...rpc.Option) error
-	SetLogLevel(ctx context.Context, level log.Lvl, options ...rpc.Option) error
+	SetLogLevel(ctx context.Context, level log.Level, options ...rpc.Option) error
 	GetVMConfig(ctx context.Context, options ...rpc.Option) (*Config, error)
 }
 
@@ -222,7 +222,7 @@ func (c *client) LockProfile(ctx context.Context, options ...rpc.Option) error {
 }
 
 // SetLogLevel dynamically sets the log level for the C Chain
-func (c *client) SetLogLevel(ctx context.Context, level log.Lvl, options ...rpc.Option) error {
+func (c *client) SetLogLevel(ctx context.Context, level log.Level, options ...rpc.Option) error {
 	return c.adminRequester.SendRequest(ctx, "admin.setLogLevel", &SetLogLevelArgs{
 		Level: level.String(),
 	}, &api.EmptyReply{}, options...)

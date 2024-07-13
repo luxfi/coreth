@@ -27,9 +27,9 @@
 package trie
 
 import (
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/trie/triedb/hashdb"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/trie/triedb/hashdb"
 )
 
 // newTestDatabase initializes the trie database with specified scheme.

@@ -11,24 +11,24 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/luxdefi/node/ids"
+	"github.com/luxfi/node/ids"
 
-	"github.com/luxdefi/coreth/ethdb/memorydb"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/sync/client/stats"
+	"github.com/luxfi/coreth/ethdb/memorydb"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/sync/client/stats"
 
-	"github.com/luxdefi/node/codec"
-	"github.com/luxdefi/node/version"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/version"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/peer"
-	"github.com/luxdefi/coreth/plugin/evm/message"
-	"github.com/luxdefi/coreth/trie"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/peer"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/trie"
 )
 
 const (

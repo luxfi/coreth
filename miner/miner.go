@@ -30,13 +30,13 @@ package miner
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/luxdefi/coreth/consensus"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/txpool"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
-	"github.com/luxdefi/node/utils/timer/mockable"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/node/utils/timer/mockable"
 )
 
 // Backend wraps all methods required for mining.

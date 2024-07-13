@@ -28,8 +28,8 @@ package vm
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
 	"math/big"
 )
 

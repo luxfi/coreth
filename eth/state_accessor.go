@@ -34,12 +34,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/state"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/eth/tracers"
-	"github.com/luxdefi/coreth/trie"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/eth/tracers"
+	"github.com/luxfi/coreth/trie"
 )
 
 // noopReleaser is returned in case there is no operation expected

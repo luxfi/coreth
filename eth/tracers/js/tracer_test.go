@@ -35,10 +35,10 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/core/state"
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/eth/tracers"
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/eth/tracers"
+	"github.com/luxfi/coreth/params"
 )
 
 type account struct{}

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/constants"
+	"github.com/luxfi/coreth/constants"
 	"github.com/stretchr/testify/require"
 )
 

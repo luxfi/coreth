@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
-	"github.com/luxdefi/node/snow/engine/snowman/block"
-	"github.com/luxdefi/node/utils/set"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/utils/set"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

@@ -30,8 +30,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/luxdefi/coreth/internal/version"
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/internal/version"
+	"github.com/luxfi/coreth/params"
 	"github.com/urfave/cli/v2"
 )
 

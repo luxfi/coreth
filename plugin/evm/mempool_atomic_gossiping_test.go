@@ -8,9 +8,9 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/utils/crypto/secp256k1"
-	"github.com/luxdefi/node/vms/components/chain"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/node/vms/components/chain"
 
 	"github.com/stretchr/testify/assert"
 )

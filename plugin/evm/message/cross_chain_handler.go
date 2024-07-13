@@ -7,10 +7,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/luxdefi/node/codec"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/coreth/internal/ethapi"
-	"github.com/luxdefi/coreth/rpc"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/coreth/internal/ethapi"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/ethereum/go-ethereum/log"
 )
 

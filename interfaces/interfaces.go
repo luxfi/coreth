@@ -32,7 +32,7 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 

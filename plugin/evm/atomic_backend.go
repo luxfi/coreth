@@ -10,15 +10,15 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/core/types"
-	syncclient "github.com/luxdefi/coreth/sync/client"
-	"github.com/luxdefi/node/chains/atomic"
-	"github.com/luxdefi/node/codec"
-	"github.com/luxdefi/node/database"
-	"github.com/luxdefi/node/database/prefixdb"
-	"github.com/luxdefi/node/database/versiondb"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/utils/wrappers"
+	"github.com/luxfi/coreth/core/types"
+	syncclient "github.com/luxfi/coreth/sync/client"
+	"github.com/luxfi/node/chains/atomic"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/database"
+	"github.com/luxfi/node/database/prefixdb"
+	"github.com/luxfi/node/database/versiondb"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/utils/wrappers"
 )
 
 var _ AtomicBackend = &atomicBackend{}

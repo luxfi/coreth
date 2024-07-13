@@ -30,8 +30,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/trie"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/trie"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 )

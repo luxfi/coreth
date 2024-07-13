@@ -19,8 +19,8 @@ package logger
 import (
 	"math/big"
 
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/core/vm"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
 	"github.com/ethereum/go-ethereum/common"
 )
 

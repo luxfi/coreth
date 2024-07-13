@@ -29,8 +29,8 @@ package leveldb
 import (
 	"testing"
 
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/ethdb/dbtest"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/ethdb/dbtest"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/storage"
 )

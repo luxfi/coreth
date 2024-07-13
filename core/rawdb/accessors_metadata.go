@@ -30,8 +30,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"

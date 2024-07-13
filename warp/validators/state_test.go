@@ -7,10 +7,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/luxdefi/coreth/utils"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/snow/validators"
-	"github.com/luxdefi/node/utils/constants"
+	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/snow/validators"
+	"github.com/luxfi/node/utils/constants"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
