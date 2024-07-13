@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package aggregator
@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/utils/crypto/bls"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/coreth/plugin/evm/message"
 )
 
 const (
@@ -104,6 +104,9 @@ func (s *NetworkSignatureGetter) GetSignature(ctx context.Context, nodeID ids.No
 		var response message.SignatureResponse
 		if _, err := message.Codec.Unmarshal(signatureRes, &response); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal signature res: %w", err)
+		}
+		if response.Signature == [bls.SignatureLen]byte{} {
+			return nil, fmt.Errorf("received empty signature response")
 		}
 		blsSignature, err := bls.SignatureFromBytes(response.Signature[:])
 		if err != nil {

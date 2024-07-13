@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/coreth/params"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/ids"

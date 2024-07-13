@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2019-2020, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -31,10 +31,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/luxfi/coreth/accounts"
 	"github.com/luxfi/coreth/accounts/external"
 	"github.com/luxfi/coreth/accounts/keystore"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // Config represents a small collection of configuration values to fine tune the
@@ -59,6 +59,12 @@ type Config struct {
 
 	// InsecureUnlockAllowed allows user to unlock accounts in unsafe http environment.
 	InsecureUnlockAllowed bool `toml:",omitempty"`
+
+	// BatchRequestLimit is the maximum number of requests in a batch.
+	BatchRequestLimit int `toml:",omitempty"`
+
+	// BatchResponseMaxSize is the maximum number of bytes returned from a batched rpc call.
+	BatchResponseMaxSize int `toml:",omitempty"`
 
 	CorethVersion string
 }

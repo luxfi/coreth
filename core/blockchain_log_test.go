@@ -1,4 +1,5 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
+// See the file LICENSE for licensing terms.
 
 package core
 
@@ -7,14 +8,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/coreth/core/vm"
 	"github.com/luxfi/coreth/params"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,7 +36,7 @@ func TestAcceptedLogsSubscription(t *testing.T) {
 	)
 	var (
 		require = require.New(t)
-		engine  = dummy.NewFaker()
+		engine  = dummy.NewCoinbaseFaker()
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
 		funds   = new(big.Int).Mul(big.NewInt(100), big.NewInt(params.Ether))

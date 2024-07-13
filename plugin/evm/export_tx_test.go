@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -9,8 +9,6 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/ids"
 	engCommon "github.com/luxfi/node/snow/engine/common"
@@ -19,6 +17,8 @@ import (
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/secp256k1fx"
+	"github.com/luxfi/coreth/params"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // createExportTxOptions adds funds to shared memory, imports them, and returns a list of export transactions
@@ -128,14 +128,14 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 	tests := []struct {
 		name          string
 		tx            []EVMInput
-		luxBalance    *big.Int
+		luxBalance   *big.Int
 		balances      map[ids.ID]*big.Int
 		expectedNonce uint64
 		shouldErr     bool
 	}{
 		{
-			name:       "no transfers",
-			tx:         nil,
+			name:        "no transfers",
+			tx:          nil,
 			luxBalance: big.NewInt(int64(luxAmount) * x2cRateInt64),
 			balances: map[ids.ID]*big.Int{
 				customAssetID: big.NewInt(int64(customAmount)),
@@ -449,7 +449,7 @@ func TestExportTxSemanticVerify(t *testing.T) {
 	ethAddr := testEthAddrs[0]
 
 	var (
-		luxBalance            = 10 * units.Lux
+		luxBalance           = 10 * units.Lux
 		custom0Balance uint64 = 100
 		custom0AssetID        = ids.ID{1, 2, 3, 4, 5}
 		custom1Balance uint64 = 1000
@@ -937,7 +937,7 @@ func TestExportTxAccept(t *testing.T) {
 	ethAddr := testEthAddrs[0]
 
 	var (
-		luxBalance            = 10 * units.Lux
+		luxBalance           = 10 * units.Lux
 		custom0Balance uint64 = 100
 		custom0AssetID        = ids.ID{1, 2, 3, 4, 5}
 	)
@@ -1630,52 +1630,52 @@ func TestExportTxGasCost(t *testing.T) {
 
 func TestNewExportTx(t *testing.T) {
 	tests := []struct {
-		name              string
-		genesis           string
-		rules             params.Rules
-		bal               uint64
+		name               string
+		genesis            string
+		rules              params.Rules
+		bal                uint64
 		expectedBurnedLUX uint64
 	}{
 		{
-			name:              "apricot phase 0",
-			genesis:           genesisJSONApricotPhase0,
-			rules:             apricotRulesPhase0,
-			bal:               44000000,
+			name:               "apricot phase 0",
+			genesis:            genesisJSONApricotPhase0,
+			rules:              apricotRulesPhase0,
+			bal:                44000000,
 			expectedBurnedLUX: 1000000,
 		},
 		{
-			name:              "apricot phase 1",
-			genesis:           genesisJSONApricotPhase1,
-			rules:             apricotRulesPhase1,
-			bal:               44000000,
+			name:               "apricot phase 1",
+			genesis:            genesisJSONApricotPhase1,
+			rules:              apricotRulesPhase1,
+			bal:                44000000,
 			expectedBurnedLUX: 1000000,
 		},
 		{
-			name:              "apricot phase 2",
-			genesis:           genesisJSONApricotPhase2,
-			rules:             apricotRulesPhase2,
-			bal:               43000000,
+			name:               "apricot phase 2",
+			genesis:            genesisJSONApricotPhase2,
+			rules:              apricotRulesPhase2,
+			bal:                43000000,
 			expectedBurnedLUX: 1000000,
 		},
 		{
-			name:              "apricot phase 3",
-			genesis:           genesisJSONApricotPhase3,
-			rules:             apricotRulesPhase3,
-			bal:               44446500,
+			name:               "apricot phase 3",
+			genesis:            genesisJSONApricotPhase3,
+			rules:              apricotRulesPhase3,
+			bal:                44446500,
 			expectedBurnedLUX: 276750,
 		},
 		{
-			name:              "apricot phase 4",
-			genesis:           genesisJSONApricotPhase4,
-			rules:             apricotRulesPhase4,
-			bal:               44446500,
+			name:               "apricot phase 4",
+			genesis:            genesisJSONApricotPhase4,
+			rules:              apricotRulesPhase4,
+			bal:                44446500,
 			expectedBurnedLUX: 276750,
 		},
 		{
-			name:              "apricot phase 5",
-			genesis:           genesisJSONApricotPhase5,
-			rules:             apricotRulesPhase5,
-			bal:               39946500,
+			name:               "apricot phase 5",
+			genesis:            genesisJSONApricotPhase5,
+			rules:              apricotRulesPhase5,
+			bal:                39946500,
 			expectedBurnedLUX: 2526750,
 		},
 	}
@@ -1776,7 +1776,6 @@ func TestNewExportTx(t *testing.T) {
 				t.Fatalf("Failed to create commit batch for VM due to %s", err)
 			}
 			chainID, atomicRequests, err := exportTx.AtomicOps()
-
 			if err != nil {
 				t.Fatalf("Failed to accept export transaction due to: %s", err)
 			}
@@ -1964,7 +1963,6 @@ func TestNewExportTxMulticoin(t *testing.T) {
 				t.Fatalf("Failed to create commit batch for VM due to %s", err)
 			}
 			chainID, atomicRequests, err := exportTx.AtomicOps()
-
 			if err != nil {
 				t.Fatalf("Failed to accept export transaction due to: %s", err)
 			}

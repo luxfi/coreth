@@ -29,12 +29,13 @@ package core
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/coreth/core/vm"
 	"github.com/luxfi/coreth/predicate"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
 	//"github.com/ethereum/go-ethereum/log"
 )
 
@@ -54,8 +55,8 @@ func NewEVMBlockContext(header *types.Header, chain ChainContext, author *common
 	if !ok {
 		return newEVMBlockContext(header, chain, author, nil)
 	}
-	// Prior to the DUpgrade, the VM enforces the extra data is smaller than or
-	// equal to this size. After the DUpgrade, the VM pre-verifies the extra
+	// Prior to Durango, the VM enforces the extra data is smaller than or
+	// equal to this size. After Durango, the VM pre-verifies the extra
 	// data past the dynamic fee rollup window is valid.
 	predicateResults, err := predicate.ParseResults(predicateBytes)
 	if err != nil {
@@ -80,6 +81,7 @@ func newEVMBlockContext(header *types.Header, chain ChainContext, author *common
 	var (
 		beneficiary common.Address
 		baseFee     *big.Int
+		blobBaseFee *big.Int
 	)
 
 	// If we don't have an explicit author (i.e. not mining), extract from the header
@@ -90,6 +92,9 @@ func newEVMBlockContext(header *types.Header, chain ChainContext, author *common
 	}
 	if header.BaseFee != nil {
 		baseFee = new(big.Int).Set(header.BaseFee)
+	}
+	if header.ExcessBlobGas != nil {
+		blobBaseFee = eip4844.CalcBlobFee(*header.ExcessBlobGas)
 	}
 	return vm.BlockContext{
 		CanTransfer:       CanTransfer,
@@ -103,16 +108,22 @@ func newEVMBlockContext(header *types.Header, chain ChainContext, author *common
 		Time:              header.Time,
 		Difficulty:        new(big.Int).Set(header.Difficulty),
 		BaseFee:           baseFee,
+		BlobBaseFee:       blobBaseFee,
 		GasLimit:          header.GasLimit,
 	}
 }
 
 // NewEVMTxContext creates a new transaction context for a single transaction.
 func NewEVMTxContext(msg *Message) vm.TxContext {
-	return vm.TxContext{
-		Origin:   msg.From,
-		GasPrice: new(big.Int).Set(msg.GasPrice),
+	ctx := vm.TxContext{
+		Origin:     msg.From,
+		GasPrice:   new(big.Int).Set(msg.GasPrice),
+		BlobHashes: msg.BlobHashes,
 	}
+	if msg.BlobGasFeeCap != nil {
+		ctx.BlobFeeCap = new(big.Int).Set(msg.BlobGasFeeCap)
+	}
+	return ctx
 }
 
 // GetHashFn returns a GetHashFunc which retrieves header hashes by number

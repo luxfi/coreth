@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package predicate
@@ -6,8 +6,8 @@ package predicate
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/coreth/params"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // EndByte is used as a delimiter for the bytes packed into a precompile predicate.
@@ -54,8 +54,8 @@ func UnpackPredicate(paddedPredicate []byte) ([]byte, error) {
 // GetPredicateResultBytes returns the predicate result bytes from the extra data and
 // true iff the predicate results bytes have non-zero length.
 func GetPredicateResultBytes(extraData []byte) ([]byte, bool) {
-	// Prior to the DUpgrade, the VM enforces the extra data is smaller than or equal to this size.
-	// After the DUpgrade, the VM pre-verifies the extra data past the dynamic fee rollup window is
+	// Prior to Durango, the VM enforces the extra data is smaller than or equal to this size.
+	// After Durango, the VM pre-verifies the extra data past the dynamic fee rollup window is
 	// valid.
 	if len(extraData) <= params.DynamicFeeExtraDataSize {
 		return nil, false

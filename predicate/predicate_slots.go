@@ -1,13 +1,13 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package predicate
 
 import (
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/utils"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // PreparePredicateStorageSlots populates the the predicate storage slots of a transaction's access list

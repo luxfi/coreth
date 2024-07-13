@@ -33,9 +33,9 @@ import (
 	"time"
 
 	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/ethdb"
 	"github.com/luxfi/coreth/trie"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -61,7 +61,7 @@ func loadSnapshot(diskdb ethdb.KeyValueStore, triedb *trie.Database, cache int, 
 	// is present in the database (or crashed mid-update).
 	baseBlockHash := rawdb.ReadSnapshotBlockHash(diskdb)
 	if baseBlockHash == (common.Hash{}) {
-		return nil, false, fmt.Errorf("missing or corrupted snapshot, no snapshot block hash")
+		return nil, false, errors.New("missing or corrupted snapshot, no snapshot block hash")
 	}
 	if baseBlockHash != blockHash {
 		return nil, false, fmt.Errorf("block hash stored on disk (%#x) does not match last accepted (%#x)", baseBlockHash, blockHash)

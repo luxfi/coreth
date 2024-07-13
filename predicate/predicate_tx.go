@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package predicate
@@ -6,9 +6,9 @@ package predicate
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/coreth/utils"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // NewPredicateTx returns a transaction with the predicateAddress/predicateBytes tuple

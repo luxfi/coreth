@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package testutils
@@ -35,7 +35,7 @@ func RunVerifyTests(t *testing.T, tests map[string]ConfigVerifyTest) {
 			if chainConfig == nil {
 				ctrl := gomock.NewController(t)
 				mockChainConfig := precompileconfig.NewMockChainConfig(ctrl)
-				mockChainConfig.EXPECT().IsDUpgrade(gomock.Any()).AnyTimes().Return(true)
+				mockChainConfig.EXPECT().IsDurango(gomock.Any()).AnyTimes().Return(true)
 				chainConfig = mockChainConfig
 			}
 			err := test.Config.Verify(chainConfig)

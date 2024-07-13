@@ -37,19 +37,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/event"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/bloombits"
 	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/core/vm"
-	"github.com/luxfi/coreth/ethdb"
 	"github.com/luxfi/coreth/interfaces"
 	"github.com/luxfi/coreth/internal/ethapi"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/rpc"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/event"
 	"github.com/stretchr/testify/require"
 )
 
@@ -78,8 +77,8 @@ func (b *testBackend) ChainDb() ethdb.Database {
 	return b.db
 }
 
-func (b *testBackend) GetVMConfig() *vm.Config {
-	return &vm.Config{AllowUnfinalizedQueries: true}
+func (b *testBackend) IsAllowUnfinalizedQueries() bool {
+	return true
 }
 
 func (b *testBackend) GetMaxBlocksPerRequest() int64 {
@@ -96,13 +95,26 @@ func (b *testBackend) HeaderByNumber(ctx context.Context, blockNr rpc.BlockNumbe
 		num  uint64
 	)
 	switch blockNr {
-	case rpc.LatestBlockNumber, rpc.AcceptedBlockNumber:
+	case rpc.FinalizedBlockNumber:
+		var err error
+		hash, err = rawdb.ReadAcceptorTip(b.db)
+		if err != nil {
+			return nil, err
+		}
+		number := rawdb.ReadHeaderNumber(b.db, hash)
+		if number == nil {
+			return nil, nil
+		}
+		num = *number
+	case rpc.LatestBlockNumber, rpc.PendingBlockNumber:
 		hash = rawdb.ReadHeadBlockHash(b.db)
 		number := rawdb.ReadHeaderNumber(b.db, hash)
 		if number == nil {
 			return nil, nil
 		}
 		num = *number
+	case rpc.SafeBlockNumber:
+		return nil, errors.New("safe block not found")
 	default:
 		num = uint64(blockNr)
 		hash = rawdb.ReadCanonicalHash(b.db, num)
@@ -223,7 +235,7 @@ func TestBlockSubscription(t *testing.T) {
 		api          = NewFilterAPI(sys)
 		genesis      = &core.Genesis{
 			Config:  params.TestChainConfig,
-			BaseFee: big.NewInt(params.ApricotPhase4MinBaseFee),
+			BaseFee: big.NewInt(1),
 		}
 		_, chain, _, _ = core.GenerateChainWithGenesis(genesis, dummy.NewFaker(), 10, 10, func(i int, b *core.BlockGen) {})
 		chainEvents    = []core.ChainEvent{}
@@ -409,6 +421,8 @@ func TestLogFilterCreation(t *testing.T) {
 			{FilterCriteria{FromBlock: big.NewInt(rpc.PendingBlockNumber.Int64()), ToBlock: big.NewInt(100)}, false},
 			// from block "higher" than to block
 			{FilterCriteria{FromBlock: big.NewInt(rpc.PendingBlockNumber.Int64()), ToBlock: big.NewInt(rpc.LatestBlockNumber.Int64())}, false},
+			// topics more then 4
+			{FilterCriteria{Topics: [][]common.Hash{{}, {}, {}, {}, {}}}, false},
 		}
 	)
 
@@ -443,6 +457,7 @@ func TestInvalidLogFilterCreation(t *testing.T) {
 		0: {FromBlock: big.NewInt(rpc.PendingBlockNumber.Int64()), ToBlock: big.NewInt(rpc.LatestBlockNumber.Int64())},
 		1: {FromBlock: big.NewInt(rpc.PendingBlockNumber.Int64()), ToBlock: big.NewInt(100)},
 		2: {FromBlock: big.NewInt(rpc.LatestBlockNumber.Int64()), ToBlock: big.NewInt(100)},
+		3: {Topics: [][]common.Hash{{}, {}, {}, {}, {}}},
 	}
 
 	for i, test := range testCases {
@@ -452,7 +467,10 @@ func TestInvalidLogFilterCreation(t *testing.T) {
 	}
 }
 
+// TestLogFilterUninstall tests invalid getLogs requests
 func TestInvalidGetLogsRequest(t *testing.T) {
+	t.Parallel()
+
 	var (
 		db        = rawdb.NewMemoryDatabase()
 		_, sys    = newTestFilterSystem(t, db, Config{})
@@ -465,12 +483,28 @@ func TestInvalidGetLogsRequest(t *testing.T) {
 		0: {BlockHash: &blockHash, FromBlock: big.NewInt(100)},
 		1: {BlockHash: &blockHash, ToBlock: big.NewInt(500)},
 		2: {BlockHash: &blockHash, FromBlock: big.NewInt(rpc.LatestBlockNumber.Int64())},
+		3: {BlockHash: &blockHash, Topics: [][]common.Hash{{}, {}, {}, {}, {}}},
 	}
 
 	for i, test := range testCases {
 		if _, err := api.GetLogs(context.Background(), test); err == nil {
 			t.Errorf("Expected Logs for case #%d to fail", i)
 		}
+	}
+}
+
+// TestInvalidGetRangeLogsRequest tests getLogs with invalid block range
+func TestInvalidGetRangeLogsRequest(t *testing.T) {
+	t.Parallel()
+
+	var (
+		db     = rawdb.NewMemoryDatabase()
+		_, sys = newTestFilterSystem(t, db, Config{})
+		api    = NewFilterAPI(sys)
+	)
+
+	if _, err := api.GetLogs(context.Background(), FilterCriteria{FromBlock: big.NewInt(2), ToBlock: big.NewInt(1)}); err != errInvalidBlockRange {
+		t.Errorf("Expected Logs for invalid range return error, but got: %v", err)
 	}
 }
 
@@ -801,10 +835,14 @@ func TestPendingTxFilterDeadlock(t *testing.T) {
 
 	// Create a bunch of filters that will
 	// timeout either in 100ms or 200ms
-	fids := make([]rpc.ID, 20)
-	for i := 0; i < len(fids); i++ {
+	subs := make([]*Subscription, 20)
+	for i := 0; i < len(subs); i++ {
 		fid := api.NewPendingTransactionFilter(nil)
-		fids[i] = fid
+		f, ok := api.filters[fid]
+		if !ok {
+			t.Fatalf("Filter %s should exist", fid)
+		}
+		subs[i] = f.s
 		// Wait for at least one tx to arrive in filter
 		for {
 			hashes, err := api.GetFilterChanges(fid)
@@ -818,21 +856,13 @@ func TestPendingTxFilterDeadlock(t *testing.T) {
 		}
 	}
 
-	// Wait until filters have timed out
-	time.Sleep(3 * timeout)
-
-	// If tx loop doesn't consume `done` after a second
-	// it's hanging.
-	select {
-	case done <- struct{}{}:
-		// Check that all filters have been uninstalled
-		for _, fid := range fids {
-			if _, err := api.GetFilterChanges(fid); err == nil {
-				t.Errorf("Filter %s should have been uninstalled\n", fid)
-			}
+	// Wait until filters have timed out and have been uninstalled.
+	for _, sub := range subs {
+		select {
+		case <-sub.Err():
+		case <-time.After(1 * time.Second):
+			t.Fatalf("Filter timeout is hanging")
 		}
-	case <-time.After(1 * time.Second):
-		t.Error("Tx sending loop hangs")
 	}
 }
 

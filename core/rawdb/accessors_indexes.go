@@ -31,9 +31,9 @@ import (
 	"math/big"
 
 	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/ethdb"
 	"github.com/luxfi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 )

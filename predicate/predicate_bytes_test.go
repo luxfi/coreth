@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package predicate
@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/node/utils"
+	"github.com/luxfi/coreth/params"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,11 +56,11 @@ func TestPredicateResultsBytes(t *testing.T) {
 	_, ok := GetPredicateResultBytes(dataTooShort)
 	require.False(ok)
 
-	preDUPgradeData := utils.RandomBytes(params.DynamicFeeExtraDataSize)
-	_, ok = GetPredicateResultBytes(preDUPgradeData)
+	preDurangoData := utils.RandomBytes(params.DynamicFeeExtraDataSize)
+	_, ok = GetPredicateResultBytes(preDurangoData)
 	require.False(ok)
-	postDUpgradeData := utils.RandomBytes(params.DynamicFeeExtraDataSize + 2)
-	resultBytes, ok := GetPredicateResultBytes(postDUpgradeData)
+	postDurangoData := utils.RandomBytes(params.DynamicFeeExtraDataSize + 2)
+	resultBytes, ok := GetPredicateResultBytes(postDurangoData)
 	require.True(ok)
-	require.Equal(resultBytes, postDUpgradeData[params.DynamicFeeExtraDataSize:])
+	require.Equal(resultBytes, postDurangoData[params.DynamicFeeExtraDataSize:])
 }

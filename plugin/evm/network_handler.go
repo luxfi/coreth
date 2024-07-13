@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -6,7 +6,8 @@ package evm
 import (
 	"context"
 
-	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/ids"
 	"github.com/luxfi/coreth/metrics"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	syncHandlers "github.com/luxfi/coreth/sync/handlers"
@@ -14,8 +15,7 @@ import (
 	"github.com/luxfi/coreth/trie"
 	"github.com/luxfi/coreth/warp"
 	warpHandlers "github.com/luxfi/coreth/warp/handlers"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/ids"
+	"github.com/ethereum/go-ethereum/ethdb"
 )
 
 var _ message.RequestHandler = &networkHandler{}

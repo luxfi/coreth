@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package aggregator
@@ -23,7 +23,7 @@ func newValidator(t testing.TB, weight uint64) (*bls.SecretKey, *luxWarp.Validat
 	pk := bls.PublicFromSecretKey(sk)
 	return sk, &luxWarp.Validator{
 		PublicKey:      pk,
-		PublicKeyBytes: bls.PublicKeyToBytes(pk),
+		PublicKeyBytes: bls.PublicKeyToCompressedBytes(pk),
 		Weight:         weight,
 		NodeIDs:        []ids.NodeID{ids.GenerateTestNodeID()},
 	}

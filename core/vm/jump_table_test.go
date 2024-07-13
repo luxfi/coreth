@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited.
+// (c) 2023, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -34,7 +34,7 @@ import (
 
 // TestJumpTableCopy tests that deep copy is necessery to prevent modify shared jump table
 func TestJumpTableCopy(t *testing.T) {
-	tbl := newDUpgradeInstructionSet()
+	tbl := newDurangoInstructionSet()
 	require.Equal(t, uint64(0), tbl[SLOAD].constantGas)
 
 	// a deep copy won't modify the shared jump table

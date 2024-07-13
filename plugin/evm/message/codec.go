@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited. All rights reserved.
+// (c) 2019-2022, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package message
@@ -22,7 +22,7 @@ var (
 
 func init() {
 	Codec = codec.NewManager(maxMessageSize)
-	c := linearcodec.NewCustomMaxLength(maxMessageSize)
+	c := linearcodec.NewDefault()
 
 	errs := wrappers.Errs{}
 	errs.Add(
@@ -54,7 +54,7 @@ func init() {
 	}
 
 	CrossChainCodec = codec.NewManager(maxMessageSize)
-	ccc := linearcodec.NewCustomMaxLength(maxMessageSize)
+	ccc := linearcodec.NewDefault()
 
 	errs = wrappers.Errs{}
 	errs.Add(

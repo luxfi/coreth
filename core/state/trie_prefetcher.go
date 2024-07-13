@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2019-2020, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -30,10 +30,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/luxfi/coreth/metrics"
 	"github.com/luxfi/coreth/utils"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // triePrefetchMetricsPrefix is the prefix under which to publish the metrics.
@@ -47,7 +47,7 @@ const triePrefetchMetricsPrefix = "trie/prefetch/"
 type triePrefetcher struct {
 	db       Database               // Database to fetch trie nodes through
 	root     common.Hash            // Root hash of the account trie for metrics
-	fetches  map[string]Trie        // Partially or fully fetcher tries
+	fetches  map[string]Trie        // Partially or fully fetched tries. Only populated for inactive copies.
 	fetchers map[string]*subfetcher // Subfetchers for each trie
 
 	maxConcurrency int
@@ -265,7 +265,10 @@ func (p *triePrefetcher) used(owner common.Hash, root common.Hash, used [][]byte
 
 // trieID returns an unique trie identifier consists the trie owner and root hash.
 func (p *triePrefetcher) trieID(owner common.Hash, root common.Hash) string {
-	return string(append(owner.Bytes(), root.Bytes()...))
+	trieID := make([]byte, common.HashLength*2)
+	copy(trieID, owner.Bytes())
+	copy(trieID[common.HashLength:], root.Bytes())
+	return string(trieID)
 }
 
 // subfetcher is a trie fetcher goroutine responsible for pulling entries for a
@@ -424,7 +427,9 @@ func newTrieOrchestrator(sf *subfetcher) *trieOrchestrator {
 			return nil
 		}
 	} else {
-		base, err = sf.db.OpenStorageTrie(sf.state, sf.owner, sf.root)
+		// The trie argument can be nil as verkle doesn't support prefetching
+		// yet. TODO FIX IT(rjl493456442), otherwise code will panic here.
+		base, err = sf.db.OpenStorageTrie(sf.state, sf.addr, sf.root, nil)
 		if err != nil {
 			log.Warn("Trie prefetcher failed opening trie", "root", sf.root, "err", err)
 			return nil

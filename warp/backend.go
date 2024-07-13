@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxfi/coreth/ethdb"
 	"github.com/luxfi/node/cache"
 	"github.com/luxfi/node/database"
 	"github.com/luxfi/node/ids"
@@ -18,6 +16,8 @@ import (
 	"github.com/luxfi/node/utils/crypto/bls"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 var (
@@ -92,6 +92,14 @@ func (b *backend) initOffChainMessages(offchainMessages [][]byte) error {
 		unsignedMsg, err := luxWarp.ParseUnsignedMessage(offchainMsg)
 		if err != nil {
 			return fmt.Errorf("%w at index %d: %w", errParsingOffChainMessage, i, err)
+		}
+
+		if unsignedMsg.NetworkID != b.networkID {
+			return fmt.Errorf("%w at index %d", luxWarp.ErrWrongNetworkID, i)
+		}
+
+		if unsignedMsg.SourceChainID != b.sourceChainID {
+			return fmt.Errorf("%w at index %d", luxWarp.ErrWrongSourceChainID, i)
 		}
 
 		_, err = payload.ParseAddressedCall(unsignedMsg.Payload)
@@ -195,6 +203,7 @@ func (b *backend) GetMessage(messageID ids.ID) (*luxWarp.UnsignedMessage, error)
 	if message, ok := b.offchainAddressedCallMsgs[messageID]; ok {
 		return message, nil
 	}
+
 	unsignedMessageBytes, err := b.db.Get(messageID[:])
 	if err != nil {
 		return nil, fmt.Errorf("failed to get warp message %s from db: %w", messageID.String(), err)

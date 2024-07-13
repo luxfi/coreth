@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -8,14 +8,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxfi/coreth/peer"
-	"github.com/luxfi/coreth/warp/aggregator"
-	"github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/coreth/peer"
+	"github.com/luxfi/coreth/warp/aggregator"
+	"github.com/luxfi/coreth/warp/validators"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")
@@ -38,6 +38,15 @@ func NewAPI(networkID uint32, sourceSubnetID ids.ID, sourceChainID ids.ID, state
 		state:          state,
 		client:         client,
 	}
+}
+
+// GetMessage returns the Warp message associated with a messageID.
+func (a *API) GetMessage(ctx context.Context, messageID ids.ID) (hexutil.Bytes, error) {
+	message, err := a.backend.GetMessage(messageID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get message %s with error %w", messageID, err)
+	}
+	return hexutil.Bytes(message.Bytes()), nil
 }
 
 // GetMessageSignature returns the BLS signature associated with a messageID.

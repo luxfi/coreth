@@ -1,11 +1,11 @@
-// (c) 2021-2024, Lux Partners Limited. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package vm
 
 import (
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/coreth/precompile/contract"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // wrappedPrecompiledContract implements StatefulPrecompiledContract by wrapping stateless native precompiled contracts
@@ -14,6 +14,8 @@ type wrappedPrecompiledContract struct {
 	p PrecompiledContract
 }
 
+// newWrappedPrecompiledContract returns a wrapped version of [PrecompiledContract] to be executed according to the StatefulPrecompiledContract
+// interface.
 func newWrappedPrecompiledContract(p PrecompiledContract) contract.StatefulPrecompiledContract {
 	return &wrappedPrecompiledContract{p: p}
 }

@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited. All rights reserved.
+// (c) 2019-2021, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -7,14 +7,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/luxfi/node/utils/timer"
+	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/node/utils/timer"
 
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/node/snow"
 	commonEng "github.com/luxfi/node/snow/engine/common"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 const (
@@ -27,9 +27,8 @@ type blockBuilder struct {
 	ctx         *snow.Context
 	chainConfig *params.ChainConfig
 
-	txPool   *txpool.TxPool
-	mempool  *Mempool
-	gossiper Gossiper
+	txPool  *txpool.TxPool
+	mempool *Mempool
 
 	shutdownChan <-chan struct{}
 	shutdownWg   *sync.WaitGroup
@@ -58,7 +57,6 @@ func (vm *VM) NewBlockBuilder(notifyBuildBlockChan chan<- commonEng.Message) *bl
 		chainConfig:          vm.chainConfig,
 		txPool:               vm.txPool,
 		mempool:              vm.mempool,
-		gossiper:             vm.gossiper,
 		shutdownChan:         vm.shutdownChan,
 		shutdownWg:           &vm.shutdownWg,
 		notifyBuildBlockChan: notifyBuildBlockChan,
@@ -102,7 +100,7 @@ func (b *blockBuilder) handleGenerateBlock() {
 // needToBuild returns true if there are outstanding transactions to be issued
 // into a block.
 func (b *blockBuilder) needToBuild() bool {
-	size := b.txPool.PendingSize()
+	size := b.txPool.PendingSize(true)
 	return size > 0 || b.mempool.Len() > 0
 }
 
@@ -146,7 +144,7 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 	// txSubmitChan is invoked when new transactions are issued as well as on re-orgs which
 	// may orphan transactions that were previously in a preferred block.
 	txSubmitChan := make(chan core.NewTxsEvent)
-	b.txPool.SubscribeNewTxsEvent(txSubmitChan)
+	b.txPool.SubscribeTransactions(txSubmitChan, true)
 
 	b.shutdownWg.Add(1)
 	go b.ctx.Log.RecoverAndPanic(func() {
@@ -154,33 +152,12 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 
 		for {
 			select {
-			case ethTxsEvent := <-txSubmitChan:
+			case <-txSubmitChan:
 				log.Trace("New tx detected, trying to generate a block")
 				b.signalTxsReady()
-
-				if b.gossiper != nil && len(ethTxsEvent.Txs) > 0 {
-					// [GossipEthTxs] will block unless [gossiper.ethTxsToGossipChan] (an
-					// unbuffered channel) is listened on
-					if err := b.gossiper.GossipEthTxs(ethTxsEvent.Txs); err != nil {
-						log.Warn(
-							"failed to gossip new eth transactions",
-							"err", err,
-						)
-					}
-				}
 			case <-b.mempool.Pending:
 				log.Trace("New atomic Tx detected, trying to generate a block")
 				b.signalTxsReady()
-
-				newTxs := b.mempool.GetNewTxs()
-				if b.gossiper != nil && len(newTxs) > 0 {
-					if err := b.gossiper.GossipAtomicTxs(newTxs); err != nil {
-						log.Warn(
-							"failed to gossip new atomic transactions",
-							"err", err,
-						)
-					}
-				}
 			case <-b.shutdownChan:
 				b.buildBlockTimer.Stop()
 				return

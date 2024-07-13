@@ -15,12 +15,10 @@ import (
 
 	"github.com/luxfi/node/ids"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/ethdb/memorydb"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	clientstats "github.com/luxfi/coreth/sync/client/stats"
@@ -28,6 +26,8 @@ import (
 	handlerstats "github.com/luxfi/coreth/sync/handlers/stats"
 	"github.com/luxfi/coreth/sync/syncutils"
 	"github.com/luxfi/coreth/trie"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func TestGetCode(t *testing.T) {
@@ -142,8 +142,9 @@ func TestGetBlocks(t *testing.T) {
 	var gspec = &core.Genesis{
 		Config: params.TestChainConfig,
 	}
-	memdb := memorydb.New()
-	genesis := gspec.MustCommit(memdb)
+	memdb := rawdb.NewMemoryDatabase()
+	tdb := trie.NewDatabase(memdb, nil)
+	genesis := gspec.MustCommit(memdb, tdb)
 	engine := dummy.NewETHFaker()
 	numBlocks := 110
 	blocks, _, err := core.GenerateChain(params.TestChainConfig, genesis, engine, memdb, numBlocks, 0, func(i int, b *core.BlockGen) {})
@@ -410,7 +411,7 @@ func TestGetLeafs(t *testing.T) {
 
 	const leafsLimit = 1024
 
-	trieDB := trie.NewDatabase(memorydb.New())
+	trieDB := trie.NewDatabase(rawdb.NewMemoryDatabase(), nil)
 	largeTrieRoot, largeTrieKeys, _ := syncutils.GenerateTrie(t, trieDB, 100_000, common.HashLength)
 	smallTrieRoot, _, _ := syncutils.GenerateTrie(t, trieDB, leafsLimit, common.HashLength)
 
@@ -793,7 +794,7 @@ func TestGetLeafs(t *testing.T) {
 func TestGetLeafsRetries(t *testing.T) {
 	rand.Seed(1)
 
-	trieDB := trie.NewDatabase(memorydb.New())
+	trieDB := trie.NewDatabase(rawdb.NewMemoryDatabase(), nil)
 	root, _, _ := syncutils.GenerateTrie(t, trieDB, 100_000, common.HashLength)
 
 	handler := handlers.NewLeafsRequestHandler(trieDB, nil, message.Codec, handlerstats.NewNoopHandlerStats())

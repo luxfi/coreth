@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package validators
@@ -7,10 +7,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/snow/validators"
 	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/coreth/utils"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

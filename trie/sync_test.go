@@ -1,7 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited.
-//
-// This file is a derived work, based on coreth and the go-ethereum library
-// whose original notices appear below.
+// (c) 2020-2021, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -11,7 +8,6 @@
 //
 // Much love to the original authors for their work.
 // **********
-// Copyright 2020-2021, Ava Labs, Inc.
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -33,11 +29,11 @@ package trie
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/ethdb"
 	"github.com/luxfi/coreth/trie/trienode"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethdb"
 )
 
 // makeTestTrie create a sample test trie to test node-wise reconstruction.
@@ -66,8 +62,8 @@ func makeTestTrie(scheme string) (ethdb.Database, *Database, *StateTrie, map[str
 			trie.MustUpdate(key, val)
 		}
 	}
-	root, nodes := trie.Commit(false)
-	if err := triedb.Update(root, types.EmptyRootHash, trienode.NewWithNodeSet(nodes)); err != nil {
+	root, nodes, _ := trie.Commit(false)
+	if err := triedb.Update(root, types.EmptyRootHash, 0, trienode.NewWithNodeSet(nodes), nil); err != nil {
 		panic(fmt.Errorf("failed to commit db %v", err))
 	}
 	if err := triedb.Commit(root, false); err != nil {
@@ -76,4 +72,26 @@ func makeTestTrie(scheme string) (ethdb.Database, *Database, *StateTrie, map[str
 	// Re-create the trie based on the new state
 	trie, _ = NewStateTrie(TrieID(root), triedb)
 	return db, triedb, trie, content
+}
+
+// checkTrieConsistency checks that all nodes in a trie are indeed present.
+func checkTrieConsistency(db ethdb.Database, scheme string, root common.Hash, rawTrie bool) error {
+	ndb := newTestDatabase(db, scheme)
+	var it NodeIterator
+	if rawTrie {
+		trie, err := New(TrieID(root), ndb)
+		if err != nil {
+			return nil // Consider a non existent state consistent
+		}
+		it = trie.MustNodeIterator(nil)
+	} else {
+		trie, err := NewStateTrie(TrieID(root), ndb)
+		if err != nil {
+			return nil // Consider a non existent state consistent
+		}
+		it = trie.MustNodeIterator(nil)
+	}
+	for it.Next(true) {
+	}
+	return it.Error()
 }

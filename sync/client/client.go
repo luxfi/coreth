@@ -13,7 +13,6 @@ import (
 
 	"github.com/luxfi/node/ids"
 
-	"github.com/luxfi/coreth/ethdb/memorydb"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/sync/client/stats"
 
@@ -24,11 +23,12 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 
+	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/ethdb"
 	"github.com/luxfi/coreth/peer"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/trie"
+	"github.com/ethereum/go-ethereum/ethdb"
 )
 
 const (
@@ -151,7 +151,7 @@ func parseLeafsResponse(codec codec.Manager, reqIntf message.Request, data []byt
 	// Populate proof when ProofVals are present in the response. Its ok to pass it as nil to the trie.VerifyRangeProof
 	// function as it will assert that all the leaves belonging to the specified root are present.
 	if len(leafsResponse.ProofVals) > 0 {
-		proof = memorydb.New()
+		proof = rawdb.NewMemoryDatabase()
 		defer proof.Close()
 		for _, proofVal := range leafsResponse.ProofVals {
 			proofKey := crypto.Keccak256(proofVal)
@@ -161,13 +161,9 @@ func parseLeafsResponse(codec codec.Manager, reqIntf message.Request, data []byt
 		}
 	}
 
-	var (
-		firstKey = leafsRequest.Start
-		lastKey  = leafsRequest.End
-	)
-	// Last key is the last returned key in response
+	firstKey := leafsRequest.Start
 	if len(leafsResponse.Keys) > 0 {
-		lastKey = leafsResponse.Keys[len(leafsResponse.Keys)-1]
+		lastKey := leafsResponse.Keys[len(leafsResponse.Keys)-1]
 
 		if firstKey == nil {
 			firstKey = bytes.Repeat([]byte{0x00}, len(lastKey))
@@ -177,7 +173,7 @@ func parseLeafsResponse(codec codec.Manager, reqIntf message.Request, data []byt
 	// VerifyRangeProof verifies that the key-value pairs included in [leafResponse] are all of the keys within the range from start
 	// to the last key returned.
 	// Also ensures the keys are in monotonically increasing order
-	more, err := trie.VerifyRangeProof(leafsRequest.Root, firstKey, lastKey, leafsResponse.Keys, leafsResponse.Vals, proof)
+	more, err := trie.VerifyRangeProof(leafsRequest.Root, firstKey, leafsResponse.Keys, leafsResponse.Vals, proof)
 	if err != nil {
 		return nil, 0, fmt.Errorf("%s due to %w", errInvalidRangeProof, err)
 	}

@@ -29,7 +29,6 @@ package gasprice
 import (
 	"context"
 	"math/big"
-	"sort"
 	"sync"
 
 	"github.com/luxfi/node/utils/timer/mockable"
@@ -43,6 +42,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -252,7 +252,7 @@ func (oracle *Oracle) estimateNextBaseFee(ctx context.Context) (*big.Int, error)
 	// If the block does have a baseFee, calculate the next base fee
 	// based on the current time and add it to the tip to estimate the
 	// total gas price estimate.
-	_, nextBaseFee, err := dummy.EstimateNextBaseFee(oracle.backend.ChainConfig(), header, uint64(oracle.clock.Unix()))
+	_, nextBaseFee, err := dummy.EstimateNextBaseFee(oracle.backend.ChainConfig(), header, oracle.clock.Unix())
 	return nextBaseFee, err
 }
 
@@ -320,7 +320,7 @@ func (oracle *Oracle) suggestDynamicFees(ctx context.Context) (*big.Int, *big.In
 	var (
 		latestBlockNumber     = head.Number.Uint64()
 		lowerBlockNumberLimit = uint64(0)
-		currentTime           = uint64(oracle.clock.Unix())
+		currentTime           = oracle.clock.Unix()
 		tipResults            []*big.Int
 		baseFeeResults        []*big.Int
 	)
@@ -356,12 +356,12 @@ func (oracle *Oracle) suggestDynamicFees(ctx context.Context) (*big.Int, *big.In
 	price := lastPrice
 	baseFee := lastBaseFee
 	if len(tipResults) > 0 {
-		sort.Sort(bigIntArray(tipResults))
+		slices.SortFunc(tipResults, func(a, b *big.Int) int { return a.Cmp(b) })
 		price = tipResults[(len(tipResults)-1)*oracle.percentile/100]
 	}
 
 	if len(baseFeeResults) > 0 {
-		sort.Sort(bigIntArray(baseFeeResults))
+		slices.SortFunc(baseFeeResults, func(a, b *big.Int) int { return a.Cmp(b) })
 		baseFee = baseFeeResults[(len(baseFeeResults)-1)*oracle.percentile/100]
 	}
 	if price.Cmp(oracle.maxPrice) > 0 {
@@ -394,9 +394,3 @@ func (oracle *Oracle) getFeeInfo(ctx context.Context, number uint64) (*feeInfo, 
 	}
 	return oracle.feeInfoProvider.addHeader(ctx, header)
 }
-
-type bigIntArray []*big.Int
-
-func (s bigIntArray) Len() int           { return len(s) }
-func (s bigIntArray) Less(i, j int) bool { return s[i].Cmp(s[j]) < 0 }
-func (s bigIntArray) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }

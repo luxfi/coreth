@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2019-2020, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -27,17 +27,27 @@
 package tests
 
 import (
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/state"
 	"github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/ethdb"
 	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/coreth/trie/triedb/hashdb"
+	"github.com/luxfi/coreth/trie/triedb/pathdb"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethdb"
 )
 
-func MakePreState(db ethdb.Database, accounts core.GenesisAlloc, snapshotter bool) (*snapshot.Tree, *state.StateDB) {
-	sdb := state.NewDatabaseWithConfig(db, &trie.Config{Preimages: true})
+func MakePreState(db ethdb.Database, accounts core.GenesisAlloc, snapshotter bool, scheme string) (*trie.Database, *snapshot.Tree, *state.StateDB) {
+	tconf := &trie.Config{Preimages: true}
+	if scheme == rawdb.HashScheme {
+		tconf.HashDB = hashdb.Defaults
+	} else {
+		tconf.PathDB = pathdb.Defaults
+	}
+	triedb := trie.NewDatabase(db, tconf)
+	sdb := state.NewDatabaseWithNodeDB(db, triedb)
 	statedb, _ := state.New(types.EmptyRootHash, sdb, nil)
 	for addr, a := range accounts {
 		statedb.SetCode(addr, a.Code)
@@ -48,18 +58,18 @@ func MakePreState(db ethdb.Database, accounts core.GenesisAlloc, snapshotter boo
 		}
 	}
 	// Commit and re-open to start with a clean state.
-	root, _ := statedb.Commit(false, false)
+	root, _ := statedb.Commit(0, false, false)
 
 	var snaps *snapshot.Tree
 	if snapshotter {
 		snapconfig := snapshot.Config{
 			CacheSize:  1,
-			AsyncBuild: false,
 			NoBuild:    false,
+			AsyncBuild: false,
 			SkipVerify: true,
 		}
-		snaps, _ = snapshot.New(snapconfig, db, sdb.TrieDB(), common.Hash{}, root)
+		snaps, _ = snapshot.New(snapconfig, db, triedb, common.Hash{}, root)
 	}
 	statedb, _ = state.New(root, sdb, snaps)
-	return snaps, statedb
+	return triedb, snaps, statedb
 }

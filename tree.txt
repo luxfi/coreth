@@ -1,0 +1,957 @@
+./
+├── accounts/
+│   ├── abi/
+│   │   ├── bind/
+│   │   │   ├── backends/
+│   │   │   │   ├── simulated.go
+│   │   │   │   └── simulated_test.go
+│   │   │   ├── auth.go
+│   │   │   ├── backend.go
+│   │   │   ├── base.go
+│   │   │   ├── base_test.go
+│   │   │   ├── bind.go
+│   │   │   ├── bind_test.go
+│   │   │   ├── template.go
+│   │   │   ├── util.go
+│   │   │   └── util_test.go
+│   │   ├── abi.go
+│   │   ├── abi_extra_test.go
+│   │   ├── abi_test.go
+│   │   ├── argument.go
+│   │   ├── doc.go
+│   │   ├── error.go
+│   │   ├── error_handling.go
+│   │   ├── event.go
+│   │   ├── event_test.go
+│   │   ├── method.go
+│   │   ├── method_test.go
+│   │   ├── pack.go
+│   │   ├── pack_test.go
+│   │   ├── packing_test.go
+│   │   ├── reflect.go
+│   │   ├── reflect_test.go
+│   │   ├── topics.go
+│   │   ├── topics_test.go
+│   │   ├── type.go
+│   │   ├── type_test.go
+│   │   ├── unpack.go
+│   │   ├── unpack_test.go
+│   │   └── utils.go
+│   ├── external/
+│   │   └── backend.go
+│   ├── keystore/
+│   │   ├── testdata/
+│   │   │   ├── dupes/
+│   │   │   │   ├── 1
+│   │   │   │   ├── 2
+│   │   │   │   └── foo
+│   │   │   ├── keystore/
+│   │   │   │   ├── foo/
+│   │   │   │   │   └── fd9bd350f08ee3c0c19b85a8e16114a11a60aa4e
+│   │   │   │   ├── README
+│   │   │   │   ├── UTC--2016-03-22T12-57-55.920751759Z--7ef5a6135f1fd6a02593eedc869c6d41d934aef8
+│   │   │   │   ├── aaa
+│   │   │   │   ├── empty
+│   │   │   │   ├── garbage
+│   │   │   │   ├── no-address
+│   │   │   │   ├── zero
+│   │   │   │   └── zzz
+│   │   │   ├── v1/
+│   │   │   │   └── cb61d5a9c4896fb9658090b597ef0e7be6f7b67e/
+│   │   │   │       └── cb61d5a9c4896fb9658090b597ef0e7be6f7b67e
+│   │   │   ├── v1_test_vector.json
+│   │   │   ├── v3_test_vector.json
+│   │   │   └── very-light-scrypt.json
+│   │   ├── account_cache.go
+│   │   ├── account_cache_test.go
+│   │   ├── file_cache.go
+│   │   ├── key.go
+│   │   ├── keystore.go
+│   │   ├── keystore_test.go
+│   │   ├── passphrase.go
+│   │   ├── passphrase_test.go
+│   │   ├── plain.go
+│   │   ├── plain_test.go
+│   │   ├── presale.go
+│   │   ├── wallet.go
+│   │   ├── watch.go
+│   │   └── watch_fallback.go
+│   ├── scwallet/
+│   │   ├── README.md
+│   │   ├── apdu.go
+│   │   ├── hub.go
+│   │   ├── securechannel.go
+│   │   └── wallet.go
+│   ├── accounts.go
+│   ├── accounts_test.go
+│   ├── errors.go
+│   ├── hd.go
+│   ├── hd_test.go
+│   ├── manager.go
+│   ├── sort.go
+│   ├── url.go
+│   └── url_test.go
+├── cmd/
+│   └── abigen/
+│       ├── main.go
+│       ├── namefilter.go
+│       └── namefilter_test.go
+├── consensus/
+│   ├── dummy/
+│   │   ├── README.md
+│   │   ├── consensus.go
+│   │   ├── consensus_test.go
+│   │   ├── dynamic_fees.go
+│   │   └── dynamic_fees_test.go
+│   ├── misc/
+│   │   ├── eip4844.go
+│   │   └── eip4844_test.go
+│   ├── consensus.go
+│   └── errors.go
+├── constants/
+│   └── constants.go
+├── contracts/
+│   └── contracts/
+│       ├── interfaces/
+│       │   └── IWarpMessenger.sol
+│       └── ExampleWarp.sol
+├── core/
+│   ├── bloombits/
+│   │   ├── doc.go
+│   │   ├── generator.go
+│   │   ├── generator_test.go
+│   │   ├── matcher.go
+│   │   ├── matcher_test.go
+│   │   ├── scheduler.go
+│   │   └── scheduler_test.go
+│   ├── rawdb/
+│   │   ├── accessors_chain.go
+│   │   ├── accessors_chain_test.go
+│   │   ├── accessors_indexes.go
+│   │   ├── accessors_indexes_test.go
+│   │   ├── accessors_metadata.go
+│   │   ├── accessors_snapshot.go
+│   │   ├── accessors_state.go
+│   │   ├── accessors_state_sync.go
+│   │   ├── accessors_state_sync_test.go
+│   │   ├── accessors_trie.go
+│   │   ├── chain_iterator.go
+│   │   ├── chain_iterator_test.go
+│   │   ├── database.go
+│   │   ├── databases_64bit.go
+│   │   ├── databases_non64bit.go
+│   │   ├── key_length_iterator.go
+│   │   ├── key_length_iterator_test.go
+│   │   ├── schema.go
+│   │   ├── table.go
+│   │   └── table_test.go
+│   ├── state/
+│   │   ├── pruner/
+│   │   │   ├── bloom.go
+│   │   │   └── pruner.go
+│   │   ├── snapshot/
+│   │   │   ├── account.go
+│   │   │   ├── conversion.go
+│   │   │   ├── difflayer.go
+│   │   │   ├── difflayer_test.go
+│   │   │   ├── disklayer.go
+│   │   │   ├── disklayer_test.go
+│   │   │   ├── generate.go
+│   │   │   ├── generate_test.go
+│   │   │   ├── iterator.go
+│   │   │   ├── iterator_binary.go
+│   │   │   ├── iterator_fast.go
+│   │   │   ├── iterator_test.go
+│   │   │   ├── journal.go
+│   │   │   ├── snapshot.go
+│   │   │   ├── snapshot_test.go
+│   │   │   ├── sort.go
+│   │   │   ├── utils.go
+│   │   │   ├── wipe.go
+│   │   │   └── wipe_test.go
+│   │   ├── access_list.go
+│   │   ├── database.go
+│   │   ├── dump.go
+│   │   ├── iterator.go
+│   │   ├── iterator_test.go
+│   │   ├── journal.go
+│   │   ├── metrics.go
+│   │   ├── state_object.go
+│   │   ├── state_object_test.go
+│   │   ├── state_test.go
+│   │   ├── statedb.go
+│   │   ├── statedb_test.go
+│   │   ├── sync_test.go
+│   │   ├── test_statedb.go
+│   │   ├── transient_storage.go
+│   │   ├── trie_prefetcher.go
+│   │   └── trie_prefetcher_test.go
+│   ├── txpool/
+│   │   ├── journal.go
+│   │   ├── list.go
+│   │   ├── list_test.go
+│   │   ├── noncer.go
+│   │   ├── txpool.go
+│   │   ├── txpool2_test.go
+│   │   └── txpool_test.go
+│   ├── types/
+│   │   ├── block.go
+│   │   ├── block_test.go
+│   │   ├── bloom9.go
+│   │   ├── bloom9_test.go
+│   │   ├── gen_access_tuple.go
+│   │   ├── gen_account_rlp.go
+│   │   ├── gen_header_json.go
+│   │   ├── gen_header_rlp.go
+│   │   ├── gen_log_json.go
+│   │   ├── gen_log_rlp.go
+│   │   ├── gen_receipt_json.go
+│   │   ├── hashes.go
+│   │   ├── hashing.go
+│   │   ├── hashing_test.go
+│   │   ├── log.go
+│   │   ├── receipt.go
+│   │   ├── receipt_test.go
+│   │   ├── state_account.go
+│   │   ├── transaction.go
+│   │   ├── transaction_marshalling.go
+│   │   ├── transaction_signing.go
+│   │   ├── transaction_signing_test.go
+│   │   ├── transaction_test.go
+│   │   ├── tx_access_list.go
+│   │   ├── tx_blob.go
+│   │   ├── tx_dynamic_fee.go
+│   │   ├── tx_legacy.go
+│   │   └── types_test.go
+│   ├── vm/
+│   │   ├── runtime/
+│   │   │   ├── doc.go
+│   │   │   ├── env.go
+│   │   │   ├── runtime.go
+│   │   │   ├── runtime_example_test.go
+│   │   │   └── runtime_test.go
+│   │   ├── testdata/
+│   │   │   ├── precompiles/
+│   │   │   │   ├── blake2F.json
+│   │   │   │   ├── blsG1Add.json
+│   │   │   │   ├── blsG1Mul.json
+│   │   │   │   ├── blsG1MultiExp.json
+│   │   │   │   ├── blsG2Add.json
+│   │   │   │   ├── blsG2Mul.json
+│   │   │   │   ├── blsG2MultiExp.json
+│   │   │   │   ├── blsMapG1.json
+│   │   │   │   ├── blsMapG2.json
+│   │   │   │   ├── blsPairing.json
+│   │   │   │   ├── bn256Add.json
+│   │   │   │   ├── bn256Pairing.json
+│   │   │   │   ├── bn256ScalarMul.json
+│   │   │   │   ├── ecRecover.json
+│   │   │   │   ├── fail-blake2f.json
+│   │   │   │   ├── fail-blsG1Add.json
+│   │   │   │   ├── fail-blsG1Mul.json
+│   │   │   │   ├── fail-blsG1MultiExp.json
+│   │   │   │   ├── fail-blsG2Add.json
+│   │   │   │   ├── fail-blsG2Mul.json
+│   │   │   │   ├── fail-blsG2MultiExp.json
+│   │   │   │   ├── fail-blsMapG1.json
+│   │   │   │   ├── fail-blsMapG2.json
+│   │   │   │   ├── fail-blsPairing.json
+│   │   │   │   ├── modexp.json
+│   │   │   │   └── modexp_eip2565.json
+│   │   │   ├── testcases_add.json
+│   │   │   ├── testcases_and.json
+│   │   │   ├── testcases_byte.json
+│   │   │   ├── testcases_div.json
+│   │   │   ├── testcases_eq.json
+│   │   │   ├── testcases_exp.json
+│   │   │   ├── testcases_gt.json
+│   │   │   ├── testcases_lt.json
+│   │   │   ├── testcases_mod.json
+│   │   │   ├── testcases_mul.json
+│   │   │   ├── testcases_or.json
+│   │   │   ├── testcases_sar.json
+│   │   │   ├── testcases_sdiv.json
+│   │   │   ├── testcases_sgt.json
+│   │   │   ├── testcases_shl.json
+│   │   │   ├── testcases_shr.json
+│   │   │   ├── testcases_signext.json
+│   │   │   ├── testcases_slt.json
+│   │   │   ├── testcases_smod.json
+│   │   │   ├── testcases_sub.json
+│   │   │   └── testcases_xor.json
+│   │   ├── analysis.go
+│   │   ├── analysis_test.go
+│   │   ├── common.go
+│   │   ├── contract.go
+│   │   ├── contracts.go
+│   │   ├── contracts_stateful.go
+│   │   ├── contracts_stateful_native_asset.go
+│   │   ├── contracts_stateful_test.go
+│   │   ├── contracts_test.go
+│   │   ├── doc.go
+│   │   ├── eips.go
+│   │   ├── errors.go
+│   │   ├── evm.go
+│   │   ├── evm_test.go
+│   │   ├── gas.go
+│   │   ├── gas_table.go
+│   │   ├── gas_table_test.go
+│   │   ├── instructions.go
+│   │   ├── instructions_test.go
+│   │   ├── interface.go
+│   │   ├── interpreter.go
+│   │   ├── interpreter_test.go
+│   │   ├── jump_table.go
+│   │   ├── jump_table_export.go
+│   │   ├── jump_table_test.go
+│   │   ├── logger.go
+│   │   ├── memory.go
+│   │   ├── memory_table.go
+│   │   ├── opcodes.go
+│   │   ├── operations_acl.go
+│   │   ├── stack.go
+│   │   └── stack_table.go
+│   ├── README.md
+│   ├── bench_test.go
+│   ├── block_validator.go
+│   ├── block_validator_test.go
+│   ├── blockchain.go
+│   ├── blockchain_iterator.go
+│   ├── blockchain_log_test.go
+│   ├── blockchain_reader.go
+│   ├── blockchain_repair_test.go
+│   ├── blockchain_sethead_test.go
+│   ├── blockchain_snapshot_test.go
+│   ├── blockchain_test.go
+│   ├── bloom_indexer.go
+│   ├── bounded_buffer.go
+│   ├── chain_indexer.go
+│   ├── chain_indexer_test.go
+│   ├── chain_makers.go
+│   ├── chain_makers_test.go
+│   ├── error.go
+│   ├── events.go
+│   ├── evm.go
+│   ├── fifo_cache.go
+│   ├── gaspool.go
+│   ├── gen_genesis.go
+│   ├── gen_genesis_account.go
+│   ├── genesis.go
+│   ├── genesis_test.go
+│   ├── headerchain.go
+│   ├── headerchain_test.go
+│   ├── main_test.go
+│   ├── mkalloc.go
+│   ├── predicate_check.go
+│   ├── predicate_check_test.go
+│   ├── rlp_test.go
+│   ├── sender_cacher.go
+│   ├── state_manager.go
+│   ├── state_manager_test.go
+│   ├── state_prefetcher.go
+│   ├── state_processor.go
+│   ├── state_processor_test.go
+│   ├── state_transition.go
+│   ├── state_transition_test.go
+│   ├── test_blockchain.go
+│   └── types.go
+├── eth/
+│   ├── ethconfig/
+│   │   └── config.go
+│   ├── filters/
+│   │   ├── api.go
+│   │   ├── api_test.go
+│   │   ├── bench_test.go
+│   │   ├── filter.go
+│   │   ├── filter_system.go
+│   │   ├── filter_system_test.go
+│   │   └── filter_test.go
+│   ├── gasprice/
+│   │   ├── fee_info_provider.go
+│   │   ├── fee_info_provider_test.go
+│   │   ├── feehistory.go
+│   │   ├── feehistory_test.go
+│   │   ├── gasprice.go
+│   │   └── gasprice_test.go
+│   ├── tracers/
+│   │   ├── internal/
+│   │   │   └── tracetest/
+│   │   │       ├── testdata/
+│   │   │       │   ├── call_tracer/
+│   │   │       │   │   ├── create.json
+│   │   │       │   │   ├── deep_calls.json
+│   │   │       │   │   ├── delegatecall.json
+│   │   │       │   │   ├── inner_create_oog_outer_throw.json
+│   │   │       │   │   ├── inner_instafail.json
+│   │   │       │   │   ├── inner_revert_reason.json
+│   │   │       │   │   ├── inner_throw_outer_revert.json
+│   │   │       │   │   ├── inner_throw_outer_revert.md
+│   │   │       │   │   ├── oog.json
+│   │   │       │   │   ├── revert.json
+│   │   │       │   │   ├── revert_reason.json
+│   │   │       │   │   ├── selfdestruct.json
+│   │   │       │   │   ├── simple.json
+│   │   │       │   │   ├── simple_onlytop.json
+│   │   │       │   │   └── throw.json
+│   │   │       │   ├── call_tracer_flat/
+│   │   │       │   │   ├── big_slow.json
+│   │   │       │   │   ├── callcode_precompiled_fail_hide.json
+│   │   │       │   │   ├── callcode_precompiled_oog.json
+│   │   │       │   │   ├── callcode_precompiled_throw.json
+│   │   │       │   │   ├── create.json
+│   │   │       │   │   ├── deep_calls.json
+│   │   │       │   │   ├── delegatecall.json
+│   │   │       │   │   ├── delegatecall_parent_value.json
+│   │   │       │   │   ├── gas.json
+│   │   │       │   │   ├── include_precompiled.json
+│   │   │       │   │   ├── inner_create_oog_outer_throw.json
+│   │   │       │   │   ├── inner_instafail.json
+│   │   │       │   │   ├── inner_precompiled_wrong_gas.json
+│   │   │       │   │   ├── inner_throw_outer_revert.json
+│   │   │       │   │   ├── nested_create.json
+│   │   │       │   │   ├── nested_create2_action_gas.json
+│   │   │       │   │   ├── nested_create_action_gas.json
+│   │   │       │   │   ├── nested_create_inerror.json
+│   │   │       │   │   ├── nested_pointer_issue.json
+│   │   │       │   │   ├── oog.json
+│   │   │       │   │   ├── option_convert_parity_errors.json
+│   │   │       │   │   ├── result_output.json
+│   │   │       │   │   ├── revert.json
+│   │   │       │   │   ├── revert_reason.json
+│   │   │       │   │   ├── selfdestruct.json
+│   │   │       │   │   ├── simple.json
+│   │   │       │   │   ├── simple_onlytop.json
+│   │   │       │   │   ├── skip_no_balance_error.json
+│   │   │       │   │   ├── staticcall_precompiled.json
+│   │   │       │   │   ├── suicide.json
+│   │   │       │   │   └── throw.json
+│   │   │       │   ├── call_tracer_legacy/
+│   │   │       │   │   ├── create.json
+│   │   │       │   │   ├── deep_calls.json
+│   │   │       │   │   ├── delegatecall.json
+│   │   │       │   │   ├── inner_create_oog_outer_throw.json
+│   │   │       │   │   ├── inner_instafail.json
+│   │   │       │   │   ├── inner_throw_outer_revert.json
+│   │   │       │   │   ├── oog.json
+│   │   │       │   │   ├── revert.json
+│   │   │       │   │   ├── revert_reason.json
+│   │   │       │   │   ├── selfdestruct.json
+│   │   │       │   │   ├── simple.json
+│   │   │       │   │   └── throw.json
+│   │   │       │   ├── call_tracer_withLog/
+│   │   │       │   │   ├── calldata.json
+│   │   │       │   │   ├── delegatecall.json
+│   │   │       │   │   ├── multi_contracts.json
+│   │   │       │   │   ├── multilogs.json
+│   │   │       │   │   ├── notopic.json
+│   │   │       │   │   ├── simple.json
+│   │   │       │   │   ├── tx_failed.json
+│   │   │       │   │   ├── tx_partial_failed.json
+│   │   │       │   │   └── with_onlyTopCall.json
+│   │   │       │   ├── prestate_tracer/
+│   │   │       │   │   ├── create_existing_contract.json
+│   │   │       │   │   └── simple.json
+│   │   │       │   ├── prestate_tracer_ant/
+│   │   │       │   │   └── sload.json
+│   │   │       │   ├── prestate_tracer_legacy/
+│   │   │       │   │   └── simple.json
+│   │   │       │   └── prestate_tracer_with_diff_mode/
+│   │   │       │       ├── create.json
+│   │   │       │       ├── create_failed.json
+│   │   │       │       ├── create_suicide.json
+│   │   │       │       ├── inner_create.json
+│   │   │       │       ├── simple.json
+│   │   │       │       └── suicide.json
+│   │   │       ├── calltrace_test.go
+│   │   │       ├── flat_calltrace_test.go
+│   │   │       ├── prestate_test.go
+│   │   │       └── util.go
+│   │   ├── js/
+│   │   │   ├── internal/
+│   │   │   │   └── tracers/
+│   │   │   │       ├── 4byte_tracer_legacy.js
+│   │   │   │       ├── bigram_tracer.js
+│   │   │   │       ├── call_tracer_legacy.js
+│   │   │   │       ├── evmdis_tracer.js
+│   │   │   │       ├── noop_tracer_legacy.js
+│   │   │   │       ├── opcount_tracer.js
+│   │   │   │       ├── prestate_tracer_legacy.js
+│   │   │   │       ├── tracers.go
+│   │   │   │       ├── trigram_tracer.js
+│   │   │   │       └── unigram_tracer.js
+│   │   │   ├── bigint.go
+│   │   │   ├── goja.go
+│   │   │   └── tracer_test.go
+│   │   ├── logger/
+│   │   │   ├── access_list_tracer.go
+│   │   │   ├── gen_structlog.go
+│   │   │   ├── logger.go
+│   │   │   ├── logger_json.go
+│   │   │   └── logger_test.go
+│   │   ├── native/
+│   │   │   ├── 4byte.go
+│   │   │   ├── call.go
+│   │   │   ├── call_flat.go
+│   │   │   ├── gen_account_json.go
+│   │   │   ├── gen_callframe_json.go
+│   │   │   ├── gen_flatcallaction_json.go
+│   │   │   ├── gen_flatcallresult_json.go
+│   │   │   ├── mux.go
+│   │   │   ├── noop.go
+│   │   │   └── prestate.go
+│   │   ├── api.go
+│   │   ├── api_test.go
+│   │   ├── tracers.go
+│   │   ├── tracers_test.go
+│   │   ├── tracker.go
+│   │   └── tracker_test.go
+│   ├── api.go
+│   ├── api_backend.go
+│   ├── api_backend_test.go
+│   ├── backend.go
+│   ├── bloombits.go
+│   └── state_accessor.go
+├── ethclient/
+│   ├── corethclient/
+│   │   └── corethclient.go
+│   ├── client_interface_test.go
+│   ├── ethclient.go
+│   └── signer.go
+├── ethdb/
+│   ├── dbtest/
+│   │   └── testsuite.go
+│   ├── leveldb/
+│   │   ├── leveldb.go
+│   │   └── leveldb_test.go
+│   ├── memorydb/
+│   │   ├── memorydb.go
+│   │   └── memorydb_test.go
+│   ├── pebble/
+│   │   ├── pebble.go
+│   │   └── pebble_test.go
+│   ├── batch.go
+│   ├── database.go
+│   ├── iterator.go
+│   └── snapshot.go
+├── interfaces/
+│   └── interfaces.go
+├── internal/
+│   ├── debug/
+│   │   ├── api.go
+│   │   ├── flags.go
+│   │   ├── loudpanic.go
+│   │   ├── loudpanic_fallback.go
+│   │   ├── trace.go
+│   │   └── trace_fallback.go
+│   ├── ethapi/
+│   │   ├── addrlock.go
+│   │   ├── api.go
+│   │   ├── api_test.go
+│   │   ├── backend.go
+│   │   ├── transaction_args.go
+│   │   └── transaction_args_test.go
+│   ├── flags/
+│   │   ├── categories.go
+│   │   └── helpers.go
+│   ├── shutdowncheck/
+│   │   └── shutdown_tracker.go
+│   └── version/
+│       ├── vcs.go
+│       └── version.go
+├── metrics/
+│   ├── prometheus/
+│   │   ├── prometheus.go
+│   │   └── prometheus_test.go
+│   ├── FORK.md
+│   ├── LICENSE
+│   ├── README.md
+│   ├── config.go
+│   ├── counter.go
+│   ├── counter_float64.go
+│   ├── counter_float_64_test.go
+│   ├── counter_test.go
+│   ├── cpu.go
+│   ├── cpu_disabled.go
+│   ├── cpu_enabled.go
+│   ├── cputime_nop.go
+│   ├── cputime_unix.go
+│   ├── debug.go
+│   ├── debug_test.go
+│   ├── disk.go
+│   ├── disk_linux.go
+│   ├── disk_nop.go
+│   ├── doc.go
+│   ├── ewma.go
+│   ├── ewma_test.go
+│   ├── gauge.go
+│   ├── gauge_float64.go
+│   ├── gauge_float64_test.go
+│   ├── gauge_test.go
+│   ├── graphite.go
+│   ├── graphite_test.go
+│   ├── healthcheck.go
+│   ├── histogram.go
+│   ├── histogram_test.go
+│   ├── init_test.go
+│   ├── json.go
+│   ├── json_test.go
+│   ├── log.go
+│   ├── memory.md
+│   ├── meter.go
+│   ├── meter_test.go
+│   ├── metrics.go
+│   ├── metrics_test.go
+│   ├── opentsdb.go
+│   ├── opentsdb_test.go
+│   ├── registry.go
+│   ├── registry_test.go
+│   ├── resetting_sample.go
+│   ├── resetting_timer.go
+│   ├── resetting_timer_test.go
+│   ├── sample.go
+│   ├── sample_test.go
+│   ├── syslog.go
+│   ├── timer.go
+│   ├── timer_test.go
+│   ├── validate.sh*
+│   ├── writer.go
+│   └── writer_test.go
+├── miner/
+│   ├── README.md
+│   ├── miner.go
+│   └── worker.go
+├── node/
+│   ├── api.go
+│   ├── config.go
+│   ├── errors.go
+│   └── node.go
+├── notes/
+│   ├── copied-list.txt
+│   └── hacked-list.txt
+├── params/
+│   ├── lux_params.go
+│   ├── config.go
+│   ├── config_test.go
+│   ├── denomination.go
+│   ├── network_params.go
+│   ├── precompile_upgrade.go
+│   ├── precompiles.go
+│   ├── protocol_params.go
+│   └── version.go
+├── peer/
+│   ├── stats/
+│   │   └── stats.go
+│   ├── README.md
+│   ├── client.go
+│   ├── network.go
+│   ├── network_test.go
+│   ├── peer_tracker.go
+│   └── waiting_handler.go
+├── plugin/
+│   ├── evm/
+│   │   ├── message/
+│   │   │   ├── block_request.go
+│   │   │   ├── block_request_test.go
+│   │   │   ├── code_request.go
+│   │   │   ├── code_request_test.go
+│   │   │   ├── codec.go
+│   │   │   ├── cross_chain_handler.go
+│   │   │   ├── eth_call_request.go
+│   │   │   ├── handler.go
+│   │   │   ├── handler_test.go
+│   │   │   ├── leafs_request.go
+│   │   │   ├── leafs_request_test.go
+│   │   │   ├── message.go
+│   │   │   ├── message_test.go
+│   │   │   ├── request.go
+│   │   │   ├── signature_request.go
+│   │   │   ├── signature_request_test.go
+│   │   │   └── syncable.go
+│   │   ├── ExampleWarp.abi
+│   │   ├── ExampleWarp.bin
+│   │   ├── README.md
+│   │   ├── admin.go
+│   │   ├── atomic_backend.go
+│   │   ├── atomic_state.go
+│   │   ├── atomic_syncer.go
+│   │   ├── atomic_syncer_test.go
+│   │   ├── atomic_trie.go
+│   │   ├── atomic_trie_height_map_repair.go
+│   │   ├── atomic_trie_height_map_repair_test.go
+│   │   ├── atomic_trie_iterator.go
+│   │   ├── atomic_trie_iterator_test.go
+│   │   ├── atomic_trie_repair.go
+│   │   ├── atomic_trie_repair_test.go
+│   │   ├── atomic_trie_test.go
+│   │   ├── atomic_tx_repository.go
+│   │   ├── atomic_tx_repository_test.go
+│   │   ├── block.go
+│   │   ├── block_builder.go
+│   │   ├── block_builder_test.go
+│   │   ├── block_verification.go
+│   │   ├── bonus_blocks.json
+│   │   ├── client.go
+│   │   ├── client_interface_test.go
+│   │   ├── codec.go
+│   │   ├── config.go
+│   │   ├── config_test.go
+│   │   ├── database.go
+│   │   ├── export_tx.go
+│   │   ├── export_tx_test.go
+│   │   ├── ext_data_hashes.go
+│   │   ├── factory.go
+│   │   ├── formatting.go
+│   │   ├── fuji_ext_data_hashes.json
+│   │   ├── gasprice_update.go
+│   │   ├── gasprice_update_test.go
+│   │   ├── gossip.go
+│   │   ├── gossip_stats.go
+│   │   ├── gossip_test.go
+│   │   ├── gossiper.go
+│   │   ├── gossiper_atomic_gossiping_test.go
+│   │   ├── gossiper_eth_gossiping_test.go
+│   │   ├── health.go
+│   │   ├── import_tx.go
+│   │   ├── import_tx_test.go
+│   │   ├── log.go
+│   │   ├── mainnet_ext_data_hashes.json
+│   │   ├── mempool.go
+│   │   ├── mempool_atomic_gossiping_test.go
+│   │   ├── mempool_test.go
+│   │   ├── network_handler.go
+│   │   ├── service.go
+│   │   ├── shared_memory_writer.go
+│   │   ├── static_service.go
+│   │   ├── status.go
+│   │   ├── syncervm_client.go
+│   │   ├── syncervm_server.go
+│   │   ├── syncervm_test.go
+│   │   ├── test_tx.go
+│   │   ├── tx.go
+│   │   ├── tx_gossip_test.go
+│   │   ├── tx_heap.go
+│   │   ├── tx_heap_test.go
+│   │   ├── tx_test.go
+│   │   ├── user.go
+│   │   ├── version.go
+│   │   ├── vm.go
+│   │   ├── vm_test.go
+│   │   └── vm_warp_test.go
+│   ├── keys.go
+│   ├── main.go
+│   └── params.go
+├── precompile/
+│   ├── contract/
+│   │   ├── contract.go
+│   │   ├── interfaces.go
+│   │   ├── mocks.go
+│   │   ├── utils.go
+│   │   └── utils_test.go
+│   ├── contracts/
+│   │   └── warp/
+│   │       ├── README.md
+│   │       ├── config.go
+│   │       ├── config_test.go
+│   │       ├── contract.abi
+│   │       ├── contract.go
+│   │       ├── contract_test.go
+│   │       ├── contract_warp_handler.go
+│   │       ├── module.go
+│   │       ├── predicate_test.go
+│   │       └── signature_verification_test.go
+│   ├── modules/
+│   │   ├── module.go
+│   │   ├── registerer.go
+│   │   └── registerer_test.go
+│   ├── precompileconfig/
+│   │   ├── config.go
+│   │   ├── mocks.go
+│   │   └── upgradeable.go
+│   ├── registry/
+│   │   └── registry.go
+│   └── testutils/
+│       ├── test_config.go
+│       ├── test_precompile.go
+│       └── test_predicate.go
+├── predicate/
+│   ├── Predicate.md
+│   ├── Results.md
+│   ├── predicate_bytes.go
+│   ├── predicate_bytes_test.go
+│   ├── predicate_results.go
+│   ├── predicate_results_test.go
+│   ├── predicate_slots.go
+│   └── predicate_tx.go
+├── rpc/
+│   ├── testdata/
+│   │   ├── internal-error.js
+│   │   ├── invalid-badid.js
+│   │   ├── invalid-badversion.js
+│   │   ├── invalid-batch.js
+│   │   ├── invalid-idonly.js
+│   │   ├── invalid-nonobj.js
+│   │   ├── invalid-syntax.json
+│   │   ├── reqresp-batch.js
+│   │   ├── reqresp-echo.js
+│   │   ├── reqresp-namedparam.js
+│   │   ├── reqresp-noargsrets.js
+│   │   ├── reqresp-nomethod.js
+│   │   ├── reqresp-noparam.js
+│   │   ├── reqresp-paramsnull.js
+│   │   ├── revcall.js
+│   │   ├── revcall2.js
+│   │   └── subscription.js
+│   ├── client.go
+│   ├── client_opt.go
+│   ├── client_opt_test.go
+│   ├── client_test.go
+│   ├── context_headers.go
+│   ├── doc.go
+│   ├── errors.go
+│   ├── handler.go
+│   ├── http.go
+│   ├── http_test.go
+│   ├── inproc.go
+│   ├── json.go
+│   ├── metrics.go
+│   ├── server.go
+│   ├── server_test.go
+│   ├── service.go
+│   ├── subscription.go
+│   ├── subscription_test.go
+│   ├── testservice_test.go
+│   ├── types.go
+│   ├── types_test.go
+│   ├── websocket.go
+│   └── websocket_test.go
+├── scripts/
+│   ├── build.sh*
+│   ├── build_image.sh*
+│   ├── build_test.sh*
+│   ├── constants.sh
+│   ├── coverage.sh*
+│   ├── geth-allowed-packages.txt
+│   ├── lint.sh*
+│   ├── lint_allowed_geth_imports.sh*
+│   ├── tests.e2e.sh*
+│   └── versions.sh
+├── signer/
+│   └── core/
+│       └── apitypes/
+│           └── types.go
+├── sync/
+│   ├── client/
+│   │   ├── stats/
+│   │   │   └── stats.go
+│   │   ├── client.go
+│   │   ├── client_test.go
+│   │   ├── leaf_syncer.go
+│   │   ├── mock_client.go
+│   │   └── mock_network.go
+│   ├── handlers/
+│   │   ├── stats/
+│   │   │   ├── mock_stats.go
+│   │   │   └── stats.go
+│   │   ├── block_request.go
+│   │   ├── block_request_test.go
+│   │   ├── code_request.go
+│   │   ├── code_request_test.go
+│   │   ├── handler.go
+│   │   ├── leafs_request.go
+│   │   ├── leafs_request_test.go
+│   │   └── test_providers.go
+│   ├── statesync/
+│   │   ├── code_syncer.go
+│   │   ├── code_syncer_test.go
+│   │   ├── state_syncer.go
+│   │   ├── sync_helpers.go
+│   │   ├── sync_test.go
+│   │   ├── test_sync.go
+│   │   ├── trie_queue.go
+│   │   ├── trie_segments.go
+│   │   ├── trie_sync_stats.go
+│   │   └── trie_sync_tasks.go
+│   ├── syncutils/
+│   │   ├── iterators.go
+│   │   └── test_trie.go
+│   └── README.md
+├── tests/
+│   ├── init.go
+│   ├── rlp_test_util.go
+│   └── state_test_util.go
+├── trie/
+│   ├── triedb/
+│   │   └── hashdb/
+│   │       └── database.go
+│   ├── trienode/
+│   │   └── node.go
+│   ├── committer.go
+│   ├── database_test.go
+│   ├── database_wrap.go
+│   ├── encoding.go
+│   ├── encoding_test.go
+│   ├── errors.go
+│   ├── hasher.go
+│   ├── iterator.go
+│   ├── iterator_test.go
+│   ├── node.go
+│   ├── node_enc.go
+│   ├── node_test.go
+│   ├── preimages.go
+│   ├── proof.go
+│   ├── proof_test.go
+│   ├── secure_trie.go
+│   ├── secure_trie_test.go
+│   ├── stacktrie.go
+│   ├── stacktrie_test.go
+│   ├── sync_test.go
+│   ├── tracer.go
+│   ├── tracer_test.go
+│   ├── trie.go
+│   ├── trie_id.go
+│   ├── trie_reader.go
+│   └── trie_test.go
+├── utils/
+│   ├── address_range.go
+│   ├── bounded_workers.go
+│   ├── bytes.go
+│   ├── bytes_test.go
+│   ├── fork.go
+│   ├── fork_test.go
+│   ├── metered_cache.go
+│   └── snow.go
+├── vmerrs/
+│   └── vmerrs.go
+├── warp/
+│   ├── aggregator/
+│   │   ├── aggregator.go
+│   │   ├── aggregator_test.go
+│   │   ├── mock_signature_getter.go
+│   │   └── signature_getter.go
+│   ├── handlers/
+│   │   ├── signature_request.go
+│   │   ├── signature_request_test.go
+│   │   └── stats.go
+│   ├── validators/
+│   │   ├── state.go
+│   │   └── state_test.go
+│   ├── backend.go
+│   ├── backend_test.go
+│   ├── client.go
+│   ├── fetcher.go
+│   └── service.go
+├── AUTHORS
+├── COPYING
+├── COPYING.LESSER
+├── Dockerfile
+├── LICENSE
+├── README.md
+├── RELEASES.md
+├── SECURITY.md
+├── go.mod
+├── go.sum
+├── multicoin.bin
+├── multicoin.sol
+└── tree.txt
+
+114 directories, 841 files

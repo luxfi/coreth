@@ -20,12 +20,14 @@ import (
 	"github.com/luxfi/coreth/params"
 )
 
-// LookupInstructionSet returns the instructionset for the fork configured by
+// LookupInstructionSet returns the instruction set for the fork configured by
 // the rules.
 func LookupInstructionSet(rules params.Rules) (JumpTable, error) {
 	switch {
-	case rules.IsDUpgrade:
-		return newDUpgradeInstructionSet(), nil
+	case rules.IsCancun:
+		return newCancunInstructionSet(), nil
+	case rules.IsDurango:
+		return newDurangoInstructionSet(), nil
 	case rules.IsApricotPhase3, rules.IsApricotPhase4,
 		rules.IsApricotPhase5, rules.IsApricotPhasePre6,
 		rules.IsApricotPhase6, rules.IsApricotPhasePost6,
@@ -51,7 +53,7 @@ func LookupInstructionSet(rules params.Rules) (JumpTable, error) {
 	return newFrontierInstructionSet(), nil
 }
 
-// Stack returns the mininum and maximum stack requirements.
+// Stack returns the minimum and maximum stack requirements.
 func (op *operation) Stack() (int, int) {
 	return op.minStack, op.maxStack
 }

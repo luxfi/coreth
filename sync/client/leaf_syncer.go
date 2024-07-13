@@ -9,12 +9,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/coreth/utils"
 )
 
 var (
