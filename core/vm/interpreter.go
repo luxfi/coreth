@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2019-2020, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -27,19 +27,17 @@
 package vm
 
 import (
+	"github.com/luxfi/coreth/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxfi/coreth/vmerrs"
 )
 
-var (
-	BuiltinAddr = common.Address{
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	}
-)
+var BuiltinAddr = common.Address{
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+}
 
 // Config are the configuration options for the Interpreter
 type Config struct {
@@ -47,9 +45,6 @@ type Config struct {
 	NoBaseFee               bool      // Forces the EIP-1559 baseFee to 0 (needed for 0 price calls)
 	EnablePreimageRecording bool      // Enables recording of SHA3/keccak preimages
 	ExtraEips               []int     // Additional EIPS that are to be enabled
-
-	// AllowUnfinalizedQueries allow unfinalized queries
-	AllowUnfinalizedQueries bool
 }
 
 // ScopeContext contains the things that are per-call, such as stack and memory,
@@ -66,7 +61,7 @@ type EVMInterpreter struct {
 	table *JumpTable
 
 	hasher    crypto.KeccakState // Keccak256 hasher instance shared across opcodes
-	hasherBuf common.Hash        // Keccak256 hasher result array shared aross opcodes
+	hasherBuf common.Hash        // Keccak256 hasher result array shared across opcodes
 
 	readOnly   bool   // Whether to throw on stateful modifications
 	returnData []byte // Last CALL's return data for subsequent reuse
@@ -77,8 +72,10 @@ func NewEVMInterpreter(evm *EVM) *EVMInterpreter {
 	// If jump table was not initialised we set the default one.
 	var table *JumpTable
 	switch {
-	case evm.chainRules.IsDUpgrade:
-		table = &dUpgradeInstructionSet
+	case evm.chainRules.IsCancun:
+		table = &cancunInstructionSet
+	case evm.chainRules.IsDurango:
+		table = &durangoInstructionSet
 	case evm.chainRules.IsApricotPhase3:
 		table = &apricotPhase3InstructionSet
 	case evm.chainRules.IsApricotPhase2:

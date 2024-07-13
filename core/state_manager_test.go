@@ -26,8 +26,8 @@ func (t *MockTrieDB) Commit(root common.Hash, report bool) error {
 	t.LastCommit = root
 	return nil
 }
-func (t *MockTrieDB) Size() (common.StorageSize, common.StorageSize) {
-	return 0, 0
+func (t *MockTrieDB) Size() (common.StorageSize, common.StorageSize, common.StorageSize) {
+	return 0, 0, 0
 }
 func (t *MockTrieDB) Cap(limit common.StorageSize) error {
 	return nil
@@ -45,7 +45,7 @@ func TestCappedMemoryTrieWriter(t *testing.T) {
 				Root:   common.BigToHash(bigI),
 				Number: bigI,
 			},
-			nil, nil, nil, nil, nil, true,
+			nil, nil, nil, nil,
 		)
 
 		assert.NoError(w.InsertTrie(block))
@@ -84,7 +84,7 @@ func TestNoPruningTrieWriter(t *testing.T) {
 				Root:   common.BigToHash(bigI),
 				Number: bigI,
 			},
-			nil, nil, nil, nil, nil, true,
+			nil, nil, nil, nil,
 		)
 
 		assert.NoError(w.InsertTrie(block))

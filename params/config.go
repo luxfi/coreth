@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2019-2020, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -27,24 +27,27 @@
 package params
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
-	"time"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/node/version"
 	"github.com/luxfi/coreth/precompile/modules"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/utils"
-	"github.com/luxfi/node/snow"
+	"github.com/ethereum/go-ethereum/common"
 )
+
+const maxJSONLen = 64 * 1024 * 1024 // 64MB
 
 // Lux ChainIDs
 var (
 	// LuxMainnetChainID ...
 	LuxMainnetChainID = big.NewInt(43114)
-	// LuxTestnetChainID ...
-	LuxTestnetChainID = big.NewInt(43113)
+	// LuxFujiChainID ...
+	LuxFujiChainID = big.NewInt(43113)
 	// LuxLocalChainID ...
 	LuxLocalChainID = big.NewInt(43112)
 
@@ -53,88 +56,16 @@ var (
 
 var (
 	// LuxMainnetChainConfig is the configuration for Lux Main Network
-	LuxMainnetChainConfig = &ChainConfig{
-		ChainID:                         LuxMainnetChainID,
-		HomesteadBlock:                  big.NewInt(0),
-		DAOForkBlock:                    big.NewInt(0),
-		DAOForkSupport:                  true,
-		EIP150Block:                     big.NewInt(0),
-		EIP155Block:                     big.NewInt(0),
-		EIP158Block:                     big.NewInt(0),
-		ByzantiumBlock:                  big.NewInt(0),
-		ConstantinopleBlock:             big.NewInt(0),
-		PetersburgBlock:                 big.NewInt(0),
-		IstanbulBlock:                   big.NewInt(0),
-		MuirGlacierBlock:                big.NewInt(0),
-		ApricotPhase1BlockTimestamp:     utils.TimeToNewUint64(time.Date(2021, time.March, 31, 14, 0, 0, 0, time.UTC)),
-		ApricotPhase2BlockTimestamp:     utils.TimeToNewUint64(time.Date(2021, time.May, 10, 11, 0, 0, 0, time.UTC)),
-		ApricotPhase3BlockTimestamp:     utils.TimeToNewUint64(time.Date(2021, time.August, 24, 14, 0, 0, 0, time.UTC)),
-		ApricotPhase4BlockTimestamp:     utils.TimeToNewUint64(time.Date(2021, time.September, 22, 21, 0, 0, 0, time.UTC)),
-		ApricotPhase5BlockTimestamp:     utils.TimeToNewUint64(time.Date(2021, time.December, 2, 18, 0, 0, 0, time.UTC)),
-		ApricotPhasePre6BlockTimestamp:  utils.TimeToNewUint64(time.Date(2022, time.September, 5, 1, 30, 0, 0, time.UTC)),
-		ApricotPhase6BlockTimestamp:     utils.TimeToNewUint64(time.Date(2022, time.September, 6, 20, 0, 0, 0, time.UTC)),
-		ApricotPhasePost6BlockTimestamp: utils.TimeToNewUint64(time.Date(2022, time.September, 7, 3, 0, 0, 0, time.UTC)),
-		BanffBlockTimestamp:             utils.TimeToNewUint64(time.Date(2022, time.October, 18, 16, 0, 0, 0, time.UTC)),
-		CortinaBlockTimestamp:           utils.TimeToNewUint64(time.Date(2023, time.April, 25, 15, 0, 0, 0, time.UTC)),
-		// TODO Add DUpgrade timestamp
-	}
+	LuxMainnetChainConfig = getChainConfig(constants.MainnetID, LuxMainnetChainID)
 
-	// LuxTestnetChainConfig is the configuration for the Testnet Test Network
-	LuxTestnetChainConfig = &ChainConfig{
-		ChainID:                         LuxTestnetChainID,
-		HomesteadBlock:                  big.NewInt(0),
-		DAOForkBlock:                    big.NewInt(0),
-		DAOForkSupport:                  true,
-		EIP150Block:                     big.NewInt(0),
-		EIP155Block:                     big.NewInt(0),
-		EIP158Block:                     big.NewInt(0),
-		ByzantiumBlock:                  big.NewInt(0),
-		ConstantinopleBlock:             big.NewInt(0),
-		PetersburgBlock:                 big.NewInt(0),
-		IstanbulBlock:                   big.NewInt(0),
-		MuirGlacierBlock:                big.NewInt(0),
-		ApricotPhase1BlockTimestamp:     utils.TimeToNewUint64(time.Date(2021, time.March, 26, 14, 0, 0, 0, time.UTC)),
-		ApricotPhase2BlockTimestamp:     utils.TimeToNewUint64(time.Date(2021, time.May, 5, 14, 0, 0, 0, time.UTC)),
-		ApricotPhase3BlockTimestamp:     utils.TimeToNewUint64(time.Date(2021, time.August, 16, 19, 0, 0, 0, time.UTC)),
-		ApricotPhase4BlockTimestamp:     utils.TimeToNewUint64(time.Date(2021, time.September, 16, 21, 0, 0, 0, time.UTC)),
-		ApricotPhase5BlockTimestamp:     utils.TimeToNewUint64(time.Date(2021, time.November, 24, 15, 0, 0, 0, time.UTC)),
-		ApricotPhasePre6BlockTimestamp:  utils.TimeToNewUint64(time.Date(2022, time.September, 6, 20, 0, 0, 0, time.UTC)),
-		ApricotPhase6BlockTimestamp:     utils.TimeToNewUint64(time.Date(2022, time.September, 6, 20, 0, 0, 0, time.UTC)),
-		ApricotPhasePost6BlockTimestamp: utils.TimeToNewUint64(time.Date(2022, time.September, 7, 6, 0, 0, 0, time.UTC)),
-		BanffBlockTimestamp:             utils.TimeToNewUint64(time.Date(2022, time.October, 3, 14, 0, 0, 0, time.UTC)),
-		CortinaBlockTimestamp:           utils.TimeToNewUint64(time.Date(2023, time.April, 6, 15, 0, 0, 0, time.UTC)),
-		// TODO Add DUpgrade timestamp
-	}
+	// LuxFujiChainConfig is the configuration for the Fuji Test Network
+	LuxFujiChainConfig = getChainConfig(constants.FujiID, LuxFujiChainID)
 
 	// LuxLocalChainConfig is the configuration for the Lux Local Network
-	LuxLocalChainConfig = &ChainConfig{
-		ChainID:                         LuxLocalChainID,
-		HomesteadBlock:                  big.NewInt(0),
-		DAOForkBlock:                    big.NewInt(0),
-		DAOForkSupport:                  true,
-		EIP150Block:                     big.NewInt(0),
-		EIP155Block:                     big.NewInt(0),
-		EIP158Block:                     big.NewInt(0),
-		ByzantiumBlock:                  big.NewInt(0),
-		ConstantinopleBlock:             big.NewInt(0),
-		PetersburgBlock:                 big.NewInt(0),
-		IstanbulBlock:                   big.NewInt(0),
-		MuirGlacierBlock:                big.NewInt(0),
-		ApricotPhase1BlockTimestamp:     utils.NewUint64(0),
-		ApricotPhase2BlockTimestamp:     utils.NewUint64(0),
-		ApricotPhase3BlockTimestamp:     utils.NewUint64(0),
-		ApricotPhase4BlockTimestamp:     utils.NewUint64(0),
-		ApricotPhase5BlockTimestamp:     utils.NewUint64(0),
-		ApricotPhasePre6BlockTimestamp:  utils.NewUint64(0),
-		ApricotPhase6BlockTimestamp:     utils.NewUint64(0),
-		ApricotPhasePost6BlockTimestamp: utils.NewUint64(0),
-		BanffBlockTimestamp:             utils.NewUint64(0),
-		CortinaBlockTimestamp:           utils.NewUint64(0),
-		DUpgradeBlockTimestamp:          utils.NewUint64(0),
-	}
+	LuxLocalChainConfig = getChainConfig(constants.LocalID, LuxLocalChainID)
 
 	TestChainConfig = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -157,11 +88,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: utils.NewUint64(0),
 		BanffBlockTimestamp:             utils.NewUint64(0),
 		CortinaBlockTimestamp:           utils.NewUint64(0),
-		DUpgradeBlockTimestamp:          utils.NewUint64(0),
+		DurangoBlockTimestamp:           utils.NewUint64(0),
 	}
 
 	TestLaunchConfig = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -184,11 +115,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: nil,
 		BanffBlockTimestamp:             nil,
 		CortinaBlockTimestamp:           nil,
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
 	TestApricotPhase1Config = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -211,11 +142,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: nil,
 		BanffBlockTimestamp:             nil,
 		CortinaBlockTimestamp:           nil,
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
 	TestApricotPhase2Config = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -238,11 +169,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: nil,
 		BanffBlockTimestamp:             nil,
 		CortinaBlockTimestamp:           nil,
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
 	TestApricotPhase3Config = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -265,11 +196,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: nil,
 		BanffBlockTimestamp:             nil,
 		CortinaBlockTimestamp:           nil,
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
 	TestApricotPhase4Config = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -292,11 +223,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: nil,
 		BanffBlockTimestamp:             nil,
 		CortinaBlockTimestamp:           nil,
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
 	TestApricotPhase5Config = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -319,11 +250,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: nil,
 		BanffBlockTimestamp:             nil,
 		CortinaBlockTimestamp:           nil,
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
 	TestApricotPhasePre6Config = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -346,11 +277,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: nil,
 		BanffBlockTimestamp:             nil,
 		CortinaBlockTimestamp:           nil,
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
 	TestApricotPhase6Config = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -373,11 +304,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: nil,
 		BanffBlockTimestamp:             nil,
 		CortinaBlockTimestamp:           nil,
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
 	TestApricotPhasePost6Config = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -400,11 +331,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: utils.NewUint64(0),
 		BanffBlockTimestamp:             nil,
 		CortinaBlockTimestamp:           nil,
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
 	TestBanffChainConfig = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -427,11 +358,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: utils.NewUint64(0),
 		BanffBlockTimestamp:             utils.NewUint64(0),
 		CortinaBlockTimestamp:           nil,
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
 	TestCortinaChainConfig = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -454,11 +385,11 @@ var (
 		ApricotPhasePost6BlockTimestamp: utils.NewUint64(0),
 		BanffBlockTimestamp:             utils.NewUint64(0),
 		CortinaBlockTimestamp:           utils.NewUint64(0),
-		DUpgradeBlockTimestamp:          nil,
+		DurangoBlockTimestamp:           nil,
 	}
 
-	TestDUpgradeChainConfig = &ChainConfig{
-		LuxContext:                      LuxContext{utils.TestSnowContext()},
+	TestDurangoChainConfig = &ChainConfig{
+		LuxContext:                LuxContext{utils.TestSnowContext()},
 		ChainID:                         big.NewInt(1),
 		HomesteadBlock:                  big.NewInt(0),
 		DAOForkBlock:                    nil,
@@ -483,20 +414,35 @@ var (
 		CortinaBlockTimestamp:           utils.NewUint64(0),
 	}
 
-	TestRules = TestChainConfig.LuxRules(new(big.Int), 0)
+	TestRules = TestChainConfig.Rules(new(big.Int), 0)
 )
 
-// UpgradeConfig includes the following configs that may be specified in upgradeBytes:
-// - Timestamps that enable lux network upgrades,
-// - Enabling or disabling precompiles as network upgrades.
-type UpgradeConfig struct {
-	// Config for enabling and disabling precompiles as network upgrades.
-	PrecompileUpgrades []PrecompileUpgrade `json:"precompileUpgrades,omitempty"`
-}
-
-// LuxContext provides Lux specific context directly into the EVM.
-type LuxContext struct {
-	SnowCtx *snow.Context
+func getChainConfig(networkID uint32, chainID *big.Int) *ChainConfig {
+	return &ChainConfig{
+		ChainID:                         chainID,
+		HomesteadBlock:                  big.NewInt(0),
+		DAOForkBlock:                    big.NewInt(0),
+		DAOForkSupport:                  true,
+		EIP150Block:                     big.NewInt(0),
+		EIP155Block:                     big.NewInt(0),
+		EIP158Block:                     big.NewInt(0),
+		ByzantiumBlock:                  big.NewInt(0),
+		ConstantinopleBlock:             big.NewInt(0),
+		PetersburgBlock:                 big.NewInt(0),
+		IstanbulBlock:                   big.NewInt(0),
+		MuirGlacierBlock:                big.NewInt(0),
+		ApricotPhase1BlockTimestamp:     getUpgradeTime(networkID, version.ApricotPhase1Times),
+		ApricotPhase2BlockTimestamp:     getUpgradeTime(networkID, version.ApricotPhase2Times),
+		ApricotPhase3BlockTimestamp:     getUpgradeTime(networkID, version.ApricotPhase3Times),
+		ApricotPhase4BlockTimestamp:     getUpgradeTime(networkID, version.ApricotPhase4Times),
+		ApricotPhase5BlockTimestamp:     getUpgradeTime(networkID, version.ApricotPhase5Times),
+		ApricotPhasePre6BlockTimestamp:  getUpgradeTime(networkID, version.ApricotPhasePre6Times),
+		ApricotPhase6BlockTimestamp:     getUpgradeTime(networkID, version.ApricotPhase6Times),
+		ApricotPhasePost6BlockTimestamp: getUpgradeTime(networkID, version.ApricotPhasePost6Times),
+		BanffBlockTimestamp:             getUpgradeTime(networkID, version.BanffTimes),
+		CortinaBlockTimestamp:           getUpgradeTime(networkID, version.CortinaTimes),
+		DurangoBlockTimestamp:           getUpgradeTime(networkID, version.DurangoTimes),
+	}
 }
 
 // ChainConfig is the core config which determines the blockchain settings.
@@ -546,12 +492,14 @@ type ChainConfig struct {
 	BanffBlockTimestamp *uint64 `json:"banffBlockTimestamp,omitempty"`
 	// Cortina increases the block gas limit to 15M. (nil = no fork, 0 = already activated)
 	CortinaBlockTimestamp *uint64 `json:"cortinaBlockTimestamp,omitempty"`
-	// DUpgrade activates the Shanghai Execution Spec Upgrade from Ethereum (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/shanghai.md#included-eips)
+	// Durango activates the Shanghai Execution Spec Upgrade from Ethereum (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/shanghai.md#included-eips)
 	// and Lux Warp Messaging. (nil = no fork, 0 = already activated)
 	// Note: EIP-4895 is excluded since withdrawals are not relevant to the Lux C-Chain or Subnets running the EVM.
-	DUpgradeBlockTimestamp *uint64 `json:"dUpgradeBlockTimestamp,omitempty"`
+	DurangoBlockTimestamp *uint64 `json:"durangoBlockTimestamp,omitempty"`
 	// Cancun activates the Cancun upgrade from Ethereum. (nil = no fork, 0 = already activated)
 	CancunTime *uint64 `json:"cancunTime,omitempty"`
+	// Verkle activates the Verkle upgrade from Ethereum. (nil = no fork, 0 = already activated)
+	VerkleTime *uint64 `json:"verkleTime,omitempty"` // Verkle switch time (nil = no fork, 0 = already on verkle)
 
 	UpgradeConfig `json:"-"` // Config specified in upgradeBytes (lux network upgrades or enable/disabling precompiles). Skip encoding/decoding directly into ChainConfig.
 }
@@ -566,7 +514,7 @@ func (c *ChainConfig) Description() string {
 	// Create a list of forks with a short description of them. Forks that only
 	// makes sense for mainnet should be optional at printing to avoid bloating
 	// the output for testnets and private networks.
-	banner += "Hard Forks:\n"
+	banner += "Hard Forks (block based):\n"
 	banner += fmt.Sprintf(" - Homestead:                   #%-8v (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/homestead.md)\n", c.HomesteadBlock)
 	if c.DAOForkBlock != nil {
 		banner += fmt.Sprintf(" - DAO Fork:                    #%-8v (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/dao-fork.md)\n", c.DAOForkBlock)
@@ -581,6 +529,12 @@ func (c *ChainConfig) Description() string {
 	if c.MuirGlacierBlock != nil {
 		banner += fmt.Sprintf(" - Muir Glacier:                #%-8v (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/muir-glacier.md)\n", c.MuirGlacierBlock)
 	}
+
+	banner += "Hard forks (timestamp based):\n"
+	banner += fmt.Sprintf(" - Cancun Timestamp:                 @%-10v (https://github.com/luxfi/node/releases/tag/v1.12.0)\n", ptrToString(c.CancunTime))
+	banner += "\n"
+
+	banner += "Mandatory Lux Upgrades (timestamp based):\n"
 	banner += fmt.Sprintf(" - Apricot Phase 1 Timestamp:        @%-10v (https://github.com/luxfi/node/releases/tag/v1.3.0)\n", ptrToString(c.ApricotPhase1BlockTimestamp))
 	banner += fmt.Sprintf(" - Apricot Phase 2 Timestamp:        @%-10v (https://github.com/luxfi/node/releases/tag/v1.4.0)\n", ptrToString(c.ApricotPhase2BlockTimestamp))
 	banner += fmt.Sprintf(" - Apricot Phase 3 Timestamp:        @%-10v (https://github.com/luxfi/node/releases/tag/v1.5.0)\n", ptrToString(c.ApricotPhase3BlockTimestamp))
@@ -591,8 +545,14 @@ func (c *ChainConfig) Description() string {
 	banner += fmt.Sprintf(" - Apricot Phase Post-6 Timestamp:   @%-10v (https://github.com/luxfi/node/releases/tag/v1.8.0\n", ptrToString(c.ApricotPhasePost6BlockTimestamp))
 	banner += fmt.Sprintf(" - Banff Timestamp:                  @%-10v (https://github.com/luxfi/node/releases/tag/v1.9.0)\n", ptrToString(c.BanffBlockTimestamp))
 	banner += fmt.Sprintf(" - Cortina Timestamp:                @%-10v (https://github.com/luxfi/node/releases/tag/v1.10.0)\n", ptrToString(c.CortinaBlockTimestamp))
-	banner += fmt.Sprintf(" - DUpgrade Timestamp:               @%-10v (https://github.com/luxfi/node/releases/tag/v1.11.0)\n", ptrToString(c.DUpgradeBlockTimestamp))
-	banner += fmt.Sprintf(" - Cancun Timestamp:                 @%-10v (https://github.com/luxfi/node/releases/tag/v1.12.0)\n", ptrToString(c.CancunTime))
+	banner += fmt.Sprintf(" - Durango Timestamp:                @%-10v (https://github.com/luxfi/node/releases/tag/v1.11.0)\n", ptrToString(c.DurangoBlockTimestamp))
+	banner += "\n"
+
+	upgradeConfigBytes, err := json.Marshal(c.UpgradeConfig)
+	if err != nil {
+		upgradeConfigBytes = []byte("cannot marshal UpgradeConfig")
+	}
+	banner += fmt.Sprintf("Upgrade Config: %s", string(upgradeConfigBytes))
 	banner += "\n"
 	return banner
 }
@@ -711,16 +671,22 @@ func (c *ChainConfig) IsCortina(time uint64) bool {
 	return utils.IsTimestampForked(c.CortinaBlockTimestamp, time)
 }
 
-// IsDUpgrade returns whether [time] represents a block
-// with a timestamp after the DUpgrade upgrade time.
-func (c *ChainConfig) IsDUpgrade(time uint64) bool {
-	return utils.IsTimestampForked(c.DUpgradeBlockTimestamp, time)
+// IsDurango returns whether [time] represents a block
+// with a timestamp after the Durango upgrade time.
+func (c *ChainConfig) IsDurango(time uint64) bool {
+	return utils.IsTimestampForked(c.DurangoBlockTimestamp, time)
 }
 
 // IsCancun returns whether [time] represents a block
 // with a timestamp after the Cancun upgrade time.
-func (c *ChainConfig) IsCancun(time uint64) bool {
+func (c *ChainConfig) IsCancun(num *big.Int, time uint64) bool {
 	return utils.IsTimestampForked(c.CancunTime, time)
+}
+
+// IsVerkle returns whether [time] represents a block
+// with a timestamp after the Verkle upgrade time.
+func (c *ChainConfig) IsVerkle(num *big.Int, time uint64) bool {
+	return utils.IsTimestampForked(c.VerkleTime, time)
 }
 
 func (r *Rules) PredicatersExist() bool {
@@ -773,17 +739,17 @@ func (c *ChainConfig) Verify() error {
 	return nil
 }
 
+type fork struct {
+	name      string
+	block     *big.Int // some go-ethereum forks use block numbers
+	timestamp *uint64  // Lux forks use timestamps
+	optional  bool     // if true, the fork may be nil and next fork is still allowed
+}
+
 // CheckConfigForkOrder checks that we don't "skip" any forks, geth isn't pluggable enough
 // to guarantee that forks can be implemented in a different order than on official networks
 func (c *ChainConfig) CheckConfigForkOrder() error {
-	type fork struct {
-		name      string
-		block     *big.Int // some go-ethereum forks use block numbers
-		timestamp *uint64  // Lux forks use timestamps
-		optional  bool     // if true, the fork may be nil and next fork is still allowed
-	}
-	var lastFork fork
-	for _, cur := range []fork{
+	ethForks := []fork{
 		{name: "homesteadBlock", block: c.HomesteadBlock},
 		{name: "daoForkBlock", block: c.DAOForkBlock, optional: true},
 		{name: "eip150Block", block: c.EIP150Block},
@@ -794,68 +760,72 @@ func (c *ChainConfig) CheckConfigForkOrder() error {
 		{name: "petersburgBlock", block: c.PetersburgBlock},
 		{name: "istanbulBlock", block: c.IstanbulBlock},
 		{name: "muirGlacierBlock", block: c.MuirGlacierBlock, optional: true},
-	} {
-		if cur.block != nil && common.Big0.Cmp(cur.block) != 0 {
+		{name: "cancunTime", timestamp: c.CancunTime},
+	}
+
+	// Check that forks are enabled in order
+	if err := checkForks(ethForks, true); err != nil {
+		return err
+	}
+
+	// Note: In Lux, hard forks must take place via block timestamps instead
+	// of block numbers since blocks are produced asynchronously. Therefore, we do not
+	// check that the block timestamps in the same way as for
+	// the block number forks since it would not be a meaningful comparison.
+	// Instead, we check only that Phases are enabled in order.
+	// Note: we do not add the optional stateful precompile configs in here because they are optional
+	// and independent, such that the ordering they are enabled does not impact the correctness of the
+	// chain config.
+	if err := checkForks(c.forkOrder(), false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// checkForks checks that forks are enabled in order and returns an error if not
+// [blockFork] is true if the fork is a block number fork, false if it is a timestamp fork
+func checkForks(forks []fork, blockFork bool) error {
+	lastFork := fork{}
+	for _, cur := range forks {
+		if blockFork && cur.block != nil && common.Big0.Cmp(cur.block) != 0 {
 			return errNonGenesisForkByHeight
 		}
 		if lastFork.name != "" {
-			// Next one must be higher number
-			if lastFork.block == nil && cur.block != nil {
-				return fmt.Errorf("unsupported fork ordering: %v not enabled, but %v enabled at %v",
-					lastFork.name, cur.name, cur.block)
-			}
-			if lastFork.block != nil && cur.block != nil {
-				if lastFork.block.Cmp(cur.block) > 0 {
-					return fmt.Errorf("unsupported fork ordering: %v enabled at %v, but %v enabled at %v",
+			switch {
+			// Non-optional forks must all be present in the chain config up to the last defined fork
+			case lastFork.block == nil && lastFork.timestamp == nil && (cur.block != nil || cur.timestamp != nil):
+				if cur.block != nil {
+					return fmt.Errorf("unsupported fork ordering: %v not enabled, but %v enabled at block %v",
+						lastFork.name, cur.name, cur.block)
+				} else {
+					return fmt.Errorf("unsupported fork ordering: %v not enabled, but %v enabled at timestamp %v",
+						lastFork.name, cur.name, cur.timestamp)
+				}
+
+			// Fork (whether defined by block or timestamp) must follow the fork definition sequence
+			case (lastFork.block != nil && cur.block != nil) || (lastFork.timestamp != nil && cur.timestamp != nil):
+				if lastFork.block != nil && lastFork.block.Cmp(cur.block) > 0 {
+					return fmt.Errorf("unsupported fork ordering: %v enabled at block %v, but %v enabled at block %v",
 						lastFork.name, lastFork.block, cur.name, cur.block)
+				} else if lastFork.timestamp != nil && *lastFork.timestamp > *cur.timestamp {
+					return fmt.Errorf("unsupported fork ordering: %v enabled at timestamp %v, but %v enabled at timestamp %v",
+						lastFork.name, lastFork.timestamp, cur.name, cur.timestamp)
+				}
+
+				// Timestamp based forks can follow block based ones, but not the other way around
+				if lastFork.timestamp != nil && cur.block != nil {
+					return fmt.Errorf("unsupported fork ordering: %v used timestamp ordering, but %v reverted to block ordering",
+						lastFork.name, cur.name)
 				}
 			}
 		}
 		// If it was optional and not set, then ignore it
-		if !cur.optional || cur.block != nil {
+		if !cur.optional || (cur.block != nil || cur.timestamp != nil) {
 			lastFork = cur
 		}
 	}
 
-	// Note: ApricotPhase1 and ApricotPhase2 override the rules set by block number
-	// hard forks. In Lux, hard forks must take place via block timestamps instead
-	// of block numbers since blocks are produced asynchronously. Therefore, we do not
-	// check that the block timestamps for Apricot Phase1 and Phase2 in the same way as for
-	// the block number forks since it would not be a meaningful comparison.
-	// Instead, we check only that Apricot Phases are enabled in order.
-	lastFork = fork{}
-	for _, cur := range []fork{
-		{name: "apricotPhase1BlockTimestamp", timestamp: c.ApricotPhase1BlockTimestamp},
-		{name: "apricotPhase2BlockTimestamp", timestamp: c.ApricotPhase2BlockTimestamp},
-		{name: "apricotPhase3BlockTimestamp", timestamp: c.ApricotPhase3BlockTimestamp},
-		{name: "apricotPhase4BlockTimestamp", timestamp: c.ApricotPhase4BlockTimestamp},
-		{name: "apricotPhase5BlockTimestamp", timestamp: c.ApricotPhase5BlockTimestamp},
-		{name: "apricotPhasePre6BlockTimestamp", timestamp: c.ApricotPhasePre6BlockTimestamp},
-		{name: "apricotPhase6BlockTimestamp", timestamp: c.ApricotPhase6BlockTimestamp},
-		{name: "apricotPhasePost6BlockTimestamp", timestamp: c.ApricotPhasePost6BlockTimestamp},
-		{name: "banffBlockTimestamp", timestamp: c.BanffBlockTimestamp},
-		{name: "cortinaBlockTimestamp", timestamp: c.CortinaBlockTimestamp},
-		{name: "dUpgradeBlockTimestamp", timestamp: c.DUpgradeBlockTimestamp},
-		{name: "cancunTime", timestamp: c.CancunTime},
-	} {
-		if lastFork.name != "" {
-			// Next one must be higher number
-			if lastFork.timestamp == nil && cur.timestamp != nil {
-				return fmt.Errorf("unsupported fork ordering: %v not enabled, but %v enabled at %v",
-					lastFork.name, cur.name, cur.timestamp)
-			}
-			if lastFork.timestamp != nil && cur.timestamp != nil {
-				if *lastFork.timestamp > *cur.timestamp {
-					return fmt.Errorf("unsupported fork ordering: %v enabled at %v, but %v enabled at %v",
-						lastFork.name, lastFork.timestamp, cur.name, cur.timestamp)
-				}
-			}
-		}
-		// If it was optional and not set, then ignore it
-		if !cur.optional || cur.timestamp != nil {
-			lastFork = cur
-		}
-	}
 	// TODO(aaronbuchwald) check that lux block timestamps are at least possible with the other rule set changes
 	// additional change: require that block number hard forks are either 0 or nil since they should not
 	// be enabled at a specific block number.
@@ -934,8 +904,8 @@ func (c *ChainConfig) checkCompatible(newcfg *ChainConfig, height *big.Int, time
 	if isForkTimestampIncompatible(c.CortinaBlockTimestamp, newcfg.CortinaBlockTimestamp, time) {
 		return newTimestampCompatError("Cortina fork block timestamp", c.CortinaBlockTimestamp, newcfg.CortinaBlockTimestamp)
 	}
-	if isForkTimestampIncompatible(c.DUpgradeBlockTimestamp, newcfg.DUpgradeBlockTimestamp, time) {
-		return newTimestampCompatError("DUpgrade fork block timestamp", c.DUpgradeBlockTimestamp, newcfg.DUpgradeBlockTimestamp)
+	if isForkTimestampIncompatible(c.DurangoBlockTimestamp, newcfg.DurangoBlockTimestamp, time) {
+		return newTimestampCompatError("Durango fork block timestamp", c.DurangoBlockTimestamp, newcfg.DurangoBlockTimestamp)
 	}
 	if isForkTimestampIncompatible(c.CancunTime, newcfg.CancunTime, time) {
 		return newTimestampCompatError("Cancun fork block timestamp", c.CancunTime, newcfg.CancunTime)
@@ -1064,11 +1034,7 @@ type Rules struct {
 	IsCancun                                                bool
 
 	// Rules for Lux releases
-	IsApricotPhase1, IsApricotPhase2, IsApricotPhase3, IsApricotPhase4, IsApricotPhase5 bool
-	IsApricotPhasePre6, IsApricotPhase6, IsApricotPhasePost6                            bool
-	IsBanff                                                                             bool
-	IsCortina                                                                           bool
-	IsDUpgrade                                                                          bool
+	LuxRules
 
 	// ActivePrecompiles maps addresses to stateful precompiled contracts that are enabled
 	// for this rule set.
@@ -1081,6 +1047,12 @@ type Rules struct {
 	// AccepterPrecompiles map addresses to stateful precompile accepter functions
 	// that are enabled for this rule set.
 	AccepterPrecompiles map[common.Address]precompileconfig.Accepter
+}
+
+// IsPrecompileEnabled returns true if the precompile at [addr] is enabled for this rule set.
+func (r *Rules) IsPrecompileEnabled(addr common.Address) bool {
+	_, ok := r.ActivePrecompiles[addr]
+	return ok
 }
 
 // Rules ensures c's ChainID is not nil.
@@ -1099,26 +1071,16 @@ func (c *ChainConfig) rules(num *big.Int, timestamp uint64) Rules {
 		IsConstantinople: c.IsConstantinople(num),
 		IsPetersburg:     c.IsPetersburg(num),
 		IsIstanbul:       c.IsIstanbul(num),
-		IsCancun:         c.IsCancun(timestamp),
+		IsCancun:         c.IsCancun(num, timestamp),
 	}
 }
 
-// LuxRules returns the Lux modified rules to support Lux
+// Rules returns the Lux modified rules to support Lux
 // network upgrades
-func (c *ChainConfig) LuxRules(blockNum *big.Int, timestamp uint64) Rules {
+func (c *ChainConfig) Rules(blockNum *big.Int, timestamp uint64) Rules {
 	rules := c.rules(blockNum, timestamp)
 
-	rules.IsApricotPhase1 = c.IsApricotPhase1(timestamp)
-	rules.IsApricotPhase2 = c.IsApricotPhase2(timestamp)
-	rules.IsApricotPhase3 = c.IsApricotPhase3(timestamp)
-	rules.IsApricotPhase4 = c.IsApricotPhase4(timestamp)
-	rules.IsApricotPhase5 = c.IsApricotPhase5(timestamp)
-	rules.IsApricotPhasePre6 = c.IsApricotPhasePre6(timestamp)
-	rules.IsApricotPhase6 = c.IsApricotPhase6(timestamp)
-	rules.IsApricotPhasePost6 = c.IsApricotPhasePost6(timestamp)
-	rules.IsBanff = c.IsBanff(timestamp)
-	rules.IsCortina = c.IsCortina(timestamp)
-	rules.IsDUpgrade = c.IsDUpgrade(timestamp)
+	rules.LuxRules = c.GetLuxRules(timestamp)
 
 	// Initialize the stateful precompiles that should be enabled at [blockTimestamp].
 	rules.ActivePrecompiles = make(map[common.Address]precompileconfig.Config)
@@ -1137,10 +1099,4 @@ func (c *ChainConfig) LuxRules(blockNum *big.Int, timestamp uint64) Rules {
 	}
 
 	return rules
-}
-
-// IsPrecompileEnabled returns true if the precompile at [addr] is enabled for this rule set.
-func (r *Rules) IsPrecompileEnabled(addr common.Address) bool {
-	_, ok := r.ActivePrecompiles[addr]
-	return ok
 }

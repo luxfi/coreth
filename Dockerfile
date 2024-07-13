@@ -1,5 +1,5 @@
 # ============= Compilation Stage ================
-FROM golang:1.20.10-bullseye AS builder
+FROM golang:1.21.11-bullseye AS builder
 
 ARG LUX_VERSION
 
@@ -17,11 +17,10 @@ WORKDIR $GOPATH/src/github.com/luxfi/node
 RUN go mod download
 # Replace the coreth dependency
 RUN go mod edit -replace github.com/luxfi/coreth=../coreth
-RUN go mod download && go mod tidy -compat=1.20
+RUN go mod download && go mod tidy -compat=1.21
 
 # Build the Lux Node binary with local version of coreth.
-RUN ./scripts/build_node.sh
-
+RUN ./scripts/build_lux.sh
 # Create the plugins directory in the standard location so the build directory will be recognized
 # as valid.
 RUN mkdir build/plugins
@@ -36,4 +35,4 @@ WORKDIR /node/build
 # Copy the executables into the container
 COPY --from=builder /go/src/github.com/luxfi/node/build .
 
-CMD [ "./luxd" ]
+CMD [ "./node" ]

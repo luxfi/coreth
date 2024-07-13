@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package handlers
@@ -8,18 +8,19 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/coreth/utils"
-	"github.com/luxfi/coreth/warp"
 	"github.com/luxfi/node/database/memdb"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/snow/choices"
 	"github.com/luxfi/node/snow/consensus/snowman"
+	"github.com/luxfi/node/snow/consensus/snowman/snowmantest"
 	"github.com/luxfi/node/snow/engine/common"
 	"github.com/luxfi/node/snow/engine/snowman/block"
 	"github.com/luxfi/node/utils/crypto/bls"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/coreth/warp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -62,12 +63,12 @@ func TestMessageSignatureHandler(t *testing.T) {
 				}, signature[:]
 			},
 			verifyStats: func(t *testing.T, stats *handlerStats) {
-				require.EqualValues(t, 1, stats.messageSignatureRequest.Count())
-				require.EqualValues(t, 1, stats.messageSignatureHit.Count())
-				require.EqualValues(t, 0, stats.messageSignatureMiss.Count())
-				require.EqualValues(t, 0, stats.blockSignatureRequest.Count())
-				require.EqualValues(t, 0, stats.blockSignatureHit.Count())
-				require.EqualValues(t, 0, stats.blockSignatureMiss.Count())
+				require.EqualValues(t, 1, stats.messageSignatureRequest.Snapshot().Count())
+				require.EqualValues(t, 1, stats.messageSignatureHit.Snapshot().Count())
+				require.EqualValues(t, 0, stats.messageSignatureMiss.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureRequest.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureHit.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureMiss.Snapshot().Count())
 			},
 		},
 		"offchain message": {
@@ -77,12 +78,12 @@ func TestMessageSignatureHandler(t *testing.T) {
 				}, offchainSignature[:]
 			},
 			verifyStats: func(t *testing.T, stats *handlerStats) {
-				require.EqualValues(t, 1, stats.messageSignatureRequest.Count())
-				require.EqualValues(t, 1, stats.messageSignatureHit.Count())
-				require.EqualValues(t, 0, stats.messageSignatureMiss.Count())
-				require.EqualValues(t, 0, stats.blockSignatureRequest.Count())
-				require.EqualValues(t, 0, stats.blockSignatureHit.Count())
-				require.EqualValues(t, 0, stats.blockSignatureMiss.Count())
+				require.EqualValues(t, 1, stats.messageSignatureRequest.Snapshot().Count())
+				require.EqualValues(t, 1, stats.messageSignatureHit.Snapshot().Count())
+				require.EqualValues(t, 0, stats.messageSignatureMiss.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureRequest.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureHit.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureMiss.Snapshot().Count())
 			},
 		},
 		"unknown message": {
@@ -92,12 +93,12 @@ func TestMessageSignatureHandler(t *testing.T) {
 				}, emptySignature[:]
 			},
 			verifyStats: func(t *testing.T, stats *handlerStats) {
-				require.EqualValues(t, 1, stats.messageSignatureRequest.Count())
-				require.EqualValues(t, 0, stats.messageSignatureHit.Count())
-				require.EqualValues(t, 1, stats.messageSignatureMiss.Count())
-				require.EqualValues(t, 0, stats.blockSignatureRequest.Count())
-				require.EqualValues(t, 0, stats.blockSignatureHit.Count())
-				require.EqualValues(t, 0, stats.blockSignatureMiss.Count())
+				require.EqualValues(t, 1, stats.messageSignatureRequest.Snapshot().Count())
+				require.EqualValues(t, 0, stats.messageSignatureHit.Snapshot().Count())
+				require.EqualValues(t, 1, stats.messageSignatureMiss.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureRequest.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureHit.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureMiss.Snapshot().Count())
 			},
 		},
 	}
@@ -139,7 +140,7 @@ func TestBlockSignatureHandler(t *testing.T) {
 		TestVM: common.TestVM{T: t},
 		GetBlockF: func(ctx context.Context, i ids.ID) (snowman.Block, error) {
 			if i == blkID {
-				return &snowman.TestBlock{
+				return &snowmantest.Block{
 					TestDecidable: choices.TestDecidable{
 						IDV:     blkID,
 						StatusV: choices.Accepted,
@@ -177,12 +178,12 @@ func TestBlockSignatureHandler(t *testing.T) {
 				}, signature[:]
 			},
 			verifyStats: func(t *testing.T, stats *handlerStats) {
-				require.EqualValues(t, 0, stats.messageSignatureRequest.Count())
-				require.EqualValues(t, 0, stats.messageSignatureHit.Count())
-				require.EqualValues(t, 0, stats.messageSignatureMiss.Count())
-				require.EqualValues(t, 1, stats.blockSignatureRequest.Count())
-				require.EqualValues(t, 1, stats.blockSignatureHit.Count())
-				require.EqualValues(t, 0, stats.blockSignatureMiss.Count())
+				require.EqualValues(t, 0, stats.messageSignatureRequest.Snapshot().Count())
+				require.EqualValues(t, 0, stats.messageSignatureHit.Snapshot().Count())
+				require.EqualValues(t, 0, stats.messageSignatureMiss.Snapshot().Count())
+				require.EqualValues(t, 1, stats.blockSignatureRequest.Snapshot().Count())
+				require.EqualValues(t, 1, stats.blockSignatureHit.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureMiss.Snapshot().Count())
 			},
 		},
 		"unknown block": {
@@ -192,12 +193,12 @@ func TestBlockSignatureHandler(t *testing.T) {
 				}, emptySignature[:]
 			},
 			verifyStats: func(t *testing.T, stats *handlerStats) {
-				require.EqualValues(t, 0, stats.messageSignatureRequest.Count())
-				require.EqualValues(t, 0, stats.messageSignatureHit.Count())
-				require.EqualValues(t, 0, stats.messageSignatureMiss.Count())
-				require.EqualValues(t, 1, stats.blockSignatureRequest.Count())
-				require.EqualValues(t, 0, stats.blockSignatureHit.Count())
-				require.EqualValues(t, 1, stats.blockSignatureMiss.Count())
+				require.EqualValues(t, 0, stats.messageSignatureRequest.Snapshot().Count())
+				require.EqualValues(t, 0, stats.messageSignatureHit.Snapshot().Count())
+				require.EqualValues(t, 0, stats.messageSignatureMiss.Snapshot().Count())
+				require.EqualValues(t, 1, stats.blockSignatureRequest.Snapshot().Count())
+				require.EqualValues(t, 0, stats.blockSignatureHit.Snapshot().Count())
+				require.EqualValues(t, 1, stats.blockSignatureMiss.Snapshot().Count())
 			},
 		},
 	}

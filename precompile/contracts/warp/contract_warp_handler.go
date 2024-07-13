@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -6,14 +6,14 @@ package warp
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/luxfi/coreth/precompile/contract"
-	"github.com/luxfi/coreth/predicate"
-	"github.com/luxfi/coreth/vmerrs"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/coreth/precompile/contract"
+	"github.com/luxfi/coreth/predicate"
+	"github.com/luxfi/coreth/vmerrs"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 var (

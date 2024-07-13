@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package modules
@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/coreth/constants"
 	"github.com/luxfi/coreth/utils"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 var (

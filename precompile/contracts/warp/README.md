@@ -1,18 +1,16 @@
-# Lux Warp Messaging
+# Integrating Lux Warp Messaging into the EVM
 
 Lux Warp Messaging offers a basic primitive to enable Cross-Subnet communication on the Lux Network.
 
 It is intended to allow communication between arbitrary Custom Virtual Machines (including, but not limited to Subnet-EVM and Coreth).
 
-## How does Lux Warp Messaging Work
+## How does Lux Warp Messaging Work?
 
 Lux Warp Messaging uses BLS Multi-Signatures with Public-Key Aggregation where every Lux validator registers a public key alongside its NodeID on the Lux P-Chain.
 
 Every node tracking a Subnet has read access to the Lux P-Chain. This provides weighted sets of BLS Public Keys that correspond to the validator sets of each Subnet on the Lux Network. Lux Warp Messaging provides a basic primitive for signing and verifying messages between Subnets: the receiving network can verify whether an aggregation of signatures from a set of source Subnet validators represents a threshold of stake large enough for the receiving network to process the message.
 
-For more details on Lux Warp Messaging, see the Lux Node [Warp README](https://github.com/luxfi/node/blob/warp-readme/vms/platformvm/warp/README.md).
-
-## Integrating Lux Warp Messaging into the EVM
+For more details on Lux Warp Messaging, see the Lux Node [Warp README](https://docs.lux.network/build/cross-chain/awm/deep-dive).
 
 ### Flow of Sending / Receiving a Warp Message within the EVM
 
@@ -21,7 +19,7 @@ The Lux Warp Precompile enables this flow to send a message from blockchain A to
 1. Call the Warp Precompile `sendWarpMessage` function with the arguments for the `UnsignedMessage`
 2. Warp Precompile emits an event / log containing the `UnsignedMessage` specified by the caller of `sendWarpMessage`
 3. Network accepts the block containing the `UnsignedMessage` in the log, so that validators are willing to sign the message
-4. An off-chain relayer queries the validators for their signatures of the message and aggregate the signatures to create a `SignedMessage`
+4. An off-chain relayer queries the validators for their signatures of the message and aggregates the signatures to create a `SignedMessage`
 5. The off-chain relayer encodes the `SignedMessage` as the [predicate](#predicate-encoding) in the AccessList of a transaction to deliver on blockchain B
 6. The transaction is delivered on blockchain B, the signature is verified prior to executing the block, and the message is accessible via the Warp Precompile's `getVerifiedWarpMessage` during the execution of that transaction
 
@@ -46,7 +44,7 @@ Additionally, the `SourceChainID` is excluded because anyone parsing the chain c
 - `sender`
 - The `messageID` of the unsigned message (sha256 of the unsigned message)
 
-The actual `message` is the entire [Lux Warp Unsigned Message](https://github.com/luxfi/node/blob/master/vms/platformvm/warp/unsigned_message.go#L14) including an [AddressedCall](https://github.com/luxfi/node/tree/v1.10.15/vms/platformvm/warp/payload). The unsigned message is emitted as the unindexed data in the log.
+The actual `message` is the entire [Lux Warp Unsigned Message](https://github.com/luxfi/node/blob/master/vms/platformvm/warp/unsigned_message.go#L14) including an [AddressedCall](https://github.com/luxfi/node/tree/master/vms/platformvm/warp/payload#readme). The unsigned message is emitted as the unindexed data in the log.
 
 #### getVerifiedMessage
 
@@ -73,11 +71,11 @@ The `blockchainID` in Lux refers to the txID that created the blockchain on the 
 
 ### Predicate Encoding
 
-Lux Warp Messages are encoded as a signed Lux [Warp Message](https://github.com/luxfi/node/blob/v1.10.4/vms/platformvm/warp/message.go#L7) where the [UnsignedMessage](https://github.com/luxfi/node/blob/v1.10.4/vms/platformvm/warp/unsigned_message.go#L14)'s payload includes an [AddressedPayload](../../../warp/payload/payload.go).
+Lux Warp Messages are encoded as a signed Lux [Warp Message](https://github.com/luxfi/node/blob/master/vms/platformvm/warp/message.go) where the [UnsignedMessage](https://github.com/luxfi/node/blob/master/vms/platformvm/warp/unsigned_message.go)'s payload includes an [AddressedPayload](https://github.com/luxfi/node/blob/master/vms/platformvm/warp/payload/payload.go).
 
 Since the predicate is encoded into the [Transaction Access List](https://eips.ethereum.org/EIPS/eip-2930), it is packed into 32 byte hashes intended to declare storage slots that should be pre-warmed into the cache prior to transaction execution.
 
-Therefore, we use the [Predicate Utils](../../../utils/predicate/README.md) package to encode the actual byte slice of size N into the access list.
+Therefore, we use the [Predicate Utils](https://github.com/luxfi/coreth/blob/master/predicate/Predicate.md) package to encode the actual byte slice of size N into the access list.
 
 ### Performance Optimization: C-Chain to Subnet
 

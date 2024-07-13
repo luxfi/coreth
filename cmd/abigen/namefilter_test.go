@@ -1,7 +1,7 @@
-// (c) 2023-2024, Lux Partners Limited.
+// (c) 2023, Lux Partners Limited.
 //
-// This file is a derived work, based on coreth and the go-ethereum library
-// whose original notices appear below.
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
 //
 // It is distributed under a license compatible with the licensing terms of the
 // original code from which it is derived.
@@ -17,6 +17,7 @@ import (
 )
 
 func TestNameFilter(t *testing.T) {
+	t.Parallel()
 	_, err := newNameFilter("Foo")
 	require.Error(t, err)
 	_, err = newNameFilter("too/many:colons:Foo")

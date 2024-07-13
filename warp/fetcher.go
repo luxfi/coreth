@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxfi/coreth/warp/aggregator"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/utils/crypto/bls"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/coreth/warp/aggregator"
 )
 
 var _ aggregator.SignatureGetter = (*apiFetcher)(nil)

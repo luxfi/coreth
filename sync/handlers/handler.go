@@ -1,12 +1,12 @@
-// (c) 2021-2024, Lux Partners Limited. All rights reserved.
+// (c) 2021-2022, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package handlers
 
 import (
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/coreth/core/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type BlockProvider interface {

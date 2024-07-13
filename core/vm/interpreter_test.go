@@ -31,12 +31,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/state"
 	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/coreth/params"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 var loopInterruptTests = []string{

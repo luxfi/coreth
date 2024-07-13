@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	//go:embed testnet_ext_data_hashes.json
-	rawTestnetExtDataHashes []byte
-	testnetExtDataHashes    map[common.Hash]common.Hash
+	//go:embed fuji_ext_data_hashes.json
+	rawFujiExtDataHashes []byte
+	fujiExtDataHashes    map[common.Hash]common.Hash
 
 	//go:embed mainnet_ext_data_hashes.json
 	rawMainnetExtDataHashes []byte
@@ -18,10 +18,10 @@ var (
 )
 
 func init() {
-	if err := json.Unmarshal(rawTestnetExtDataHashes, &testnetExtDataHashes); err != nil {
+	if err := json.Unmarshal(rawFujiExtDataHashes, &fujiExtDataHashes); err != nil {
 		panic(err)
 	}
-	rawTestnetExtDataHashes = nil
+	rawFujiExtDataHashes = nil
 	if err := json.Unmarshal(rawMainnetExtDataHashes, &mainnetExtDataHashes); err != nil {
 		panic(err)
 	}

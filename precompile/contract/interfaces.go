@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 // Defines the interface for the configuration and execution of a precompile contract
@@ -7,9 +7,9 @@ package contract
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/node/snow"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // StatefulPrecompiledContract is the interface for executing a precompiled contract
@@ -34,14 +34,11 @@ type StateDB interface {
 	Exist(common.Address) bool
 
 	AddLog(addr common.Address, topics []common.Hash, data []byte, blockNumber uint64)
-	GetLogData() [][]byte
+	GetLogData() (topics [][]common.Hash, data [][]byte)
 	GetPredicateStorageSlots(address common.Address, index int) ([]byte, bool)
 	SetPredicateStorageSlots(address common.Address, predicates [][]byte)
 
 	GetTxHash() common.Hash
-
-	Suicide(common.Address) bool
-	Finalise(deleteEmptyObjects bool)
 
 	Snapshot() int
 	RevertToSnapshot(int)

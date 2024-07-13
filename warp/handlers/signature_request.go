@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package handlers
@@ -7,12 +7,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/coreth/warp"
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/utils/crypto/bls"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/warp"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // SignatureRequestHandler serves warp signature requests. It is a peer.RequestHandler for message.MessageSignatureRequest.

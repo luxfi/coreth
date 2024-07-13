@@ -32,10 +32,10 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/luxfi/coreth/ethdb/memorydb"
 	"github.com/luxfi/coreth/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethdb/memorydb"
 )
 
 func copyDestructs(destructs map[common.Hash]struct{}) map[common.Hash]struct{} {
@@ -246,7 +246,7 @@ func TestInsertAndMerge(t *testing.T) {
 func emptyLayer() *diskLayer {
 	return &diskLayer{
 		diskdb: memorydb.New(),
-		cache:  utils.NewMeteredCache(500*1024, "", "", 0),
+		cache:  utils.NewMeteredCache(500*1024, "", 0),
 	}
 }
 

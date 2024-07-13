@@ -36,10 +36,10 @@ import (
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/ethdb"
 	"github.com/luxfi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/lru"
+	"github.com/ethereum/go-ethereum/ethdb"
 )
 
 const (

@@ -30,22 +30,20 @@ package filters
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/bloombits"
 	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/core/vm"
-	"github.com/luxfi/coreth/ethdb"
 	"github.com/luxfi/coreth/interfaces"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/rpc"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // Config represents the configuration of the filter system.
@@ -85,7 +83,7 @@ type Backend interface {
 	ServiceFilter(ctx context.Context, session *bloombits.MatcherSession)
 
 	// Added to the backend interface to support limiting of logs requests
-	GetVMConfig() *vm.Config
+	IsAllowUnfinalizedQueries() bool
 	LastAcceptedBlock() *types.Block
 	GetMaxBlocksPerRequest() int64
 }
@@ -291,6 +289,9 @@ func (es *EventSystem) subscribe(sub *subscription) *Subscription {
 // given criteria to the given logs channel. Default value for the from and to
 // block is "latest". If the fromBlock > toBlock an error is returned.
 func (es *EventSystem) SubscribeLogs(crit interfaces.FilterQuery, logs chan []*types.Log) (*Subscription, error) {
+	if len(crit.Topics) > maxTopics {
+		return nil, errExceedMaxTopics
+	}
 	var from, to rpc.BlockNumber
 	if crit.FromBlock == nil {
 		from = rpc.LatestBlockNumber
@@ -323,7 +324,7 @@ func (es *EventSystem) SubscribeLogs(crit interfaces.FilterQuery, logs chan []*t
 	if from >= 0 && to == rpc.LatestBlockNumber {
 		return es.subscribeLogs(crit, logs), nil
 	}
-	return nil, errors.New("invalid from and to block combination: from > to")
+	return nil, errInvalidBlockRange
 }
 
 func (es *EventSystem) SubscribeAcceptedLogs(crit interfaces.FilterQuery, logs chan []*types.Log) (*Subscription, error) {
@@ -519,15 +520,6 @@ func (es *EventSystem) handlePendingLogs(filters filterIndex, ev []*types.Log) {
 	}
 }
 
-func (es *EventSystem) handleRemovedLogs(filters filterIndex, ev core.RemovedLogsEvent) {
-	for _, f := range filters[LogsSubscription] {
-		matchedLogs := filterLogs(ev.Logs, f.logsCrit.FromBlock, f.logsCrit.ToBlock, f.logsCrit.Addresses, f.logsCrit.Topics)
-		if len(matchedLogs) > 0 {
-			f.logs <- matchedLogs
-		}
-	}
-}
-
 func (es *EventSystem) handleTxsEvent(filters filterIndex, ev core.NewTxsEvent, accepted bool) {
 	for _, f := range filters[PendingTransactionsSubscription] {
 		f.txs <- ev.Txs
@@ -579,7 +571,7 @@ func (es *EventSystem) eventLoop() {
 		case ev := <-es.logsAcceptedCh:
 			es.handleAcceptedLogs(index, ev)
 		case ev := <-es.rmLogsCh:
-			es.handleRemovedLogs(index, ev)
+			es.handleLogs(index, ev.Logs)
 		case ev := <-es.pendingLogsCh:
 			es.handlePendingLogs(index, ev)
 		case ev := <-es.chainCh:

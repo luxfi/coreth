@@ -1,14 +1,13 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2019-2020, Lux Partners Limited.
 //
-// This file is a derived work, based on coreth and the go-ethereum library
-// whose original notices appear below.
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
 //
 // It is distributed under a license compatible with the licensing terms of the
 // original code from which it is derived.
 //
 // Much love to the original authors for their work.
 // **********
-// Copyright 2019-2020, Ava Labs, Inc.
 // Copyright 2017 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -32,10 +31,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/event"
 	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/coreth/interfaces"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/event"
 	"golang.org/x/crypto/sha3"
 )
 

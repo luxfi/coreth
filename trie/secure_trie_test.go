@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2020-2021, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -33,22 +33,22 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/coreth/trie/trienode"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func newEmptySecure() *StateTrie {
-	trie, _ := NewStateTrie(TrieID(types.EmptyRootHash), NewDatabase(rawdb.NewMemoryDatabase()))
+	trie, _ := NewStateTrie(TrieID(types.EmptyRootHash), NewDatabase(rawdb.NewMemoryDatabase(), nil))
 	return trie
 }
 
 // makeTestStateTrie creates a large enough secure trie for testing.
 func makeTestStateTrie() (*Database, *StateTrie, map[string][]byte) {
 	// Create an empty trie
-	triedb := NewDatabase(rawdb.NewMemoryDatabase())
+	triedb := NewDatabase(rawdb.NewMemoryDatabase(), nil)
 	trie, _ := NewStateTrie(TrieID(types.EmptyRootHash), triedb)
 
 	// Fill it with some arbitrary data
@@ -70,8 +70,8 @@ func makeTestStateTrie() (*Database, *StateTrie, map[string][]byte) {
 			trie.MustUpdate(key, val)
 		}
 	}
-	root, nodes := trie.Commit(false)
-	if err := triedb.Update(root, types.EmptyRootHash, trienode.NewWithNodeSet(nodes)); err != nil {
+	root, nodes, _ := trie.Commit(false)
+	if err := triedb.Update(root, types.EmptyRootHash, 0, trienode.NewWithNodeSet(nodes), nil); err != nil {
 		panic(fmt.Errorf("failed to commit db %v", err))
 	}
 	// Re-create the trie based on the new state

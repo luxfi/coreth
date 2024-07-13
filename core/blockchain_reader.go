@@ -1,7 +1,7 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2019-2021, Lux Partners Limited.
 //
-// This file is a derived work, based on the coreth and go-ethereum library
-// whose original notices appear below.
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
 //
 // It is distributed under a license compatible with the licensing terms of the
 // original code from which it is derived.
@@ -27,8 +27,6 @@
 package core
 
 import (
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/event"
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/state"
@@ -37,6 +35,8 @@ import (
 	"github.com/luxfi/coreth/core/vm"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/trie"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // CurrentHeader retrieves the current head header of the canonical chain. The
@@ -228,12 +228,6 @@ func (bc *BlockChain) HasBlockAndState(hash common.Hash, number uint64) bool {
 		return false
 	}
 	return bc.HasState(block.Root())
-}
-
-// TrieNode retrieves a blob of data associated with a trie node
-// either from ephemeral in-memory cache, or from persistent storage.
-func (bc *BlockChain) TrieNode(hash common.Hash) ([]byte, error) {
-	return bc.stateCache.TrieDB().Node(hash)
 }
 
 // State returns a new mutable state based on the current HEAD block.

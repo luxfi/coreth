@@ -33,8 +33,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/asm"
 	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/core"
@@ -45,6 +43,8 @@ import (
 	"github.com/luxfi/coreth/eth/tracers"
 	"github.com/luxfi/coreth/eth/tracers/logger"
 	"github.com/luxfi/coreth/params"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/asm"
 
 	// force-load js tracers to trigger registration
 	_ "github.com/luxfi/coreth/eth/tracers/js"
@@ -681,7 +681,7 @@ func TestColdAccountAccessCost(t *testing.T) {
 			for ii, op := range tracer.StructLogs() {
 				t.Logf("%d: %v %d", ii, op.OpName(), op.GasCost)
 			}
-			t.Fatalf("tescase %d, gas report wrong, step %d, have %d want %d", i, tc.step, have, want)
+			t.Fatalf("testcase %d, gas report wrong, step %d, have %d want %d", i, tc.step, have, want)
 		}
 	}
 }

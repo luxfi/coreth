@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -63,12 +63,6 @@ func (o EVMOutput) Compare(other EVMOutput) int {
 	return bytes.Compare(o.AssetID[:], other.AssetID[:])
 }
 
-// Less returns an integer comparing two EVMOutput values.
-// The result will be 0 if o==other, -1 if o < other, and +1 if o > other.
-func (o EVMOutput) Less(other EVMOutput) bool {
-	return o.Compare(other) < 0
-}
-
 // EVMInput defines an input created from the EVM state to fund export transactions
 type EVMInput struct {
 	Address common.Address `serialize:"true" json:"address"`
@@ -83,12 +77,6 @@ func (i EVMInput) Compare(other EVMInput) int {
 		return addrComp
 	}
 	return bytes.Compare(i.AssetID[:], other.AssetID[:])
-}
-
-// Less returns an integer comparing two EVMInput values.
-// The result will be 0 if i==other, -1 if i < other, and +1 if i > other.
-func (i EVMInput) Less(other EVMInput) bool {
-	return i.Compare(other) < 0
 }
 
 // Verify ...
@@ -165,10 +153,6 @@ func (tx *Tx) Compare(other *Tx) int {
 	default:
 		return 0
 	}
-}
-
-func (tx *Tx) Less(other *Tx) bool {
-	return tx.ID().Hex() < other.ID().Hex()
 }
 
 // Sign this transaction with the provided signers
@@ -303,15 +287,4 @@ func mergeAtomicOps(txs []*Tx) (map[ids.ID]*atomic.Requests, error) {
 		mergeAtomicOpsToMap(output, chainID, txRequests)
 	}
 	return output, nil
-}
-
-// mergeAtomicOps merges atomic ops for [chainID] represented by [requests]
-// to the [output] map provided.
-func mergeAtomicOpsToMap(output map[ids.ID]*atomic.Requests, chainID ids.ID, requests *atomic.Requests) {
-	if request, exists := output[chainID]; exists {
-		request.PutRequests = append(request.PutRequests, requests.PutRequests...)
-		request.RemoveRequests = append(request.RemoveRequests, requests.RemoveRequests...)
-	} else {
-		output[chainID] = requests
-	}
 }

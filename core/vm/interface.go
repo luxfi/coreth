@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2019-2020, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -27,10 +27,11 @@
 package vm
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	"math/big"
+
 	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/coreth/params"
-	"math/big"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // StateDB is an EVM database for full state querying.
@@ -65,12 +66,13 @@ type StateDB interface {
 	GetTransientState(addr common.Address, key common.Hash) common.Hash
 	SetTransientState(addr common.Address, key, value common.Hash)
 
-	Suicide(common.Address) bool
-	HasSuicided(common.Address) bool
-	Finalise(deleteEmptyObjects bool)
+	SelfDestruct(common.Address)
+	HasSelfDestructed(common.Address) bool
+
+	Selfdestruct6780(common.Address)
 
 	// Exist reports whether the given account exists in state.
-	// Notably this should also return true for suicided accounts.
+	// Notably this should also return true for self-destructed accounts.
 	Exist(common.Address) bool
 	// Empty returns whether the given account is empty. Empty
 	// is defined according to EIP161 (balance = nonce = code = 0).
@@ -90,7 +92,7 @@ type StateDB interface {
 	Snapshot() int
 
 	AddLog(addr common.Address, topics []common.Hash, data []byte, blockNumber uint64)
-	GetLogData() [][]byte
+	GetLogData() (topics [][]common.Hash, data [][]byte)
 	GetPredicateStorageSlots(address common.Address, index int) ([]byte, bool)
 	SetPredicateStorageSlots(address common.Address, predicates [][]byte)
 

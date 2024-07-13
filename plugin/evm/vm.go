@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited. All rights reserved.
+// (c) 2019-2020, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -17,12 +17,13 @@ import (
 	"sync"
 	"time"
 
-	nodeMetrics "github.com/luxfi/node/api/metrics"
 	"github.com/luxfi/node/network/p2p"
 	"github.com/luxfi/node/network/p2p/gossip"
+	nodeConstants "github.com/luxfi/node/utils/constants"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/luxfi/coreth/consensus/dummy"
-	corethConstants "github.com/luxfi/coreth/constants"
+	"github.com/luxfi/coreth/constants"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/coreth/core/state"
@@ -30,18 +31,16 @@ import (
 	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/coreth/eth"
 	"github.com/luxfi/coreth/eth/ethconfig"
-	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/metrics"
 	corethPrometheus "github.com/luxfi/coreth/metrics/prometheus"
 	"github.com/luxfi/coreth/miner"
 	"github.com/luxfi/coreth/node"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/peer"
 	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/trie/triedb/hashdb"
 
-	// Force-load precompiles to trigger registration
 	warpPrecompile "github.com/luxfi/coreth/precompile/contracts/warp"
-	"github.com/luxfi/coreth/precompile/precompileconfig"
-	_ "github.com/luxfi/coreth/precompile/registry"
 	"github.com/luxfi/coreth/rpc"
 	statesyncclient "github.com/luxfi/coreth/sync/client"
 	"github.com/luxfi/coreth/sync/client/stats"
@@ -50,7 +49,6 @@ import (
 	"github.com/luxfi/coreth/warp"
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 
-	"github.com/prometheus/client_golang/prometheus"
 	// Force-load tracer engine to trigger registration
 	//
 	// We must import this package (not referenced elsewhere) so that the native "callTracer"
@@ -59,11 +57,14 @@ import (
 	_ "github.com/luxfi/coreth/eth/tracers/js"
 	_ "github.com/luxfi/coreth/eth/tracers/native"
 
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	// Force-load precompiles to trigger registration
+	_ "github.com/luxfi/coreth/precompile/registry"
+
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-
-	"github.com/luxfi/coreth/metrics"
 
 	luxRPC "github.com/gorilla/rpc/v2"
 
@@ -78,7 +79,6 @@ import (
 	"github.com/luxfi/node/snow/choices"
 	"github.com/luxfi/node/snow/consensus/snowman"
 	"github.com/luxfi/node/snow/engine/snowman/block"
-	"github.com/luxfi/node/utils/constants"
 	"github.com/luxfi/node/utils/crypto/secp256k1"
 	"github.com/luxfi/node/utils/formatting/address"
 	"github.com/luxfi/node/utils/logging"
@@ -94,16 +94,21 @@ import (
 
 	commonEng "github.com/luxfi/node/snow/engine/common"
 
+	luxUtils "github.com/luxfi/node/utils"
 	luxJSON "github.com/luxfi/node/utils/json"
+)
+
+var (
+	_ block.ChainVM                      = &VM{}
+	_ block.BuildBlockWithContextChainVM = &VM{}
+	_ block.StateSyncableVM              = &VM{}
+	_ statesyncclient.EthBlockParser     = &VM{}
+	_ secp256k1fx.VM                     = &VM{}
 )
 
 const (
 	x2cRateInt64       int64 = 1_000_000_000
 	x2cRateMinus1Int64 int64 = x2cRateInt64 - 1
-
-	// Prefixes for metrics gatherers
-	ethMetricsPrefix        = "eth"
-	chainStateMetricsPrefix = "chain_state"
 )
 
 var (
@@ -113,10 +118,6 @@ var (
 	// places on the X and P chains, but is 18 decimal places within the EVM.
 	x2cRate       = big.NewInt(x2cRateInt64)
 	x2cRateMinus1 = big.NewInt(x2cRateMinus1Int64)
-
-	_ block.ChainVM                  = &VM{}
-	_ block.StateSyncableVM          = &VM{}
-	_ statesyncclient.EthBlockParser = &VM{}
 )
 
 const (
@@ -134,6 +135,11 @@ const (
 	bytesToIDCacheSize     = 5 * units.MiB
 	warpSignatureCacheSize = 500
 
+	// Prefixes for metrics gatherers
+	ethMetricsPrefix        = "eth"
+	sdkMetricsPrefix        = "sdk"
+	chainStateMetricsPrefix = "chain_state"
+
 	targetAtomicTxsSize = 40 * units.KiB
 
 	// p2p app protocols
@@ -141,20 +147,21 @@ const (
 	atomicTxGossipProtocol = 0x1
 
 	// gossip constants
-	txGossipBloomMaxItems          = 8 * 1024
-	txGossipBloomFalsePositiveRate = 0.01
-	txGossipMaxFalsePositiveRate   = 0.05
-	txGossipTargetMessageSize      = 20 * units.KiB
-	maxValidatorSetStaleness       = time.Minute
-	txGossipThrottlingPeriod       = 10 * time.Second
-	txGossipThrottlingLimit        = 2
-	gossipFrequency                = 10 * time.Second
-	txGossipPollSize               = 10
+	pushGossipDiscardedElements          = 16_384
+	txGossipBloomMinTargetElements       = 8 * 1024
+	txGossipBloomTargetFalsePositiveRate = 0.01
+	txGossipBloomResetFalsePositiveRate  = 0.05
+	txGossipBloomChurnMultiplier         = 3
+	txGossipTargetMessageSize            = 20 * units.KiB
+	maxValidatorSetStaleness             = time.Minute
+	txGossipThrottlingPeriod             = 10 * time.Second
+	txGossipThrottlingLimit              = 2
+	txGossipPollSize                     = 1
 )
 
 // Define the API endpoints for the VM
 const (
-	luxEndpoint             = "/lux"
+	luxEndpoint            = "/lux"
 	adminEndpoint           = "/admin"
 	ethRPCEndpoint          = "/rpc"
 	ethWSEndpoint           = "/ws"
@@ -289,8 +296,6 @@ type VM struct {
 
 	builder *blockBuilder
 
-	gossiper Gossiper
-
 	baseCodec codec.Registry
 	codec     codec.Manager
 	clock     mockable.Clock
@@ -312,7 +317,7 @@ type VM struct {
 	validators *p2p.Validators
 
 	// Metrics
-	multiGatherer nodeMetrics.MultiGatherer
+	sdkMetrics *prometheus.Registry
 
 	bootstrapped bool
 	IsPlugin     bool
@@ -321,10 +326,20 @@ type VM struct {
 	// State sync server and client
 	StateSyncServer
 	StateSyncClient
-}
 
-// Codec implements the secp256k1fx interface
-func (vm *VM) Codec() codec.Manager { return vm.codec }
+	// Lux Warp Messaging backend
+	// Used to serve BLS signatures of warp messages over RPC
+	warpBackend warp.Backend
+
+	// Initialize only sets these if nil so they can be overridden in tests
+	p2pSender             commonEng.AppSender
+	ethTxGossipHandler    p2p.Handler
+	ethTxPushGossiper     luxUtils.Atomic[*gossip.PushGossiper[*GossipEthTx]]
+	ethTxPullGossiper     gossip.Gossiper
+	atomicTxGossipHandler p2p.Handler
+	atomicTxPushGossiper  *gossip.PushGossiper[*GossipAtomicTx]
+	atomicTxPullGossiper  gossip.Gossiper
+}
 
 // CodecRegistry implements the secp256k1fx interface
 func (vm *VM) CodecRegistry() codec.Registry { return vm.baseCodec }
@@ -377,6 +392,7 @@ func (vm *VM) Initialize(
 	// Create logger
 	alias, err := vm.ctx.BCLookup.PrimaryAlias(vm.ctx.ChainID)
 	if err != nil {
+		// fallback to ChainID string instead of erroring
 		alias = vm.ctx.ChainID.String()
 	}
 
@@ -408,7 +424,7 @@ func (vm *VM) Initialize(
 	vm.shutdownChan = make(chan struct{}, 1)
 	// Use NewNested rather than New so that the structure of the database
 	// remains the same regardless of the provided baseDB type.
-	vm.chaindb = Database{prefixdb.NewNested(ethDBPrefix, db)}
+	vm.chaindb = rawdb.NewDatabase(Database{prefixdb.NewNested(ethDBPrefix, db)})
 	vm.db = versiondb.New(db)
 	vm.acceptedBlockDB = prefixdb.New(acceptedPrefix, vm.db)
 	vm.metadataDB = prefixdb.New(metadataPrefix, vm.db)
@@ -432,24 +448,24 @@ func (vm *VM) Initialize(
 	}
 
 	var extDataHashes map[common.Hash]common.Hash
-	// Set the chain config for mainnet/testnet chain IDs
+	// Set the chain config for mainnet/fuji chain IDs
 	switch {
 	case g.Config.ChainID.Cmp(params.LuxMainnetChainID) == 0:
 		config := *params.LuxMainnetChainConfig
 		g.Config = &config
 		extDataHashes = mainnetExtDataHashes
-	case g.Config.ChainID.Cmp(params.LuxTestnetChainID) == 0:
-		config := *params.LuxTestnetChainConfig
+	case g.Config.ChainID.Cmp(params.LuxFujiChainID) == 0:
+		config := *params.LuxFujiChainConfig
 		g.Config = &config
-		extDataHashes = testnetExtDataHashes
+		extDataHashes = fujiExtDataHashes
 	case g.Config.ChainID.Cmp(params.LuxLocalChainID) == 0:
 		config := *params.LuxLocalChainConfig
 		g.Config = &config
 	}
-	// If the DUpgrade is activated, activate the Warp Precompile at the same time
-	if g.Config.DUpgradeBlockTimestamp != nil {
+	// If the Durango is activated, activate the Warp Precompile at the same time
+	if g.Config.DurangoBlockTimestamp != nil {
 		g.Config.PrecompileUpgrades = append(g.Config.PrecompileUpgrades, params.PrecompileUpgrade{
-			Config: warpPrecompile.NewDefaultConfig(g.Config.DUpgradeBlockTimestamp),
+			Config: warpPrecompile.NewDefaultConfig(g.Config.DurangoBlockTimestamp),
 		})
 	}
 	// Set the Lux Context on the ChainConfig
@@ -469,8 +485,8 @@ func (vm *VM) Initialize(
 	}
 
 	// Free the memory of the extDataHash map that is not used (i.e. if mainnet
-	// config, free testnet)
-	testnetExtDataHashes = nil
+	// config, free fuji)
+	fujiExtDataHashes = nil
 	mainnetExtDataHashes = nil
 
 	vm.chainID = g.Config.ChainID
@@ -492,27 +508,24 @@ func (vm *VM) Initialize(
 	vm.ethConfig.RPCTxFeeCap = vm.config.RPCTxFeeCap
 
 	vm.ethConfig.TxPool.NoLocals = !vm.config.LocalTxsEnabled
-	vm.ethConfig.TxPool.Journal = vm.config.TxPoolJournal
-	vm.ethConfig.TxPool.Rejournal = vm.config.TxPoolRejournal.Duration
 	vm.ethConfig.TxPool.PriceLimit = vm.config.TxPoolPriceLimit
 	vm.ethConfig.TxPool.PriceBump = vm.config.TxPoolPriceBump
 	vm.ethConfig.TxPool.AccountSlots = vm.config.TxPoolAccountSlots
 	vm.ethConfig.TxPool.GlobalSlots = vm.config.TxPoolGlobalSlots
 	vm.ethConfig.TxPool.AccountQueue = vm.config.TxPoolAccountQueue
 	vm.ethConfig.TxPool.GlobalQueue = vm.config.TxPoolGlobalQueue
+	vm.ethConfig.TxPool.Lifetime = vm.config.TxPoolLifetime.Duration
 
 	vm.ethConfig.AllowUnfinalizedQueries = vm.config.AllowUnfinalizedQueries
 	vm.ethConfig.AllowUnprotectedTxs = vm.config.AllowUnprotectedTxs
 	vm.ethConfig.AllowUnprotectedTxHashes = vm.config.AllowUnprotectedTxHashes
 	vm.ethConfig.Preimages = vm.config.Preimages
+	vm.ethConfig.Pruning = vm.config.Pruning
 	vm.ethConfig.TrieCleanCache = vm.config.TrieCleanCache
-	vm.ethConfig.TrieCleanJournal = vm.config.TrieCleanJournal
-	vm.ethConfig.TrieCleanRejournal = vm.config.TrieCleanRejournal.Duration
 	vm.ethConfig.TrieDirtyCache = vm.config.TrieDirtyCache
 	vm.ethConfig.TrieDirtyCommitTarget = vm.config.TrieDirtyCommitTarget
 	vm.ethConfig.TriePrefetcherParallelism = vm.config.TriePrefetcherParallelism
 	vm.ethConfig.SnapshotCache = vm.config.SnapshotCache
-	vm.ethConfig.Pruning = vm.config.Pruning
 	vm.ethConfig.AcceptorQueueLimit = vm.config.AcceptorQueueLimit
 	vm.ethConfig.PopulateMissingTries = vm.config.PopulateMissingTries
 	vm.ethConfig.PopulateMissingTriesParallelism = vm.config.PopulateMissingTriesParallelism
@@ -551,20 +564,46 @@ func (vm *VM) Initialize(
 
 	vm.codec = Codec
 
-	// TODO: read size from settings
-	vm.mempool, err = NewMempool(chainCtx, defaultMempoolSize, vm.verifyTxAtTip)
-	if err != nil {
-		return fmt.Errorf("failed to initialize mempool: %w", err)
-	}
-
 	if err := vm.initializeMetrics(); err != nil {
 		return err
 	}
 
+	// TODO: read size from settings
+	vm.mempool, err = NewMempool(chainCtx, vm.sdkMetrics, defaultMempoolSize, vm.verifyTxAtTip)
+	if err != nil {
+		return fmt.Errorf("failed to initialize mempool: %w", err)
+	}
+
 	// initialize peer network
+	if vm.p2pSender == nil {
+		vm.p2pSender = appSender
+	}
+
+	p2pNetwork, err := p2p.NewNetwork(vm.ctx.Log, vm.p2pSender, vm.sdkMetrics, "p2p")
+	if err != nil {
+		return fmt.Errorf("failed to initialize p2p network: %w", err)
+	}
+	vm.validators = p2p.NewValidators(p2pNetwork.Peers, vm.ctx.Log, vm.ctx.SubnetID, vm.ctx.ValidatorState, maxValidatorSetStaleness)
 	vm.networkCodec = message.Codec
 	vm.Network = peer.NewNetwork(p2pNetwork, appSender, vm.networkCodec, message.CrossChainCodec, chainCtx.NodeID, vm.config.MaxOutboundActiveRequests, vm.config.MaxOutboundActiveCrossChainRequests)
 	vm.client = peer.NewNetworkClient(vm.Network)
+
+	// Initialize warp backend
+	offchainWarpMessages := make([][]byte, len(vm.config.WarpOffChainMessages))
+	for i, hexMsg := range vm.config.WarpOffChainMessages {
+		offchainWarpMessages[i] = []byte(hexMsg)
+	}
+	vm.warpBackend, err = warp.NewBackend(vm.ctx.NetworkID, vm.ctx.ChainID, vm.ctx.WarpSigner, vm, vm.warpDB, warpSignatureCacheSize, offchainWarpMessages)
+	if err != nil {
+		return err
+	}
+
+	// clear warpdb on initialization if config enabled
+	if vm.config.PruneWarpDB {
+		if err := vm.warpBackend.Clear(); err != nil {
+			return fmt.Errorf("failed to prune warpDB: %w", err)
+		}
+	}
 
 	if err := vm.initializeChain(lastAcceptedHash); err != nil {
 		return err
@@ -572,28 +611,21 @@ func (vm *VM) Initialize(
 	// initialize bonus blocks on mainnet
 	var (
 		bonusBlockHeights map[uint64]ids.ID
-		bonusBlockRepair  map[uint64]*types.Block
 	)
 	if vm.chainID.Cmp(params.LuxMainnetChainID) == 0 {
-		bonusBlockHeights = bonusBlockMainnetHeights
-		bonusBlockRepair = mainnetBonusBlocksParsed
+		bonusBlockHeights, err = readMainnetBonusBlocks()
+		if err != nil {
+			return fmt.Errorf("failed to read mainnet bonus blocks: %w", err)
+		}
 	}
-	defer func() {
-		// Free memory after VM is initialized
-		mainnetBonusBlocksParsed = nil
-		mainnetBonusBlocksJson = nil
-	}()
 
 	// initialize atomic repository
-	vm.atomicTxRepository, err = NewAtomicTxRepository(
-		vm.db, vm.codec, lastAcceptedHeight,
-		vm.getAtomicTxFromPreApricot5BlockByHeight,
-	)
+	vm.atomicTxRepository, err = NewAtomicTxRepository(vm.db, vm.codec, lastAcceptedHeight)
 	if err != nil {
 		return fmt.Errorf("failed to create atomic repository: %w", err)
 	}
-	vm.atomicBackend, _, err = NewAtomicBackendWithBonusBlockRepair(
-		vm.db, vm.ctx.SharedMemory, bonusBlockHeights, bonusBlockRepair,
+	vm.atomicBackend, err = NewAtomicBackend(
+		vm.db, vm.ctx.SharedMemory, bonusBlockHeights,
 		vm.atomicTxRepository, lastAcceptedHeight, lastAcceptedHash,
 		vm.config.CommitInterval,
 	)
@@ -601,14 +633,6 @@ func (vm *VM) Initialize(
 		return fmt.Errorf("failed to create atomic backend: %w", err)
 	}
 	vm.atomicTrie = vm.atomicBackend.AtomicTrie()
-
-	// Run the atomic trie height map repair in the background on mainnet/fuji
-	// TODO: remove after DUpgrade
-	if vm.chainID.Cmp(params.LuxMainnetChainID) == 0 ||
-		vm.chainID.Cmp(params.LuxFujiChainID) == 0 {
-		_, lastCommitted := vm.atomicTrie.LastCommitted()
-		go vm.atomicTrie.RepairHeightMap(lastCommitted)
-	}
 
 	go vm.ctx.Log.RecoverAndPanic(vm.startContinuousProfiler)
 
@@ -628,22 +652,16 @@ func (vm *VM) Initialize(
 
 func (vm *VM) initializeMetrics() error {
 	vm.sdkMetrics = prometheus.NewRegistry()
-	vm.multiGatherer = nodeMetrics.NewMultiGatherer()
-	// If metrics are enabled, register the default metrics regitry
-	if metrics.Enabled {
-		gatherer := corethPrometheus.Gatherer(metrics.DefaultRegistry)
-		if err := vm.multiGatherer.Register(ethMetricsPrefix, gatherer); err != nil {
-			return err
-		}
-		if err := vm.multiGatherer.Register("sdk", vm.sdkMetrics); err != nil {
-			return err
-		}
-		// Register [multiGatherer] after registerers have been registered to it
-		if err := vm.ctx.Metrics.Register(vm.multiGatherer); err != nil {
-			return err
-		}
+	// If metrics are enabled, register the default metrics registry
+	if !metrics.Enabled {
+		return nil
 	}
-	return nil
+
+	gatherer := corethPrometheus.Gatherer(metrics.DefaultRegistry)
+	if err := vm.ctx.Metrics.Register(ethMetricsPrefix, gatherer); err != nil {
+		return err
+	}
+	return vm.ctx.Metrics.Register(sdkMetricsPrefix, vm.sdkMetrics)
 }
 
 func (vm *VM) initializeChain(lastAcceptedHash common.Hash) error {
@@ -661,6 +679,7 @@ func (vm *VM) initializeChain(lastAcceptedHash common.Hash) error {
 		node,
 		&vm.ethConfig,
 		vm.createConsensusCallbacks(),
+		&EthPushGossiper{vm: vm},
 		vm.chaindb,
 		vm.config.EthBackendSettings(),
 		lastAcceptedHash,
@@ -669,13 +688,15 @@ func (vm *VM) initializeChain(lastAcceptedHash common.Hash) error {
 	if err != nil {
 		return err
 	}
-	vm.eth.SetEtherbase(corethConstants.BlackholeAddr)
+	vm.eth.SetEtherbase(constants.BlackholeAddr)
 	vm.txPool = vm.eth.TxPool()
 	vm.blockChain = vm.eth.BlockChain()
 	vm.miner = vm.eth.Miner()
 
-	// start goroutines to update the tx pool gas minimum gas price when upgrades go into effect
-	vm.handleGasPriceUpdates()
+	// Set the gas parameters for the tx pool to the minimum gas price for the
+	// latest upgrade.
+	vm.txPool.SetGasTip(big.NewInt(0))
+	vm.txPool.SetMinFee(big.NewInt(params.ApricotPhase4MinBaseFee))
 
 	vm.eth.Start()
 	return vm.initChainState(vm.blockChain.LastAcceptedBlock())
@@ -728,7 +749,7 @@ func (vm *VM) initializeStateSyncClient(lastAcceptedHeight uint64) error {
 	// If StateSync is disabled, clear any ongoing summary so that we will not attempt to resume
 	// sync using a snapshot that has been modified by the node running normal operations.
 	if !stateSyncEnabled {
-		return vm.StateSyncClient.StateSyncClearOngoingSummary()
+		return vm.StateSyncClient.ClearOngoingSummary()
 	}
 
 	return nil
@@ -774,11 +795,15 @@ func (vm *VM) initChainState(lastAcceptedBlock *types.Block) error {
 	}
 	vm.State = state
 
-	return vm.multiGatherer.Register(chainStateMetricsPrefix, chainStateRegisterer)
+	if !metrics.Enabled {
+		return nil
+	}
+
+	return vm.ctx.Metrics.Register(chainStateMetricsPrefix, chainStateRegisterer)
 }
 
-func (vm *VM) createConsensusCallbacks() *dummy.ConsensusCallbacks {
-	return &dummy.ConsensusCallbacks{
+func (vm *VM) createConsensusCallbacks() dummy.ConsensusCallbacks {
+	return dummy.ConsensusCallbacks{
 		OnFinalizeAndAssemble: vm.onFinalizeAndAssemble,
 		OnExtraStateChange:    vm.onExtraStateChange,
 	}
@@ -795,7 +820,7 @@ func (vm *VM) preBatchOnFinalizeAndAssemble(header *types.Header, state *state.S
 		// Note: snapshot is taken inside the loop because you cannot revert to the same snapshot more than
 		// once.
 		snapshot := state.Snapshot()
-		rules := vm.chainConfig.LuxRules(header.Number, header.Time)
+		rules := vm.chainConfig.Rules(header.Number, header.Time)
 		if err := vm.verifyTx(tx, header.ParentHash, header.BaseFee, state, rules); err != nil {
 			// Discard the transaction from the mempool on failed verification.
 			log.Debug("discarding tx from mempool on failed verification", "txID", tx.ID(), "err", err)
@@ -837,7 +862,7 @@ func (vm *VM) postBatchOnFinalizeAndAssemble(header *types.Header, state *state.
 		batchAtomicUTXOs  set.Set[ids.ID]
 		batchContribution *big.Int = new(big.Int).Set(common.Big0)
 		batchGasUsed      *big.Int = new(big.Int).Set(common.Big0)
-		rules                      = vm.chainConfig.LuxRules(header.Number, header.Time)
+		rules                      = vm.chainConfig.Rules(header.Number, header.Time)
 		size              int
 	)
 
@@ -943,7 +968,7 @@ func (vm *VM) onExtraStateChange(block *types.Block, state *state.StateDB) (*big
 		batchContribution *big.Int = big.NewInt(0)
 		batchGasUsed      *big.Int = big.NewInt(0)
 		header                     = block.Header()
-		rules                      = vm.chainConfig.LuxRules(header.Number, header.Time)
+		rules                      = vm.chainConfig.Rules(header.Number, header.Time)
 	)
 
 	txs, err := ExtractAtomicTxs(block.ExtData(), rules.IsApricotPhase5, vm.codec)
@@ -1013,6 +1038,13 @@ func (vm *VM) SetState(_ context.Context, state snow.State) error {
 		if err := vm.StateSyncClient.Error(); err != nil {
 			return err
 		}
+		// After starting bootstrapping, do not attempt to resume a previous state sync.
+		if err := vm.StateSyncClient.ClearOngoingSummary(); err != nil {
+			return err
+		}
+		// Ensure snapshots are initialized before bootstrapping (i.e., if state sync is skipped).
+		// Note calling this function has no effect if snapshots are already initialized.
+		vm.blockChain.InitializeSnapshots()
 		return vm.fx.Bootstrapping()
 	case snow.NormalOp:
 		// Initialize goroutines related to block building once we enter normal operation as there is no need to handle mempool gossip before this point.
@@ -1027,15 +1059,17 @@ func (vm *VM) SetState(_ context.Context, state snow.State) error {
 }
 
 // initBlockBuilding starts goroutines to manage block building
-func (vm *VM) initBlockBuilding() {
-	// NOTE: gossip network must be initialized first otherwise ETH tx gossip will not work.
-	gossipStats := NewGossipStats()
-	vm.gossiper = vm.createGossiper(gossipStats, vm.ethTxPushGossiper, vm.atomicTxPushGossiper)
-	vm.builder = vm.NewBlockBuilder(vm.toEngine)
-	vm.builder.awaitSubmittedTxs()
-	vm.Network.SetGossipHandler(NewGossipHandler(vm, gossipStats))
+func (vm *VM) initBlockBuilding() error {
+	ctx, cancel := context.WithCancel(context.TODO())
+	vm.cancel = cancel
 
-	ethTxPool, err := NewGossipEthTxPool(vm.txPool)
+	ethTxGossipMarshaller := GossipEthTxMarshaller{}
+	ethTxGossipClient := vm.Network.NewClient(ethTxGossipProtocol, p2p.WithValidatorSampling(vm.validators))
+	ethTxGossipMetrics, err := gossip.NewMetrics(vm.sdkMetrics, ethTxGossipNamespace)
+	if err != nil {
+		return fmt.Errorf("failed to initialize eth tx gossip metrics: %w", err)
+	}
+	ethTxPool, err := NewGossipEthTxPool(vm.txPool, vm.sdkMetrics)
 	if err != nil {
 		return err
 	}
@@ -1045,16 +1079,170 @@ func (vm *VM) initBlockBuilding() {
 		vm.shutdownWg.Done()
 	}()
 
+	atomicTxGossipMarshaller := GossipAtomicTxMarshaller{}
+	atomicTxGossipClient := vm.Network.NewClient(atomicTxGossipProtocol, p2p.WithValidatorSampling(vm.validators))
+	atomicTxGossipMetrics, err := gossip.NewMetrics(vm.sdkMetrics, atomicTxGossipNamespace)
+	if err != nil {
+		return fmt.Errorf("failed to initialize atomic tx gossip metrics: %w", err)
+	}
+
+	pushGossipParams := gossip.BranchingFactor{
+		StakePercentage: vm.config.PushGossipPercentStake,
+		Validators:      vm.config.PushGossipNumValidators,
+		Peers:           vm.config.PushGossipNumPeers,
+	}
+	pushRegossipParams := gossip.BranchingFactor{
+		Validators: vm.config.PushRegossipNumValidators,
+		Peers:      vm.config.PushRegossipNumPeers,
+	}
+
+	ethTxPushGossiper := vm.ethTxPushGossiper.Get()
+	if ethTxPushGossiper == nil {
+		ethTxPushGossiper, err = gossip.NewPushGossiper[*GossipEthTx](
+			ethTxGossipMarshaller,
+			ethTxPool,
+			vm.validators,
+			ethTxGossipClient,
+			ethTxGossipMetrics,
+			pushGossipParams,
+			pushRegossipParams,
+			pushGossipDiscardedElements,
+			txGossipTargetMessageSize,
+			vm.config.RegossipFrequency.Duration,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to initialize eth tx push gossiper: %w", err)
+		}
+		vm.ethTxPushGossiper.Set(ethTxPushGossiper)
+	}
+
+	if vm.atomicTxPushGossiper == nil {
+		vm.atomicTxPushGossiper, err = gossip.NewPushGossiper[*GossipAtomicTx](
+			atomicTxGossipMarshaller,
+			vm.mempool,
+			vm.validators,
+			atomicTxGossipClient,
+			atomicTxGossipMetrics,
+			pushGossipParams,
+			pushRegossipParams,
+			pushGossipDiscardedElements,
+			txGossipTargetMessageSize,
+			vm.config.RegossipFrequency.Duration,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to initialize atomic tx push gossiper: %w", err)
+		}
+	}
+
+	// NOTE: gossip network must be initialized first otherwise ETH tx gossip will not work.
+	gossipStats := NewGossipStats()
+	vm.builder = vm.NewBlockBuilder(vm.toEngine)
+	vm.builder.awaitSubmittedTxs()
+	vm.Network.SetGossipHandler(NewGossipHandler(vm, gossipStats))
+
+	if vm.ethTxGossipHandler == nil {
+		vm.ethTxGossipHandler = newTxGossipHandler[*GossipEthTx](
+			vm.ctx.Log,
+			ethTxGossipMarshaller,
+			ethTxPool,
+			ethTxGossipMetrics,
+			txGossipTargetMessageSize,
+			txGossipThrottlingPeriod,
+			txGossipThrottlingLimit,
+			vm.validators,
+		)
+	}
+
+	if err := vm.Network.AddHandler(ethTxGossipProtocol, vm.ethTxGossipHandler); err != nil {
+		return err
+	}
+
+	if vm.atomicTxGossipHandler == nil {
+		vm.atomicTxGossipHandler = newTxGossipHandler[*GossipAtomicTx](
+			vm.ctx.Log,
+			atomicTxGossipMarshaller,
+			vm.mempool,
+			atomicTxGossipMetrics,
+			txGossipTargetMessageSize,
+			txGossipThrottlingPeriod,
+			txGossipThrottlingLimit,
+			vm.validators,
+		)
+	}
+
+	if err := vm.Network.AddHandler(atomicTxGossipProtocol, vm.atomicTxGossipHandler); err != nil {
+		return err
+	}
+
+	if vm.ethTxPullGossiper == nil {
+		ethTxPullGossiper := gossip.NewPullGossiper[*GossipEthTx](
+			vm.ctx.Log,
+			ethTxGossipMarshaller,
+			ethTxPool,
+			ethTxGossipClient,
+			ethTxGossipMetrics,
+			txGossipPollSize,
+		)
+
+		vm.ethTxPullGossiper = gossip.ValidatorGossiper{
+			Gossiper:   ethTxPullGossiper,
+			NodeID:     vm.ctx.NodeID,
+			Validators: vm.validators,
+		}
+	}
+
+	vm.shutdownWg.Add(2)
+	go func() {
+		gossip.Every(ctx, vm.ctx.Log, ethTxPushGossiper, vm.config.PushGossipFrequency.Duration)
+		vm.shutdownWg.Done()
+	}()
+	go func() {
+		gossip.Every(ctx, vm.ctx.Log, vm.ethTxPullGossiper, vm.config.PullGossipFrequency.Duration)
+		vm.shutdownWg.Done()
+	}()
+
+	if vm.atomicTxPullGossiper == nil {
+		atomicTxPullGossiper := gossip.NewPullGossiper[*GossipAtomicTx](
+			vm.ctx.Log,
+			atomicTxGossipMarshaller,
+			vm.mempool,
+			atomicTxGossipClient,
+			atomicTxGossipMetrics,
+			txGossipPollSize,
+		)
+
+		vm.atomicTxPullGossiper = &gossip.ValidatorGossiper{
+			Gossiper:   atomicTxPullGossiper,
+			NodeID:     vm.ctx.NodeID,
+			Validators: vm.validators,
+		}
+	}
+
+	vm.shutdownWg.Add(2)
+	go func() {
+		gossip.Every(ctx, vm.ctx.Log, vm.atomicTxPushGossiper, vm.config.PushGossipFrequency.Duration)
+		vm.shutdownWg.Done()
+	}()
+	go func() {
+		gossip.Every(ctx, vm.ctx.Log, vm.atomicTxPullGossiper, vm.config.PullGossipFrequency.Duration)
+		vm.shutdownWg.Done()
+	}()
+
+	return nil
+}
+
 // setAppRequestHandlers sets the request handlers for the VM to serve state sync
 // requests.
 func (vm *VM) setAppRequestHandlers() {
 	// Create separate EVM TrieDB (read only) for serving leafs requests.
 	// We create a separate TrieDB here, so that it has a separate cache from the one
 	// used by the node when processing blocks.
-	evmTrieDB := trie.NewDatabaseWithConfig(
+	evmTrieDB := trie.NewDatabase(
 		vm.chaindb,
 		&trie.Config{
-			Cache: vm.config.StateSyncServerTrieCache,
+			HashDB: &hashdb.Config{
+				CleanCacheSize: vm.config.StateSyncServerTrieCache * units.MiB,
+			},
 		},
 	)
 	networkHandler := newNetworkHandler(
@@ -1093,11 +1281,11 @@ func (vm *VM) Shutdown(context.Context) error {
 	return nil
 }
 
+// buildBlock builds a block to be wrapped by ChainState
 func (vm *VM) buildBlock(ctx context.Context) (snowman.Block, error) {
 	return vm.buildBlockWithContext(ctx, nil)
 }
 
-// buildBlock builds a block to be wrapped by ChainState
 func (vm *VM) buildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (snowman.Block, error) {
 	if proposerVMBlockCtx != nil {
 		log.Debug("Building block with context", "pChainBlockHeight", proposerVMBlockCtx.PChainHeight)
@@ -1209,21 +1397,21 @@ func (vm *VM) VerifyHeightIndex(context.Context) error {
 	return nil
 }
 
-// GetBlockAtHeight implements the HeightIndexedChainVM interface and returns the
-// canonical block at [blkHeight].
-// If [blkHeight] is less than the height of the last accepted block, this will return
-// the block accepted at that height. Otherwise, it may return a blkID that has not yet
-// been accepted.
-// Note: the engine assumes that if a block is not found at [blkHeight], then
-// [database.ErrNotFound] will be returned. This indicates that the VM has state synced
-// and does not have all historical blocks available.
-func (vm *VM) GetBlockIDAtHeight(_ context.Context, blkHeight uint64) (ids.ID, error) {
-	ethBlock := vm.blockChain.GetBlockByNumber(blkHeight)
-	if ethBlock == nil {
+// GetBlockAtHeight returns the canonical block at [height].
+// Note: the engine assumes that if a block is not found at [height], then
+// [database.ErrNotFound] will be returned. This indicates that the VM has state
+// synced and does not have all historical blocks available.
+func (vm *VM) GetBlockIDAtHeight(_ context.Context, height uint64) (ids.ID, error) {
+	lastAcceptedBlock := vm.LastAcceptedBlock()
+	if lastAcceptedBlock.Height() < height {
 		return ids.ID{}, database.ErrNotFound
 	}
 
-	return ids.ID(ethBlock.Hash()), nil
+	hash := vm.blockChain.GetCanonicalHash(height)
+	if hash == (common.Hash{}) {
+		return ids.ID{}, database.ErrNotFound
+	}
+	return ids.ID(hash), nil
 }
 
 func (vm *VM) Version(context.Context) (string, error) {
@@ -1234,16 +1422,12 @@ func (vm *VM) Version(context.Context) (string, error) {
 //   - The handler's functionality is defined by [service]
 //     [service] should be a gorilla RPC service (see https://www.gorillatoolkit.org/pkg/rpc/v2)
 //   - The name of the service is [name]
-//   - The LockOption is the first element of [lockOption]
-//     By default the LockOption is WriteLock
-//     [lockOption] should have either 0 or 1 elements. Elements beside the first are ignored.
-func newHandler(name string, service interface{}, lockOption ...commonEng.LockOption) (*commonEng.HTTPHandler, error) {
+func newHandler(name string, service interface{}) (http.Handler, error) {
 	server := luxRPC.NewServer()
 	server.RegisterCodec(luxJSON.NewCodec(), "application/json")
 	server.RegisterCodec(luxJSON.NewCodec(), "application/json;charset=UTF-8")
-	if err := server.RegisterService(service, name); err != nil {
-		return nil, err
-	}
+	return server, server.RegisterService(service, name)
+}
 
 // CreateHandlers makes new http handlers that can handle API calls
 func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
@@ -1257,7 +1441,7 @@ func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get primary alias for chain due to %w", err)
 	}
-	apis := make(map[string]*commonEng.HTTPHandler)
+	apis := make(map[string]http.Handler)
 	luxAPI, err := newHandler("lux", &LuxAPI{vm})
 	if err != nil {
 		return nil, fmt.Errorf("failed to register service for LUX API due to %w", err)
@@ -1280,6 +1464,7 @@ func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 		}
 		enabledAPIs = append(enabledAPIs, "snowman")
 	}
+
 	if vm.config.WarpAPIEnabled {
 		validatorsState := warpValidators.NewState(vm.ctx)
 		if err := handler.RegisterName("warp", warp.NewAPI(vm.ctx.NetworkID, vm.ctx.SubnetID, vm.ctx.ChainID, validatorsState, vm.warpBackend, vm.client)); err != nil {
@@ -1391,7 +1576,7 @@ func (vm *VM) ParseAddress(addrStr string) (ids.ID, ids.ShortID, error) {
 		return ids.ID{}, ids.ShortID{}, err
 	}
 
-	expectedHRP := constants.GetHRP(vm.ctx.NetworkID)
+	expectedHRP := nodeConstants.GetHRP(vm.ctx.NetworkID)
 	if hrp != expectedHRP {
 		return ids.ID{}, ids.ShortID{}, fmt.Errorf("expected hrp %q but got %q",
 			expectedHRP, hrp)
@@ -1725,7 +1910,7 @@ func (vm *VM) GetCurrentNonce(address common.Address) (uint64, error) {
 // currentRules returns the chain rules for the current block.
 func (vm *VM) currentRules() params.Rules {
 	header := vm.eth.APIBackend.CurrentHeader()
-	return vm.chainConfig.LuxRules(header.Number, header.Time)
+	return vm.chainConfig.Rules(header.Number, header.Time)
 }
 
 func (vm *VM) startContinuousProfiler() {
@@ -1769,14 +1954,6 @@ func (vm *VM) estimateBaseFee(ctx context.Context) (*big.Int, error) {
 	}
 
 	return baseFee, nil
-}
-
-func (vm *VM) getAtomicTxFromPreApricot5BlockByHeight(height uint64) (*Tx, error) {
-	blk := vm.blockChain.GetBlockByNumber(height)
-	if blk == nil {
-		return nil, nil
-	}
-	return ExtractAtomicTx(blk.ExtData(), vm.codec)
 }
 
 // readLastAccepted reads the last accepted hash from [acceptedBlockDB] and returns the

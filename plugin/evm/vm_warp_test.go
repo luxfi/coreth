@@ -12,16 +12,6 @@ import (
 
 	_ "embed"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/eth/tracers"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/coreth/precompile/contract"
-	"github.com/luxfi/coreth/precompile/contracts/warp"
-	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/snow/choices"
 	"github.com/luxfi/node/snow/engine/snowman/block"
@@ -32,6 +22,16 @@ import (
 	"github.com/luxfi/node/vms/components/chain"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/eth/tracers"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/precompile/contract"
+	"github.com/luxfi/coreth/precompile/contracts/warp"
+	"github.com/luxfi/coreth/predicate"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,7 +44,7 @@ var (
 
 func TestSendWarpMessage(t *testing.T) {
 	require := require.New(t)
-	issuer, vm, _, _, _ := GenesisVM(t, true, genesisJSONDUpgrade, "", "")
+	issuer, vm, _, _, _ := GenesisVM(t, true, genesisJSONDurango, "", "")
 
 	defer func() {
 		require.NoError(vm.Shutdown(context.Background()))
@@ -95,7 +95,7 @@ func TestSendWarpMessage(t *testing.T) {
 	require.Len(receipts[0].Logs, 1)
 	expectedTopics := []common.Hash{
 		warp.WarpABI.Events["SendWarpMessage"].ID,
-		testEthAddrs[0].Hash(),
+		common.BytesToHash(testEthAddrs[0].Bytes()),
 		common.Hash(expectedUnsignedMessage.ID()),
 	}
 	require.Equal(expectedTopics, receipts[0].Logs[0].Topics)
@@ -237,7 +237,7 @@ func TestValidateInvalidWarpBlockHash(t *testing.T) {
 
 func testWarpVMTransaction(t *testing.T, unsignedMessage *luxWarp.UnsignedMessage, validSignature bool, txPayload []byte) {
 	require := require.New(t)
-	issuer, vm, _, _, _ := GenesisVM(t, true, genesisJSONDUpgrade, "", "")
+	issuer, vm, _, _, _ := GenesisVM(t, true, genesisJSONDurango, "", "")
 
 	defer func() {
 		require.NoError(vm.Shutdown(context.Background()))
@@ -387,7 +387,7 @@ func testWarpVMTransaction(t *testing.T, unsignedMessage *luxWarp.UnsignedMessag
 
 func TestReceiveWarpMessage(t *testing.T) {
 	require := require.New(t)
-	issuer, vm, _, _, _ := GenesisVM(t, true, genesisJSONDUpgrade, "", "")
+	issuer, vm, _, _, _ := GenesisVM(t, true, genesisJSONDurango, "", "")
 
 	defer func() {
 		require.NoError(vm.Shutdown(context.Background()))
@@ -563,7 +563,7 @@ func TestReceiveWarpMessage(t *testing.T) {
 }
 
 func TestMessageSignatureRequestsToVM(t *testing.T) {
-	_, vm, _, _, appSender := GenesisVM(t, true, genesisJSONDUpgrade, "", "")
+	_, vm, _, _, appSender := GenesisVM(t, true, genesisJSONDurango, "", "")
 
 	defer func() {
 		err := vm.Shutdown(context.Background())
@@ -623,7 +623,7 @@ func TestMessageSignatureRequestsToVM(t *testing.T) {
 }
 
 func TestBlockSignatureRequestsToVM(t *testing.T) {
-	_, vm, _, _, appSender := GenesisVM(t, true, genesisJSONDUpgrade, "", "")
+	_, vm, _, _, appSender := GenesisVM(t, true, genesisJSONDurango, "", "")
 
 	defer func() {
 		err := vm.Shutdown(context.Background())

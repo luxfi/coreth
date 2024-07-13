@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package aggregator
@@ -7,13 +7,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxfi/coreth/params"
-
 	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/luxfi/node/utils/crypto/bls"
 	"github.com/luxfi/node/utils/set"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
+	"github.com/luxfi/coreth/precompile/contracts/warp"
 )
 
 type AggregateSignatureResult struct {
@@ -130,7 +129,7 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *l
 		)
 
 		// If the signature weight meets the requested threshold, cancel signature fetching
-		if err := luxWarp.VerifyWeight(signaturesWeight, a.totalWeight, quorumNum, params.WarpQuorumDenominator); err == nil {
+		if err := luxWarp.VerifyWeight(signaturesWeight, a.totalWeight, quorumNum, warp.WarpQuorumDenominator); err == nil {
 			log.Debug("Verify weight passed, exiting aggregation early",
 				"quorumNum", quorumNum,
 				"totalWeight", a.totalWeight,

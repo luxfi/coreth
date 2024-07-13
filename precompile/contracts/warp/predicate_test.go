@@ -1,26 +1,28 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
 
-import "testing"
+import (
+	"context"
+	"errors"
+	"fmt"
+	"testing"
 
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/snow"
 	"github.com/luxfi/node/snow/engine/snowman/block"
 	"github.com/luxfi/node/snow/validators"
-	"github.com/luxfi/node/utils"
+	agoUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
 	"github.com/luxfi/node/utils/crypto/bls"
 	"github.com/luxfi/node/utils/set"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
-	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/precompile/testutils"
 	"github.com/luxfi/coreth/predicate"
-	corethUtils "github.com/luxfi/coreth/utils"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/luxfi/coreth/utils"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -28,7 +30,7 @@ import "testing"
 const pChainHeight uint64 = 1337
 
 var (
-	_ utils.Sortable[*testValidator] = (*testValidator)(nil)
+	_ agoUtils.Sortable[*testValidator] = (*testValidator)(nil)
 
 	errTest        = errors.New("non-nil error")
 	networkID      = uint32(54321)
@@ -56,7 +58,7 @@ func init() {
 	for i := 0; i < numTestVdrs; i++ {
 		testVdrs = append(testVdrs, newTestValidator())
 	}
-	utils.Sort(testVdrs)
+	agoUtils.Sort(testVdrs)
 
 	vdrs = map[ids.NodeID]*validators.GetValidatorOutput{
 		testVdrs[0].nodeID: {
@@ -194,7 +196,7 @@ func createSnowCtx(validatorRanges []validatorRange) *snow.Context {
 		}
 	}
 
-	snowCtx := snow.DefaultContextTest()
+	snowCtx := utils.TestSnowContext()
 	state := &validators.TestState{
 		GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
 			return sourceSubnetID, nil
@@ -210,17 +212,17 @@ func createSnowCtx(validatorRanges []validatorRange) *snow.Context {
 
 func createValidPredicateTest(snowCtx *snow.Context, numKeys uint64, predicateBytes []byte) testutils.PredicateTest {
 	return testutils.PredicateTest{
-		Config: NewDefaultConfig(corethUtils.NewUint64(0)),
+		Config: NewDefaultConfig(utils.NewUint64(0)),
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
 				PChainHeight: 1,
 			},
 		},
-		StorageSlots: [][]byte{predicateBytes},
-		Gas:          GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + numKeys*GasCostPerWarpSigner,
-		GasErr:       nil,
-		PredicateRes: set.NewBits().Bytes(),
+		PredicateBytes: predicateBytes,
+		Gas:            GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + numKeys*GasCostPerWarpSigner,
+		GasErr:         nil,
+		ExpectedErr:    nil,
 	}
 }
 
@@ -228,7 +230,7 @@ func TestWarpMessageFromPrimaryNetwork(t *testing.T) {
 	require := require.New(t)
 	numKeys := 10
 	cChainID := ids.GenerateTestID()
-	addressedCall, err := payload.NewAddressedCall(utils.RandomBytes(20), utils.RandomBytes(100))
+	addressedCall, err := payload.NewAddressedCall(agoUtils.RandomBytes(20), agoUtils.RandomBytes(100))
 	require.NoError(err)
 	unsignedMsg, err := luxWarp.NewUnsignedMessage(networkID, cChainID, addressedCall.Bytes())
 	require.NoError(err)
@@ -259,7 +261,7 @@ func TestWarpMessageFromPrimaryNetwork(t *testing.T) {
 
 	predicateBytes := predicate.PackPredicate(warpMsg.Bytes())
 
-	snowCtx := snow.DefaultContextTest()
+	snowCtx := utils.TestSnowContext()
 	snowCtx.SubnetID = ids.GenerateTestID()
 	snowCtx.ChainID = ids.GenerateTestID()
 	snowCtx.CChainID = cChainID
@@ -276,17 +278,17 @@ func TestWarpMessageFromPrimaryNetwork(t *testing.T) {
 	}
 
 	test := testutils.PredicateTest{
-		Config: NewDefaultConfig(corethUtils.NewUint64(0)),
+		Config: NewDefaultConfig(utils.NewUint64(0)),
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
 				PChainHeight: 1,
 			},
 		},
-		StorageSlots: [][]byte{predicateBytes},
-		Gas:          GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numKeys)*GasCostPerWarpSigner,
-		GasErr:       nil,
-		PredicateRes: set.NewBits().Bytes(),
+		PredicateBytes: predicateBytes,
+		Gas:            GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numKeys)*GasCostPerWarpSigner,
+		GasErr:         nil,
+		ExpectedErr:    nil,
 	}
 
 	test.Run(t)
@@ -306,16 +308,16 @@ func TestInvalidPredicatePacking(t *testing.T) {
 	predicateBytes = append(predicateBytes, byte(0x01)) // Invalidate the predicate byte packing
 
 	test := testutils.PredicateTest{
-		Config: NewDefaultConfig(corethUtils.NewUint64(0)),
+		Config: NewDefaultConfig(utils.NewUint64(0)),
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
 				PChainHeight: 1,
 			},
 		},
-		StorageSlots: [][]byte{predicateBytes},
-		Gas:          GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numKeys)*GasCostPerWarpSigner,
-		GasErr:       errInvalidPredicateBytes,
+		PredicateBytes: predicateBytes,
+		Gas:            GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numKeys)*GasCostPerWarpSigner,
+		GasErr:         errInvalidPredicateBytes,
 	}
 
 	test.Run(t)
@@ -337,17 +339,16 @@ func TestInvalidWarpMessage(t *testing.T) {
 	predicateBytes := predicate.PackPredicate(warpMsgBytes)
 
 	test := testutils.PredicateTest{
-		Config: NewDefaultConfig(corethUtils.NewUint64(0)),
+		Config: NewDefaultConfig(utils.NewUint64(0)),
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
 				PChainHeight: 1,
 			},
 		},
-		StorageSlots: [][]byte{predicateBytes},
-		Gas:          GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numKeys)*GasCostPerWarpSigner,
-		GasErr:       errInvalidWarpMsg,
-		PredicateRes: set.NewBits(0).Bytes(), // Won't be reached
+		PredicateBytes: predicateBytes,
+		Gas:            GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numKeys)*GasCostPerWarpSigner,
+		GasErr:         errInvalidWarpMsg,
 	}
 
 	test.Run(t)
@@ -382,23 +383,23 @@ func TestInvalidAddressedPayload(t *testing.T) {
 	predicateBytes := predicate.PackPredicate(warpMsgBytes)
 
 	test := testutils.PredicateTest{
-		Config: NewDefaultConfig(corethUtils.NewUint64(0)),
+		Config: NewDefaultConfig(utils.NewUint64(0)),
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
 				PChainHeight: 1,
 			},
 		},
-		StorageSlots: [][]byte{predicateBytes},
-		Gas:          GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numKeys)*GasCostPerWarpSigner,
-		GasErr:       errInvalidWarpMsgPayload,
+		PredicateBytes: predicateBytes,
+		Gas:            GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numKeys)*GasCostPerWarpSigner,
+		GasErr:         errInvalidWarpMsgPayload,
 	}
 
 	test.Run(t)
 }
 
 func TestInvalidBitSet(t *testing.T) {
-	addressedCall, err := payload.NewAddressedCall(utils.RandomBytes(20), utils.RandomBytes(100))
+	addressedCall, err := payload.NewAddressedCall(agoUtils.RandomBytes(20), agoUtils.RandomBytes(100))
 	require.NoError(t, err)
 	unsignedMsg, err := luxWarp.NewUnsignedMessage(
 		networkID,
@@ -427,17 +428,16 @@ func TestInvalidBitSet(t *testing.T) {
 	})
 	predicateBytes := predicate.PackPredicate(msg.Bytes())
 	test := testutils.PredicateTest{
-		Config: NewDefaultConfig(corethUtils.NewUint64(0)),
+		Config: NewDefaultConfig(utils.NewUint64(0)),
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
 				PChainHeight: 1,
 			},
 		},
-		StorageSlots: [][]byte{predicateBytes},
-		Gas:          GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numKeys)*GasCostPerWarpSigner,
-		GasErr:       errCannotGetNumSigners,
-		PredicateRes: set.NewBits(0).Bytes(), // Won't be reached
+		PredicateBytes: predicateBytes,
+		Gas:            GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numKeys)*GasCostPerWarpSigner,
+		GasErr:         errCannotGetNumSigners,
 	}
 
 	test.Run(t)
@@ -456,34 +456,34 @@ func TestWarpSignatureWeightsDefaultQuorumNumerator(t *testing.T) {
 	tests := make(map[string]testutils.PredicateTest)
 	for _, numSigners := range []int{
 		1,
-		int(params.WarpDefaultQuorumNumerator) - 1,
-		int(params.WarpDefaultQuorumNumerator),
-		int(params.WarpDefaultQuorumNumerator) + 1,
-		int(params.WarpQuorumDenominator) - 1,
-		int(params.WarpQuorumDenominator),
-		int(params.WarpQuorumDenominator) + 1,
+		int(WarpDefaultQuorumNumerator) - 1,
+		int(WarpDefaultQuorumNumerator),
+		int(WarpDefaultQuorumNumerator) + 1,
+		int(WarpQuorumDenominator) - 1,
+		int(WarpQuorumDenominator),
+		int(WarpQuorumDenominator) + 1,
 	} {
-		var (
-			predicateBytes           = createPredicate(numSigners)
-			expectedPredicateResults = set.NewBits()
-		)
-		// If the number of signers is less than the required numerator or exceeds the denominator, then
-		// mark the expected result as invalid.
-		if numSigners < int(params.WarpDefaultQuorumNumerator) || numSigners > int(params.WarpQuorumDenominator) {
-			expectedPredicateResults.Add(0)
+		predicateBytes := createPredicate(numSigners)
+		// The predicate is valid iff the number of signers is >= the required numerator and does not exceed the denominator.
+		var expectedErr error
+		if numSigners >= int(WarpDefaultQuorumNumerator) && numSigners <= int(WarpQuorumDenominator) {
+			expectedErr = nil
+		} else {
+			expectedErr = errFailedVerification
 		}
+
 		tests[fmt.Sprintf("default quorum %d signature(s)", numSigners)] = testutils.PredicateTest{
-			Config: NewDefaultConfig(corethUtils.NewUint64(0)),
+			Config: NewDefaultConfig(utils.NewUint64(0)),
 			PredicateContext: &precompileconfig.PredicateContext{
 				SnowCtx: snowCtx,
 				ProposerVMBlockCtx: &block.Context{
 					PChainHeight: 1,
 				},
 			},
-			StorageSlots: [][]byte{predicateBytes},
-			Gas:          GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numSigners)*GasCostPerWarpSigner,
-			GasErr:       nil,
-			PredicateRes: expectedPredicateResults.Bytes(),
+			PredicateBytes: predicateBytes,
+			Gas:            GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numSigners)*GasCostPerWarpSigner,
+			GasErr:         nil,
+			ExpectedErr:    expectedErr,
 		}
 	}
 	testutils.RunPredicateTests(t, tests)
@@ -509,36 +509,40 @@ func TestWarpMultiplePredicates(t *testing.T) {
 		{true, true},
 	} {
 		var (
-			numSigners               = int(params.WarpQuorumDenominator)
-			invalidPredicateBytes    = createPredicate(1)
-			validPredicateBytes      = createPredicate(numSigners)
-			expectedPredicateResults = set.NewBits()
+			numSigners            = int(WarpQuorumDenominator)
+			invalidPredicateBytes = createPredicate(1)
+			validPredicateBytes   = createPredicate(numSigners)
 		)
-		predicates := make([][]byte, len(validMessageIndices))
-		expectedGas := uint64(0)
-		for index, valid := range validMessageIndices {
-			if valid {
-				predicates[index] = common.CopyBytes(validPredicateBytes)
-				expectedGas += GasCostPerSignatureVerification + uint64(len(validPredicateBytes))*GasCostPerWarpMessageBytes + uint64(numSigners)*GasCostPerWarpSigner
-			} else {
-				expectedPredicateResults.Add(index)
-				expectedGas += GasCostPerSignatureVerification + uint64(len(invalidPredicateBytes))*GasCostPerWarpMessageBytes + uint64(1)*GasCostPerWarpSigner
-				predicates[index] = invalidPredicateBytes
-			}
-		}
 
-		tests[fmt.Sprintf("multiple predicates %v", validMessageIndices)] = testutils.PredicateTest{
-			Config: NewDefaultConfig(corethUtils.NewUint64(0)),
-			PredicateContext: &precompileconfig.PredicateContext{
-				SnowCtx: snowCtx,
-				ProposerVMBlockCtx: &block.Context{
-					PChainHeight: 1,
+		for _, valid := range validMessageIndices {
+			var (
+				predicate   []byte
+				expectedGas uint64
+				expectedErr error
+			)
+			if valid {
+				predicate = validPredicateBytes
+				expectedGas = GasCostPerSignatureVerification + uint64(len(validPredicateBytes))*GasCostPerWarpMessageBytes + uint64(numSigners)*GasCostPerWarpSigner
+				expectedErr = nil
+			} else {
+				expectedGas = GasCostPerSignatureVerification + uint64(len(invalidPredicateBytes))*GasCostPerWarpMessageBytes + uint64(1)*GasCostPerWarpSigner
+				predicate = invalidPredicateBytes
+				expectedErr = errFailedVerification
+			}
+
+			tests[fmt.Sprintf("multiple predicates %v", validMessageIndices)] = testutils.PredicateTest{
+				Config: NewDefaultConfig(utils.NewUint64(0)),
+				PredicateContext: &precompileconfig.PredicateContext{
+					SnowCtx: snowCtx,
+					ProposerVMBlockCtx: &block.Context{
+						PChainHeight: 1,
+					},
 				},
-			},
-			StorageSlots: predicates,
-			Gas:          expectedGas,
-			GasErr:       nil,
-			PredicateRes: expectedPredicateResults.Bytes(),
+				PredicateBytes: predicate,
+				Gas:            expectedGas,
+				GasErr:         nil,
+				ExpectedErr:    expectedErr,
+			}
 		}
 	}
 	testutils.RunPredicateTests(t, tests)
@@ -557,31 +561,31 @@ func TestWarpSignatureWeightsNonDefaultQuorumNumerator(t *testing.T) {
 	tests := make(map[string]testutils.PredicateTest)
 	nonDefaultQuorumNumerator := 50
 	// Ensure this test fails if the DefaultQuroumNumerator is changed to an unexpected value during development
-	require.NotEqual(t, nonDefaultQuorumNumerator, int(params.WarpDefaultQuorumNumerator))
+	require.NotEqual(t, nonDefaultQuorumNumerator, int(WarpDefaultQuorumNumerator))
 	// Add cases with default quorum
 	for _, numSigners := range []int{nonDefaultQuorumNumerator, nonDefaultQuorumNumerator + 1, 99, 100, 101} {
-		var (
-			predicateBytes           = createPredicate(numSigners)
-			expectedPredicateResults = set.NewBits()
-		)
-		// If the number of signers is less than the required numerator or exceeds the denominator, then
-		// mark the expected result as invalid.
-		if numSigners < nonDefaultQuorumNumerator || numSigners > int(params.WarpQuorumDenominator) {
-			expectedPredicateResults.Add(0)
+		predicateBytes := createPredicate(numSigners)
+		// The predicate is valid iff the number of signers is >= the required numerator and does not exceed the denominator.
+		var expectedErr error
+		if numSigners >= nonDefaultQuorumNumerator && numSigners <= int(WarpQuorumDenominator) {
+			expectedErr = nil
+		} else {
+			expectedErr = errFailedVerification
 		}
+
 		name := fmt.Sprintf("non-default quorum %d signature(s)", numSigners)
 		tests[name] = testutils.PredicateTest{
-			Config: NewConfig(corethUtils.NewUint64(0), uint64(nonDefaultQuorumNumerator)),
+			Config: NewConfig(utils.NewUint64(0), uint64(nonDefaultQuorumNumerator)),
 			PredicateContext: &precompileconfig.PredicateContext{
 				SnowCtx: snowCtx,
 				ProposerVMBlockCtx: &block.Context{
 					PChainHeight: 1,
 				},
 			},
-			StorageSlots: [][]byte{predicateBytes},
-			Gas:          GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numSigners)*GasCostPerWarpSigner,
-			GasErr:       nil,
-			PredicateRes: expectedPredicateResults.Bytes(),
+			PredicateBytes: predicateBytes,
+			Gas:            GasCostPerSignatureVerification + uint64(len(predicateBytes))*GasCostPerWarpMessageBytes + uint64(numSigners)*GasCostPerWarpSigner,
+			GasErr:         nil,
+			ExpectedErr:    expectedErr,
 		}
 	}
 
@@ -660,7 +664,7 @@ func initWarpPredicateTests() {
 			}
 		}
 
-		snowCtx := snow.DefaultContextTest()
+		snowCtx := utils.TestSnowContext()
 		snowCtx.NetworkID = networkID
 		state := &validators.TestState{
 			GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {

@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package predicate
@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/codec/linearcodec"
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/utils/wrappers"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 const (

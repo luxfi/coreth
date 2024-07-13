@@ -1,14 +1,13 @@
-// (c) 2023-2024, Lux Partners Limited.
+// (c) 2023, Lux Partners Limited.
 //
-// This file is a derived work, based on coreth and the go-ethereum library
-// whose original notices appear below.
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
 //
 // It is distributed under a license compatible with the licensing terms of the
 // original code from which it is derived.
 //
 // Much love to the original authors for their work.
 // **********
-// Copyright 2023, Ava Labs, Inc.
 // Copyright 2022 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //

@@ -1,4 +1,4 @@
-// (c) 2023-2024, Lux Partners Limited. All rights reserved.
+// (c) 2023, Lux Partners Limited. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -14,14 +14,13 @@ import (
 	"github.com/luxfi/node/vms/platformvm/warp"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
-
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/luxfi/coreth/core/state"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/coreth/precompile/testutils"
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/coreth/vmerrs"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -148,10 +147,16 @@ func TestSendWarpMessage(t *testing.T) {
 				return bytes
 			}(),
 			AfterHook: func(t testing.TB, state contract.StateDB) {
-				logsData := state.GetLogData()
+				logsTopics, logsData := state.GetLogData()
+				require.Len(t, logsTopics, 1)
+				topics := logsTopics[0]
+				require.Len(t, topics, 3)
+				require.Equal(t, topics[0], WarpABI.Events["SendWarpMessage"].ID)
+				require.Equal(t, topics[1], common.BytesToHash(callerAddr[:]))
+				require.Equal(t, topics[2], common.Hash(unsignedWarpMessage.ID()))
+
 				require.Len(t, logsData, 1)
 				logData := logsData[0]
-
 				unsignedWarpMsg, err := UnpackSendWarpEventDataToMessage(logData)
 				require.NoError(t, err)
 				addressedPayload, err := payload.ParseAddressedCall(unsignedWarpMsg.Payload)

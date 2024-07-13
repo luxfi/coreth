@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2019-2020, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -33,14 +33,14 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/rpc"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // TransactionArgs represents the arguments to construct a new transaction
@@ -90,7 +90,6 @@ func (args *TransactionArgs) setDefaults(ctx context.Context, b Backend) error {
 	if err := args.setFeeDefaults(ctx, b); err != nil {
 		return err
 	}
-
 	if args.Value == nil {
 		args.Value = new(hexutil.Big)
 	}
@@ -123,7 +122,7 @@ func (args *TransactionArgs) setDefaults(ctx context.Context, b Backend) error {
 			AccessList:           args.AccessList,
 		}
 		pendingBlockNr := rpc.BlockNumberOrHashWithNumber(rpc.PendingBlockNumber)
-		estimated, err := DoEstimateGas(ctx, b, callArgs, pendingBlockNr, b.RPCGasCap())
+		estimated, err := DoEstimateGas(ctx, b, callArgs, pendingBlockNr, nil, b.RPCGasCap())
 		if err != nil {
 			return err
 		}
@@ -155,20 +154,35 @@ func (args *TransactionArgs) setFeeDefaults(ctx context.Context, b feeBackend) e
 	if args.GasPrice != nil && (args.MaxFeePerGas != nil || args.MaxPriorityFeePerGas != nil) {
 		return errors.New("both gasPrice and (maxFeePerGas or maxPriorityFeePerGas) specified")
 	}
-	// If the tx has completely specified a fee mechanism, no default is needed. This allows users
-	// who are not yet synced past London to get defaults for other tx values. See
-	// https://github.com/ethereum/go-ethereum/pull/23274 for more information.
+	// If the tx has completely specified a fee mechanism, no default is needed.
+	// This allows users who are not yet synced past London to get defaults for
+	// other tx values. See https://github.com/ethereum/go-ethereum/pull/23274
+	// for more information.
 	eip1559ParamsSet := args.MaxFeePerGas != nil && args.MaxPriorityFeePerGas != nil
-	if (args.GasPrice != nil && !eip1559ParamsSet) || (args.GasPrice == nil && eip1559ParamsSet) {
-		// Sanity check the EIP-1559 fee parameters if present.
-		if args.GasPrice == nil && args.MaxFeePerGas.ToInt().Cmp(args.MaxPriorityFeePerGas.ToInt()) < 0 {
+
+	// Sanity check the EIP-1559 fee parameters if present.
+	if args.GasPrice == nil && eip1559ParamsSet {
+		if args.MaxFeePerGas.ToInt().Sign() == 0 {
+			return errors.New("maxFeePerGas must be non-zero")
+		}
+		if args.MaxFeePerGas.ToInt().Cmp(args.MaxPriorityFeePerGas.ToInt()) < 0 {
 			return fmt.Errorf("maxFeePerGas (%v) < maxPriorityFeePerGas (%v)", args.MaxFeePerGas, args.MaxPriorityFeePerGas)
 		}
-		return nil
+		return nil // No need to set anything, user already set MaxFeePerGas and MaxPriorityFeePerGas
 	}
-	// Now attempt to fill in default value depending on whether London is active or not.
+	// Sanity check the non-EIP-1559 fee parameters.
 	head := b.CurrentHeader()
-	if b.ChainConfig().IsApricotPhase3(head.Time) {
+	isLondon := b.ChainConfig().IsApricotPhase3(head.Time)
+	if args.GasPrice != nil && !eip1559ParamsSet {
+		// Zero gas-price is not allowed after London fork
+		if args.GasPrice.ToInt().Sign() == 0 && isLondon {
+			return errors.New("gasPrice must be non-zero after london fork")
+		}
+		return nil // No need to set anything, user already set GasPrice
+	}
+
+	// Now attempt to fill in default value depending on whether London is active or not.
+	if isLondon {
 		// London is active, set maxPriorityFeePerGas and maxFeePerGas.
 		if err := args.setApricotPhase3FeeDefault(ctx, head, b); err != nil {
 			return err
@@ -236,7 +250,7 @@ func (args *TransactionArgs) ToMessage(globalGasCap uint64, baseFee *big.Int) (*
 		gas = uint64(*args.Gas)
 	}
 	if globalGasCap != 0 && globalGasCap < gas {
-		log.Warn("Caller gas above allowance, capping", "requested", gas, "cap", globalGasCap)
+		log.Info("Caller gas above allowance, capping", "requested", gas, "cap", globalGasCap)
 		gas = globalGasCap
 	}
 	var (
@@ -258,7 +272,7 @@ func (args *TransactionArgs) ToMessage(globalGasCap uint64, baseFee *big.Int) (*
 			gasPrice = args.GasPrice.ToInt()
 			gasFeeCap, gasTipCap = gasPrice, gasPrice
 		} else {
-			// User specified 1559 gas feilds (or none), use those
+			// User specified 1559 gas fields (or none), use those
 			gasFeeCap = new(big.Int)
 			if args.MaxFeePerGas != nil {
 				gasFeeCap = args.MaxFeePerGas.ToInt()

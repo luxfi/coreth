@@ -1,4 +1,4 @@
-// (c) 2021-2024, Lux Partners Limited.
+// (c) 2020-2021, Lux Partners Limited.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -32,13 +32,13 @@ import (
 	"math/big"
 	"sync/atomic"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/luxfi/coreth/core/vm"
 	"github.com/luxfi/coreth/eth/tracers"
 	"github.com/luxfi/coreth/vmerrs"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 //go:generate go run github.com/fjl/gencodec -type callFrame -field-override callFrameMarshaling -out gen_callframe_json.go
@@ -51,6 +51,9 @@ type callLog struct {
 	Address common.Address `json:"address"`
 	Topics  []common.Hash  `json:"topics"`
 	Data    hexutil.Bytes  `json:"data"`
+	// Position of the log relative to subcalls within the same trace
+	// See https://github.com/ethereum/go-ethereum/pull/28389 for details
+	Position hexutil.Uint `json:"position"`
 }
 
 type callFrame struct {
@@ -199,7 +202,12 @@ func (t *callTracer) CaptureState(pc uint64, op vm.OpCode, gas, cost uint64, sco
 			return
 		}
 
-		log := callLog{Address: scope.Contract.Address(), Topics: topics, Data: hexutil.Bytes(data)}
+		log := callLog{
+			Address:  scope.Contract.Address(),
+			Topics:   topics,
+			Data:     hexutil.Bytes(data),
+			Position: hexutil.Uint(len(t.callstack[len(t.callstack)-1].Calls)),
+		}
 		t.callstack[len(t.callstack)-1].Logs = append(t.callstack[len(t.callstack)-1].Logs, log)
 	}
 }
