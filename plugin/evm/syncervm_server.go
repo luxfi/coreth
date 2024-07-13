@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxdefi/node/database"
-	"github.com/luxdefi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/database"
+	"github.com/luxfi/node/snow/engine/snowman/block"
 
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

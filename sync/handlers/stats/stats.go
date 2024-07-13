@@ -6,7 +6,7 @@ package stats
 import (
 	"time"
 
-	"github.com/luxdefi/coreth/metrics"
+	"github.com/luxfi/coreth/metrics"
 )
 
 // HandlerStats reports prometheus metrics for the state sync handlers

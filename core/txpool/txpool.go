@@ -40,14 +40,14 @@ import (
 	"github.com/ethereum/go-ethereum/common/prque"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/consensus/dummy"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/state"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/metrics"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/utils"
-	"github.com/luxdefi/coreth/vmerrs"
+	"github.com/luxfi/coreth/consensus/dummy"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/metrics"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/coreth/vmerrs"
 )
 
 const (

@@ -6,8 +6,8 @@ package rawdb
 import (
 	"encoding/binary"
 
-	"github.com/luxdefi/node/utils/wrappers"
-	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxfi/node/utils/wrappers"
+	"github.com/luxfi/coreth/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

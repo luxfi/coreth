@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/luxdefi/coreth/core/state/snapshot"
-	"github.com/luxdefi/coreth/ethdb"
-	syncclient "github.com/luxdefi/coreth/sync/client"
-	"github.com/luxdefi/coreth/trie"
+	"github.com/luxfi/coreth/core/state/snapshot"
+	"github.com/luxfi/coreth/ethdb"
+	syncclient "github.com/luxfi/coreth/sync/client"
+	"github.com/luxfi/coreth/trie"
 	"github.com/ethereum/go-ethereum/common"
 	"golang.org/x/sync/errgroup"
 )

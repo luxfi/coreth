@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/snow"
-	"github.com/luxdefi/node/utils/set"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/snow"
+	"github.com/luxfi/node/utils/set"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/plugin/evm/message"
 )
 
 // locally issued txs should be gossiped

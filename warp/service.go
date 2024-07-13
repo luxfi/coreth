@@ -10,12 +10,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/peer"
-	"github.com/luxdefi/coreth/warp/aggregator"
-	"github.com/luxdefi/coreth/warp/validators"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/vms/platformvm/warp"
-	"github.com/luxdefi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/coreth/peer"
+	"github.com/luxfi/coreth/warp/aggregator"
+	"github.com/luxfi/coreth/warp/validators"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/vms/platformvm/warp"
+	"github.com/luxfi/node/vms/platformvm/warp/payload"
 )
 
 var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")

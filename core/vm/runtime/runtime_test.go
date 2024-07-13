@@ -35,19 +35,19 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/asm"
-	"github.com/luxdefi/coreth/accounts/abi"
-	"github.com/luxdefi/coreth/consensus"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/core/state"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/eth/tracers"
-	"github.com/luxdefi/coreth/eth/tracers/logger"
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/accounts/abi"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/eth/tracers"
+	"github.com/luxfi/coreth/eth/tracers/logger"
+	"github.com/luxfi/coreth/params"
 
 	// force-load js tracers to trigger registration
-	_ "github.com/luxdefi/coreth/eth/tracers/js"
+	_ "github.com/luxfi/coreth/eth/tracers/js"
 )
 
 func TestDefaults(t *testing.T) {

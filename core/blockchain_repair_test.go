@@ -34,11 +34,11 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxdefi/coreth/consensus/dummy"
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/consensus/dummy"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -502,7 +502,7 @@ func testLongReorgedDeepRepair(t *testing.T, snapshots bool) {
 
 func testRepair(t *testing.T, tt *rewindTest, snapshots bool) {
 	// It's hard to follow the test case, visualize the input
-	//log.Root().SetHandler(log.LvlFilterHandler(log.LvlTrace, log.StreamHandler(os.Stderr, log.TerminalFormat(true))))
+	//log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
 	// fmt.Println(tt.dump(true))
 
 	// Create a temporary persistent database

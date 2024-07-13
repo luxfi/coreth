@@ -27,8 +27,8 @@
 package node
 
 import (
-	"github.com/luxdefi/coreth/accounts"
-	"github.com/luxdefi/coreth/rpc"
+	"github.com/luxfi/coreth/accounts"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // Node is a container on which services can be registered.

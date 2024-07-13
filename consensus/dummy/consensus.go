@@ -10,12 +10,12 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/luxdefi/coreth/consensus"
-	"github.com/luxdefi/coreth/core/state"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/rpc"
-	"github.com/luxdefi/coreth/trie"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/coreth/trie"
 	"github.com/ethereum/go-ethereum/common"
 )
 

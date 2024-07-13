@@ -34,11 +34,11 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/coreth/accounts/abi/bind"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/interfaces"
-	"github.com/luxdefi/coreth/rpc"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/coreth/accounts/abi/bind"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/interfaces"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )

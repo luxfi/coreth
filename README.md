@@ -11,8 +11,8 @@ This chain implements the Ethereum Virtual Machine and supports Solidity smart c
 Coreth is a dependency of Lux Node which is used to implement the EVM based Virtual Machine for the Lux C-Chain. In order to run with a local version of Coreth, users must update their Coreth dependency within Lux Node to point to their local Coreth directory. If Coreth and Lux Node are at the standard location within your GOPATH, this will look like the following:
 
 ```bash
-cd $GOPATH/src/github.com/luxdefi/node
-go mod edit -replace github.com/luxdefi/coreth=../coreth
+cd $GOPATH/src/github.com/luxfi/node
+go mod edit -replace github.com/luxfi/coreth=../coreth
 ```
 
 Now that Lux Node depends on the local version of Coreth, we can build with the normal build script:

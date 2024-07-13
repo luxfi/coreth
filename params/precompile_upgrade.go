@@ -9,9 +9,9 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/precompile/modules"
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
-	"github.com/luxdefi/coreth/utils"
+	"github.com/luxfi/coreth/precompile/modules"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/coreth/utils"
 )
 
 var errNoKey = errors.New("PrecompileUpgrade cannot be empty")

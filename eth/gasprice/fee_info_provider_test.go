@@ -9,9 +9,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )

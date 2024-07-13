@@ -4,8 +4,8 @@
 package handlers
 
 import (
-	"github.com/luxdefi/coreth/core/state/snapshot"
-	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxfi/coreth/core/state/snapshot"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 

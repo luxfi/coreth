@@ -29,9 +29,9 @@ package core
 import (
 	"sync/atomic"
 
-	"github.com/luxdefi/coreth/core/state"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/core/vm"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
 )
 
 // Validator is an interface which defines the standard for block validation. It

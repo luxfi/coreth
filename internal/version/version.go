@@ -33,10 +33,10 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/params"
 )
 
-const ourPath = "github.com/luxdefi/coreth" // Path to our module
+const ourPath = "github.com/luxfi/coreth" // Path to our module
 
 // These variables are set at build-time by the linker when the build is
 // done by build/ci.go.

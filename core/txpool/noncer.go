@@ -29,7 +29,7 @@ package txpool
 import (
 	"sync"
 
-	"github.com/luxdefi/coreth/core/state"
+	"github.com/luxfi/coreth/core/state"
 	"github.com/ethereum/go-ethereum/common"
 )
 

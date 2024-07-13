@@ -32,9 +32,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxdefi/coreth/core/bloombits"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/rpc"
+	"github.com/luxfi/coreth/core/bloombits"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/ethereum/go-ethereum/common"
 )
 

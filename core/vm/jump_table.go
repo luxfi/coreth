@@ -29,7 +29,7 @@ package vm
 import (
 	"fmt"
 
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/params"
 )
 
 type (

@@ -3,7 +3,7 @@
 
 package precompileconfig
 
-import "github.com/luxdefi/coreth/utils"
+import "github.com/luxfi/coreth/utils"
 
 // Upgrade contains the timestamp for the upgrade along with
 // a boolean [Disable]. If [Disable] is set, the upgrade deactivates

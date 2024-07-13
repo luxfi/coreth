@@ -21,7 +21,7 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/luxdefi/coreth/core/vm"
+	"github.com/luxfi/coreth/core/vm"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 )

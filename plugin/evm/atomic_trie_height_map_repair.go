@@ -9,9 +9,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/luxdefi/node/database"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/trie/trienode"
+	"github.com/luxfi/node/database"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/trie/trienode"
 	"github.com/ethereum/go-ethereum/log"
 )
 

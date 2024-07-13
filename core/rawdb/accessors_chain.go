@@ -32,9 +32,9 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"

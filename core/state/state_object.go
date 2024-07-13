@@ -37,9 +37,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/metrics"
-	"github.com/luxdefi/coreth/trie/trienode"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/metrics"
+	"github.com/luxfi/coreth/trie/trienode"
 )
 
 type Code []byte

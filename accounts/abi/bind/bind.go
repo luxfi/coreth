@@ -39,7 +39,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/luxdefi/coreth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/ethereum/go-ethereum/log"
 )
 

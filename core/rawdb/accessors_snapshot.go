@@ -27,7 +27,7 @@
 package rawdb
 
 import (
-	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxfi/coreth/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

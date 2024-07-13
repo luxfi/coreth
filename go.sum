@@ -227,8 +227,8 @@ github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0
 github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
 github.com/leanovate/gopter v0.2.9 h1:fQjYxZaynp97ozCzfOyOuAGOU4aU/z37zf/tOujFk7c=
 github.com/leanovate/gopter v0.2.9/go.mod h1:U2L/78B+KVFIx2VmW6onHJQzXtFb+p5y3y2Sh+Jxxv8=
-github.com/luxdefi/node v1.10.21 h1:ghv9Rm54RikLXplQoOeerreiq/6srYSBxi7QkffOr28=
-github.com/luxdefi/node v1.10.21/go.mod h1:8we3V7J7ZiXtgljc6UD911fatRnIT5ukkk3jA4d9IWg=
+github.com/luxfi/node v1.10.21 h1:ghv9Rm54RikLXplQoOeerreiq/6srYSBxi7QkffOr28=
+github.com/luxfi/node v1.10.21/go.mod h1:8we3V7J7ZiXtgljc6UD911fatRnIT5ukkk3jA4d9IWg=
 github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0VQdvPDY=
 github.com/magiconair/properties v1.8.7/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=

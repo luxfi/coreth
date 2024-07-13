@@ -38,14 +38,14 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/bloombits"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/interfaces"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/rpc"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/bloombits"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/interfaces"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // Config represents the configuration of the filter system.

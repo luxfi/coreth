@@ -21,10 +21,10 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/trie/triedb/hashdb"
-	"github.com/luxdefi/coreth/trie/trienode"
-	"github.com/luxdefi/coreth/utils"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/trie/triedb/hashdb"
+	"github.com/luxfi/coreth/trie/trienode"
+	"github.com/luxfi/coreth/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

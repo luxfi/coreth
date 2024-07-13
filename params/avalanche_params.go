@@ -6,7 +6,7 @@ package params
 import (
 	"math/big"
 
-	"github.com/luxdefi/node/utils/units"
+	"github.com/luxfi/node/utils/units"
 )
 
 // Minimum Gas Price

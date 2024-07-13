@@ -6,7 +6,7 @@ package evm
 import (
 	"container/heap"
 
-	"github.com/luxdefi/node/ids"
+	"github.com/luxfi/node/ids"
 )
 
 // txEntry is used to track the [gasPrice] transactions pay to be included in

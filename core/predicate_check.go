@@ -9,11 +9,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
-	"github.com/luxdefi/coreth/predicate"
-	"github.com/luxdefi/node/utils/set"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/coreth/predicate"
+	"github.com/luxfi/node/utils/set"
 )
 
 var ErrMissingPredicateContext = errors.New("missing predicate context")

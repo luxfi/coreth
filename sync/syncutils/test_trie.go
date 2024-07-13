@@ -10,12 +10,12 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/luxdefi/coreth/accounts/keystore"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/trie"
-	"github.com/luxdefi/coreth/trie/trienode"
-	"github.com/luxdefi/node/utils/wrappers"
+	"github.com/luxfi/coreth/accounts/keystore"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/coreth/trie/trienode"
+	"github.com/luxfi/node/utils/wrappers"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"

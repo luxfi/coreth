@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/luxdefi/coreth/rpc"
-	"github.com/luxdefi/node/ids"
+	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/node/ids"
 )
 
 var _ Client = (*client)(nil)

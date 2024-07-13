@@ -10,7 +10,7 @@ Lux Warp Messaging uses BLS Multi-Signatures with Public-Key Aggregation where e
 
 Every node tracking a Subnet has read access to the Lux P-Chain. This provides weighted sets of BLS Public Keys that correspond to the validator sets of each Subnet on the Lux Network. Lux Warp Messaging provides a basic primitive for signing and verifying messages between Subnets: the receiving network can verify whether an aggregation of signatures from a set of source Subnet validators represents a threshold of stake large enough for the receiving network to process the message.
 
-For more details on Lux Warp Messaging, see the Lux Node [Warp README](https://github.com/luxdefi/node/blob/warp-readme/vms/platformvm/warp/README.md).
+For more details on Lux Warp Messaging, see the Lux Node [Warp README](https://github.com/luxfi/node/blob/warp-readme/vms/platformvm/warp/README.md).
 
 ## Integrating Lux Warp Messaging into the EVM
 
@@ -46,7 +46,7 @@ Additionally, the `SourceChainID` is excluded because anyone parsing the chain c
 - `sender`
 - The `messageID` of the unsigned message (sha256 of the unsigned message)
 
-The actual `message` is the entire [Lux Warp Unsigned Message](https://github.com/luxdefi/node/blob/master/vms/platformvm/warp/unsigned_message.go#L14) including an [AddressedCall](https://github.com/luxdefi/node/tree/v1.10.15/vms/platformvm/warp/payload). The unsigned message is emitted as the unindexed data in the log.
+The actual `message` is the entire [Lux Warp Unsigned Message](https://github.com/luxfi/node/blob/master/vms/platformvm/warp/unsigned_message.go#L14) including an [AddressedCall](https://github.com/luxfi/node/tree/v1.10.15/vms/platformvm/warp/payload). The unsigned message is emitted as the unindexed data in the log.
 
 #### getVerifiedMessage
 
@@ -73,7 +73,7 @@ The `blockchainID` in Lux refers to the txID that created the blockchain on the 
 
 ### Predicate Encoding
 
-Lux Warp Messages are encoded as a signed Lux [Warp Message](https://github.com/luxdefi/node/blob/v1.10.4/vms/platformvm/warp/message.go#L7) where the [UnsignedMessage](https://github.com/luxdefi/node/blob/v1.10.4/vms/platformvm/warp/unsigned_message.go#L14)'s payload includes an [AddressedPayload](../../../warp/payload/payload.go).
+Lux Warp Messages are encoded as a signed Lux [Warp Message](https://github.com/luxfi/node/blob/v1.10.4/vms/platformvm/warp/message.go#L7) where the [UnsignedMessage](https://github.com/luxfi/node/blob/v1.10.4/vms/platformvm/warp/unsigned_message.go#L14)'s payload includes an [AddressedPayload](../../../warp/payload/payload.go).
 
 Since the predicate is encoded into the [Transaction Access List](https://eips.ethereum.org/EIPS/eip-2930), it is packed into 32 byte hashes intended to declare storage slots that should be pre-warmed into the cache prior to transaction execution.
 

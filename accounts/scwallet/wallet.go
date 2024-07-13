@@ -43,9 +43,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxdefi/coreth/accounts"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/interfaces"
+	"github.com/luxfi/coreth/accounts"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/interfaces"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"

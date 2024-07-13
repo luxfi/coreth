@@ -8,8 +8,8 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
-	"github.com/luxdefi/node/snow"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/node/snow"
 )
 
 // StatefulPrecompiledContract is the interface for executing a precompiled contract

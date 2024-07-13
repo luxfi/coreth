@@ -27,7 +27,7 @@
 package vm
 
 import (
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/params"
 )
 
 func minSwapStack(n int) int {

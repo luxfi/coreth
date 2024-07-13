@@ -34,14 +34,14 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/holiman/uint256"
-	"github.com/luxdefi/coreth/constants"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/precompile/contract"
-	"github.com/luxdefi/coreth/precompile/modules"
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
-	"github.com/luxdefi/coreth/predicate"
-	"github.com/luxdefi/coreth/vmerrs"
-	"github.com/luxdefi/node/snow"
+	"github.com/luxfi/coreth/constants"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/precompile/contract"
+	"github.com/luxfi/coreth/precompile/modules"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/coreth/predicate"
+	"github.com/luxfi/coreth/vmerrs"
+	"github.com/luxfi/node/snow"
 )
 
 var (

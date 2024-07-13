@@ -34,7 +34,7 @@ import (
 	"math/big"
 	"unsafe"
 
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"

@@ -33,7 +33,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/luxdefi/coreth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 

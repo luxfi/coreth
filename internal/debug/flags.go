@@ -35,9 +35,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/luxdefi/coreth/internal/flags"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/fjl/memsize/memsizeui"
+	"github.com/luxfi/coreth/internal/flags"
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"
@@ -186,14 +186,16 @@ var Flags = []cli.Flag{
 }
 
 var (
-	glogger         *log.GlogHandler
-	logOutputStream log.Handler
+	glogger                *log.GlogHandler
+	logOutputFile          io.WriteCloser
+	defaultTerminalHandler *log.TerminalHandler
 )
 
 func init() {
-	glogger = log.NewGlogHandler(log.StreamHandler(os.Stderr, log.TerminalFormat(false)))
+	defaultTerminalHandler = log.NewTerminalHandler(os.Stderr, false)
+	glogger = log.NewGlogHandler(defaultTerminalHandler)
 	glogger.Verbosity(log.LvlInfo)
-	log.Root().SetHandler(glogger)
+	log.SetDefault(log.NewLogger(glogger))
 }
 
 // Setup initializes profiling and logging based on the CLI flags.
@@ -267,7 +269,7 @@ func Setup(ctx *cli.Context) error {
 
 	// logging
 	verbosity := ctx.Int(verbosityFlag.Name)
-	glogger.Verbosity(log.Lvl(verbosity))
+	glogger.Verbosity(log.Level(verbosity))
 	vmodule := ctx.String(logVmoduleFlag.Name)
 	if vmodule == "" {
 		// Retain backwards compatibility with `--vmodule` flag if `--log.vmodule` not set

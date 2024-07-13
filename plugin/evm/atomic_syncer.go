@@ -10,14 +10,14 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/node/database/versiondb"
-	"github.com/luxdefi/node/utils/wrappers"
+	"github.com/luxfi/node/database/versiondb"
+	"github.com/luxfi/node/utils/wrappers"
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/luxdefi/coreth/plugin/evm/message"
-	syncclient "github.com/luxdefi/coreth/sync/client"
-	"github.com/luxdefi/coreth/trie"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	syncclient "github.com/luxfi/coreth/sync/client"
+	"github.com/luxfi/coreth/trie"
 )
 
 var (

@@ -7,5 +7,5 @@ package registry
 // Force imports of each precompile to ensure each precompile's init function runs and registers itself
 // with the registry.
 import (
-	_ "github.com/luxdefi/coreth/precompile/contracts/warp"
+	_ "github.com/luxfi/coreth/precompile/contracts/warp"
 )

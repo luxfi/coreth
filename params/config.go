@@ -33,10 +33,10 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/precompile/modules"
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
-	"github.com/luxdefi/coreth/utils"
-	"github.com/luxdefi/node/snow"
+	"github.com/luxfi/coreth/precompile/modules"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/node/snow"
 )
 
 // Lux ChainIDs
@@ -581,18 +581,18 @@ func (c *ChainConfig) Description() string {
 	if c.MuirGlacierBlock != nil {
 		banner += fmt.Sprintf(" - Muir Glacier:                #%-8v (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/muir-glacier.md)\n", c.MuirGlacierBlock)
 	}
-	banner += fmt.Sprintf(" - Apricot Phase 1 Timestamp:        @%-10v (https://github.com/luxdefi/node/releases/tag/v1.3.0)\n", ptrToString(c.ApricotPhase1BlockTimestamp))
-	banner += fmt.Sprintf(" - Apricot Phase 2 Timestamp:        @%-10v (https://github.com/luxdefi/node/releases/tag/v1.4.0)\n", ptrToString(c.ApricotPhase2BlockTimestamp))
-	banner += fmt.Sprintf(" - Apricot Phase 3 Timestamp:        @%-10v (https://github.com/luxdefi/node/releases/tag/v1.5.0)\n", ptrToString(c.ApricotPhase3BlockTimestamp))
-	banner += fmt.Sprintf(" - Apricot Phase 4 Timestamp:        @%-10v (https://github.com/luxdefi/node/releases/tag/v1.6.0)\n", ptrToString(c.ApricotPhase4BlockTimestamp))
-	banner += fmt.Sprintf(" - Apricot Phase 5 Timestamp:        @%-10v (https://github.com/luxdefi/node/releases/tag/v1.7.0)\n", ptrToString(c.ApricotPhase5BlockTimestamp))
-	banner += fmt.Sprintf(" - Apricot Phase P6 Timestamp        @%-10v (https://github.com/luxdefi/node/releases/tag/v1.8.0)\n", ptrToString(c.ApricotPhasePre6BlockTimestamp))
-	banner += fmt.Sprintf(" - Apricot Phase 6 Timestamp:        @%-10v (https://github.com/luxdefi/node/releases/tag/v1.8.0)\n", ptrToString(c.ApricotPhase6BlockTimestamp))
-	banner += fmt.Sprintf(" - Apricot Phase Post-6 Timestamp:   @%-10v (https://github.com/luxdefi/node/releases/tag/v1.8.0\n", ptrToString(c.ApricotPhasePost6BlockTimestamp))
-	banner += fmt.Sprintf(" - Banff Timestamp:                  @%-10v (https://github.com/luxdefi/node/releases/tag/v1.9.0)\n", ptrToString(c.BanffBlockTimestamp))
-	banner += fmt.Sprintf(" - Cortina Timestamp:                @%-10v (https://github.com/luxdefi/node/releases/tag/v1.10.0)\n", ptrToString(c.CortinaBlockTimestamp))
-	banner += fmt.Sprintf(" - DUpgrade Timestamp:               @%-10v (https://github.com/luxdefi/node/releases/tag/v1.11.0)\n", ptrToString(c.DUpgradeBlockTimestamp))
-	banner += fmt.Sprintf(" - Cancun Timestamp:                 @%-10v (https://github.com/luxdefi/node/releases/tag/v1.12.0)\n", ptrToString(c.CancunTime))
+	banner += fmt.Sprintf(" - Apricot Phase 1 Timestamp:        @%-10v (https://github.com/luxfi/node/releases/tag/v1.3.0)\n", ptrToString(c.ApricotPhase1BlockTimestamp))
+	banner += fmt.Sprintf(" - Apricot Phase 2 Timestamp:        @%-10v (https://github.com/luxfi/node/releases/tag/v1.4.0)\n", ptrToString(c.ApricotPhase2BlockTimestamp))
+	banner += fmt.Sprintf(" - Apricot Phase 3 Timestamp:        @%-10v (https://github.com/luxfi/node/releases/tag/v1.5.0)\n", ptrToString(c.ApricotPhase3BlockTimestamp))
+	banner += fmt.Sprintf(" - Apricot Phase 4 Timestamp:        @%-10v (https://github.com/luxfi/node/releases/tag/v1.6.0)\n", ptrToString(c.ApricotPhase4BlockTimestamp))
+	banner += fmt.Sprintf(" - Apricot Phase 5 Timestamp:        @%-10v (https://github.com/luxfi/node/releases/tag/v1.7.0)\n", ptrToString(c.ApricotPhase5BlockTimestamp))
+	banner += fmt.Sprintf(" - Apricot Phase P6 Timestamp        @%-10v (https://github.com/luxfi/node/releases/tag/v1.8.0)\n", ptrToString(c.ApricotPhasePre6BlockTimestamp))
+	banner += fmt.Sprintf(" - Apricot Phase 6 Timestamp:        @%-10v (https://github.com/luxfi/node/releases/tag/v1.8.0)\n", ptrToString(c.ApricotPhase6BlockTimestamp))
+	banner += fmt.Sprintf(" - Apricot Phase Post-6 Timestamp:   @%-10v (https://github.com/luxfi/node/releases/tag/v1.8.0\n", ptrToString(c.ApricotPhasePost6BlockTimestamp))
+	banner += fmt.Sprintf(" - Banff Timestamp:                  @%-10v (https://github.com/luxfi/node/releases/tag/v1.9.0)\n", ptrToString(c.BanffBlockTimestamp))
+	banner += fmt.Sprintf(" - Cortina Timestamp:                @%-10v (https://github.com/luxfi/node/releases/tag/v1.10.0)\n", ptrToString(c.CortinaBlockTimestamp))
+	banner += fmt.Sprintf(" - DUpgrade Timestamp:               @%-10v (https://github.com/luxfi/node/releases/tag/v1.11.0)\n", ptrToString(c.DUpgradeBlockTimestamp))
+	banner += fmt.Sprintf(" - Cancun Timestamp:                 @%-10v (https://github.com/luxfi/node/releases/tag/v1.12.0)\n", ptrToString(c.CancunTime))
 	banner += "\n"
 	return banner
 }

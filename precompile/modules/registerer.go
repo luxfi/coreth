@@ -8,8 +8,8 @@ import (
 	"sort"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/constants"
-	"github.com/luxdefi/coreth/utils"
+	"github.com/luxfi/coreth/constants"
+	"github.com/luxfi/coreth/utils"
 )
 
 var (

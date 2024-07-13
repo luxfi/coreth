@@ -29,8 +29,8 @@ package vm
 import (
 	"errors"
 
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/vmerrs"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 )

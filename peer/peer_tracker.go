@@ -8,14 +8,14 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/luxdefi/node/ids"
-	utils_math "github.com/luxdefi/node/utils/math"
-	"github.com/luxdefi/node/utils/set"
-	"github.com/luxdefi/node/version"
+	"github.com/luxfi/node/ids"
+	utils_math "github.com/luxfi/node/utils/math"
+	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/node/version"
 
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/luxdefi/coreth/metrics"
+	"github.com/luxfi/coreth/metrics"
 )
 
 const (

@@ -5,9 +5,9 @@ package predicate
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/utils"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/utils"
 )
 
 // PreparePredicateStorageSlots populates the the predicate storage slots of a transaction's access list

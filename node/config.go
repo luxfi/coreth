@@ -32,9 +32,9 @@ import (
 	"path/filepath"
 
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/accounts"
-	"github.com/luxdefi/coreth/accounts/external"
-	"github.com/luxdefi/coreth/accounts/keystore"
+	"github.com/luxfi/coreth/accounts"
+	"github.com/luxfi/coreth/accounts/external"
+	"github.com/luxfi/coreth/accounts/keystore"
 )
 
 // Config represents a small collection of configuration values to fine tune the

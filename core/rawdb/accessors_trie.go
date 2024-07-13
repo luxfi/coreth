@@ -33,7 +33,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/ethdb"
+	"github.com/luxfi/coreth/ethdb"
 	"golang.org/x/crypto/sha3"
 )
 

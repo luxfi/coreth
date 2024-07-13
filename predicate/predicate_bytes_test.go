@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/node/utils"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/node/utils"
 	"github.com/stretchr/testify/require"
 )
 

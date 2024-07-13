@@ -21,7 +21,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/params"
 )
 
 func TestCalcBlobFee(t *testing.T) {

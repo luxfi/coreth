@@ -7,12 +7,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxdefi/coreth/accounts/abi"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/precompile/contract"
-	"github.com/luxdefi/coreth/vmerrs"
-	"github.com/luxdefi/node/vms/platformvm/warp"
-	"github.com/luxdefi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/coreth/accounts/abi"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/precompile/contract"
+	"github.com/luxfi/coreth/vmerrs"
+	"github.com/luxfi/node/vms/platformvm/warp"
+	"github.com/luxfi/node/vms/platformvm/warp/payload"
 
 	_ "embed"
 

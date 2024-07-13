@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/luxdefi/node/codec"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/plugin/evm/message"
-	"github.com/luxdefi/coreth/sync/handlers"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/sync/handlers"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 )

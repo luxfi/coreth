@@ -37,12 +37,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxdefi/coreth/accounts/abi"
-	"github.com/luxdefi/coreth/accounts/abi/bind"
-	"github.com/luxdefi/coreth/core"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/interfaces"
-	"github.com/luxdefi/coreth/params"
+	"github.com/luxfi/coreth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi/bind"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/interfaces"
+	"github.com/luxfi/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )

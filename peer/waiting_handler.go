@@ -6,7 +6,7 @@ package peer
 import (
 	"context"
 
-	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/plugin/evm/message"
 )
 
 var _ message.ResponseHandler = &waitingResponseHandler{}

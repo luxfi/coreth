@@ -7,7 +7,7 @@ import (
 	"bytes"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/coreth/precompile/contract"
+	"github.com/luxfi/coreth/precompile/contract"
 )
 
 type Module struct {

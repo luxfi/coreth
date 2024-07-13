@@ -29,7 +29,7 @@ package runtime_test
 import (
 	"fmt"
 
-	"github.com/luxdefi/coreth/core/vm/runtime"
+	"github.com/luxfi/coreth/core/vm/runtime"
 	"github.com/ethereum/go-ethereum/common"
 )
 

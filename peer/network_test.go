@@ -13,21 +13,21 @@ import (
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/luxdefi/node/network/p2p"
-	"github.com/luxdefi/node/snow/engine/common"
-	"github.com/luxdefi/node/utils/logging"
-	"github.com/luxdefi/node/utils/set"
+	"github.com/luxfi/node/network/p2p"
+	"github.com/luxfi/node/snow/engine/common"
+	"github.com/luxfi/node/utils/logging"
+	"github.com/luxfi/node/utils/set"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/luxdefi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/plugin/evm/message"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/luxdefi/node/codec"
-	"github.com/luxdefi/node/codec/linearcodec"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/version"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/codec/linearcodec"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/version"
 )
 
 var (

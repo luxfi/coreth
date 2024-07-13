@@ -34,9 +34,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/ethdb/leveldb"
-	"github.com/luxdefi/coreth/ethdb/memorydb"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/ethdb/leveldb"
+	"github.com/luxfi/coreth/ethdb/memorydb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/olekukonko/tablewriter"

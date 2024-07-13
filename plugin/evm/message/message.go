@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxdefi/node/codec"
+	"github.com/luxfi/node/codec"
 
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/utils/units"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/utils/units"
 )
 
 const (

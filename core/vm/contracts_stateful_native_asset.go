@@ -9,8 +9,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/holiman/uint256"
-	"github.com/luxdefi/coreth/precompile/contract"
-	"github.com/luxdefi/coreth/vmerrs"
+	"github.com/luxfi/coreth/precompile/contract"
+	"github.com/luxfi/coreth/vmerrs"
 )
 
 // PrecompiledContractsApricot contains the default set of pre-compiled Ethereum

@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/luxdefi/node/cache"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/network/p2p/gossip"
-	"github.com/luxdefi/node/snow"
+	"github.com/luxfi/node/cache"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/network/p2p/gossip"
+	"github.com/luxfi/node/snow"
 
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/metrics"
+	"github.com/luxfi/coreth/metrics"
 )
 
 const (

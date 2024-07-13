@@ -43,7 +43,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/luxdefi/coreth/core"
+	"github.com/luxfi/coreth/core"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 

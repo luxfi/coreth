@@ -31,7 +31,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/luxdefi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/rawdb"
 )
 
 // Tests that the node iterator indeed walks over the entire database contents.

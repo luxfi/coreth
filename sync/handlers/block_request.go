@@ -8,14 +8,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/luxdefi/node/codec"
-	"github.com/luxdefi/node/ids"
-	"github.com/luxdefi/node/utils/units"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/utils/units"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/luxdefi/coreth/plugin/evm/message"
-	"github.com/luxdefi/coreth/sync/handlers/stats"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/sync/handlers/stats"
 )
 
 const (

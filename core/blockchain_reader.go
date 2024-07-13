@@ -29,14 +29,14 @@ package core
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/luxdefi/coreth/consensus"
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/core/state"
-	"github.com/luxdefi/coreth/core/state/snapshot"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/core/vm"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/trie"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/state/snapshot"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/trie"
 )
 
 // CurrentHeader retrieves the current head header of the canonical chain. The

@@ -8,12 +8,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/luxdefi/coreth/precompile/contract"
-	"github.com/luxdefi/coreth/predicate"
-	"github.com/luxdefi/coreth/vmerrs"
-	"github.com/luxdefi/node/utils/set"
-	"github.com/luxdefi/node/vms/platformvm/warp"
-	"github.com/luxdefi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/coreth/precompile/contract"
+	"github.com/luxfi/coreth/predicate"
+	"github.com/luxfi/coreth/vmerrs"
+	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/node/vms/platformvm/warp"
+	"github.com/luxfi/node/vms/platformvm/warp/payload"
 )
 
 var (

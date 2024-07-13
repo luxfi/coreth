@@ -37,11 +37,12 @@ import (
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/luxdefi/coreth/core/rawdb"
-	"github.com/luxdefi/coreth/core/types"
-	"github.com/luxdefi/coreth/ethdb"
-	"github.com/luxdefi/coreth/trie"
-	"github.com/luxdefi/coreth/utils"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/ethdb"
+	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/coreth/utils"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -63,18 +64,18 @@ type generatorStats struct {
 // Info creates an contextual info-level log with the given message and the context pulled
 // from the internally maintained statistics.
 func (gs *generatorStats) Info(msg string, root common.Hash, marker []byte) {
-	gs.log(log.LvlInfo, msg, root, marker)
+	gs.log(log.LevelInfo, msg, root, marker)
 }
 
 // Debug creates an contextual debug-level log with the given message and the context pulled
 // from the internally maintained statistics.
 func (gs *generatorStats) Debug(msg string, root common.Hash, marker []byte) {
-	gs.log(log.LvlDebug, msg, root, marker)
+	gs.log(log.LevelDebug, msg, root, marker)
 }
 
 // log creates an contextual log with the given message and the context pulled
 // from the internally maintained statistics.
-func (gs *generatorStats) log(level log.Lvl, msg string, root common.Hash, marker []byte) {
+func (gs *generatorStats) log(level slog.Level, msg string, root common.Hash, marker []byte) {
 	var ctx []interface{}
 	if root != (common.Hash{}) {
 		ctx = append(ctx, []interface{}{"root", root}...)
@@ -109,17 +110,17 @@ func (gs *generatorStats) log(level log.Lvl, msg string, root common.Hash, marke
 	}
 
 	switch level {
-	case log.LvlTrace:
+	case log.LevelTrace:
 		log.Trace(msg, ctx...)
-	case log.LvlDebug:
+	case log.LevelDebug:
 		log.Debug(msg, ctx...)
-	case log.LvlInfo:
+	case log.LevelInfo:
 		log.Info(msg, ctx...)
-	case log.LvlWarn:
+	case log.LevelWarn:
 		log.Warn(msg, ctx...)
-	case log.LvlError:
+	case log.LevelError:
 		log.Error(msg, ctx...)
-	case log.LvlCrit:
+	case log.LevelCrit:
 		log.Crit(msg, ctx...)
 	default:
 		log.Error(fmt.Sprintf("log with invalid log level %s: %s", level, msg), ctx...)

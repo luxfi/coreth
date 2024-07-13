@@ -14,8 +14,8 @@ import (
 func TestMain(m *testing.M) {
 	opts := []goleak.Option{
 		// No good way to shut down these goroutines:
-		goleak.IgnoreTopFunction("github.com/luxdefi/coreth/core/state/snapshot.(*diskLayer).generate"),
-		goleak.IgnoreTopFunction("github.com/luxdefi/coreth/metrics.(*meterArbiter).tick"),
+		goleak.IgnoreTopFunction("github.com/luxfi/coreth/core/state/snapshot.(*diskLayer).generate"),
+		goleak.IgnoreTopFunction("github.com/luxfi/coreth/metrics.(*meterArbiter).tick"),
 		goleak.IgnoreTopFunction("github.com/syndtr/goleveldb/leveldb.(*DB).mpoolDrain"),
 	}
 	goleak.VerifyTestMain(m, opts...)

@@ -6,8 +6,8 @@ package params
 import (
 	"encoding/json"
 
-	"github.com/luxdefi/coreth/precompile/modules"
-	"github.com/luxdefi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/coreth/precompile/modules"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
 )
 
 type Precompiles map[string]precompileconfig.Config

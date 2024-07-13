@@ -40,10 +40,10 @@ import (
 	"github.com/ethereum/go-ethereum/crypto/bls12381"
 	"github.com/ethereum/go-ethereum/crypto/bn256"
 	big2 "github.com/holiman/big"
-	"github.com/luxdefi/coreth/params"
-	"github.com/luxdefi/coreth/precompile/contract"
-	"github.com/luxdefi/coreth/precompile/modules"
-	"github.com/luxdefi/coreth/vmerrs"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/precompile/contract"
+	"github.com/luxfi/coreth/precompile/modules"
+	"github.com/luxfi/coreth/vmerrs"
 	"golang.org/x/crypto/ripemd160"
 )
 

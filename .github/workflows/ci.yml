@@ -9,7 +9,7 @@ on:
       luxdRepo:
         description: 'lux node github repository'
         required: true
-        default: 'luxdefi/node'
+        default: 'luxfi/node'
       luxdBranch:
         description: 'lux branch'
         required: true
@@ -36,7 +36,7 @@ jobs:
       - name: change luxd dep
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
-          go mod edit -replace github.com/luxdefi/node=./node
+          go mod edit -replace github.com/luxfi/node=./node
           go mod tidy
           go clean -modcache # avoid conflicts with the golangci-lint-action cache
       - run: ./scripts/lint_allowed_geth_imports.sh
@@ -70,7 +70,7 @@ jobs:
     - name: change luxd dep
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: |
-        go mod edit -replace github.com/luxdefi/node=./node
+        go mod edit -replace github.com/luxfi/node=./node
         go mod tidy
     - run: go mod download
       shell: bash
@@ -103,7 +103,7 @@ jobs:
     - name: change luxd dep
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: |
-        go mod edit -replace github.com/luxdefi/node=./node
+        go mod edit -replace github.com/luxfi/node=./node
         go mod tidy
     - run: go mod download
       shell: bash
