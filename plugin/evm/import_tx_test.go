@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/params"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/luxfi/node/chains/atomic"

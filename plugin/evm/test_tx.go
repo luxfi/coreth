@@ -16,8 +16,8 @@ import (
 	"github.com/luxfi/node/snow"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/utils/wrappers"
-	"github.com/luxfi/coreth/core/state"
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/params"
 )
 
 type TestUnsignedTx struct {

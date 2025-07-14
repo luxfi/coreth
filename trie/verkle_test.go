@@ -22,10 +22,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/trie/triedb/pathdb"
-	"github.com/luxfi/coreth/trie/utils"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/trie/triedb/pathdb"
+	"github.com/luxfi/geth/trie/utils"
 	"github.com/ethereum/go-ethereum/common"
 )
 

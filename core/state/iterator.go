@@ -31,8 +31,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/trie"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 )

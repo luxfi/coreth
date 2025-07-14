@@ -29,7 +29,7 @@ package trie
 import (
 	"fmt"
 
-	"github.com/luxfi/coreth/trie/trienode"
+	"github.com/luxfi/geth/trie/trienode"
 	"github.com/ethereum/go-ethereum/common"
 )
 

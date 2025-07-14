@@ -19,17 +19,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/core/vm"
-	"github.com/luxfi/coreth/tests"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/geth/tests"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 
 	// Force-load the native, to trigger registration
-	"github.com/luxfi/coreth/eth/tracers"
+	"github.com/luxfi/geth/eth/tracers"
 )
 
 // flatCallTrace is the result of a callTracerParity run.

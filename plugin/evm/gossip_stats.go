@@ -3,9 +3,27 @@
 
 package evm
 
-import "github.com/luxfi/coreth/metrics"
+import "github.com/luxfi/geth/metrics"
 
 var _ GossipStats = &gossipStats{}
+
+// GossipSentStats tracks sent gossip statistics
+type GossipSentStats interface {
+	IncAtomicGossipSent()
+	IncEthTxsGossipSent()
+}
+
+// GossipReceivedStats tracks received gossip statistics
+type GossipReceivedStats interface {
+	IncAtomicGossipReceived()
+	IncEthTxsGossipReceived()
+	IncAtomicGossipReceivedKnown()
+	IncAtomicGossipReceivedDropped()
+	IncAtomicGossipReceivedNew()
+	IncEthTxsGossipReceivedKnown()
+	IncAtomicGossipReceivedError()
+	IncEthTxsGossipReceivedNew()
+}
 
 // GossipStats contains methods for updating incoming and outgoing gossip stats.
 type GossipStats interface {
@@ -65,3 +83,14 @@ func (g *gossipStats) IncAtomicGossipReceivedNew()     { g.atomicGossipReceivedN
 func (g *gossipStats) IncEthTxsGossipReceivedError()   { g.ethTxsGossipReceivedError.Inc(1) }
 func (g *gossipStats) IncEthTxsGossipReceivedKnown()   { g.ethTxsGossipReceivedKnown.Inc(1) }
 func (g *gossipStats) IncEthTxsGossipReceivedNew()     { g.ethTxsGossipReceivedNew.Inc(1) }
+
+// noopGossipSentStats implements GossipSentStats with no-op methods
+type noopGossipSentStats struct{}
+
+func (n *noopGossipSentStats) IncAtomicGossipSent()   {}
+func (n *noopGossipSentStats) IncEthTxsGossipSent()   {}
+
+// Convert GossipStats to GossipSentStats
+func asSentStats(stats GossipStats) GossipSentStats {
+	return &noopGossipSentStats{}
+}

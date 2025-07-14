@@ -33,11 +33,11 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/core/state"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/vmerrs"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )

@@ -8,8 +8,8 @@ import (
 
 	"github.com/luxfi/node/database"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/trie/trienode"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/trie/trienode"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -70,9 +70,9 @@ func (a *atomicTrie) repairAtomicTrie(bonusBlockIDs map[uint64]ids.ID, bonusBloc
 		}
 		heightsRepaired++
 	}
-	newRoot, nodes := tr.Commit(false)
+	newRoot, nodes, _ := tr.Commit(false)
 	if nodes != nil {
-		if err := a.trieDB.Update(newRoot, types.EmptyRootHash, trienode.NewWithNodeSet(nodes)); err != nil {
+		if err := a.trieDB.Update(newRoot, root, lastCommitted, trienode.NewWithNodeSet(nodes), nil); err != nil {
 			return 0, err
 		}
 		if err := a.commit(lastCommitted, newRoot); err != nil {

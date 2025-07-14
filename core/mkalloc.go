@@ -42,7 +42,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/geth/core"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"golang.org/x/exp/slices"

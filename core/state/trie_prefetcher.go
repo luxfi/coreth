@@ -30,8 +30,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/coreth/metrics"
-	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/geth/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

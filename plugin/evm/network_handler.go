@@ -8,13 +8,13 @@ import (
 
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/coreth/metrics"
-	"github.com/luxfi/coreth/plugin/evm/message"
-	syncHandlers "github.com/luxfi/coreth/sync/handlers"
-	syncStats "github.com/luxfi/coreth/sync/handlers/stats"
-	"github.com/luxfi/coreth/trie"
-	"github.com/luxfi/coreth/warp"
-	warpHandlers "github.com/luxfi/coreth/warp/handlers"
+	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/geth/plugin/evm/message"
+	syncHandlers "github.com/luxfi/geth/sync/handlers"
+	syncStats "github.com/luxfi/geth/sync/handlers/stats"
+	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/warp"
+	warpHandlers "github.com/luxfi/geth/warp/handlers"
 	"github.com/ethereum/go-ethereum/ethdb"
 )
 

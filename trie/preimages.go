@@ -29,7 +29,7 @@ package trie
 import (
 	"sync"
 
-	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/geth/core/rawdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
 )

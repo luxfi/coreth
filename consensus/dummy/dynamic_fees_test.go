@@ -8,8 +8,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/stretchr/testify/assert"

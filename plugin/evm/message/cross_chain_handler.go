@@ -10,8 +10,8 @@ import (
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/ids"
 
-	"github.com/luxfi/coreth/internal/ethapi"
-	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/geth/internal/ethapi"
+	"github.com/luxfi/geth/rpc"
 
 	"github.com/ethereum/go-ethereum/log"
 )

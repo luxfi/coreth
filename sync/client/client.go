@@ -13,8 +13,8 @@ import (
 
 	"github.com/luxfi/node/ids"
 
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/sync/client/stats"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/sync/client/stats"
 
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/version"
@@ -23,11 +23,11 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/peer"
-	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/peer"
+	"github.com/luxfi/geth/plugin/evm/message"
+	"github.com/luxfi/geth/trie"
 	"github.com/ethereum/go-ethereum/ethdb"
 )
 

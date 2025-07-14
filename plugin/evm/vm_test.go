@@ -22,12 +22,12 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/luxfi/coreth/eth/filters"
-	"github.com/luxfi/coreth/internal/ethapi"
-	"github.com/luxfi/coreth/metrics"
-	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/coreth/trie"
-	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/geth/eth/filters"
+	"github.com/luxfi/geth/internal/ethapi"
+	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/geth/plugin/evm/message"
+	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/utils"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -56,16 +56,16 @@ import (
 
 	commonEng "github.com/luxfi/node/snow/engine/common"
 
-	"github.com/luxfi/coreth/consensus/dummy"
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/eth"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/geth/consensus/dummy"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/eth"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/rpc"
 
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
-	"github.com/luxfi/coreth/accounts/abi"
-	accountKeystore "github.com/luxfi/coreth/accounts/keystore"
+	"github.com/luxfi/geth/accounts/abi"
+	accountKeystore "github.com/luxfi/geth/accounts/keystore"
 )
 
 var (

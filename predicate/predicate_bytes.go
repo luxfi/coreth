@@ -6,7 +6,7 @@ package predicate
 import (
 	"fmt"
 
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 

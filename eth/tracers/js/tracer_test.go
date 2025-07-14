@@ -34,10 +34,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/coreth/core/state"
-	"github.com/luxfi/coreth/core/vm"
-	"github.com/luxfi/coreth/eth/tracers"
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/geth/eth/tracers"
+	"github.com/luxfi/geth/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 

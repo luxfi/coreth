@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/rpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"

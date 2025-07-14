@@ -33,9 +33,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/metrics"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/metrics"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"

@@ -30,11 +30,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/coreth/consensus"
-	"github.com/luxfi/coreth/core/state"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/geth/consensus"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/trie"
 )
 
 // BlockValidator is responsible for validating block headers, uncles and

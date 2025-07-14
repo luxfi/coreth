@@ -35,15 +35,15 @@ import (
 	"math/big"
 
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/coreth/accounts/abi/bind"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/interfaces"
-	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/geth/accounts/abi/bind"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/interfaces"
+	"github.com/luxfi/geth/rpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	// Force-load precompiles to trigger registration
-	_ "github.com/luxfi/coreth/precompile/registry"
+	_ "github.com/luxfi/geth/precompile/registry"
 )
 
 // Verify that Client implements required interfaces

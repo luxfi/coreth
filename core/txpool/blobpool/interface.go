@@ -27,9 +27,9 @@
 package blobpool
 
 import (
-	"github.com/luxfi/coreth/core/state"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 

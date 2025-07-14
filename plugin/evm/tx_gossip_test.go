@@ -32,9 +32,9 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/utils"
 )
 
 func TestEthTxGossip(t *testing.T) {

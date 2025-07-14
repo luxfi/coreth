@@ -35,7 +35,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/geth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 

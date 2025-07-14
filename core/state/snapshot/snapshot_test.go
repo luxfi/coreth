@@ -34,8 +34,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 )

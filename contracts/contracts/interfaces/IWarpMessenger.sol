@@ -1,4 +1,4 @@
-// (c) 2022-2023, Lux Partners Limited. All rights reserved.
+// (c) 2022-2023, Lux Industries Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 // SPDX-License-Identifier: MIT

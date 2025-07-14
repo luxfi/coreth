@@ -33,7 +33,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/geth/core/types"
 )
 
 type blockAndState struct {

@@ -16,13 +16,13 @@ import (
 	"github.com/luxfi/node/database/memdb"
 	"github.com/luxfi/node/database/versiondb"
 
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/plugin/evm/message"
-	syncclient "github.com/luxfi/coreth/sync/client"
-	"github.com/luxfi/coreth/sync/handlers"
-	handlerstats "github.com/luxfi/coreth/sync/handlers/stats"
-	"github.com/luxfi/coreth/sync/syncutils"
-	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/plugin/evm/message"
+	syncclient "github.com/luxfi/geth/sync/client"
+	"github.com/luxfi/geth/sync/handlers"
+	handlerstats "github.com/luxfi/geth/sync/handlers/stats"
+	"github.com/luxfi/geth/sync/syncutils"
+	"github.com/luxfi/geth/trie"
 	"github.com/ethereum/go-ethereum/common"
 )
 

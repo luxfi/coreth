@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 
 	"github.com/luxfi/node/utils/formatting"
-	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/geth/core"
 )
 
 // StaticService defines the static API services exposed by the evm

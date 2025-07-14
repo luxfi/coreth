@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/node/utils"
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/params"
 	"github.com/stretchr/testify/require"
 )
 

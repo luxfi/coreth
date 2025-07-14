@@ -27,8 +27,8 @@
 package node
 
 import (
-	"github.com/luxfi/coreth/internal/debug"
-	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/geth/internal/debug"
+	"github.com/luxfi/geth/rpc"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 )

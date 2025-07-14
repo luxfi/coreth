@@ -19,7 +19,7 @@ package misc
 import (
 	"math/big"
 
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/params"
 )
 
 var (

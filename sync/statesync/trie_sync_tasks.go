@@ -6,10 +6,10 @@ package statesync
 import (
 	"fmt"
 
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/sync/syncutils"
-	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/sync/syncutils"
+	"github.com/luxfi/geth/trie"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/log"

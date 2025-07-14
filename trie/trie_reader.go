@@ -27,8 +27,8 @@
 package trie
 
 import (
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/trie/triestate"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/trie/triestate"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

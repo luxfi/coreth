@@ -31,8 +31,8 @@ import (
 	"time"
 
 	"github.com/VictoriaMetrics/fastcache"
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/trie/trienode"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/trie/trienode"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"

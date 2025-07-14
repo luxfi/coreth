@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/utils"
 )
 
 func TestBlockBuilderShutsDown(t *testing.T) {

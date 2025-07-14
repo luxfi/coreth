@@ -14,12 +14,12 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/precompile/precompileconfig"
-	"github.com/luxfi/coreth/predicate"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/precompile/precompileconfig"
+	"github.com/luxfi/geth/predicate"
 
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/snow/choices"

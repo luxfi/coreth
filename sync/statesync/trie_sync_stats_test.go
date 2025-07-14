@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/coreth/metrics"
+	"github.com/luxfi/geth/metrics"
 	"github.com/stretchr/testify/require"
 )
 

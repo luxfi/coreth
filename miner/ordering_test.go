@@ -33,8 +33,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/coreth/core/txpool"
-	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/geth/core/txpool"
+	"github.com/luxfi/geth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )

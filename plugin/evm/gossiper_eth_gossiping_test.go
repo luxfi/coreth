@@ -25,10 +25,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/plugin/evm/message"
 )
 
 func fundAddressByGenesis(addrs []common.Address) (string, error) {

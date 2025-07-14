@@ -26,7 +26,7 @@
 
 package state
 
-import "github.com/luxfi/coreth/metrics"
+import "github.com/luxfi/geth/metrics"
 
 var (
 	accountUpdatedMeter      = metrics.NewRegisteredMeter("state/update/account", nil)

@@ -36,7 +36,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/luxfi/coreth/internal/flags"
+	"github.com/luxfi/geth/internal/flags"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/fjl/memsize/memsizeui"
 	"github.com/mattn/go-colorable"

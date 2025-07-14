@@ -29,11 +29,11 @@ package core
 import (
 	"math/big"
 
-	"github.com/luxfi/coreth/consensus"
-	"github.com/luxfi/coreth/consensus/misc/eip4844"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/core/vm"
-	"github.com/luxfi/coreth/predicate"
+	"github.com/luxfi/geth/consensus"
+	"github.com/luxfi/geth/consensus/misc/eip4844"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/geth/predicate"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	//"github.com/ethereum/go-ethereum/log"

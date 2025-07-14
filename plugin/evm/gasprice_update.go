@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/utils"
 )
 
 type gasPriceUpdater struct {
@@ -28,7 +28,7 @@ type gasPriceSetter interface {
 // handleGasPriceUpdates creates and runs an instance of
 func (vm *VM) handleGasPriceUpdates() {
 	gpu := &gasPriceUpdater{
-		setter:       vm.txPool,
+		setter:       &gasPriceSetterWrapper{pool: vm.txPool},
 		chainConfig:  vm.chainConfig,
 		shutdownChan: vm.shutdownChan,
 		wg:           &vm.shutdownWg,

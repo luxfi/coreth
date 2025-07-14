@@ -14,7 +14,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/geth/rpc"
 )
 
 // This example configures a HTTP-based RPC client with two options - one setting the

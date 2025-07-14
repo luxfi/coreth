@@ -6,7 +6,7 @@ package evm
 import (
 	"github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/geth/precompile/precompileconfig"
 )
 
 var _ precompileconfig.SharedMemoryWriter = &sharedMemoryWriter{}

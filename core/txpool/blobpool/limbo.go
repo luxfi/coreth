@@ -29,7 +29,7 @@ package blobpool
 import (
 	"errors"
 
-	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/geth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"

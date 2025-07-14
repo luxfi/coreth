@@ -9,8 +9,8 @@ import (
 	"math/big"
 
 	"github.com/luxfi/node/utils/wrappers"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 )

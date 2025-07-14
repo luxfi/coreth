@@ -34,9 +34,9 @@ import (
 
 	"github.com/luxfi/node/utils/constants"
 	"github.com/luxfi/node/version"
-	"github.com/luxfi/coreth/precompile/modules"
-	"github.com/luxfi/coreth/precompile/precompileconfig"
-	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/geth/precompile/modules"
+	"github.com/luxfi/geth/precompile/precompileconfig"
+	"github.com/luxfi/geth/utils"
 	"github.com/ethereum/go-ethereum/common"
 )
 

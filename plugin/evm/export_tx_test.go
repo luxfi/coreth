@@ -17,7 +17,7 @@ import (
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/secp256k1fx"
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 

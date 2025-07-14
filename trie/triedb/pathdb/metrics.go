@@ -26,7 +26,7 @@
 
 package pathdb
 
-import "github.com/luxfi/coreth/metrics"
+import "github.com/luxfi/geth/metrics"
 
 // nolint: unused
 var (

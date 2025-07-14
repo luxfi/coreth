@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxfi/coreth/core/txpool/legacypool"
-	"github.com/luxfi/coreth/eth"
+	"github.com/luxfi/geth/core/txpool/legacypool"
+	"github.com/luxfi/geth/eth"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/spf13/cast"

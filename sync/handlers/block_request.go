@@ -12,8 +12,8 @@ import (
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/utils/units"
 
-	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/coreth/sync/handlers/stats"
+	"github.com/luxfi/geth/plugin/evm/message"
+	"github.com/luxfi/geth/sync/handlers/stats"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

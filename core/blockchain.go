@@ -39,19 +39,18 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/luxfi/coreth/consensus"
-	"github.com/luxfi/coreth/consensus/misc/eip4844"
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/core/state"
-	"github.com/luxfi/coreth/core/state/snapshot"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/core/vm"
-	"github.com/luxfi/coreth/internal/version"
-	"github.com/luxfi/coreth/metrics"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/trie"
-	"github.com/luxfi/coreth/trie/triedb/hashdb"
-	"github.com/luxfi/coreth/trie/triedb/pathdb"
+	"github.com/luxfi/geth/consensus"
+	"github.com/luxfi/geth/consensus/misc/eip4844"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/state/snapshot"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/trie/triedb/hashdb"
+	"github.com/luxfi/geth/trie/triedb/pathdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/lru"
 	"github.com/ethereum/go-ethereum/ethdb"
@@ -1667,11 +1666,9 @@ func (b *BadBlockReason) String() string {
 			i, receipt.CumulativeGasUsed, receipt.GasUsed, receipt.ContractAddress.Hex(),
 			receipt.Status, receipt.TxHash.Hex(), receipt.Logs, receipt.Bloom, receipt.PostState)
 	}
-	version, vcs := version.Info()
+	version := params.VersionWithMeta
 	platform := fmt.Sprintf("%s %s %s %s", version, runtime.Version(), runtime.GOARCH, runtime.GOOS)
-	if vcs != "" {
-		vcs = fmt.Sprintf("\nVCS: %s", vcs)
-	}
+	vcs := ""
 	return fmt.Sprintf(`
 ########## BAD BLOCK #########
 Block: %v (%#x)

@@ -11,10 +11,10 @@ import (
 	"testing"
 
 	"github.com/luxfi/node/utils/wrappers"
-	"github.com/luxfi/coreth/accounts/keystore"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/trie"
-	"github.com/luxfi/coreth/trie/trienode"
+	"github.com/luxfi/geth/accounts/keystore"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/trie/trienode"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"

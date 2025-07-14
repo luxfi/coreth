@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/geth/plugin/evm/message"
 
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/codec/linearcodec"

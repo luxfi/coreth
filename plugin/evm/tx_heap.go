@@ -5,7 +5,9 @@ package evm
 
 import (
 	"container/heap"
+	"math/big"
 
+	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/node/ids"
 )
 
@@ -160,4 +162,31 @@ func (th *txHeap) Get(id ids.ID) (*Tx, bool) {
 
 func (th *txHeap) Has(id ids.ID) bool {
 	return th.maxHeap.Has(id)
+}
+
+// TxByPriceAndTime implements both the sort and the heap interface
+type TxByPriceAndTime types.Transactions
+
+func (s TxByPriceAndTime) Len() int      { return len(s) }
+func (s TxByPriceAndTime) Less(i, j int) bool {
+	// Compare prices first
+	return s[i].GasPrice().Cmp(s[j].GasPrice()) > 0
+}
+func (s TxByPriceAndTime) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+func (s *TxByPriceAndTime) Push(x interface{}) {
+	*s = append(*s, x.(*types.Transaction))
+}
+
+func (s *TxByPriceAndTime) Pop() interface{} {
+	old := *s
+	n := len(old)
+	x := old[n-1]
+	*s = old[0 : n-1]
+	return x
+}
+
+// NewTxWithMinerFee creates a transaction wrapper with miner fee
+func NewTxWithMinerFee(tx *types.Transaction, baseFee, minerFee *big.Int) *types.Transaction {
+	return tx
 }

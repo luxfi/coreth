@@ -27,9 +27,9 @@
 package trie
 
 import (
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/trie/triedb/hashdb"
-	"github.com/luxfi/coreth/trie/triedb/pathdb"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/trie/triedb/hashdb"
+	"github.com/luxfi/geth/trie/triedb/pathdb"
 	"github.com/ethereum/go-ethereum/ethdb"
 )
 

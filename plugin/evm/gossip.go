@@ -20,10 +20,10 @@ import (
 	"github.com/luxfi/node/snow/engine/common"
 	"github.com/luxfi/node/utils/logging"
 
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/txpool"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/eth"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/txpool"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/eth"
 )
 
 const pendingTxsBuffer = 10

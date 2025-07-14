@@ -9,7 +9,7 @@ import (
 	"github.com/luxfi/node/database/memdb"
 	"github.com/luxfi/node/database/versiondb"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/geth/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"

@@ -29,8 +29,8 @@ package ethapi
 import (
 	"fmt"
 
-	"github.com/luxfi/coreth/accounts/abi"
-	"github.com/luxfi/coreth/vmerrs"
+	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/geth/vmerrs"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 

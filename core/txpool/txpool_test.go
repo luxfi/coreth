@@ -43,13 +43,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/core/state"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/trie"
-	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/utils"
 )
 
 var (

@@ -14,7 +14,7 @@ import (
 	"github.com/luxfi/node/snow"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/luxfi/coreth/metrics"
+	"github.com/luxfi/geth/metrics"
 	"github.com/ethereum/go-ethereum/log"
 )
 

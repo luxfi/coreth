@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/luxfi/node/snow"
-	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/geth/utils"
 )
 
 // UpgradeConfig includes the following configs that may be specified in upgradeBytes:

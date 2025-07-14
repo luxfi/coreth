@@ -21,7 +21,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/params"
 )
 
 func TestCalcExcessBlobGas(t *testing.T) {

@@ -9,9 +9,9 @@ import (
 
 	"github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
-	"github.com/luxfi/coreth/accounts/abi"
-	"github.com/luxfi/coreth/precompile/contract"
-	"github.com/luxfi/coreth/vmerrs"
+	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/geth/precompile/contract"
+	"github.com/luxfi/geth/vmerrs"
 
 	_ "embed"
 

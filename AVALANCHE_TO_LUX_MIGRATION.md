@@ -8,7 +8,7 @@ After searching through the entire coreth codebase, I found that most references
 
 1. **Import Paths**: All Go import paths have been updated from `github.com/ava-labs/avalanchego` to `github.com/luxfi/node`
 2. **Module Name**: The go.mod file correctly uses `module github.com/luxfi/coreth`
-3. **Copyright Headers**: Files show "Lux Partners Limited" in copyright notices
+3. **Copyright Headers**: Files show "Lux Industries Inc" in copyright notices
 4. **README.md**: Already references Lux network and documentation
 5. **Dockerfile**: Uses `github.com/luxfi/node` and builds Lux Node
 6. **Configuration**: Chain configs use "Lux" naming (LuxMainnetChainConfig, LuxFujiChainConfig, etc.)

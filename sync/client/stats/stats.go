@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxfi/coreth/metrics"
-	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/geth/plugin/evm/message"
 )
 
 var (

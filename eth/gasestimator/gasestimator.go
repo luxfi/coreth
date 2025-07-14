@@ -33,12 +33,12 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/state"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/core/vm"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/vmerrs"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/luxfi/node/database"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/trie/trienode"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/trie/trienode"
 	"github.com/ethereum/go-ethereum/log"
 )
+
+var heightMapRepairKey = []byte("heightMapRepair")
 
 const (
 	repairDone = math.MaxUint64 // used as a marker for when the height map is repaired
@@ -56,9 +58,9 @@ func (a *atomicTrie) repairHeightMap(from, to uint64) error {
 		logEach = 90 * time.Second
 	)
 	commitRepairedHeight := func(commitHeight uint64) error {
-		root, nodes := hasher.Commit(false)
+		root, nodes, _ := hasher.Commit(false)
 		if nodes != nil {
-			err := a.trieDB.Update(root, types.EmptyRootHash, trienode.NewWithNodeSet(nodes))
+			err := a.trieDB.Update(root, types.EmptyRootHash, 0, trienode.NewWithNodeSet(nodes), nil)
 			if err != nil {
 				return err
 			}

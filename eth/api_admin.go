@@ -34,8 +34,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 

@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/luxfi/coreth/precompile/precompileconfig"
-	"github.com/luxfi/coreth/precompile/testutils"
-	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/geth/precompile/precompileconfig"
+	"github.com/luxfi/geth/precompile/testutils"
+	"github.com/luxfi/geth/utils"
 	"go.uber.org/mock/gomock"
 )
 

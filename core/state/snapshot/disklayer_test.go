@@ -30,7 +30,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/geth/core/rawdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb/memorydb"
 	"github.com/ethereum/go-ethereum/rlp"

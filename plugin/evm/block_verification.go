@@ -12,10 +12,10 @@ import (
 
 	safemath "github.com/luxfi/node/utils/math"
 
-	"github.com/luxfi/coreth/constants"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/geth/constants"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/trie"
 )
 
 var (

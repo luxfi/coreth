@@ -37,7 +37,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/coreth/accounts"
+	"github.com/luxfi/geth/accounts"
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"

@@ -10,9 +10,9 @@ import (
 
 	"github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
-	"github.com/luxfi/coreth/precompile/precompileconfig"
-	"github.com/luxfi/coreth/predicate"
-	warpValidators "github.com/luxfi/coreth/warp/validators"
+	"github.com/luxfi/geth/precompile/precompileconfig"
+	"github.com/luxfi/geth/predicate"
+	warpValidators "github.com/luxfi/geth/warp/validators"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/log"

@@ -32,9 +32,9 @@ import (
 	"sync"
 
 	"github.com/VictoriaMetrics/fastcache"
-	"github.com/luxfi/coreth/core/rawdb"
-	"github.com/luxfi/coreth/trie/trienode"
-	"github.com/luxfi/coreth/trie/triestate"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/trie/trienode"
+	"github.com/luxfi/geth/trie/triestate"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"

@@ -32,11 +32,11 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/core/vm"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/utils"
-	"github.com/luxfi/coreth/vmerrs"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/utils"
+	"github.com/luxfi/geth/vmerrs"
 	"github.com/ethereum/go-ethereum/common"
 	cmath "github.com/ethereum/go-ethereum/common/math"
 )

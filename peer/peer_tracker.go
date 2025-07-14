@@ -15,7 +15,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/luxfi/coreth/metrics"
+	"github.com/luxfi/geth/metrics"
 )
 
 const (

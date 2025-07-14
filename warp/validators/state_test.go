@@ -10,7 +10,7 @@ import (
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/snow/validators"
 	"github.com/luxfi/node/utils/constants"
-	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/geth/utils"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

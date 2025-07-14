@@ -16,7 +16,7 @@ import (
 
 	commonEng "github.com/luxfi/node/snow/engine/common"
 
-	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/geth/plugin/evm/message"
 )
 
 // show that a txID discovered from gossip is requested to the same node only if

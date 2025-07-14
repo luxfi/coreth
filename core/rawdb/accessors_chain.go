@@ -32,9 +32,9 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/luxfi/coreth/consensus/misc/eip4844"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/geth/consensus/misc/eip4844"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/log"

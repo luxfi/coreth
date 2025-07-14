@@ -6,7 +6,7 @@ package stats
 import (
 	"time"
 
-	"github.com/luxfi/coreth/metrics"
+	"github.com/luxfi/geth/metrics"
 )
 
 // RequestHandlerStats provides the interface for metrics for both app requests and cross chain requests.

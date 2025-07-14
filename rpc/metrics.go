@@ -30,7 +30,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxfi/coreth/metrics"
+	"github.com/luxfi/geth/metrics"
 )
 
 var (

@@ -15,7 +15,7 @@ import (
 	"github.com/luxfi/node/database/versiondb"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/utils/wrappers"
-	syncclient "github.com/luxfi/coreth/sync/client"
+	syncclient "github.com/luxfi/geth/sync/client"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

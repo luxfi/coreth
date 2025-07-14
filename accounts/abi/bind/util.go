@@ -31,8 +31,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/interfaces"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/interfaces"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

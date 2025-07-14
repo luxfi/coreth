@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/luxfi/node/utils/timer/mockable"
-	"github.com/luxfi/coreth/consensus"
-	"github.com/luxfi/coreth/consensus/misc/eip4844"
-	"github.com/luxfi/coreth/core/state"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/geth/consensus"
+	"github.com/luxfi/geth/consensus/misc/eip4844"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/trie"
 	"github.com/ethereum/go-ethereum/common"
 )
 

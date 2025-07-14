@@ -14,9 +14,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/luxfi/coreth/plugin/evm/message"
-	syncclient "github.com/luxfi/coreth/sync/client"
-	"github.com/luxfi/coreth/trie"
+	"github.com/luxfi/geth/plugin/evm/message"
+	syncclient "github.com/luxfi/geth/sync/client"
+	"github.com/luxfi/geth/trie"
 )
 
 var (

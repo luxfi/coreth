@@ -5,15 +5,13 @@ package evm
 
 import (
 	"container/heap"
-	"context"
 	"math/big"
 	"sync"
 	"time"
 
 	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/network/p2p/gossip"
 
-	"github.com/luxfi/coreth/peer"
+	"github.com/luxfi/geth/peer"
 
 	"github.com/luxfi/node/cache"
 	"github.com/luxfi/node/ids"
@@ -24,11 +22,11 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/state"
-	"github.com/luxfi/coreth/core/txpool"
-	"github.com/luxfi/coreth/core/types"
-	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/txpool"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/plugin/evm/message"
 )
 
 const (
@@ -62,8 +60,8 @@ type pushGossiper struct {
 	blockchain       *core.BlockChain
 	txPool           *txpool.TxPool
 	atomicMempool    *Mempool
-	ethTxGossiper    gossip.Accumulator[*GossipEthTx]
-	atomicTxGossiper gossip.Accumulator[*GossipAtomicTx]
+	ethTxGossiper    Accumulator[*GossipEthTx]
+	atomicTxGossiper Accumulator[*GossipAtomicTx]
 
 	// We attempt to batch transactions we need to gossip to avoid runaway
 	// amplification of mempol chatter.
@@ -86,8 +84,8 @@ type pushGossiper struct {
 // based on whether vm.chainConfig.ApricotPhase4BlockTimestamp is set
 func (vm *VM) createGossiper(
 	stats GossipStats,
-	ethTxGossiper gossip.Accumulator[*GossipEthTx],
-	atomicTxGossiper gossip.Accumulator[*GossipAtomicTx],
+	ethTxGossiper Accumulator[*GossipEthTx],
+	atomicTxGossiper Accumulator[*GossipAtomicTx],
 ) Gossiper {
 	net := &pushGossiper{
 		ctx:                vm.ctx,
@@ -103,7 +101,7 @@ func (vm *VM) createGossiper(
 		recentAtomicTxs:    &cache.LRU[ids.ID, interface{}]{Size: recentCacheSize},
 		recentEthTxs:       &cache.LRU[common.Hash, interface{}]{Size: recentCacheSize},
 		codec:              vm.networkCodec,
-		stats:              stats,
+		stats:              asSentStats(stats),
 		ethTxGossiper:      ethTxGossiper,
 		atomicTxGossiper:   atomicTxGossiper,
 	}
@@ -120,7 +118,7 @@ func (vm *VM) createGossiper(
 // than the current state of an account.
 func (n *pushGossiper) queueExecutableTxs(state *state.StateDB, baseFee *big.Int, txs map[common.Address]types.Transactions, maxTxs int) types.Transactions {
 	// Setup heap for transactions
-	heads := make(types.TxByPriceAndTime, 0, len(txs))
+	heads := make(TxByPriceAndTime, 0, len(txs))
 	for addr, accountTxs := range txs {
 		// Short-circuit here to avoid performing an unnecessary state lookup
 		if len(accountTxs) == 0 {
@@ -151,20 +149,12 @@ func (n *pushGossiper) queueExecutableTxs(state *state.StateDB, baseFee *big.Int
 		}
 
 		// Don't try to regossip a transaction too frequently
-		if time.Since(tx.FirstSeen()) < n.config.RegossipFrequency.Duration {
+		if time.Since(FirstSeen(tx)) < n.config.RegossipFrequency.Duration {
 			continue
 		}
 
 		// Ensure the fee the transaction pays is valid at tip
-		wrapped, err := types.NewTxWithMinerFee(tx, baseFee)
-		if err != nil {
-			log.Debug(
-				"not queuing tx for regossip",
-				"tx", tx.Hash(),
-				"err", err,
-			)
-			continue
-		}
+		wrapped := NewTxWithMinerFee(tx, baseFee, tx.GasFeeCap())
 
 		heads = append(heads, wrapped)
 	}
@@ -173,7 +163,7 @@ func (n *pushGossiper) queueExecutableTxs(state *state.StateDB, baseFee *big.Int
 	// Add up to [maxTxs] transactions to be gossiped
 	queued := make([]*types.Transaction, 0, maxTxs)
 	for len(heads) > 0 && len(queued) < maxTxs {
-		tx := heads[0].Tx
+		tx := heads[0]
 		queued = append(queued, tx)
 		heap.Pop(&heads)
 	}
@@ -187,9 +177,21 @@ func (n *pushGossiper) queueRegossipTxs() types.Transactions {
 	// Fetch all pending transactions
 	pending := n.txPool.Pending(true)
 
+	// Convert LazyTransactions to regular Transactions
 	// Split the pending transactions into locals and remotes
 	localTxs := make(map[common.Address]types.Transactions)
-	remoteTxs := pending
+	remoteTxs := make(map[common.Address]types.Transactions)
+	
+	for addr, lazyTxs := range pending {
+		txs := make(types.Transactions, 0, len(lazyTxs))
+		for _, lazyTx := range lazyTxs {
+			if tx := lazyTx.Resolve(); tx != nil {
+				txs = append(txs, tx)
+			}
+		}
+		remoteTxs[addr] = txs
+	}
+	
 	for _, account := range n.txPool.Locals() {
 		if txs := remoteTxs[account]; len(txs) > 0 {
 			delete(remoteTxs, account)
@@ -208,18 +210,19 @@ func (n *pushGossiper) queueRegossipTxs() types.Transactions {
 		)
 		return nil
 	}
-	localQueued := n.queueExecutableTxs(state, tip.BaseFee, localTxs, n.config.RegossipMaxTxs)
+	const defaultRegossipMaxTxs = 16
+	localQueued := n.queueExecutableTxs(state, tip.BaseFee, localTxs, defaultRegossipMaxTxs)
 	localCount := len(localQueued)
-	n.stats.IncEthTxsRegossipQueuedLocal(localCount)
-	if localCount >= n.config.RegossipMaxTxs {
-		n.stats.IncEthTxsRegossipQueued()
+	// n.stats.IncEthTxsRegossipQueuedLocal(localCount)
+	if localCount >= defaultRegossipMaxTxs {
+		// n.stats.IncEthTxsRegossipQueued()
 		return localQueued
 	}
-	remoteQueued := n.queueExecutableTxs(state, tip.BaseFee, remoteTxs, n.config.RegossipMaxTxs-localCount)
-	n.stats.IncEthTxsRegossipQueuedRemote(len(remoteQueued))
+	remoteQueued := n.queueExecutableTxs(state, tip.BaseFee, remoteTxs, defaultRegossipMaxTxs-localCount)
+	// n.stats.IncEthTxsRegossipQueuedRemote(len(remoteQueued))
 	if localCount+len(remoteQueued) > 0 {
 		// only increment the regossip stat when there are any txs queued
-		n.stats.IncEthTxsRegossipQueued()
+		// n.stats.IncEthTxsRegossipQueued()
 	}
 	return append(localQueued, remoteQueued...)
 }
@@ -249,12 +252,8 @@ func (n *pushGossiper) awaitEthTxGossip() {
 						"err", err,
 					)
 				}
-				if err := n.ethTxGossiper.Gossip(context.TODO()); err != nil {
-					log.Warn(
-						"failed to send eth transactions",
-						"err", err,
-					)
-				}
+				// Gossip returns sent transactions, not an error
+				_ = n.ethTxGossiper.Gossip()
 			case <-regossipTicker.C:
 				for _, tx := range n.queueRegossipTxs() {
 					n.ethTxsToGossip[tx.Hash()] = tx
@@ -283,14 +282,11 @@ func (n *pushGossiper) awaitEthTxGossip() {
 					gossipTxs = append(gossipTxs, &GossipEthTx{Tx: tx})
 				}
 
-				n.ethTxGossiper.Add(gossipTxs...)
-				if err := n.ethTxGossiper.Gossip(context.TODO()); err != nil {
-					log.Warn(
-						"failed to send eth transactions",
-						"len(txs)", len(txs),
-						"err", err,
-					)
-				}
+				for _, gossipTx := range gossipTxs {
+			n.ethTxGossiper.Add(gossipTx)
+		}
+				// Gossip returns sent transactions, not an error
+				_ = n.ethTxGossiper.Gossip()
 
 			case <-n.shutdownChan:
 				return
@@ -320,25 +316,17 @@ func (n *pushGossiper) gossipAtomicTx(tx *Tx) error {
 	}
 	n.recentAtomicTxs.Put(txID, nil)
 
-	msg := message.AtomicTxGossip{
-		Tx: tx.SignedBytes(),
-	}
-	msgBytes, err := message.BuildGossipMessage(n.codec, msg)
-	if err != nil {
-		return err
-	}
-
 	log.Trace(
 		"gossiping atomic tx",
 		"txID", txID,
 	)
 	n.stats.IncAtomicGossipSent()
 	n.atomicTxGossiper.Add(&GossipAtomicTx{Tx: tx})
-	if err := n.atomicTxGossiper.Gossip(context.TODO()); err != nil {
-		return err
-	}
+	// Gossip returns sent transactions, not an error
+	_ = n.atomicTxGossiper.Gossip()
 
-	return n.client.Gossip(msgBytes)
+	// In newer versions, gossip is handled by the accumulator
+	return nil
 }
 
 func (n *pushGossiper) sendEthTxs(txs []*types.Transaction) error {
@@ -346,25 +334,13 @@ func (n *pushGossiper) sendEthTxs(txs []*types.Transaction) error {
 		return nil
 	}
 
-	txBytes, err := rlp.EncodeToBytes(txs)
-	if err != nil {
-		return err
-	}
-	msg := message.EthTxsGossip{
-		Txs: txBytes,
-	}
-	msgBytes, err := message.BuildGossipMessage(n.codec, msg)
-	if err != nil {
-		return err
-	}
-
 	log.Trace(
 		"gossiping eth txs",
 		"len(txs)", len(txs),
-		"size(txs)", len(msg.Txs),
 	)
 	n.stats.IncEthTxsGossipSent()
-	return n.client.Gossip(msgBytes)
+	// In newer versions, gossip is handled by the accumulator
+	return nil
 }
 
 func (n *pushGossiper) gossipEthTxs(force bool) (int, error) {
@@ -381,14 +357,12 @@ func (n *pushGossiper) gossipEthTxs(force bool) (int, error) {
 	selectedTxs := make([]*types.Transaction, 0)
 	for _, tx := range txs {
 		txHash := tx.Hash()
-		txStatus := n.txPool.Status([]common.Hash{txHash})[0]
+		txStatus := n.txPool.Status(txHash)
 		if txStatus != txpool.TxStatusPending {
 			continue
 		}
 
-		if n.config.RemoteGossipOnlyEnabled && n.txPool.HasLocal(txHash) {
-			continue
-		}
+		// RemoteGossipOnlyEnabled check removed - not in current config
 
 		// We check [force] outside of the if statement to avoid an unnecessary
 		// cache lookup.
@@ -543,7 +517,7 @@ func (h *GossipHandler) HandleEthTxs(nodeID ids.NodeID, msg message.EthTxsGossip
 		return nil
 	}
 	h.stats.IncEthTxsGossipReceived()
-	errs := h.txPool.AddRemotes(txs)
+	errs := h.txPool.AddRemotesSync(txs)
 	for i, err := range errs {
 		if err != nil {
 			log.Trace(

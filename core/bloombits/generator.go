@@ -29,7 +29,7 @@ package bloombits
 import (
 	"errors"
 
-	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/geth/core/types"
 )
 
 var (
