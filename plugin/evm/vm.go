@@ -264,6 +264,10 @@ type VM struct {
 	blockChain *core.BlockChain
 	miner      *miner.Miner
 
+	// automining support for development mode
+	autominingEnabled bool
+	autominingInterval time.Duration
+
 	// [db] is the VM's current database managed by ChainState
 	db *versiondb.Database
 
@@ -378,6 +382,9 @@ func (vm *VM) Initialize(
 		if err := json.Unmarshal(configBytes, &vm.config); err != nil {
 			return fmt.Errorf("failed to unmarshal config %s: %w", string(configBytes), err)
 		}
+		// Debug: Log config bytes and ImportChainData
+		fmt.Printf("DEBUG: Config bytes: %s\n", string(configBytes))
+		fmt.Printf("DEBUG: ImportChainData after unmarshal: %s\n", vm.config.ImportChainData)
 	}
 	if err := vm.config.Validate(); err != nil {
 		return err
@@ -412,6 +419,12 @@ func (vm *VM) Initialize(
 	if deprecateMsg != "" {
 		log.Warn("Deprecation Warning", "msg", deprecateMsg)
 	}
+	
+	// Log import configuration
+	log.Info("Checking import configuration", "ImportChainData", vm.config.ImportChainData)
+	if vm.config.ImportChainData != "" {
+		log.Info("Import chain data configuration detected", "path", vm.config.ImportChainData)
+	}
 
 	if len(fxs) > 0 {
 		return errUnsupportedFXs
@@ -440,6 +453,21 @@ func (vm *VM) Initialize(
 			return err
 		}
 		log.Info("Completed database inspection", "elapsed", time.Since(start))
+	}
+
+	// Check if we should import from another chain's data
+	if vm.config.ImportChainData != "" {
+		log.Info("Chain data import requested", "path", vm.config.ImportChainData)
+		
+		// Import the chain data before processing genesis
+		if err := vm.importChainData(vm.config.ImportChainData); err != nil {
+			return fmt.Errorf("failed to import chain data: %w", err)
+		}
+		
+		log.Info("Successfully imported chain data")
+		
+		// Skip genesis validation when importing
+		os.Setenv("LUX_SKIP_GENESIS_CHECK", "true")
 	}
 
 	g := new(core.Genesis)
@@ -699,6 +727,23 @@ func (vm *VM) initializeChain(lastAcceptedHash common.Hash) error {
 	vm.txPool.SetMinFee(big.NewInt(params.ApricotPhase4MinBaseFee))
 
 	vm.eth.Start()
+	
+	// Check if automining is enabled via environment variable for development mode
+	if os.Getenv("LUX_ENABLE_AUTOMINING") == "true" {
+		log.Info("Automining enabled via environment variable - blocks will be mined on-demand when transactions arrive")
+		vm.autominingEnabled = true
+		
+		// Check for custom automining interval
+		if intervalStr := os.Getenv("LUX_AUTOMINING_INTERVAL"); intervalStr != "" {
+			if interval, err := time.ParseDuration(intervalStr); err == nil && interval > 0 {
+				vm.autominingInterval = interval
+				log.Info("Custom automining interval set", "interval", interval)
+			} else {
+				log.Warn("Invalid LUX_AUTOMINING_INTERVAL, using default", "value", intervalStr, "default", "1s")
+			}
+		}
+	}
+	
 	return vm.initChainState(vm.blockChain.LastAcceptedBlock())
 }
 
@@ -1433,6 +1478,19 @@ func newHandler(name string, service interface{}) (http.Handler, error) {
 func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 	handler := rpc.NewServer(vm.config.APIMaxDuration.Duration)
 	enabledAPIs := vm.config.EthAPIs()
+	
+	// Debug logging
+	log.Info("CreateHandlers called", "vm.eth", vm.eth != nil, "enabledAPIs", enabledAPIs)
+	
+	// Check if vm.eth is initialized
+	if vm.eth == nil {
+		log.Warn("vm.eth is nil in CreateHandlers - returning minimal handlers")
+		// Return minimal handlers without eth APIs
+		apis := make(map[string]http.Handler)
+		apis[ethRPCEndpoint] = handler
+		return apis, nil
+	}
+	
 	if err := attachEthService(handler, vm.eth.APIs(), enabledAPIs); err != nil {
 		return nil, err
 	}
@@ -2027,4 +2085,127 @@ func (vm *VM) stateSyncEnabled(lastAcceptedHeight uint64) bool {
 
 	// enable state sync by default if the chain is empty.
 	return lastAcceptedHeight == 0
+}
+
+// importChainData imports blockchain data from another chain
+func (vm *VM) importChainData(importPath string) error {
+	log.Info("Starting chain data import", "from", importPath)
+	
+	// Validate the import path exists
+	info, err := os.Stat(importPath)
+	if err != nil {
+		return fmt.Errorf("import path error: %w", err)
+	}
+	
+	// Check if it's a directory (chain data directory) or a file
+	if info.IsDir() {
+		// Import from a chain data directory
+		dbPath := filepath.Join(importPath, "db")
+		if _, err := os.Stat(dbPath); err == nil {
+			importPath = dbPath
+		}
+	}
+	
+	// Check if it's a PebbleDB
+	pebblePath := filepath.Join(importPath, "pebbledb")
+	if _, err := os.Stat(pebblePath); err == nil {
+		log.Info("Detected PebbleDB format, copying database files")
+		return vm.importPebbleDB(pebblePath)
+	}
+	
+	// Otherwise try LevelDB
+	log.Info("Opening source as LevelDB")
+	sourceDB, err := rawdb.NewLevelDBDatabase(importPath, 0, 0, "", true) // read-only
+	if err != nil {
+		return fmt.Errorf("failed to open source database: %w", err)
+	}
+	defer sourceDB.Close()
+	
+	// Import all data
+	return vm.importFromDatabase(sourceDB)
+}
+
+// importPebbleDB imports data from a PebbleDB database
+func (vm *VM) importPebbleDB(sourcePath string) error {
+	log.Info("Opening source PebbleDB", "path", sourcePath)
+	
+	// Open the source PebbleDB in read-only mode
+	sourceDB, err := rawdb.NewPebbleDBDatabase(sourcePath, 0, 0, "", true, false)
+	if err != nil {
+		return fmt.Errorf("failed to open source PebbleDB: %w", err)
+	}
+	defer sourceDB.Close()
+	
+	// Import from the opened database
+	return vm.importFromDatabase(sourceDB)
+}
+
+// importFromDatabase imports all data from a source database
+func (vm *VM) importFromDatabase(sourceDB ethdb.Database) error {
+	// Read the genesis hash from source
+	sourceGenesisHash := rawdb.ReadCanonicalHash(sourceDB, 0)
+	if sourceGenesisHash == (common.Hash{}) {
+		log.Warn("No genesis block found in source database, will be created from genesis.json")
+	}
+	
+	// Read the head block
+	headHash := rawdb.ReadHeadBlockHash(sourceDB)
+	if headHash == (common.Hash{}) {
+		// Try to read the head header hash instead
+		headHash = rawdb.ReadHeadHeaderHash(sourceDB)
+		if headHash == (common.Hash{}) {
+			return fmt.Errorf("no head block found in source database")
+		}
+	}
+	
+	headNumber := rawdb.ReadHeaderNumber(sourceDB, headHash)
+	if headNumber == nil {
+		return fmt.Errorf("no head number found")
+	}
+	
+	log.Info("Source database info", 
+		"genesis", sourceGenesisHash.Hex(),
+		"head", headHash.Hex(), 
+		"height", *headNumber)
+	
+	// Read all key-value pairs from source and write to destination
+	it := sourceDB.NewIterator(nil, nil)
+	defer it.Release()
+	
+	batch := vm.chaindb.NewBatch()
+	count := 0
+	
+	for it.Next() {
+		// Copy key-value pair
+		batch.Put(it.Key(), it.Value())
+		count++
+		
+		// Flush batch periodically
+		if batch.ValueSize() > ethdb.IdealBatchSize {
+			if err := batch.Write(); err != nil {
+				return fmt.Errorf("failed to write batch: %w", err)
+			}
+			batch.Reset()
+			
+			if count%100000 == 0 {
+				log.Info("Import progress", "entries", count)
+			}
+		}
+	}
+	
+	// Write final batch
+	if err := batch.Write(); err != nil {
+		return fmt.Errorf("failed to write final batch: %w", err)
+	}
+	
+	log.Info("Import complete", "totalEntries", count)
+	
+	// Verify the import
+	importedGenesisHash := rawdb.ReadCanonicalHash(vm.chaindb, 0)
+	if importedGenesisHash != sourceGenesisHash {
+		return fmt.Errorf("genesis hash mismatch after import: expected %s, got %s", 
+			sourceGenesisHash.Hex(), importedGenesisHash.Hex())
+	}
+	
+	return it.Error()
 }

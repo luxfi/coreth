@@ -45,11 +45,11 @@ const maxJSONLen = 64 * 1024 * 1024 // 64MB
 // Lux ChainIDs
 var (
 	// LuxMainnetChainID ...
-	LuxMainnetChainID = big.NewInt(96369)
+	LuxMainnetChainID = big.NewInt(43114)
 	// LuxFujiChainID ...
-	LuxFujiChainID = big.NewInt(96368)
+	LuxFujiChainID = big.NewInt(43113)
 	// LuxLocalChainID ...
-	LuxLocalChainID = big.NewInt(96369)
+	LuxLocalChainID = big.NewInt(43112)
 
 	errNonGenesisForkByHeight = errors.New("coreth only supports forking by height at the genesis block")
 )

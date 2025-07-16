@@ -33,6 +33,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"os"
 
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
@@ -198,7 +199,12 @@ func SetupGenesisBlock(
 		// Ensure the stored genesis matches with the given one.
 		hash := genesis.ToBlock().Hash()
 		if hash != stored {
-			return genesis.Config, common.Hash{}, &GenesisMismatchError{stored, hash}
+			// Skip genesis check if importing chain data
+			if os.Getenv("LUX_SKIP_GENESIS_CHECK") == "true" {
+				log.Warn("Skipping genesis validation for chain import (init phase)", "stored", stored, "new", hash)
+			} else {
+				return genesis.Config, common.Hash{}, &GenesisMismatchError{stored, hash}
+			}
 		}
 		_, err := genesis.Commit(db, triedb)
 		return genesis.Config, common.Hash{}, err
@@ -206,7 +212,12 @@ func SetupGenesisBlock(
 	// Check whether the genesis block is already written.
 	hash := genesis.ToBlock().Hash()
 	if hash != stored {
-		return genesis.Config, common.Hash{}, &GenesisMismatchError{stored, hash}
+		// Skip genesis check if importing chain data
+		if os.Getenv("LUX_SKIP_GENESIS_CHECK") == "true" {
+			log.Warn("Skipping genesis validation for chain import", "stored", stored, "new", hash)
+		} else {
+			return genesis.Config, common.Hash{}, &GenesisMismatchError{stored, hash}
+		}
 	}
 	// Get the existing chain configuration.
 	newcfg := genesis.Config

@@ -49,9 +49,21 @@ type blockBuilder struct {
 	// If the mempool receives a new transaction, the block builder will send a new notification to
 	// the engine and cancel the timer.
 	buildBlockTimer *timer.Timer
+	
+	// autominingEnabled indicates if blocks should be built automatically when transactions arrive
+	autominingEnabled bool
+	// autominingInterval is the minimum interval between blocks in automining mode
+	autominingInterval time.Duration
+	// lastBlockTime tracks when the last block was built for rate limiting
+	lastBlockTime time.Time
 }
 
 func (vm *VM) NewBlockBuilder(notifyBuildBlockChan chan<- commonEng.Message) *blockBuilder {
+	autominingInterval := vm.autominingInterval
+	if autominingInterval == 0 {
+		autominingInterval = 1 * time.Second // Default 1 second rate limit
+	}
+	
 	b := &blockBuilder{
 		ctx:                  vm.ctx,
 		chainConfig:          vm.chainConfig,
@@ -60,6 +72,8 @@ func (vm *VM) NewBlockBuilder(notifyBuildBlockChan chan<- commonEng.Message) *bl
 		shutdownChan:         vm.shutdownChan,
 		shutdownWg:           &vm.shutdownWg,
 		notifyBuildBlockChan: notifyBuildBlockChan,
+		autominingEnabled:    vm.autominingEnabled,
+		autominingInterval:   autominingInterval,
 	}
 	b.handleBlockBuilding()
 	return b
@@ -93,8 +107,11 @@ func (b *blockBuilder) handleGenerateBlock() {
 	// Reset buildSent now that the engine has called BuildBlock.
 	b.buildSent = false
 
-	// Set a timer to check if calling build block a second time is needed.
-	b.buildBlockTimer.SetTimeoutIn(minBlockBuildingRetryDelay)
+	// In automining mode, don't set a retry timer since we're transaction-driven
+	if !b.autominingEnabled {
+		// Set a timer to check if calling build block a second time is needed.
+		b.buildBlockTimer.SetTimeoutIn(minBlockBuildingRetryDelay)
+	}
 }
 
 // needToBuild returns true if there are outstanding transactions to be issued
@@ -111,11 +128,27 @@ func (b *blockBuilder) markBuilding() {
 	if b.buildSent {
 		return
 	}
+	
+	// In automining mode, enforce rate limiting
+	if b.autominingEnabled && !b.lastBlockTime.IsZero() {
+		timeSinceLastBlock := time.Since(b.lastBlockTime)
+		if timeSinceLastBlock < b.autominingInterval {
+			// Schedule a delayed build after the rate limit expires
+			remainingDelay := b.autominingInterval - timeSinceLastBlock
+			b.buildBlockTimer.SetTimeoutIn(remainingDelay)
+			log.Debug("Rate limiting block build", "delay", remainingDelay)
+			return
+		}
+	}
+	
 	b.buildBlockTimer.Cancel() // Cancel any future attempt from the timer to send a PendingTxs message
 
 	select {
 	case b.notifyBuildBlockChan <- commonEng.PendingTxs:
 		b.buildSent = true
+		if b.autominingEnabled {
+			b.lastBlockTime = time.Now()
+		}
 	default:
 		log.Error("Failed to push PendingTxs notification to the consensus engine.")
 	}
@@ -146,6 +179,11 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 	txSubmitChan := make(chan core.NewTxsEvent)
 	b.txPool.SubscribeTransactions(txSubmitChan, true)
 
+	// Start automining goroutine if enabled
+	if b.autominingEnabled {
+		b.startAutomining()
+	}
+
 	b.shutdownWg.Add(1)
 	go b.ctx.Log.RecoverAndPanic(func() {
 		defer b.shutdownWg.Done()
@@ -164,4 +202,12 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 			}
 		}
 	})
+}
+
+// startAutomining starts automining in on-demand mode
+// Blocks are only built when transactions arrive, with rate limiting
+func (b *blockBuilder) startAutomining() {
+	// In automining mode, we don't need a separate goroutine
+	// The existing transaction listeners will trigger block building
+	log.Info("Starting automining in on-demand mode", "minInterval", b.autominingInterval)
 }

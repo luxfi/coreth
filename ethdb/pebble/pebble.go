@@ -147,9 +147,9 @@ func New(file string, cache int, handles int, namespace string, readonly bool) (
 	// Two memory tables is configured which is identical to leveldb,
 	// including a frozen memory table and another live one.
 	memTableLimit := 2
-	memTableSize := cache * 1024 * 1024 / 2 / memTableLimit
-	if memTableSize > maxMemTableSize {
-		memTableSize = maxMemTableSize
+	memTableSize := uint64(cache * 1024 * 1024 / 2 / memTableLimit)
+	if memTableSize > uint64(maxMemTableSize) {
+		memTableSize = uint64(maxMemTableSize)
 	}
 	db := &Database{
 		fn:       file,
@@ -165,7 +165,7 @@ func New(file string, cache int, handles int, namespace string, readonly bool) (
 
 		// The size of memory table(as well as the write buffer).
 		// Note, there may have more than two memory tables in the system.
-		MemTableSize: uint64(memTableSize),
+		MemTableSize: memTableSize,
 
 		// MemTableStopWritesThreshold places a hard limit on the size
 		// of the existent MemTables(including the frozen one).

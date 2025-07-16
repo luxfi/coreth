@@ -16,7 +16,7 @@ After searching through the entire coreth codebase, I found that most references
 
 ## No Changes Needed
 
-1. **Chain IDs**: The chain IDs (43114 for mainnet, 43113 for Fuji, 43112 for local) remain the same as these are established network identifiers
+1. **Chain IDs**: The chain IDs have been updated to LUX network identifiers (96369 for mainnet, 96368 for testnet, 96369 for local)
 2. **Network Names**: "Fuji" testnet name is retained as it's an established testnet identifier
 3. **External Data Hashes**: The JSON files (fuji_ext_data_hashes.json, mainnet_ext_data_hashes.json, etc.) contain blockchain data hashes that should not be modified
 
