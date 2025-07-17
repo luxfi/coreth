@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -174,7 +174,12 @@ func (journal *journal) rotate(all map[common.Address]types.Transactions) error 
 		return err
 	}
 	journal.writer = sink
-	log.Info("Regenerated local transaction journal", "transactions", journaled, "accounts", len(all))
+
+	logger := log.Info
+	if len(all) == 0 {
+		logger = log.Debug
+	}
+	logger("Regenerated local transaction journal", "transactions", journaled, "accounts", len(all))
 
 	return nil
 }

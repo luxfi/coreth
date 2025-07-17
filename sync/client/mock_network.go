@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package statesyncclient
@@ -75,10 +75,6 @@ func (t *mockNetwork) processMock(request []byte) ([]byte, error) {
 }
 
 func (t *mockNetwork) Gossip([]byte) error {
-	panic("not implemented") // we don't care about this function for this test
-}
-
-func (t *mockNetwork) SendCrossChainRequest(ctx context.Context, chainID ids.ID, request []byte) ([]byte, error) {
 	panic("not implemented") // we don't care about this function for this test
 }
 

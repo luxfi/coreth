@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package stats
@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/plugin/evm/message"
+	"github.com/ethereum/go-ethereum/metrics"
 )
 
 var (

@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2021, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -37,6 +37,8 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/plugin/evm/upgrade/ap0"
+	"github.com/luxfi/geth/plugin/evm/upgrade/ap1"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
@@ -98,13 +100,13 @@ func executeStateTransitionTest(t *testing.T, st stateTransitionTest) {
 		db    = rawdb.NewMemoryDatabase()
 		gspec = &Genesis{
 			Config: st.config,
-			Alloc: GenesisAlloc{
-				common.HexToAddress("0x71562b71999873DB5b286dF957af199Ec94617F7"): GenesisAccount{
+			Alloc: types.GenesisAlloc{
+				common.HexToAddress("0x71562b71999873DB5b286dF957af199Ec94617F7"): types.GenesisAccount{
 					Balance: big.NewInt(2000000000000000000), // 2 ether
 					Nonce:   0,
 				},
 			},
-			GasLimit: params.ApricotPhase1GasLimit,
+			GasLimit: ap1.GasLimit,
 		}
 		genesis       = gspec.ToBlock()
 		engine        = dummy.NewFaker()
@@ -138,11 +140,11 @@ func TestNativeAssetContractCall(t *testing.T) {
 
 	contractAddr := ethCrypto.CreateAddress(testAddr, 0)
 	txs := []*types.Transaction{
-		makeContractTx(0, common.Big0, 500_000, big.NewInt(params.LaunchMinGasPrice), data),
-		makeTx(1, contractAddr, common.Big0, 100_000, big.NewInt(params.LaunchMinGasPrice), nil), // No input data is necessary, since this will hit the contract's fallback function.
+		makeContractTx(0, common.Big0, 500_000, big.NewInt(ap0.MinGasPrice), data),
+		makeTx(1, contractAddr, common.Big0, 100_000, big.NewInt(ap0.MinGasPrice), nil), // No input data is necessary, since this will hit the contract's fallback function.
 	}
 
-	phase6Tests := map[string]stateTransitionTest{
+	tests := map[string]stateTransitionTest{
 		"phase5": {
 			config:  params.TestApricotPhase5Config,
 			txs:     txs,
@@ -167,9 +169,21 @@ func TestNativeAssetContractCall(t *testing.T) {
 			gasUsed: []uint64{132091, 21618},
 			want:    "",
 		},
+		"durango": {
+			config:  params.TestDurangoChainConfig,
+			txs:     txs,
+			gasUsed: []uint64{132117, 21618},
+			want:    "",
+		},
+		"etna": {
+			config:  params.TestEtnaChainConfig,
+			txs:     txs,
+			gasUsed: []uint64{132117, 21618},
+			want:    "",
+		},
 	}
 
-	for name, stTest := range phase6Tests {
+	for name, stTest := range tests {
 		t.Run(name, func(t *testing.T) {
 			executeStateTransitionTest(t, stTest)
 		})
@@ -183,7 +197,7 @@ func TestNativeAssetContractConstructor(t *testing.T) {
 	require.NoError(err)
 
 	txs := []*types.Transaction{
-		makeContractTx(0, common.Big0, 100_000, big.NewInt(params.LaunchMinGasPrice), data),
+		makeContractTx(0, common.Big0, 100_000, big.NewInt(ap0.MinGasPrice), data),
 	}
 
 	phase6Tests := map[string]stateTransitionTest{
@@ -222,7 +236,7 @@ func TestNativeAssetContractConstructor(t *testing.T) {
 
 func TestNativeAssetDirectEOACall(t *testing.T) {
 	txs := []*types.Transaction{
-		makeTx(0, vm.NativeAssetCallAddr, common.Big0, 100_000, big.NewInt(params.LaunchMinGasPrice), nil),
+		makeTx(0, vm.NativeAssetCallAddr, common.Big0, 100_000, big.NewInt(ap0.MinGasPrice), nil),
 	}
 
 	phase6Tests := map[string]stateTransitionTest{

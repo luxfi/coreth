@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -182,7 +182,6 @@ var reflectTests = []reflectTest{
 func TestReflectNameToStruct(t *testing.T) {
 	t.Parallel()
 	for _, test := range reflectTests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			m, err := mapArgNamesToStructFields(test.args, reflect.ValueOf(test.struc))

@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package statesync
@@ -10,7 +10,7 @@ import (
 
 	"github.com/luxfi/geth/core/state/snapshot"
 	syncclient "github.com/luxfi/geth/sync/client"
-	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"golang.org/x/sync/errgroup"
@@ -37,7 +37,7 @@ type StateSyncerConfig struct {
 type stateSync struct {
 	db        ethdb.Database    // database we are syncing
 	root      common.Hash       // root of the EVM state we are syncing to
-	trieDB    *trie.Database    // trieDB on top of db we are syncing. used to restore any existing tries.
+	trieDB    *triedb.Database  // trieDB on top of db we are syncing. used to restore any existing tries.
 	snapshot  snapshot.Snapshot // used to access the database we are syncing as a snapshot.
 	batchSize int               // write batches when they reach this size
 	client    syncclient.Client // used to contact peers over the network
@@ -68,7 +68,7 @@ func NewStateSyncer(config *StateSyncerConfig) (*stateSync, error) {
 		db:              config.DB,
 		client:          config.Client,
 		root:            config.Root,
-		trieDB:          trie.NewDatabase(config.DB, nil),
+		trieDB:          triedb.NewDatabase(config.DB, nil),
 		snapshot:        snapshot.NewDiskLayer(config.DB),
 		stats:           newTrieSyncStats(),
 		triesInProgress: make(map[common.Hash]*trieToSync),
@@ -132,7 +132,7 @@ func (t *stateSync) onStorageTrieFinished(root common.Hash) error {
 	return nil
 }
 
-// onMainTrieFinishes is called after the main trie finishes syncing.
+// onMainTrieFinished is called after the main trie finishes syncing.
 func (t *stateSync) onMainTrieFinished() error {
 	t.codeSyncer.notifyAccountTrieCompleted()
 

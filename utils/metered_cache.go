@@ -1,4 +1,4 @@
-// (c) 2022, Lux Industries Inc. All rights reserved.
+// (c) 2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package utils
@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/VictoriaMetrics/fastcache"
-	"github.com/luxfi/geth/metrics"
+	"github.com/ethereum/go-ethereum/metrics"
 )
 
 // MeteredCache wraps *fastcache.Cache and periodically pulls stats from it.

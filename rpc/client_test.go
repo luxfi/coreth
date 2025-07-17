@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -723,7 +723,6 @@ func TestClientHTTP(t *testing.T) {
 	)
 	defer client.Close()
 	for i := range results {
-		i := i
 		go func() {
 			errc <- client.Call(&results[i], "test_echo", wantResult.String, wantResult.Int, wantResult.Args)
 		}()

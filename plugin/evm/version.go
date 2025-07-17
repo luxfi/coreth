@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc. All rights reserved.
+// (c) 2019-2021, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -10,8 +10,8 @@ import (
 var (
 	// GitCommit is set by the build script
 	GitCommit string
-	// Version is the version of Coreth
-	Version string = "v0.13.6"
+	// Version is the version of Geth
+	Version string = "v0.14.1"
 )
 
 func init() {

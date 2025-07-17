@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -251,7 +251,7 @@ func (hub *Hub) refreshWallets() {
 			card.Disconnect(pcsc.LeaveCard)
 			continue
 		}
-		// Card connected, start tracking in amongs the wallets
+		// Card connected, start tracking among the wallets
 		hub.wallets[reader] = wallet
 		events = append(events, accounts.WalletEvent{Wallet: wallet, Kind: accounts.WalletArrived})
 	}

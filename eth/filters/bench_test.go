@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2022, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -72,7 +72,7 @@ const benchFilterCnt = 2000
 
 func benchmarkBloomBits(b *testing.B, sectionSize uint64) {
 	b.Skip("test disabled: this tests presume (and modify) an existing datadir.")
-	benchDataDir := b.TempDir() + "/coreth/chaindata"
+	benchDataDir := b.TempDir() + "/geth/chaindata"
 	b.Log("Running bloombits benchmark   section size:", sectionSize)
 
 	db, err := rawdb.NewLevelDBDatabase(benchDataDir, 128, 1024, "", false)
@@ -171,7 +171,7 @@ func clearBloomBits(db ethdb.Database) {
 
 func BenchmarkNoBloomBits(b *testing.B) {
 	b.Skip("test disabled: this tests presume (and modify) an existing datadir.")
-	benchDataDir := b.TempDir() + "/coreth/chaindata"
+	benchDataDir := b.TempDir() + "/geth/chaindata"
 	b.Log("Running benchmark without bloombits")
 	db, err := rawdb.NewLevelDBDatabase(benchDataDir, 128, 1024, "", false)
 	if err != nil {

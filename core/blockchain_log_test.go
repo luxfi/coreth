@@ -1,4 +1,4 @@
-// (c) 2023, Lux Industries Inc. All rights reserved.
+// (c) 2023, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package core
@@ -14,6 +14,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/plugin/evm/upgrade/ap3"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
@@ -42,8 +43,8 @@ func TestAcceptedLogsSubscription(t *testing.T) {
 		funds   = new(big.Int).Mul(big.NewInt(100), big.NewInt(params.Ether))
 		gspec   = &Genesis{
 			Config:  params.TestChainConfig,
-			Alloc:   GenesisAlloc{addr1: {Balance: funds}},
-			BaseFee: big.NewInt(params.ApricotPhase3InitialBaseFee),
+			Alloc:   types.GenesisAlloc{addr1: {Balance: funds}},
+			BaseFee: big.NewInt(ap3.InitialBaseFee),
 		}
 		contractAddress = crypto.CreateAddress(addr1, 0)
 		signer          = types.LatestSigner(gspec.Config)
@@ -59,13 +60,13 @@ func TestAcceptedLogsSubscription(t *testing.T) {
 		switch i {
 		case 0:
 			// First, we deploy the contract
-			contractTx := types.NewContractCreation(0, common.Big0, 200000, big.NewInt(params.ApricotPhase3InitialBaseFee), common.FromHex(callableBin))
+			contractTx := types.NewContractCreation(0, common.Big0, 200000, big.NewInt(ap3.InitialBaseFee), common.FromHex(callableBin))
 			contractSignedTx, err := types.SignTx(contractTx, signer, key1)
 			require.NoError(err)
 			b.AddTx(contractSignedTx)
 		case 1:
 			// In the next block, we call the contract function
-			tx := types.NewTransaction(1, contractAddress, common.Big0, 23000, big.NewInt(params.ApricotPhase3InitialBaseFee), packedFunction)
+			tx := types.NewTransaction(1, contractAddress, common.Big0, 23000, big.NewInt(ap3.InitialBaseFee), packedFunction)
 			tx, err := types.SignTx(tx, signer, key1)
 			require.NoError(err)
 			b.AddTx(tx)

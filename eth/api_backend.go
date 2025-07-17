@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -34,16 +34,17 @@ import (
 
 	"github.com/luxfi/geth/accounts"
 	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/consensus/dummy"
 	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/bloombits"
-	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/txpool"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/eth/gasprice"
 	"github.com/luxfi/geth/eth/tracers"
+	"github.com/luxfi/geth/internal/ethapi"
 	"github.com/luxfi/geth/params"
+	customheader "github.com/luxfi/geth/plugin/evm/header"
 	"github.com/luxfi/geth/rpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
@@ -60,11 +61,26 @@ type EthAPIBackend struct {
 	allowUnfinalizedQueries  bool
 	eth                      *Ethereum
 	gpo                      *gasprice.Oracle
+
+	// historicalProofQueryWindow is the number of blocks before the last accepted block to be accepted for
+	// state queries when running archive mode.
+	historicalProofQueryWindow uint64
 }
 
 // ChainConfig returns the active chain configuration.
 func (b *EthAPIBackend) ChainConfig() *params.ChainConfig {
 	return b.eth.blockchain.Config()
+}
+
+// IsArchive returns true if the node is running in archive mode, false otherwise.
+func (b *EthAPIBackend) IsArchive() bool {
+	return !b.eth.config.Pruning
+}
+
+// HistoricalProofQueryWindow returns the number of blocks before the last accepted block to be accepted for state queries.
+// It returns 0 to indicate to accept any block number for state queries.
+func (b *EthAPIBackend) HistoricalProofQueryWindow() uint64 {
+	return b.historicalProofQueryWindow
 }
 
 func (b *EthAPIBackend) IsAllowUnfinalizedQueries() bool {
@@ -294,7 +310,7 @@ func (b *EthAPIBackend) GetEVM(ctx context.Context, msg *core.Message, state *st
 	} else {
 		context = core.NewEVMBlockContext(header, b.eth.BlockChain(), nil)
 	}
-	return vm.NewEVM(context, txContext, state, b.eth.blockchain.Config(), *vmConfig)
+	return vm.NewEVM(context, txContext, state, b.ChainConfig(), *vmConfig)
 }
 
 func (b *EthAPIBackend) SubscribeRemovedLogsEvent(ch chan<- core.RemovedLogsEvent) event.Subscription {
@@ -348,7 +364,7 @@ func (b *EthAPIBackend) SendTx(ctx context.Context, signedTx *types.Transaction)
 }
 
 func (b *EthAPIBackend) GetPoolTransactions() (types.Transactions, error) {
-	pending := b.eth.txPool.Pending(false)
+	pending := b.eth.txPool.Pending(txpool.PendingFilter{})
 	var txs types.Transactions
 	for _, batch := range pending {
 		for _, lazy := range batch {
@@ -364,10 +380,14 @@ func (b *EthAPIBackend) GetPoolTransaction(hash common.Hash) *types.Transaction 
 	return b.eth.txPool.Get(hash)
 }
 
-func (b *EthAPIBackend) GetTransaction(ctx context.Context, txHash common.Hash) (*types.Transaction, common.Hash, uint64, uint64, error) {
-	// Note: we only index transactions during Accept, so the below check against unfinalized queries is technically redundant, but
-	// we keep it for defense in depth.
-	tx, blockHash, blockNumber, index := rawdb.ReadTransaction(b.eth.ChainDb(), txHash)
+func (b *EthAPIBackend) GetTransaction(ctx context.Context, txHash common.Hash) (bool, *types.Transaction, common.Hash, uint64, uint64, error) {
+	lookup, tx, err := b.eth.blockchain.GetTransactionLookup(txHash)
+	if err != nil {
+		return false, nil, common.Hash{}, 0, 0, err
+	}
+	if lookup == nil || tx == nil {
+		return false, nil, common.Hash{}, 0, 0, nil
+	}
 
 	// Respond as if the transaction does not exist if it is not yet in an
 	// accepted block. We explicitly choose not to error here to avoid breaking
@@ -375,12 +395,12 @@ func (b *EthAPIBackend) GetTransaction(ctx context.Context, txHash common.Hash) 
 	// does not exist).
 	acceptedBlock := b.eth.LastAcceptedBlock()
 	if !b.IsAllowUnfinalizedQueries() && acceptedBlock != nil && tx != nil {
-		if blockNumber > acceptedBlock.NumberU64() {
-			return nil, common.Hash{}, 0, 0, nil
+		if lookup.BlockIndex > acceptedBlock.NumberU64() {
+			return false, nil, common.Hash{}, 0, 0, nil
 		}
 	}
 
-	return tx, blockHash, blockNumber, index, nil
+	return true, tx, lookup.BlockHash, lookup.BlockIndex, lookup.Index, nil
 }
 
 func (b *EthAPIBackend) GetPoolNonce(ctx context.Context, addr common.Address) (uint64, error) {
@@ -467,6 +487,10 @@ func (b *EthAPIBackend) RPCTxFeeCap() float64 {
 	return b.eth.config.RPCTxFeeCap
 }
 
+func (b *EthAPIBackend) PriceOptionsConfig() ethapi.PriceOptionConfig {
+	return b.eth.config.PriceOptionConfig
+}
+
 func (b *EthAPIBackend) BloomStatus() (uint64, uint64) {
 	sections, _, _ := b.eth.bloomIndexer.Sections()
 	return params.BloomBitsBlocks, sections
@@ -503,7 +527,7 @@ func (b *EthAPIBackend) StateAtTransaction(ctx context.Context, block *types.Blo
 }
 
 func (b *EthAPIBackend) MinRequiredTip(ctx context.Context, header *types.Header) (*big.Int, error) {
-	return dummy.MinRequiredTip(b.ChainConfig(), header)
+	return customheader.EstimateRequiredTip(b.ChainConfig(), header)
 }
 
 func (b *EthAPIBackend) isLatestAndAllowed(number rpc.BlockNumber) bool {

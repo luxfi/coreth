@@ -1,4 +1,4 @@
-// (c) 2023, Lux Industries Inc. All rights reserved.
+// (c) 2023, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 // Defines the interface for the configuration and execution of a precompile contract
@@ -10,6 +10,7 @@ import (
 	"github.com/luxfi/node/snow"
 	"github.com/luxfi/geth/precompile/precompileconfig"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/holiman/uint256"
 )
 
 // StatefulPrecompiledContract is the interface for executing a precompiled contract
@@ -26,8 +27,8 @@ type StateDB interface {
 	SetNonce(common.Address, uint64)
 	GetNonce(common.Address) uint64
 
-	GetBalance(common.Address) *big.Int
-	AddBalance(common.Address, *big.Int)
+	GetBalance(common.Address) *uint256.Int
+	AddBalance(common.Address, *uint256.Int)
 	GetBalanceMultiCoin(common.Address, common.Hash) *big.Int
 
 	CreateAccount(common.Address)
@@ -61,7 +62,7 @@ type ConfigurationBlockContext interface {
 
 type BlockContext interface {
 	ConfigurationBlockContext
-	// GetResults returns an arbitrary byte array result of verifying the predicates
+	// GetPredicateResults returns an arbitrary byte array result of verifying the predicates
 	// of the given transaction, precompile address pair.
 	GetPredicateResults(txHash common.Hash, precompileAddress common.Address) []byte
 }

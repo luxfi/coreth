@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc. All rights reserved.
+// (c) 2019-2021, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -11,6 +11,8 @@ import (
 	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/txpool"
 	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/plugin/evm/atomic"
+	"github.com/holiman/uint256"
 
 	"github.com/luxfi/node/snow"
 	commonEng "github.com/luxfi/node/snow/engine/common"
@@ -28,7 +30,7 @@ type blockBuilder struct {
 	chainConfig *params.ChainConfig
 
 	txPool  *txpool.TxPool
-	mempool *Mempool
+	mempool *atomic.Mempool
 
 	shutdownChan <-chan struct{}
 	shutdownWg   *sync.WaitGroup
@@ -117,7 +119,9 @@ func (b *blockBuilder) handleGenerateBlock() {
 // needToBuild returns true if there are outstanding transactions to be issued
 // into a block.
 func (b *blockBuilder) needToBuild() bool {
-	size := b.txPool.PendingSize(true)
+	size := b.txPool.PendingSize(txpool.PendingFilter{
+		MinTip: uint256.MustFromBig(b.txPool.GasTip()),
+	})
 	return size > 0 || b.mempool.Len() > 0
 }
 

@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -601,7 +601,7 @@ func TestOpTstore(t *testing.T) {
 		caller         = common.Address{}
 		to             = common.Address{1}
 		contractRef    = contractRef{caller}
-		contract       = NewContract(contractRef, AccountRef(to), new(big.Int), 0)
+		contract       = NewContract(contractRef, AccountRef(to), new(uint256.Int), 0)
 		scopeContext   = ScopeContext{mem, stack, contract}
 		value          = common.Hex2Bytes("abcdef00000000000000abba000000000deaf000000c0de00100000000133700")
 	)
@@ -729,7 +729,7 @@ func TestCreate2Addreses(t *testing.T) {
 
 // TestRandom is a test for the RANDOM opcode in geth, which we do not support. Therefore, we use this test to check that DIFFICULTY opcode continues to work
 // the same as the RANDOM opcode except using the Difficulty value in the block context.
-// Note: this should not be used as a source of randomness in coreth since the difficulty is required to be 1.
+// Note: this should not be used as a source of randomness in geth since the difficulty is required to be 1.
 func TestRandom(t *testing.T) {
 	type testcase struct {
 		name   string

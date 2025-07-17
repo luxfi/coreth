@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -38,6 +38,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/interfaces"
+	"github.com/luxfi/geth/rpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
@@ -437,7 +438,8 @@ func (c *BoundContract) estimateGasLimit(opts *TransactOpts, contract *common.Ad
 
 func (c *BoundContract) getNonce(opts *TransactOpts) (uint64, error) {
 	if opts.Nonce == nil {
-		return c.transactor.AcceptedNonceAt(ensureContext(opts.Context), opts.From)
+		pendingBlock := big.NewInt(int64(rpc.PendingBlockNumber))
+		return c.transactor.NonceAt(ensureContext(opts.Context), opts.From, pendingBlock)
 	} else {
 		return opts.Nonce.Uint64(), nil
 	}

@@ -1,4 +1,4 @@
-// (c) 2023, Lux Industries Inc. All rights reserved.
+// (c) 2023, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -13,9 +13,11 @@ import (
 	"github.com/luxfi/node/snow"
 	"github.com/luxfi/node/snow/engine/snowman/block"
 	"github.com/luxfi/node/snow/validators"
+	"github.com/luxfi/node/snow/validators/validatorstest"
 	agoUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
 	"github.com/luxfi/node/utils/crypto/bls"
+	"github.com/luxfi/node/utils/crypto/bls/signer/localsigner"
 	"github.com/luxfi/node/utils/set"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
@@ -24,7 +26,6 @@ import (
 	"github.com/luxfi/geth/predicate"
 	"github.com/luxfi/geth/utils"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 )
 
 const pChainHeight uint64 = 1337
@@ -48,7 +49,6 @@ var (
 	numTestVdrs = 10_000
 	testVdrs    []*testValidator
 	vdrs        map[ids.NodeID]*validators.GetValidatorOutput
-	tests       []signatureTest
 
 	predicateTests = make(map[string]testutils.PredicateTest)
 )
@@ -94,7 +94,10 @@ func init() {
 	}
 
 	for _, testVdr := range testVdrs {
-		blsSignature := bls.Sign(testVdr.sk, unsignedMsg.Bytes())
+		blsSignature, err := testVdr.sk.Sign(unsignedMsg.Bytes())
+		if err != nil {
+			panic(err)
+		}
 		blsSignatures = append(blsSignatures, blsSignature)
 	}
 
@@ -103,7 +106,7 @@ func init() {
 
 type testValidator struct {
 	nodeID ids.NodeID
-	sk     *bls.SecretKey
+	sk     bls.Signer
 	vdr    *luxWarp.Validator
 }
 
@@ -112,13 +115,13 @@ func (v *testValidator) Compare(o *testValidator) int {
 }
 
 func newTestValidator() *testValidator {
-	sk, err := bls.NewSecretKey()
+	sk, err := localsigner.New()
 	if err != nil {
 		panic(err)
 	}
 
 	nodeID := ids.GenerateTestNodeID()
-	pk := bls.PublicFromSecretKey(sk)
+	pk := sk.PublicKey()
 	return &testValidator{
 		nodeID: nodeID,
 		sk:     sk,
@@ -129,15 +132,6 @@ func newTestValidator() *testValidator {
 			NodeIDs:        []ids.NodeID{nodeID},
 		},
 	}
-}
-
-type signatureTest struct {
-	name      string
-	stateF    func(*gomock.Controller) validators.State
-	quorumNum uint64
-	quorumDen uint64
-	msgF      func(*require.Assertions) *luxWarp.Message
-	err       error
 }
 
 // createWarpMessage constructs a signed warp message using the global variable [unsignedMsg]
@@ -197,7 +191,7 @@ func createSnowCtx(validatorRanges []validatorRange) *snow.Context {
 	}
 
 	snowCtx := utils.TestSnowContext()
-	state := &validators.TestState{
+	state := &validatorstest.State{
 		GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
 			return sourceSubnetID, nil
 		},
@@ -227,6 +221,12 @@ func createValidPredicateTest(snowCtx *snow.Context, numKeys uint64, predicateBy
 }
 
 func TestWarpMessageFromPrimaryNetwork(t *testing.T) {
+	for _, requirePrimaryNetworkSigners := range []bool{true, false} {
+		testWarpMessageFromPrimaryNetwork(t, requirePrimaryNetworkSigners)
+	}
+}
+
+func testWarpMessageFromPrimaryNetwork(t *testing.T, requirePrimaryNetworkSigners bool) {
 	require := require.New(t)
 	numKeys := 10
 	cChainID := ids.GenerateTestID()
@@ -238,13 +238,16 @@ func TestWarpMessageFromPrimaryNetwork(t *testing.T) {
 	getValidatorsOutput := make(map[ids.NodeID]*validators.GetValidatorOutput)
 	blsSignatures := make([]*bls.Signature, 0, numKeys)
 	for i := 0; i < numKeys; i++ {
+		sig, err := testVdrs[i].sk.Sign(unsignedMsg.Bytes())
+		require.NoError(err)
+
 		validatorOutput := &validators.GetValidatorOutput{
 			NodeID:    testVdrs[i].nodeID,
 			Weight:    20,
 			PublicKey: testVdrs[i].vdr.PublicKey,
 		}
 		getValidatorsOutput[testVdrs[i].nodeID] = validatorOutput
-		blsSignatures = append(blsSignatures, bls.Sign(testVdrs[i].sk, unsignedMsg.Bytes()))
+		blsSignatures = append(blsSignatures, sig)
 	}
 	aggregateSignature, err := bls.AggregateSignatures(blsSignatures)
 	require.NoError(err)
@@ -266,19 +269,23 @@ func TestWarpMessageFromPrimaryNetwork(t *testing.T) {
 	snowCtx.ChainID = ids.GenerateTestID()
 	snowCtx.CChainID = cChainID
 	snowCtx.NetworkID = networkID
-	snowCtx.ValidatorState = &validators.TestState{
+	snowCtx.ValidatorState = &validatorstest.State{
 		GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
 			require.Equal(chainID, cChainID)
 			return constants.PrimaryNetworkID, nil // Return Primary Network SubnetID
 		},
 		GetValidatorSetF: func(ctx context.Context, height uint64, subnetID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
-			require.Equal(snowCtx.SubnetID, subnetID)
+			expectedSubnetID := snowCtx.SubnetID
+			if requirePrimaryNetworkSigners {
+				expectedSubnetID = constants.PrimaryNetworkID
+			}
+			require.Equal(expectedSubnetID, subnetID)
 			return getValidatorsOutput, nil
 		},
 	}
 
 	test := testutils.PredicateTest{
-		Config: NewDefaultConfig(utils.NewUint64(0)),
+		Config: NewConfig(utils.NewUint64(0), 0, requirePrimaryNetworkSigners),
 		PredicateContext: &precompileconfig.PredicateContext{
 			SnowCtx: snowCtx,
 			ProposerVMBlockCtx: &block.Context{
@@ -575,7 +582,7 @@ func TestWarpSignatureWeightsNonDefaultQuorumNumerator(t *testing.T) {
 
 		name := fmt.Sprintf("non-default quorum %d signature(s)", numSigners)
 		tests[name] = testutils.PredicateTest{
-			Config: NewConfig(utils.NewUint64(0), uint64(nonDefaultQuorumNumerator)),
+			Config: NewConfig(utils.NewUint64(0), uint64(nonDefaultQuorumNumerator), false),
 			PredicateContext: &precompileconfig.PredicateContext{
 				SnowCtx: snowCtx,
 				ProposerVMBlockCtx: &block.Context{
@@ -666,7 +673,7 @@ func initWarpPredicateTests() {
 
 		snowCtx := utils.TestSnowContext()
 		snowCtx.NetworkID = networkID
-		state := &validators.TestState{
+		state := &validatorstest.State{
 			GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
 				return sourceSubnetID, nil
 			},

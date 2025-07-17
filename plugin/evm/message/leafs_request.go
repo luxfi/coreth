@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package message
@@ -22,9 +22,9 @@ var _ Request = LeafsRequest{}
 type NodeType uint8
 
 const (
-	// StateTrieNode represents a leaf node that belongs to the coreth State trie
+	// StateTrieNode represents a leaf node that belongs to the geth State trie
 	StateTrieNode NodeType = iota + 1
-	// AtomicTrieNode represents a leaf node that belongs to the coreth evm.AtomicTrie
+	// AtomicTrieNode represents a leaf node that belongs to the geth evm.AtomicTrie
 	AtomicTrieNode
 )
 

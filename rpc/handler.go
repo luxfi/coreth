@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -38,7 +38,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/geth/metrics"
+	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/log"
 	"golang.org/x/time/rate"
 )
@@ -356,7 +356,7 @@ func (h *handler) addRequestOp(op *requestOp) {
 	}
 }
 
-// removeRequestOps stops waiting for the given request IDs.
+// removeRequestOp stops waiting for the given request IDs.
 func (h *handler) removeRequestOp(op *requestOp) {
 	for _, id := range op.ids {
 		delete(h.respWait, string(id))
@@ -479,7 +479,7 @@ func (h *handler) startCallProc(fn func(*callProc)) {
 	}
 }
 
-// handleResponse processes method call responses.
+// handleResponses processes method call responses.
 func (h *handler) handleResponses(batch []*jsonrpcMessage, handleCall func(*jsonrpcMessage)) {
 	var resolvedops []*requestOp
 	handleResp := func(msg *jsonrpcMessage) {

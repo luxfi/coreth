@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -15,13 +15,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/database"
+	"github.com/luxfi/node/api/metrics"
+	avalancheatomic "github.com/luxfi/node/chains/atomic"
+	avalanchedatabase "github.com/luxfi/node/database"
 	"github.com/luxfi/node/database/prefixdb"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/snow"
-	"github.com/luxfi/node/snow/choices"
 	commonEng "github.com/luxfi/node/snow/engine/common"
+	"github.com/luxfi/node/snow/engine/enginetest"
 	"github.com/luxfi/node/snow/engine/snowman/block"
 	"github.com/luxfi/node/utils/crypto/secp256k1"
 	"github.com/luxfi/node/utils/set"
@@ -33,12 +34,14 @@ import (
 	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/plugin/evm/atomic"
+	"github.com/luxfi/geth/plugin/evm/database"
 	"github.com/luxfi/geth/predicate"
 	statesyncclient "github.com/luxfi/geth/sync/client"
 	"github.com/luxfi/geth/sync/statesync"
 	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/log"
@@ -84,11 +87,6 @@ func TestStateSyncFromScratchExceedParent(t *testing.T) {
 
 func TestStateSyncToggleEnabledToDisabled(t *testing.T) {
 	rand.Seed(1)
-	// Hack: registering metrics uses global variables, so we need to disable metrics here so that we can initialize the VM twice.
-	metrics.Enabled = false
-	defer func() {
-		metrics.Enabled = true
-	}()
 
 	var lock sync.Mutex
 	reqCount := 0
@@ -128,7 +126,7 @@ func TestStateSyncToggleEnabledToDisabled(t *testing.T) {
 	test.expectedErr = nil
 
 	syncDisabledVM := &VM{}
-	appSender := &commonEng.SenderTest{T: t}
+	appSender := &enginetest.Sender{T: t}
 	appSender.SendAppGossipF = func(context.Context, commonEng.SendConfig, []byte) error { return nil }
 	appSender.SendAppRequestF = func(ctx context.Context, nodeSet set.Set[ids.NodeID], requestID uint32, request []byte) error {
 		nodeID, hasItem := nodeSet.Pop()
@@ -138,7 +136,8 @@ func TestStateSyncToggleEnabledToDisabled(t *testing.T) {
 		go vmSetup.serverVM.AppRequest(ctx, nodeID, requestID, time.Now().Add(1*time.Second), request)
 		return nil
 	}
-	// Disable metrics to prevent duplicate registerer
+	// Reset metrics to allow re-initialization
+	vmSetup.syncerVM.ctx.Metrics = metrics.NewPrefixGatherer()
 	stateSyncDisabledConfigJSON := `{"state-sync-enabled":false}`
 	if err := syncDisabledVM.Initialize(
 		context.Background(),
@@ -203,6 +202,8 @@ func TestStateSyncToggleEnabledToDisabled(t *testing.T) {
 		`{"state-sync-enabled":true, "state-sync-min-blocks":%d}`,
 		test.stateSyncMinBlocks,
 	)
+	// Reset metrics to allow re-initialization
+	vmSetup.syncerVM.ctx.Metrics = metrics.NewPrefixGatherer()
 	if err := syncReEnabledVM.Initialize(
 		context.Background(),
 		vmSetup.syncerVM.ctx,
@@ -290,7 +291,7 @@ func createSyncServerAndClientVMs(t *testing.T, test syncTest, numBlocks int) *s
 		require.NoError(serverVM.Shutdown(context.Background()))
 	})
 	var (
-		importTx, exportTx *Tx
+		importTx, exportTx *atomic.Tx
 		err                error
 	)
 	generateAndAcceptBlocks(t, serverVM, numBlocks, func(i int, gen *core.BlockGen) {
@@ -332,14 +333,14 @@ func createSyncServerAndClientVMs(t *testing.T, test syncTest, numBlocks int) *s
 	serverAtomicTrie := serverVM.atomicTrie.(*atomicTrie)
 	serverAtomicTrie.commitInterval = test.syncableInterval
 	require.NoError(serverAtomicTrie.commit(test.syncableInterval, serverAtomicTrie.LastAcceptedRoot()))
-	require.NoError(serverVM.db.Commit())
+	require.NoError(serverVM.versiondb.Commit())
 
 	serverSharedMemories := newSharedMemories(serverAtomicMemory, serverVM.ctx.ChainID, serverVM.ctx.XChainID)
-	serverSharedMemories.assertOpsApplied(t, importTx.mustAtomicOps())
-	serverSharedMemories.assertOpsApplied(t, exportTx.mustAtomicOps())
+	serverSharedMemories.assertOpsApplied(t, mustAtomicOps(importTx))
+	serverSharedMemories.assertOpsApplied(t, mustAtomicOps(exportTx))
 
 	// make some accounts
-	trieDB := trie.NewDatabase(serverVM.chaindb, nil)
+	trieDB := triedb.NewDatabase(serverVM.chaindb, nil)
 	root, accounts := statesync.FillAccountsWithOverlappingStorage(t, trieDB, types.EmptyRootHash, 1000, 16)
 
 	// patch serverVM's lastAcceptedBlock to have the new root
@@ -351,7 +352,6 @@ func createSyncServerAndClientVMs(t *testing.T, test syncTest, numBlocks int) *s
 	require.NoError(err)
 	internalBlock, err := serverVM.parseBlock(context.Background(), blockBytes)
 	require.NoError(err)
-	internalBlock.(*Block).SetStatus(choices.Accepted)
 	require.NoError(serverVM.State.SetLastAcceptedBlock(internalBlock))
 
 	// patch syncableInterval for test
@@ -406,7 +406,7 @@ func createSyncServerAndClientVMs(t *testing.T, test syncTest, numBlocks int) *s
 	return &syncVMSetup{
 		serverVM:        serverVM,
 		serverAppSender: serverAppSender,
-		includedAtomicTxs: []*Tx{
+		includedAtomicTxs: []*atomic.Tx{
 			importTx,
 			exportTx,
 		},
@@ -423,15 +423,15 @@ func createSyncServerAndClientVMs(t *testing.T, test syncTest, numBlocks int) *s
 // off of a server VM.
 type syncVMSetup struct {
 	serverVM        *VM
-	serverAppSender *commonEng.SenderTest
+	serverAppSender *enginetest.Sender
 
-	includedAtomicTxs []*Tx
+	includedAtomicTxs []*atomic.Tx
 	fundedAccounts    map[*keystore.Key]*types.StateAccount
 
 	syncerVM             *VM
-	syncerDB             database.Database
+	syncerDB             avalanchedatabase.Database
 	syncerEngineChan     <-chan commonEng.Message
-	syncerAtomicMemory   *atomic.Memory
+	syncerAtomicMemory   *avalancheatomic.Memory
 	shutdownOnceSyncerVM *shutdownOnceVM
 }
 
@@ -490,7 +490,7 @@ func testSyncerVM(t *testing.T, vmSetup *syncVMSetup, test syncTest) {
 	if test.expectedErr != nil {
 		require.ErrorIs(err, test.expectedErr)
 		// Note we re-open the database here to avoid a closed error when the test is for a shutdown VM.
-		chaindb := Database{prefixdb.NewNested(ethDBPrefix, syncerVM.db)}
+		chaindb := database.WrapDatabase(prefixdb.NewNested(ethDBPrefix, syncerVM.db))
 		assertSyncPerformedHeights(t, chaindb, map[uint64]struct{}{})
 		return
 	}
@@ -513,7 +513,7 @@ func testSyncerVM(t *testing.T, vmSetup *syncVMSetup, test syncTest) {
 	}
 
 	// tail should be the last block synced
-	if syncerVM.ethConfig.TxLookupLimit != 0 {
+	if syncerVM.ethConfig.TransactionHistory != 0 {
 		tail := lastSyncedBlock.NumberU64()
 
 		core.CheckTxIndices(t, &tail, tail, syncerVM.chaindb, true)
@@ -541,8 +541,8 @@ func testSyncerVM(t *testing.T, vmSetup *syncVMSetup, test syncTest) {
 		}
 	},
 		func(block *types.Block) {
-			if syncerVM.ethConfig.TxLookupLimit != 0 {
-				tail := block.NumberU64() - syncerVM.ethConfig.TxLookupLimit + 1
+			if syncerVM.ethConfig.TransactionHistory != 0 {
+				tail := block.NumberU64() - syncerVM.ethConfig.TransactionHistory + 1
 				// tail should be the minimum last synced block, since we skipped it to the last block
 				if tail < lastSyncedBlock.NumberU64() {
 					tail = lastSyncedBlock.NumberU64()
@@ -554,13 +554,13 @@ func testSyncerVM(t *testing.T, vmSetup *syncVMSetup, test syncTest) {
 
 	// check we can transition to [NormalOp] state and continue to process blocks.
 	require.NoError(syncerVM.SetState(context.Background(), snow.NormalOp))
-	require.True(syncerVM.bootstrapped)
+	require.True(syncerVM.bootstrapped.Get())
 
 	// check atomic memory was synced properly
 	syncerSharedMemories := newSharedMemories(syncerAtomicMemory, syncerVM.ctx.ChainID, syncerVM.ctx.XChainID)
 
 	for _, tx := range includedAtomicTxs {
-		syncerSharedMemories.assertOpsApplied(t, tx.mustAtomicOps())
+		syncerSharedMemories.assertOpsApplied(t, mustAtomicOps(tx))
 	}
 
 	// Generate blocks after we have entered normal consensus as well
@@ -583,8 +583,8 @@ func testSyncerVM(t *testing.T, vmSetup *syncVMSetup, test syncTest) {
 		}
 	},
 		func(block *types.Block) {
-			if syncerVM.ethConfig.TxLookupLimit != 0 {
-				tail := block.NumberU64() - syncerVM.ethConfig.TxLookupLimit + 1
+			if syncerVM.ethConfig.TransactionHistory != 0 {
+				tail := block.NumberU64() - syncerVM.ethConfig.TransactionHistory + 1
 				// tail should be the minimum last synced block, since we skipped it to the last block
 				if tail < lastSyncedBlock.NumberU64() {
 					tail = lastSyncedBlock.NumberU64()

@@ -9,7 +9,7 @@ import (
 	"github.com/luxfi/node/database/encdb"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/utils/crypto/secp256k1"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ava-labs/libevm/common"
 )
 
 // Key in the database whose corresponding value is the list of

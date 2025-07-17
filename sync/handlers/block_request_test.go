@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package handlers
@@ -17,7 +17,7 @@ import (
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/plugin/evm/message"
 	"github.com/luxfi/geth/sync/handlers/stats"
-	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -106,7 +106,7 @@ func TestBlockRequestHandler(t *testing.T) {
 		Config: params.TestChainConfig,
 	}
 	memdb := rawdb.NewMemoryDatabase()
-	tdb := trie.NewDatabase(memdb, nil)
+	tdb := triedb.NewDatabase(memdb, nil)
 	genesis := gspec.MustCommit(memdb, tdb)
 	engine := dummy.NewETHFaker()
 	blocks, _, err := core.GenerateChain(params.TestChainConfig, genesis, engine, memdb, 96, 0, func(i int, b *core.BlockGen) {})
@@ -159,12 +159,12 @@ func TestBlockRequestHandlerLargeBlocks(t *testing.T) {
 		funds   = big.NewInt(1000000000000000000)
 		gspec   = &core.Genesis{
 			Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
-			Alloc:  core.GenesisAlloc{addr1: {Balance: funds}},
+			Alloc:  types.GenesisAlloc{addr1: {Balance: funds}},
 		}
 		signer = types.LatestSigner(gspec.Config)
 	)
 	memdb := rawdb.NewMemoryDatabase()
-	tdb := trie.NewDatabase(memdb, nil)
+	tdb := triedb.NewDatabase(memdb, nil)
 	genesis := gspec.MustCommit(memdb, tdb)
 	engine := dummy.NewETHFaker()
 	blocks, _, err := core.GenerateChain(gspec.Config, genesis, engine, memdb, 96, 0, func(i int, b *core.BlockGen) {
@@ -218,7 +218,7 @@ func TestBlockRequestHandlerCtxExpires(t *testing.T) {
 		Config: params.TestChainConfig,
 	}
 	memdb := rawdb.NewMemoryDatabase()
-	tdb := trie.NewDatabase(memdb, nil)
+	tdb := triedb.NewDatabase(memdb, nil)
 	genesis := gspec.MustCommit(memdb, tdb)
 	engine := dummy.NewETHFaker()
 	blocks, _, err := core.GenerateChain(params.TestChainConfig, genesis, engine, memdb, 11, 0, func(i int, b *core.BlockGen) {})

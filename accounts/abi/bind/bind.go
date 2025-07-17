@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -262,7 +262,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 		}
 		// Parse library references.
 		for pattern, name := range libs {
-			matched, err := regexp.Match("__\\$"+pattern+"\\$__", []byte(contracts[types[i]].InputBin))
+			matched, err := regexp.MatchString("__\\$"+pattern+"\\$__", contracts[types[i]].InputBin)
 			if err != nil {
 				log.Error("Could not search for pattern", "pattern", pattern, "contract", contracts[types[i]], "err", err)
 			}

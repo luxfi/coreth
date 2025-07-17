@@ -1,4 +1,4 @@
-// (c) 2020-2025, Lux Industries Inc. All rights reserved.
+// (c) 2020-2021, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -7,19 +7,21 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxfi/node/chains/atomic"
+	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/database"
+	luxdatabase "github.com/luxfi/node/database"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/utils/wrappers"
 
-	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/plugin/evm/atomic"
+	"github.com/luxfi/geth/plugin/evm/database"
 	"github.com/luxfi/geth/trie"
-	"github.com/luxfi/geth/trie/triedb/hashdb"
 	"github.com/luxfi/geth/trie/trienode"
+	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/geth/triedb/hashdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/log"
@@ -30,8 +32,7 @@ const (
 	atomicKeyLength            = wrappers.LongLen + common.HashLength
 	sharedMemoryApplyBatchSize = 10_000 // specifies the number of atomic operations to batch progress updates
 
-	atomicTrieTipBufferSize = 1 // No need to support a buffer of previously accepted tries for the atomic trie
-	atomicTrieMemoryCap     = 64 * units.MiB
+	atomicTrieMemoryCap = 64 * units.MiB
 )
 
 var (
@@ -51,7 +52,7 @@ type AtomicTrie interface {
 	OpenTrie(hash common.Hash) (*trie.Trie, error)
 
 	// UpdateTrie updates [tr] to inlude atomicOps for height.
-	UpdateTrie(tr *trie.Trie, height uint64, atomicOps map[ids.ID]*atomic.Requests) error
+	UpdateTrie(tr *trie.Trie, height uint64, atomicOps map[ids.ID]*luxatomic.Requests) error
 
 	// Iterator returns an AtomicTrieIterator to iterate the trie at the given
 	// root hash starting at [cursor].
@@ -61,7 +62,7 @@ type AtomicTrie interface {
 	LastCommitted() (common.Hash, uint64)
 
 	// TrieDB returns the underlying trie database
-	TrieDB() *trie.Database
+	TrieDB() *triedb.Database
 
 	// Root returns hash if it exists at specified height
 	// if trie was not committed at provided height, it returns
@@ -107,7 +108,7 @@ type AtomicTrieIterator interface {
 
 	// AtomicOps returns a map of blockchainIDs to the set of atomic requests
 	// for that blockchainID at the current block number
-	AtomicOps() *atomic.Requests
+	AtomicOps() *luxatomic.Requests
 
 	// Error returns error, if any encountered during this iteration
 	Error() error
@@ -115,21 +116,20 @@ type AtomicTrieIterator interface {
 
 // atomicTrie implements the AtomicTrie interface
 type atomicTrie struct {
-	commitInterval      uint64            // commit interval, same as commitHeightInterval by default
-	metadataDB          database.Database // Underlying database containing the atomic trie metadata
-	trieDB              *trie.Database    // Trie database
-	lastCommittedRoot   common.Hash       // trie root of the most recent commit
-	lastCommittedHeight uint64            // index height of the most recent commit
-	lastAcceptedRoot    common.Hash       // most recent trie root passed to accept trie or the root of the atomic trie on intialization.
+	commitInterval      uint64                     // commit interval, same as commitHeightInterval by default
+	metadataDB          luxdatabase.Database // Underlying database containing the atomic trie metadata
+	trieDB              *triedb.Database           // Trie database
+	lastCommittedRoot   common.Hash                // trie root of the most recent commit
+	lastCommittedHeight uint64                     // index height of the most recent commit
+	lastAcceptedRoot    common.Hash                // most recent trie root passed to accept trie or the root of the atomic trie on intialization.
 	codec               codec.Manager
 	memoryCap           common.StorageSize
-	tipBuffer           *core.BoundedBuffer[common.Hash]
 }
 
 // newAtomicTrie returns a new instance of a atomicTrie with a configurable commitHeightInterval, used in testing.
 // Initializes the trie before returning it.
 func newAtomicTrie(
-	atomicTrieDB database.Database, metadataDB database.Database,
+	atomicTrieDB luxdatabase.Database, metadataDB luxdatabase.Database,
 	codec codec.Manager, lastAcceptedHeight uint64, commitHeightInterval uint64,
 ) (*atomicTrie, error) {
 	root, height, err := lastCommittedRootIfExists(metadataDB)
@@ -150,9 +150,9 @@ func newAtomicTrie(
 		}
 	}
 
-	trieDB := trie.NewDatabase(
-		rawdb.NewDatabase(Database{atomicTrieDB}),
-		&trie.Config{
+	trieDB := triedb.NewDatabase(
+		rawdb.NewDatabase(database.WrapDatabase(atomicTrieDB)),
+		&triedb.Config{
 			HashDB: &hashdb.Config{
 				CleanCacheSize: 64 * units.MiB, // Allocate 64MB of memory for clean cache
 			},
@@ -166,7 +166,6 @@ func newAtomicTrie(
 		codec:               codec,
 		lastCommittedRoot:   root,
 		lastCommittedHeight: height,
-		tipBuffer:           core.NewBoundedBuffer(atomicTrieTipBufferSize, trieDB.Dereference),
 		memoryCap:           atomicTrieMemoryCap,
 		// Initialize lastAcceptedRoot to the last committed root.
 		// If there were further blocks processed (ahead of the commit interval),
@@ -180,17 +179,17 @@ func newAtomicTrie(
 // else returns empty common.Hash{} and 0
 // returns error only if there are issues with the underlying data store
 // or if values present in the database are not as expected
-func lastCommittedRootIfExists(db database.Database) (common.Hash, uint64, error) {
+func lastCommittedRootIfExists(db luxdatabase.Database) (common.Hash, uint64, error) {
 	// read the last committed entry if it exists and set the root hash
 	lastCommittedHeightBytes, err := db.Get(lastCommittedKey)
 	switch {
-	case err == database.ErrNotFound:
+	case err == luxdatabase.ErrNotFound:
 		return common.Hash{}, 0, nil
 	case err != nil:
 		return common.Hash{}, 0, err
 	}
 
-	height, err := database.ParseUInt64(lastCommittedHeightBytes)
+	height, err := luxdatabase.ParseUInt64(lastCommittedHeightBytes)
 	if err != nil {
 		return common.Hash{}, 0, fmt.Errorf("expected value at lastCommittedKey to be a valid uint64: %w", err)
 	}
@@ -220,9 +219,9 @@ func (a *atomicTrie) commit(height uint64, root common.Hash) error {
 	return a.updateLastCommitted(root, height)
 }
 
-func (a *atomicTrie) UpdateTrie(trie *trie.Trie, height uint64, atomicOps map[ids.ID]*atomic.Requests) error {
+func (a *atomicTrie) UpdateTrie(trie *trie.Trie, height uint64, atomicOps map[ids.ID]*luxatomic.Requests) error {
 	for blockchainID, requests := range atomicOps {
-		valueBytes, err := a.codec.Marshal(codecVersion, requests)
+		valueBytes, err := a.codec.Marshal(atomic.CodecVersion, requests)
 		if err != nil {
 			// highly unlikely but possible if atomic.Element
 			// has a change that is unsupported by the codec
@@ -249,7 +248,7 @@ func (a *atomicTrie) LastCommitted() (common.Hash, uint64) {
 // updateLastCommitted adds [height] -> [root] to the index and marks it as the last committed
 // root/height pair.
 func (a *atomicTrie) updateLastCommitted(root common.Hash, height uint64) error {
-	heightBytes := database.PackUInt64(height)
+	heightBytes := luxdatabase.PackUInt64(height)
 
 	// now save the trie hash against the height it was committed at
 	if err := a.metadataDB.Put(heightBytes, root[:]); err != nil {
@@ -282,7 +281,7 @@ func (a *atomicTrie) Iterator(root common.Hash, cursor []byte) (AtomicTrieIterat
 	return NewAtomicTrieIterator(iter, a.codec), iter.Err
 }
 
-func (a *atomicTrie) TrieDB() *trie.Database {
+func (a *atomicTrie) TrieDB() *triedb.Database {
 	return a.trieDB
 }
 
@@ -295,7 +294,7 @@ func (a *atomicTrie) Root(height uint64) (common.Hash, error) {
 
 // getRoot is a helper function to return the committed atomic trie root hash at [height]
 // from [metadataDB].
-func getRoot(metadataDB database.Database, height uint64) (common.Hash, error) {
+func getRoot(metadataDB luxdatabase.Database, height uint64) (common.Hash, error) {
 	if height == 0 {
 		// if root is queried at height == 0, return the empty root hash
 		// this may occur if peers ask for the most recent state summary
@@ -303,10 +302,10 @@ func getRoot(metadataDB database.Database, height uint64) (common.Hash, error) {
 		return types.EmptyRootHash, nil
 	}
 
-	heightBytes := database.PackUInt64(height)
+	heightBytes := luxdatabase.PackUInt64(height)
 	hash, err := metadataDB.Get(heightBytes)
 	switch {
-	case err == database.ErrNotFound:
+	case err == luxdatabase.ErrNotFound:
 		return common.Hash{}, nil
 	case err != nil:
 		return common.Hash{}, err
@@ -351,12 +350,6 @@ func (a *atomicTrie) AcceptTrie(height uint64, root common.Hash) (bool, error) {
 		hasCommitted = true
 	}
 
-	// Attempt to dereference roots at least [tipBufferSize] old
-	//
-	// Note: It is safe to dereference roots that have been committed to disk
-	// (they are no-ops).
-	a.tipBuffer.Insert(root)
-
 	// Commit this root if we have reached the [commitInterval].
 	if height%a.commitInterval == 0 {
 		if err := a.commit(height, root); err != nil {
@@ -365,6 +358,13 @@ func (a *atomicTrie) AcceptTrie(height uint64, root common.Hash) (bool, error) {
 		hasCommitted = true
 	}
 
+	// The following dereferences, if any, the previously inserted root.
+	// This one can be dereferenced whether it has been:
+	// - committed, in which case the dereference is a no-op
+	// - not committted, in which case the current root we are inserting contains
+	//   references to all the relevant data from the previous root, so the previous
+	//   root can be dereferenced.
+	a.trieDB.Dereference(a.lastAcceptedRoot)
 	a.lastAcceptedRoot = root
 	return hasCommitted, nil
 }

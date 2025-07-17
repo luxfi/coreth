@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -145,7 +145,6 @@ func TestBlockNumberOrHash_WithNumber_MarshalAndUnmarshal(t *testing.T) {
 		{"earliest", int64(EarliestBlockNumber)},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			bnh := BlockNumberOrHashWithNumber(BlockNumber(test.number))
 			marshalled, err := json.Marshal(bnh)

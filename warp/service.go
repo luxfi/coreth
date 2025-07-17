@@ -1,4 +1,4 @@
-// (c) 2023, Lux Industries Inc. All rights reserved.
+// (c) 2023, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -9,11 +9,12 @@ import (
 	"fmt"
 
 	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/snow/validators"
 	"github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
 	"github.com/luxfi/geth/peer"
 	"github.com/luxfi/geth/warp/aggregator"
-	"github.com/luxfi/geth/warp/validators"
+	warpValidators "github.com/luxfi/geth/warp/validators"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/log"
 )
@@ -25,18 +26,20 @@ type API struct {
 	networkID                     uint32
 	sourceSubnetID, sourceChainID ids.ID
 	backend                       Backend
-	state                         *validators.State
+	state                         validators.State
 	client                        peer.NetworkClient
+	requirePrimaryNetworkSigners  func() bool
 }
 
-func NewAPI(networkID uint32, sourceSubnetID ids.ID, sourceChainID ids.ID, state *validators.State, backend Backend, client peer.NetworkClient) *API {
+func NewAPI(networkID uint32, sourceSubnetID ids.ID, sourceChainID ids.ID, state validators.State, backend Backend, client peer.NetworkClient, requirePrimaryNetworkSigners func() bool) *API {
 	return &API{
-		networkID:      networkID,
-		sourceSubnetID: sourceSubnetID,
-		sourceChainID:  sourceChainID,
-		backend:        backend,
-		state:          state,
-		client:         client,
+		networkID:                    networkID,
+		sourceSubnetID:               sourceSubnetID,
+		sourceChainID:                sourceChainID,
+		backend:                      backend,
+		state:                        state,
+		client:                       client,
+		requirePrimaryNetworkSigners: requirePrimaryNetworkSigners,
 	}
 }
 
@@ -51,7 +54,11 @@ func (a *API) GetMessage(ctx context.Context, messageID ids.ID) (hexutil.Bytes, 
 
 // GetMessageSignature returns the BLS signature associated with a messageID.
 func (a *API) GetMessageSignature(ctx context.Context, messageID ids.ID) (hexutil.Bytes, error) {
-	signature, err := a.backend.GetMessageSignature(messageID)
+	unsignedMessage, err := a.backend.GetMessage(messageID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get message %s with error %w", messageID, err)
+	}
+	signature, err := a.backend.GetMessageSignature(ctx, unsignedMessage)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signature for message %s with error %w", messageID, err)
 	}
@@ -60,7 +67,7 @@ func (a *API) GetMessageSignature(ctx context.Context, messageID ids.ID) (hexuti
 
 // GetBlockSignature returns the BLS signature associated with a blockID.
 func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (hexutil.Bytes, error) {
-	signature, err := a.backend.GetBlockSignature(blockID)
+	signature, err := a.backend.GetBlockSignature(ctx, blockID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signature for block %s with error %w", blockID, err)
 	}
@@ -104,22 +111,23 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.Uns
 		return nil, err
 	}
 
-	validators, totalWeight, err := warp.GetCanonicalValidatorSet(ctx, a.state, pChainHeight, subnetID)
+	state := warpValidators.NewState(a.state, a.sourceSubnetID, a.sourceChainID, a.requirePrimaryNetworkSigners())
+	validatorSet, err := warp.GetCanonicalValidatorSetFromSubnetID(ctx, state, pChainHeight, subnetID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get validator set: %w", err)
 	}
-	if len(validators) == 0 {
+	if len(validatorSet.Validators) == 0 {
 		return nil, fmt.Errorf("%w (SubnetID: %s, Height: %d)", errNoValidators, subnetID, pChainHeight)
 	}
 
 	log.Debug("Fetching signature",
 		"sourceSubnetID", subnetID,
 		"height", pChainHeight,
-		"numValidators", len(validators),
-		"totalWeight", totalWeight,
+		"numValidators", len(validatorSet.Validators),
+		"totalWeight", validatorSet.TotalWeight,
 	)
 
-	agg := aggregator.New(aggregator.NewSignatureGetter(a.client), validators, totalWeight)
+	agg := aggregator.New(aggregator.NewSignatureGetter(a.client), validatorSet.Validators, validatorSet.TotalWeight)
 	signatureResult, err := agg.AggregateSignatures(ctx, unsignedMessage, quorumNum)
 	if err != nil {
 		return nil, err

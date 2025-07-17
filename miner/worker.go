@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -39,7 +39,6 @@ import (
 	"github.com/luxfi/node/utils/timer/mockable"
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/consensus/dummy"
 	"github.com/luxfi/geth/consensus/misc/eip4844"
 	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/state"
@@ -47,11 +46,13 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/params"
+	customheader "github.com/luxfi/geth/plugin/evm/header"
 	"github.com/luxfi/geth/precompile/precompileconfig"
 	"github.com/luxfi/geth/predicate"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/holiman/uint256"
 )
 
 const (
@@ -145,32 +146,23 @@ func (w *worker) commitNewWork(predicateContext *precompileconfig.PredicateConte
 		timestamp = parent.Time
 	}
 
-	var gasLimit uint64
-	if w.chainConfig.IsCortina(timestamp) {
-		gasLimit = params.CortinaGasLimit
-	} else if w.chainConfig.IsApricotPhase1(timestamp) {
-		gasLimit = params.ApricotPhase1GasLimit
-	} else {
-		// The gas limit is set in phase1 to ApricotPhase1GasLimit because the ceiling and floor were set to the same value
-		// such that the gas limit converged to it. Since this is hardbaked now, we remove the ability to configure it.
-		gasLimit = core.CalcGasLimit(parent.GasUsed, parent.GasLimit, params.ApricotPhase1GasLimit, params.ApricotPhase1GasLimit)
+	gasLimit, err := customheader.GasLimit(w.chainConfig, parent, timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("calculating new gas limit: %w", err)
 	}
+	baseFee, err := customheader.BaseFee(w.chainConfig, parent, timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate new base fee: %w", err)
+	}
+
 	header := &types.Header{
 		ParentHash: parent.Hash(),
 		Number:     new(big.Int).Add(parent.Number, common.Big1),
 		GasLimit:   gasLimit,
-		Extra:      nil,
 		Time:       timestamp,
+		BaseFee:    baseFee,
 	}
 
-	// Set BaseFee and Extra data field if we are post ApricotPhase3
-	if w.chainConfig.IsApricotPhase3(timestamp) {
-		var err error
-		header.Extra, header.BaseFee, err = dummy.CalcBaseFee(w.chainConfig, parent, timestamp)
-		if err != nil {
-			return nil, fmt.Errorf("failed to calculate new base fee: %w", err)
-		}
-	}
 	// Apply EIP-4844, EIP-4788.
 	if w.chainConfig.IsCancun(header.Number, header.Time) {
 		var excessBlobGas uint64
@@ -216,43 +208,70 @@ func (w *worker) commitNewWork(predicateContext *precompileconfig.PredicateConte
 		return nil, err
 	}
 
-	pending := w.eth.TxPool().PendingWithBaseFee(true, header.BaseFee)
+	// Retrieve the pending transactions pre-filtered by the 1559/4844 dynamic fees
+	filter := txpool.PendingFilter{
+		MinTip: uint256.MustFromBig(w.eth.TxPool().GasTip()),
+	}
+	if env.header.BaseFee != nil {
+		filter.BaseFee = uint256.MustFromBig(env.header.BaseFee)
+	}
+	if env.header.ExcessBlobGas != nil {
+		filter.BlobFee = uint256.MustFromBig(eip4844.CalcBlobFee(*env.header.ExcessBlobGas))
+	}
+	filter.OnlyPlainTxs, filter.OnlyBlobTxs = true, false
+	pendingPlainTxs := w.eth.TxPool().Pending(filter)
+
+	filter.OnlyPlainTxs, filter.OnlyBlobTxs = false, true
+	pendingBlobTxs := w.eth.TxPool().Pending(filter)
 
 	// Split the pending transactions into locals and remotes.
-	localTxs, remoteTxs := make(map[common.Address][]*txpool.LazyTransaction), pending
+	localPlainTxs, remotePlainTxs := make(map[common.Address][]*txpool.LazyTransaction), pendingPlainTxs
+	localBlobTxs, remoteBlobTxs := make(map[common.Address][]*txpool.LazyTransaction), pendingBlobTxs
 	for _, account := range w.eth.TxPool().Locals() {
-		if txs := remoteTxs[account]; len(txs) > 0 {
-			delete(remoteTxs, account)
-			localTxs[account] = txs
+		if txs := remotePlainTxs[account]; len(txs) > 0 {
+			delete(remotePlainTxs, account)
+			localPlainTxs[account] = txs
+		}
+		if txs := remoteBlobTxs[account]; len(txs) > 0 {
+			delete(remoteBlobTxs, account)
+			localBlobTxs[account] = txs
 		}
 	}
-
 	// Fill the block with all available pending transactions.
-	if len(localTxs) > 0 {
-		txs := newTransactionsByPriceAndNonce(env.signer, localTxs, header.BaseFee)
-		w.commitTransactions(env, txs, header.Coinbase)
+	if len(localPlainTxs) > 0 || len(localBlobTxs) > 0 {
+		plainTxs := newTransactionsByPriceAndNonce(env.signer, localPlainTxs, env.header.BaseFee)
+		blobTxs := newTransactionsByPriceAndNonce(env.signer, localBlobTxs, env.header.BaseFee)
+
+		w.commitTransactions(env, plainTxs, blobTxs, env.header.Coinbase)
 	}
-	if len(remoteTxs) > 0 {
-		txs := newTransactionsByPriceAndNonce(env.signer, remoteTxs, header.BaseFee)
-		w.commitTransactions(env, txs, header.Coinbase)
+	if len(remotePlainTxs) > 0 || len(remoteBlobTxs) > 0 {
+		plainTxs := newTransactionsByPriceAndNonce(env.signer, remotePlainTxs, env.header.BaseFee)
+		blobTxs := newTransactionsByPriceAndNonce(env.signer, remoteBlobTxs, env.header.BaseFee)
+
+		w.commitTransactions(env, plainTxs, blobTxs, env.header.Coinbase)
 	}
 
 	return w.commit(env)
 }
 
 func (w *worker) createCurrentEnvironment(predicateContext *precompileconfig.PredicateContext, parent *types.Header, header *types.Header, tstart time.Time) (*environment, error) {
-	state, err := w.chain.StateAt(parent.Root)
+	currentState, err := w.chain.StateAt(parent.Root)
 	if err != nil {
 		return nil, err
 	}
-	state.StartPrefetcher("miner", w.eth.BlockChain().CacheConfig().TriePrefetcherParallelism)
+	capacity, err := customheader.GasCapacity(w.chainConfig, parent, header.Time)
+	if err != nil {
+		return nil, fmt.Errorf("calculating gas capacity: %w", err)
+	}
+	numPrefetchers := w.chain.CacheConfig().TriePrefetcherParallelism
+	currentState.StartPrefetcher("miner", state.WithConcurrentWorkers(numPrefetchers))
 	return &environment{
 		signer:           types.MakeSigner(w.chainConfig, header.Number, header.Time),
-		state:            state,
+		state:            currentState,
 		parent:           parent,
 		header:           header,
 		tcount:           0,
-		gasPool:          new(core.GasPool).AddGas(header.GasLimit),
+		gasPool:          new(core.GasPool).AddGas(capacity),
 		rules:            w.chainConfig.Rules(header.Number, header.Time),
 		predicateContext: predicateContext,
 		predicateResults: predicate.NewResults(),
@@ -270,6 +289,7 @@ func (w *worker) commitTransaction(env *environment, tx *types.Transaction, coin
 	}
 	env.txs = append(env.txs, tx)
 	env.receipts = append(env.receipts, receipt)
+	env.size += tx.Size()
 	return receipt.Logs, nil
 }
 
@@ -327,15 +347,47 @@ func (w *worker) applyTransaction(env *environment, tx *types.Transaction, coinb
 	return receipt, err
 }
 
-func (w *worker) commitTransactions(env *environment, txs *transactionsByPriceAndNonce, coinbase common.Address) {
+func (w *worker) commitTransactions(env *environment, plainTxs, blobTxs *transactionsByPriceAndNonce, coinbase common.Address) {
 	for {
 		// If we don't have enough gas for any further transactions then we're done.
 		if env.gasPool.Gas() < params.TxGas {
 			log.Trace("Not enough gas for further transactions", "have", env.gasPool, "want", params.TxGas)
 			break
 		}
+		// If we don't have enough blob space for any further blob transactions,
+		// skip that list altogether
+		if !blobTxs.Empty() && env.blobs*params.BlobTxBlobGasPerBlob >= params.MaxBlobGasPerBlock {
+			log.Trace("Not enough blob space for further blob transactions")
+			blobTxs.Clear()
+			// Fall though to pick up any plain txs
+		}
+		// If we don't have enough blob space for any further blob transactions,
+		// skip that list altogether
+		if !blobTxs.Empty() && env.blobs*params.BlobTxBlobGasPerBlob >= params.MaxBlobGasPerBlock {
+			log.Trace("Not enough blob space for further blob transactions")
+			blobTxs.Clear()
+			// Fall though to pick up any plain txs
+		}
 		// Retrieve the next transaction and abort if all done.
-		ltx := txs.Peek()
+		var (
+			ltx *txpool.LazyTransaction
+			txs *transactionsByPriceAndNonce
+		)
+		pltx, ptip := plainTxs.Peek()
+		bltx, btip := blobTxs.Peek()
+
+		switch {
+		case pltx == nil:
+			txs, ltx = blobTxs, bltx
+		case bltx == nil:
+			txs, ltx = plainTxs, pltx
+		default:
+			if ptip.Lt(btip) {
+				txs, ltx = blobTxs, bltx
+			} else {
+				txs, ltx = plainTxs, pltx
+			}
+		}
 		if ltx == nil {
 			break
 		}
@@ -422,7 +474,7 @@ func (w *worker) commit(env *environment) (*types.Block, error) {
 
 func (w *worker) handleResult(env *environment, block *types.Block, createdAt time.Time, unfinishedReceipts []*types.Receipt) (*types.Block, error) {
 	// Short circuit when receiving duplicate result caused by resubmitting.
-	if w.chain.HasBlock(block.Hash(), block.NumberU64()) {
+	if !w.config.TestOnlyAllowDuplicateBlocks && w.chain.HasBlock(block.Hash(), block.NumberU64()) {
 		return nil, fmt.Errorf("produced duplicate block (Hash: %s, Number %d)", block.Hash(), block.NumberU64())
 	}
 	// Different block could share same sealhash, deep copy here to prevent write-write conflict.
@@ -481,7 +533,7 @@ func totalFees(block *types.Block, receipts []*types.Receipt) *big.Int {
 	for i, tx := range block.Transactions() {
 		var minerFee *big.Int
 		if baseFee := block.BaseFee(); baseFee != nil {
-			// Note in coreth the coinbase payment is (baseFee + effectiveGasTip) * gasUsed
+			// Note in geth the coinbase payment is (baseFee + effectiveGasTip) * gasUsed
 			minerFee = new(big.Int).Add(baseFee, tx.EffectiveGasTipValue(baseFee))
 		} else {
 			// Prior to activation of EIP-1559, the coinbase payment was gasPrice * gasUsed

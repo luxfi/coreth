@@ -10,7 +10,7 @@ import (
 	"github.com/luxfi/node/database/versiondb"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/geth/core/types"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ava-labs/libevm/common"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"

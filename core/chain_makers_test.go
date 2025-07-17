@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -35,7 +35,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -55,9 +55,9 @@ func ExampleGenerateChain() {
 	// Ensure that key1 has some funds in the genesis block.
 	gspec := &Genesis{
 		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
-		Alloc:  GenesisAlloc{addr1: {Balance: big.NewInt(1000000)}},
+		Alloc:  types.GenesisAlloc{addr1: {Balance: big.NewInt(1000000)}},
 	}
-	genesis := gspec.MustCommit(genDb, trie.NewDatabase(genDb, trie.HashDefaults))
+	genesis := gspec.MustCommit(genDb, triedb.NewDatabase(genDb, triedb.HashDefaults))
 
 	// This call generates a chain of 3 blocks. The function runs for
 	// each block and adds different features to gen based on the

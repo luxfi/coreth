@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -33,6 +33,7 @@ import (
 	"github.com/luxfi/geth/core/txpool/blobpool"
 	"github.com/luxfi/geth/core/txpool/legacypool"
 	"github.com/luxfi/geth/eth/gasprice"
+	"github.com/luxfi/geth/internal/ethapi"
 	"github.com/luxfi/geth/miner"
 	"github.com/luxfi/geth/params"
 	"github.com/ethereum/go-ethereum/common"
@@ -137,6 +138,11 @@ type Config struct {
 	// AllowUnfinalizedQueries allow unfinalized queries
 	AllowUnfinalizedQueries bool
 
+	// HistoricalProofQueryWindow is the number of blocks before the last accepted block to be accepted for state queries.
+	// For archive nodes, it defaults to 43200 and can be set to 0 to indicate to accept any block query.
+	// For non-archive nodes, it is forcibly set to the value of [core.TipBufferSize].
+	HistoricalProofQueryWindow uint64
+
 	// AllowUnprotectedTxs allow unprotected transactions to be locally issued.
 	// Unprotected transactions are transactions that are signed without EIP-155
 	// replay protection.
@@ -157,12 +163,10 @@ type Config struct {
 	// identical state with the pre-upgrade ruleset.
 	SkipUpgradeCheck bool
 
-	// TxLookupLimit is the maximum number of blocks from head whose tx indices
+	// TransactionHistory is the maximum number of blocks from head whose tx indices
 	// are reserved:
 	//  * 0:   means no limit
 	//  * N:   means N block limit [HEAD-N+1, HEAD] and delete extra indexes
-	// Deprecated, use 'TransactionHistory' instead.
-	TxLookupLimit      uint64 `toml:",omitempty"` // The maximum number of blocks from head whose tx indices are reserved.
 	TransactionHistory uint64 `toml:",omitempty"` // The maximum number of blocks from head whose tx indices are reserved.
 	StateHistory       uint64 `toml:",omitempty"` // The maximum number of blocks from head whose state histories are reserved.
 
@@ -173,6 +177,9 @@ type Config struct {
 
 	// SkipTxIndexing skips indexing transactions.
 	// This is useful for validators that don't need to index transactions.
-	// TxLookupLimit can be still used to control unindexing old transactions.
+	// TransactionHistory can be still used to control unindexing old transactions.
 	SkipTxIndexing bool
+
+	// TODO: remove once we move SuggestPriceOptions to LUX/custom API
+	PriceOptionConfig ethapi.PriceOptionConfig
 }

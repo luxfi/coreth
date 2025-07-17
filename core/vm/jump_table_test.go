@@ -1,4 +1,4 @@
-// (c) 2023, Lux Industries Inc.
+// (c) 2023, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -32,7 +32,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestJumpTableCopy tests that deep copy is necessery to prevent modify shared jump table
+// TestJumpTableCopy tests that deep copy is necessary to prevent modify shared jump table
 func TestJumpTableCopy(t *testing.T) {
 	tbl := newDurangoInstructionSet()
 	require.Equal(t, uint64(0), tbl[SLOAD].constantGas)

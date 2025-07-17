@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -172,6 +172,9 @@ var PrecompiledContractsCancun = map[common.Address]contract.StatefulPrecompiled
 	common.BytesToAddress([]byte{8}):    newWrappedPrecompiledContract(&bn256PairingIstanbul{}),
 	common.BytesToAddress([]byte{9}):    newWrappedPrecompiledContract(&blake2F{}),
 	common.BytesToAddress([]byte{0x0a}): newWrappedPrecompiledContract(&kzgPointEvaluation{}),
+	genesisContractAddr:                 &deprecatedContract{},
+	NativeAssetBalanceAddr:              &deprecatedContract{},
+	NativeAssetCallAddr:                 &deprecatedContract{},
 }
 
 // PrecompiledContractsBLS contains the set of pre-compiled Ethereum

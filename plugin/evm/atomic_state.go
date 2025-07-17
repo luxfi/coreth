@@ -1,4 +1,4 @@
-// (c) 2020-2025, Lux Industries Inc. All rights reserved.
+// (c) 2020-2021, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -6,9 +6,10 @@ package evm
 import (
 	"fmt"
 
-	"github.com/luxfi/node/chains/atomic"
+	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/database"
 	"github.com/luxfi/node/ids"
+	"github.com/luxfi/geth/plugin/evm/atomic"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )
@@ -25,7 +26,7 @@ type AtomicState interface {
 	Root() common.Hash
 	// Accept applies the state change to VM's persistent storage
 	// Changes are persisted atomically along with the provided [commitBatch].
-	Accept(commitBatch database.Batch, requests map[ids.ID]*atomic.Requests) error
+	Accept(commitBatch database.Batch, requests map[ids.ID]*luxatomic.Requests) error
 	// Reject frees memory associated with the state change.
 	Reject() error
 }
@@ -36,8 +37,8 @@ type atomicState struct {
 	backend     *atomicBackend
 	blockHash   common.Hash
 	blockHeight uint64
-	txs         []*Tx
-	atomicOps   map[ids.ID]*atomic.Requests
+	txs         []*atomic.Tx
+	atomicOps   map[ids.ID]*luxatomic.Requests
 	atomicRoot  common.Hash
 }
 
@@ -46,7 +47,7 @@ func (a *atomicState) Root() common.Hash {
 }
 
 // Accept applies the state change to VM's persistent storage.
-func (a *atomicState) Accept(commitBatch database.Batch, requests map[ids.ID]*atomic.Requests) error {
+func (a *atomicState) Accept(commitBatch database.Batch, requests map[ids.ID]*luxatomic.Requests) error {
 	// Add the new requests to the batch to be accepted
 	for chainID, requests := range requests {
 		mergeAtomicOpsToMap(a.atomicOps, chainID, requests)
@@ -83,7 +84,7 @@ func (a *atomicState) Accept(commitBatch database.Batch, requests map[ids.ID]*at
 	// to shared memory.
 	if a.backend.IsBonus(a.blockHeight, a.blockHash) {
 		log.Info("skipping atomic tx acceptance on bonus block", "block", a.blockHash)
-		return atomic.WriteAll(commitBatch, atomicChangesBatch)
+		return luxatomic.WriteAll(commitBatch, atomicChangesBatch)
 	}
 
 	// Otherwise, atomically commit pending changes in the version db with

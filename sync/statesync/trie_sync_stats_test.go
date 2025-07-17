@@ -1,4 +1,4 @@
-// (c) 2024, Lux Industries Inc. All rights reserved.
+// (c) 2024, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package statesync
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/geth/metrics"
+	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/stretchr/testify/require"
 )
 

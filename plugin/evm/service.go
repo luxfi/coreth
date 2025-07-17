@@ -17,9 +17,9 @@ import (
 	"github.com/luxfi/node/utils/json"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/geth/params"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/ava-labs/libevm/common"
+	"github.com/ava-labs/libevm/common/hexutil"
+	"github.com/ava-labs/libevm/log"
 )
 
 // test constants

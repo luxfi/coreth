@@ -29,7 +29,7 @@ package snapshot
 import (
 	"bytes"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ava-labs/libevm/common"
 )
 
 // hashes is a helper to implement sort.Interface.

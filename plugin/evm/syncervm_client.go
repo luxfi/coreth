@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -11,7 +11,6 @@ import (
 	"github.com/luxfi/node/database"
 	"github.com/luxfi/node/database/versiondb"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/choices"
 	commonEng "github.com/luxfi/node/snow/engine/common"
 	"github.com/luxfi/node/snow/engine/snowman/block"
 	"github.com/luxfi/node/vms/components/chain"
@@ -277,7 +276,14 @@ func (client *stateSyncerClient) syncBlocks(ctx context.Context, fromHash common
 
 func (client *stateSyncerClient) syncAtomicTrie(ctx context.Context) error {
 	log.Info("atomic tx: sync starting", "root", client.syncSummary.AtomicRoot)
-	atomicSyncer, err := client.atomicBackend.Syncer(client.client, client.syncSummary.AtomicRoot, client.syncSummary.BlockNumber, client.stateSyncRequestSize)
+	atomicSyncer, err := newAtomicSyncer(
+		client.client,
+		client.db,
+		client.atomicBackend.AtomicTrie(),
+		client.syncSummary.AtomicRoot,
+		client.syncSummary.BlockNumber,
+		client.stateSyncRequestSize,
+	)
 	if err != nil {
 		return err
 	}
@@ -336,7 +342,6 @@ func (client *stateSyncerClient) finishSync() error {
 		return fmt.Errorf("could not convert block(%T) to evm.Block", stateBlock)
 	}
 
-	evmBlock.SetStatus(choices.Accepted)
 	block := evmBlock.ethBlock
 
 	if block.Hash() != client.syncSummary.BlockHash {

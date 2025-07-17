@@ -39,8 +39,8 @@ import (
 
 	"github.com/cockroachdb/pebble"
 	"github.com/cockroachdb/pebble/bloom"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/ava-labs/libevm/common"
+	"github.com/ava-labs/libevm/log"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/metrics"
 )
@@ -197,7 +197,7 @@ func New(file string, cache int, handles int, namespace string, readonly bool) (
 			WriteStallEnd:   db.onWriteStallEnd,
 		},
 	}
-	// Disable seek compaction explicitly. Check https://github.com/ethereum/go-ethereum/pull/20130
+	// Disable seek compaction explicitly. Check https://github.com/ava-labs/libevm/pull/20130
 	// for more details.
 	opt.Experimental.ReadSamplingMultiplier = -1
 

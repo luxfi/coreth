@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -146,7 +146,7 @@ func (ks keyStorePassphrase) JoinPath(filename string) string {
 	return filepath.Join(ks.keysDirPath, filename)
 }
 
-// Encryptdata encrypts the data given as 'data' with the password 'auth'.
+// EncryptDataV3 encrypts the data given as 'data' with the password 'auth'.
 func EncryptDataV3(data, auth []byte, scryptN, scryptP int) (CryptoJSON, error) {
 	salt := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {

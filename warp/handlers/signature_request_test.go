@@ -1,33 +1,33 @@
-// (c) 2023, Lux Industries Inc. All rights reserved.
+// (c) 2023, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package handlers
 
 import (
 	"context"
-	"errors"
 	"testing"
 
+	"github.com/luxfi/node/cache"
 	"github.com/luxfi/node/database/memdb"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/choices"
-	"github.com/luxfi/node/snow/consensus/snowman"
-	"github.com/luxfi/node/snow/consensus/snowman/snowmantest"
-	"github.com/luxfi/node/snow/engine/common"
-	"github.com/luxfi/node/snow/engine/snowman/block"
 	"github.com/luxfi/node/utils/crypto/bls"
+	"github.com/luxfi/node/utils/crypto/bls/signer/localsigner"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
 	"github.com/luxfi/geth/plugin/evm/message"
+	"github.com/luxfi/geth/plugin/evm/testutils"
 	"github.com/luxfi/geth/utils"
 	"github.com/luxfi/geth/warp"
+	"github.com/luxfi/geth/warp/warptest"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMessageSignatureHandler(t *testing.T) {
+	testutils.WithMetrics(t)
+
 	database := memdb.New()
 	snowCtx := utils.TestSnowContext()
-	blsSecretKey, err := bls.NewSecretKey()
+	blsSecretKey, err := localsigner.New()
 	require.NoError(t, err)
 	warpSigner := luxWarp.NewSigner(blsSecretKey, snowCtx.NetworkID, snowCtx.ChainID)
 
@@ -36,16 +36,17 @@ func TestMessageSignatureHandler(t *testing.T) {
 	offchainMessage, err := luxWarp.NewUnsignedMessage(snowCtx.NetworkID, snowCtx.ChainID, addressedPayload.Bytes())
 	require.NoError(t, err)
 
-	backend, err := warp.NewBackend(snowCtx.NetworkID, snowCtx.ChainID, warpSigner, &block.TestVM{TestVM: common.TestVM{T: t}}, database, 100, [][]byte{offchainMessage.Bytes()})
+	messageSignatureCache := &cache.LRU[ids.ID, []byte]{Size: 100}
+	backend, err := warp.NewBackend(snowCtx.NetworkID, snowCtx.ChainID, warpSigner, warptest.EmptyBlockClient, database, messageSignatureCache, [][]byte{offchainMessage.Bytes()})
 	require.NoError(t, err)
 
 	msg, err := luxWarp.NewUnsignedMessage(snowCtx.NetworkID, snowCtx.ChainID, []byte("test"))
 	require.NoError(t, err)
 	messageID := msg.ID()
 	require.NoError(t, backend.AddMessage(msg))
-	signature, err := backend.GetMessageSignature(messageID)
+	signature, err := backend.GetMessageSignature(context.TODO(), msg)
 	require.NoError(t, err)
-	offchainSignature, err := backend.GetMessageSignature(offchainMessage.ID())
+	offchainSignature, err := backend.GetMessageSignature(context.TODO(), offchainMessage)
 	require.NoError(t, err)
 
 	unknownMessageID := ids.GenerateTestID()
@@ -106,7 +107,6 @@ func TestMessageSignatureHandler(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			handler := NewSignatureRequestHandler(backend, message.Codec)
-			handler.stats.Clear()
 
 			request, expectedResponse := test.setup()
 			responseBytes, err := handler.OnMessageSignatureRequest(context.Background(), ids.GenerateTestNodeID(), 1, request)
@@ -129,39 +129,29 @@ func TestMessageSignatureHandler(t *testing.T) {
 }
 
 func TestBlockSignatureHandler(t *testing.T) {
+	testutils.WithMetrics(t)
+
 	database := memdb.New()
 	snowCtx := utils.TestSnowContext()
-	blsSecretKey, err := bls.NewSecretKey()
+	blsSecretKey, err := localsigner.New()
 	require.NoError(t, err)
 
 	warpSigner := luxWarp.NewSigner(blsSecretKey, snowCtx.NetworkID, snowCtx.ChainID)
 	blkID := ids.GenerateTestID()
-	testVM := &block.TestVM{
-		TestVM: common.TestVM{T: t},
-		GetBlockF: func(ctx context.Context, i ids.ID) (snowman.Block, error) {
-			if i == blkID {
-				return &snowmantest.Block{
-					TestDecidable: choices.TestDecidable{
-						IDV:     blkID,
-						StatusV: choices.Accepted,
-					},
-				}, nil
-			}
-			return nil, errors.New("invalid blockID")
-		},
-	}
+	blockClient := warptest.MakeBlockClient(blkID)
+	messageSignatureCache := &cache.LRU[ids.ID, []byte]{Size: 100}
 	backend, err := warp.NewBackend(
 		snowCtx.NetworkID,
 		snowCtx.ChainID,
 		warpSigner,
-		testVM,
+		blockClient,
 		database,
-		100,
+		messageSignatureCache,
 		nil,
 	)
 	require.NoError(t, err)
 
-	signature, err := backend.GetBlockSignature(blkID)
+	signature, err := backend.GetBlockSignature(context.TODO(), blkID)
 	require.NoError(t, err)
 	unknownMessageID := ids.GenerateTestID()
 
@@ -206,7 +196,6 @@ func TestBlockSignatureHandler(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			handler := NewSignatureRequestHandler(backend, message.Codec)
-			handler.stats.Clear()
 
 			request, expectedResponse := test.setup()
 			responseBytes, err := handler.OnBlockSignatureRequest(context.Background(), ids.GenerateTestNodeID(), 1, request)

@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -33,7 +33,7 @@ import (
 
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
 	"github.com/luxfi/geth/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
@@ -43,7 +43,7 @@ import (
 // diskLayer is a low level persistent snapshot built on top of a key-value store.
 type diskLayer struct {
 	diskdb ethdb.KeyValueStore // Key-value store containing the base snapshot
-	triedb *trie.Database      // Trie node cache for reconstruction purposes
+	triedb *triedb.Database    // Trie node cache for reconstruction purposes
 	cache  *utils.MeteredCache // Cache to avoid hitting the disk for direct access
 
 	blockHash common.Hash // Block hash of the base snapshot

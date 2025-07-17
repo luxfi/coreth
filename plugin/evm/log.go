@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc. All rights reserved.
+// (c) 2019-2020, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-type CorethLogger struct {
+type GethLogger struct {
 	gethlog.Logger
 
 	logLevel *slog.LevelVar
@@ -23,7 +23,7 @@ type CorethLogger struct {
 
 // InitLogger initializes logger with alias and sets the log level and format with the original [os.StdErr] interface
 // along with the context logger.
-func InitLogger(alias string, level string, jsonFormat bool, writer io.Writer) (CorethLogger, error) {
+func InitLogger(alias string, level string, jsonFormat bool, writer io.Writer) (GethLogger, error) {
 	logLevel := &slog.LevelVar{}
 
 	var handler slog.Handler
@@ -46,20 +46,20 @@ func InitLogger(alias string, level string, jsonFormat bool, writer io.Writer) (
 	}
 
 	// Create handler
-	c := CorethLogger{
+	c := GethLogger{
 		Logger:   gethlog.NewLogger(handler),
 		logLevel: logLevel,
 	}
 
 	if err := c.SetLogLevel(level); err != nil {
-		return CorethLogger{}, err
+		return GethLogger{}, err
 	}
 	gethlog.SetDefault(c.Logger)
 	return c, nil
 }
 
 // SetLogLevel sets the log level of initialized log handler.
-func (c *CorethLogger) SetLogLevel(level string) error {
+func (c *GethLogger) SetLogLevel(level string) error {
 	// Set log level
 	logLevel, err := log.LvlFromString(level)
 	if err != nil {
@@ -71,7 +71,7 @@ func (c *CorethLogger) SetLogLevel(level string) error {
 
 // locationTrims are trimmed for display to avoid unwieldy log lines.
 var locationTrims = []string{
-	"coreth",
+	"geth",
 }
 
 func trimPrefixes(s string) string {

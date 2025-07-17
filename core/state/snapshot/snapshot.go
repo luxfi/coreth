@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -36,8 +36,8 @@ import (
 
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/metrics"
-	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
+	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/log"
@@ -186,7 +186,7 @@ type Config struct {
 type Tree struct {
 	config Config              // Snapshots configurations
 	diskdb ethdb.KeyValueStore // Persistent database to store the snapshot
-	triedb *trie.Database      // In-memory cache to access the trie through
+	triedb *triedb.Database    // In-memory cache to access the trie through
 	// Collection of all known layers
 	// blockHash -> snapshot
 	blockLayers map[common.Hash]snapshot
@@ -208,7 +208,7 @@ type Tree struct {
 // If the snapshot is missing or the disk layer is broken, the snapshot will be
 // reconstructed using both the existing data and the state trie.
 // The repair happens on a background thread.
-func New(config Config, diskdb ethdb.KeyValueStore, triedb *trie.Database, blockHash, root common.Hash) (*Tree, error) {
+func New(config Config, diskdb ethdb.KeyValueStore, triedb *triedb.Database, blockHash, root common.Hash) (*Tree, error) {
 	// Create a new, empty snapshot tree
 	snap := &Tree{
 		config:      config,
@@ -891,6 +891,8 @@ func (t *Tree) disklayer() *diskLayer {
 	case *diskLayer:
 		return layer
 	case *diffLayer:
+		layer.lock.RLock()
+		defer layer.lock.RUnlock()
 		return layer.origin
 	default:
 		panic(fmt.Sprintf("%T: undefined layer", snap))
@@ -922,7 +924,7 @@ func (t *Tree) generating() (bool, error) {
 	return layer.genMarker != nil, nil
 }
 
-// DiskRoot is a external helper function to return the disk layer root.
+// DiskRoot is an external helper function to return the disk layer root.
 func (t *Tree) DiskRoot() common.Hash {
 	t.lock.Lock()
 	defer t.lock.Unlock()

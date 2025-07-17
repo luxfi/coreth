@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2024, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -38,6 +38,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
+// generatorStats is a collection of statistics gathered by the snapshot generator
+// for logging purposes.
 type generatorStats struct {
 	wiping   chan struct{}      // Notification channel if wiping is in progress
 	origin   uint64             // Origin prefix where generation started

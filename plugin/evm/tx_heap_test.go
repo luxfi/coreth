@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc. All rights reserved.
+// (c) 2019-2021, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package evm
@@ -6,27 +6,28 @@ package evm
 import (
 	"testing"
 
+	"github.com/luxfi/geth/plugin/evm/atomic"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTxHeap(t *testing.T) {
 	var (
-		tx0 = &Tx{
-			UnsignedAtomicTx: &UnsignedImportTx{
+		tx0 = &atomic.Tx{
+			UnsignedAtomicTx: &atomic.UnsignedImportTx{
 				NetworkID: 0,
 			},
 		}
 		tx0Bytes = []byte{0}
 
-		tx1 = &Tx{
-			UnsignedAtomicTx: &UnsignedImportTx{
+		tx1 = &atomic.Tx{
+			UnsignedAtomicTx: &atomic.UnsignedImportTx{
 				NetworkID: 1,
 			},
 		}
 		tx1Bytes = []byte{1}
 
-		tx2 = &Tx{
-			UnsignedAtomicTx: &UnsignedImportTx{
+		tx2 = &atomic.Tx{
+			UnsignedAtomicTx: &atomic.UnsignedImportTx{
 				NetworkID: 2,
 			},
 		}

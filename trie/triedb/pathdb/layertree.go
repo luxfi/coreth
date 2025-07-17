@@ -34,7 +34,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/trie/triestate"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ava-labs/libevm/common"
 )
 
 // layerTree is a group of state layers identified by the state root.

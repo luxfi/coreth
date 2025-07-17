@@ -7,12 +7,14 @@ set -euo pipefail
 
 # Set the PATHS
 GOPATH="$(go env GOPATH)"
+DEFAULT_PLUGIN_DIR="${HOME}/.node/plugins"
+DEFAULT_VM_ID="srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy"
 
 # Set binary location
 binary_path=${CORETH_BINARY_PATH:-"$GOPATH/src/github.com/luxfi/node/build/plugins/evm"}
 
 # Avalabs docker hub
-DOCKERHUB_REPO="avaplatform/coreth"
+DOCKERHUB_REPO="avaplatform/geth"
 
 # Current branch
 CURRENT_BRANCH=${CURRENT_BRANCH:-$(git describe --tags --exact-match 2>/dev/null || git symbolic-ref -q --short HEAD || git rev-parse --short HEAD)}

@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -35,8 +35,7 @@ import (
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/predicate"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
-	//"github.com/ethereum/go-ethereum/log"
+	"github.com/holiman/uint256"
 )
 
 // ChainContext supports retrieving headers and consensus parameters from the
@@ -51,33 +50,6 @@ type ChainContext interface {
 
 // NewEVMBlockContext creates a new context for use in the EVM.
 func NewEVMBlockContext(header *types.Header, chain ChainContext, author *common.Address) vm.BlockContext {
-	predicateBytes, ok := predicate.GetPredicateResultBytes(header.Extra)
-	if !ok {
-		return newEVMBlockContext(header, chain, author, nil)
-	}
-	// Prior to Durango, the VM enforces the extra data is smaller than or
-	// equal to this size. After Durango, the VM pre-verifies the extra
-	// data past the dynamic fee rollup window is valid.
-	predicateResults, err := predicate.ParseResults(predicateBytes)
-	if err != nil {
-		log.Error("failed to parse predicate results creating new block context", "err", err, "extra", header.Extra)
-		// As mentioned above, we pre-verify the extra data to ensure this never happens.
-		// If we hit an error, construct a new block context rather than use a potentially half initialized value
-		// as defense in depth.
-		return newEVMBlockContext(header, chain, author, nil)
-	}
-	return newEVMBlockContext(header, chain, author, predicateResults)
-}
-
-// NewEVMBlockContextWithPredicateResults creates a new context for use in the EVM with an override for the predicate results that is not present
-// in header.Extra.
-// This function is used to create a BlockContext when the header Extra data is not fully formed yet and it's more efficient to pass in predicateResults
-// directly rather than re-encode the latest results when executing each individaul transaction.
-func NewEVMBlockContextWithPredicateResults(header *types.Header, chain ChainContext, author *common.Address, predicateResults *predicate.Results) vm.BlockContext {
-	return newEVMBlockContext(header, chain, author, predicateResults)
-}
-
-func newEVMBlockContext(header *types.Header, chain ChainContext, author *common.Address, predicateResults *predicate.Results) vm.BlockContext {
 	var (
 		beneficiary common.Address
 		baseFee     *big.Int
@@ -102,7 +74,7 @@ func newEVMBlockContext(header *types.Header, chain ChainContext, author *common
 		Transfer:          Transfer,
 		TransferMultiCoin: TransferMultiCoin,
 		GetHash:           GetHashFn(header, chain),
-		PredicateResults:  predicateResults,
+		Extra:             header.Extra,
 		Coinbase:          beneficiary,
 		BlockNumber:       new(big.Int).Set(header.Number),
 		Time:              header.Time,
@@ -111,6 +83,16 @@ func newEVMBlockContext(header *types.Header, chain ChainContext, author *common
 		BlobBaseFee:       blobBaseFee,
 		GasLimit:          header.GasLimit,
 	}
+}
+
+// NewEVMBlockContextWithPredicateResults creates a new context for use in the EVM with an override for the predicate results that is not present
+// in header.Extra.
+// This function is used to create a BlockContext when the header Extra data is not fully formed yet and it's more efficient to pass in predicateResults
+// directly rather than re-encode the latest results when executing each individaul transaction.
+func NewEVMBlockContextWithPredicateResults(header *types.Header, chain ChainContext, author *common.Address, predicateResults *predicate.Results) vm.BlockContext {
+	blockContext := NewEVMBlockContext(header, chain, author)
+	blockContext.PredicateResults = predicateResults
+	return blockContext
 }
 
 // NewEVMTxContext creates a new transaction context for a single transaction.
@@ -167,7 +149,7 @@ func GetHashFn(ref *types.Header, chain ChainContext) func(n uint64) common.Hash
 
 // CanTransfer checks whether there are enough funds in the address' account to make a transfer.
 // This does not take the necessary gas in to account to make the transfer valid.
-func CanTransfer(db vm.StateDB, addr common.Address, amount *big.Int) bool {
+func CanTransfer(db vm.StateDB, addr common.Address, amount *uint256.Int) bool {
 	return db.GetBalance(addr).Cmp(amount) >= 0
 }
 
@@ -176,7 +158,7 @@ func CanTransferMC(db vm.StateDB, addr common.Address, to common.Address, coinID
 }
 
 // Transfer subtracts amount from sender and adds amount to recipient using the given Db
-func Transfer(db vm.StateDB, sender, recipient common.Address, amount *big.Int) {
+func Transfer(db vm.StateDB, sender, recipient common.Address, amount *uint256.Int) {
 	db.SubBalance(sender, amount)
 	db.AddBalance(recipient, amount)
 }

@@ -1,4 +1,4 @@
-// (c) 2023, Lux Industries Inc. All rights reserved.
+// (c) 2023, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -11,7 +11,6 @@ import (
 	"github.com/luxfi/node/ids"
 	agoUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/set"
-	"github.com/luxfi/node/vms/platformvm/warp"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
 	"github.com/luxfi/geth/core/state"
@@ -96,7 +95,7 @@ func TestSendWarpMessage(t *testing.T) {
 		sendWarpMessagePayload,
 	)
 	require.NoError(t, err)
-	unsignedWarpMessage, err := warp.NewUnsignedMessage(
+	unsignedWarpMessage, err := luxWarp.NewUnsignedMessage(
 		defaultSnowCtx.NetworkID,
 		blockchainID,
 		sendWarpMessageAddressedPayload.Bytes(),
@@ -747,7 +746,7 @@ func TestPackEvents(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	unsignedWarpMessage, err := warp.NewUnsignedMessage(
+	unsignedWarpMessage, err := luxWarp.NewUnsignedMessage(
 		networkID,
 		sourceChainID,
 		addressedPayload.Bytes(),

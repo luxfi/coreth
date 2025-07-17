@@ -1,5 +1,7 @@
-// Copyright (C) 2019-2025, Lux Industries Inc. All rights reserved.
+// Copyright (C) 2019-2023, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
+
+// TODO: move to network
 
 package evm
 
@@ -24,6 +26,7 @@ import (
 	"github.com/luxfi/geth/core/txpool"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/eth"
+	"github.com/luxfi/geth/plugin/evm/config"
 )
 
 const pendingTxsBuffer = 10
@@ -31,11 +34,9 @@ const pendingTxsBuffer = 10
 var (
 	_ p2p.Handler = (*txGossipHandler)(nil)
 
-	_ gossip.Gossipable                  = (*GossipEthTx)(nil)
-	_ gossip.Gossipable                  = (*GossipAtomicTx)(nil)
-	_ gossip.Marshaller[*GossipAtomicTx] = (*GossipAtomicTxMarshaller)(nil)
-	_ gossip.Marshaller[*GossipEthTx]    = (*GossipEthTxMarshaller)(nil)
-	_ gossip.Set[*GossipEthTx]           = (*GossipEthTxPool)(nil)
+	_ gossip.Gossipable               = (*GossipEthTx)(nil)
+	_ gossip.Marshaller[*GossipEthTx] = (*GossipEthTxMarshaller)(nil)
+	_ gossip.Set[*GossipEthTx]        = (*GossipEthTxPool)(nil)
 
 	_ eth.PushGossiper = (*EthPushGossiper)(nil)
 )
@@ -48,7 +49,7 @@ func newTxGossipHandler[T gossip.Gossipable](
 	maxMessageSize int,
 	throttlingPeriod time.Duration,
 	throttlingLimit int,
-	validators *p2p.Validators,
+	validators p2p.ValidatorSet,
 ) txGossipHandler {
 	// push gossip messages can be handled from any peer
 	handler := gossip.NewHandler(
@@ -90,33 +91,14 @@ func (t txGossipHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, dead
 	return t.appRequestHandler.AppRequest(ctx, nodeID, deadline, requestBytes)
 }
 
-func (t txGossipHandler) CrossChainAppRequest(context.Context, ids.ID, time.Time, []byte) ([]byte, error) {
-	return nil, nil
-}
-
-type GossipAtomicTxMarshaller struct{}
-
-func (g GossipAtomicTxMarshaller) MarshalGossip(tx *GossipAtomicTx) ([]byte, error) {
-	return tx.Tx.SignedBytes(), nil
-}
-
-func (g GossipAtomicTxMarshaller) UnmarshalGossip(bytes []byte) (*GossipAtomicTx, error) {
-	tx, err := ExtractAtomicTx(bytes, Codec)
-	return &GossipAtomicTx{
-		Tx: tx,
-	}, err
-}
-
-type GossipAtomicTx struct {
-	Tx *Tx
-}
-
-func (tx *GossipAtomicTx) GossipID() ids.ID {
-	return tx.Tx.ID()
-}
-
 func NewGossipEthTxPool(mempool *txpool.TxPool, registerer prometheus.Registerer) (*GossipEthTxPool, error) {
-	bloom, err := gossip.NewBloomFilter(registerer, "eth_tx_bloom_filter", txGossipBloomMinTargetElements, txGossipBloomTargetFalsePositiveRate, txGossipBloomResetFalsePositiveRate)
+	bloom, err := gossip.NewBloomFilter(
+		registerer,
+		"eth_tx_bloom_filter",
+		config.TxGossipBloomMinTargetElements,
+		config.TxGossipBloomTargetFalsePositiveRate,
+		config.TxGossipBloomResetFalsePositiveRate,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize bloom filter: %w", err)
 	}
@@ -164,7 +146,7 @@ func (g *GossipEthTxPool) Subscribe(ctx context.Context) {
 			return
 		case pendingTxs := <-g.pendingTxs:
 			g.lock.Lock()
-			optimalElements := (g.mempool.PendingSize(false) + len(pendingTxs.Txs)) * txGossipBloomChurnMultiplier
+			optimalElements := (g.mempool.PendingSize(txpool.PendingFilter{}) + len(pendingTxs.Txs)) * config.TxGossipBloomChurnMultiplier
 			for _, pendingTx := range pendingTxs.Txs {
 				tx := &GossipEthTx{Tx: pendingTx}
 				g.bloom.Add(tx)

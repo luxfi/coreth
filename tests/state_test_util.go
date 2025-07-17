@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -27,39 +27,48 @@
 package tests
 
 import (
-	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/state/snapshot"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/trie"
-	"github.com/luxfi/geth/trie/triedb/hashdb"
-	"github.com/luxfi/geth/trie/triedb/pathdb"
+	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/geth/triedb/hashdb"
+	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/holiman/uint256"
 )
 
-func MakePreState(db ethdb.Database, accounts core.GenesisAlloc, snapshotter bool, scheme string) (*trie.Database, *snapshot.Tree, *state.StateDB) {
-	tconf := &trie.Config{Preimages: true}
+// StateTestState groups all the state database objects together for use in tests.
+type StateTestState struct {
+	StateDB   *state.StateDB
+	TrieDB    *triedb.Database
+	Snapshots *snapshot.Tree
+}
+
+// MakePreState creates a state containing the given allocation.
+func MakePreState(db ethdb.Database, accounts types.GenesisAlloc, snapshotter bool, scheme string) StateTestState {
+	tconf := &triedb.Config{Preimages: true}
 	if scheme == rawdb.HashScheme {
 		tconf.HashDB = hashdb.Defaults
 	} else {
 		tconf.PathDB = pathdb.Defaults
 	}
-	triedb := trie.NewDatabase(db, tconf)
+	triedb := triedb.NewDatabase(db, tconf)
 	sdb := state.NewDatabaseWithNodeDB(db, triedb)
 	statedb, _ := state.New(types.EmptyRootHash, sdb, nil)
 	for addr, a := range accounts {
 		statedb.SetCode(addr, a.Code)
 		statedb.SetNonce(addr, a.Nonce)
-		statedb.SetBalance(addr, a.Balance)
+		statedb.SetBalance(addr, uint256.MustFromBig(a.Balance))
 		for k, v := range a.Storage {
 			statedb.SetState(addr, k, v)
 		}
 	}
 	// Commit and re-open to start with a clean state.
-	root, _ := statedb.Commit(0, false, false)
+	root, _ := statedb.Commit(0, false)
 
+	// If snapshot is requested, initialize the snapshotter and use it in state.
 	var snaps *snapshot.Tree
 	if snapshotter {
 		snapconfig := snapshot.Config{
@@ -71,5 +80,19 @@ func MakePreState(db ethdb.Database, accounts core.GenesisAlloc, snapshotter boo
 		snaps, _ = snapshot.New(snapconfig, db, triedb, common.Hash{}, root)
 	}
 	statedb, _ = state.New(root, sdb, snaps)
-	return triedb, snaps, statedb
+	return StateTestState{statedb, triedb, snaps}
+}
+
+// Close should be called when the state is no longer needed, ie. after running the test.
+func (st *StateTestState) Close() {
+	if st.TrieDB != nil {
+		st.TrieDB.Close()
+		st.TrieDB = nil
+	}
+	if st.Snapshots != nil {
+		// Need to call Disable here to quit the snapshot generator goroutine.
+		st.Snapshots.AbortGeneration()
+		st.Snapshots.Release()
+		st.Snapshots = nil
+	}
 }

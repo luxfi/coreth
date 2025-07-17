@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -31,16 +31,17 @@ import (
 	"math/big"
 
 	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/consensus/dummy"
 	"github.com/luxfi/geth/consensus/misc/eip4844"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/plugin/evm/header"
+	"github.com/luxfi/geth/triedb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/holiman/uint256"
 )
 
 // BlockGen creates blocks for testing.
@@ -167,7 +168,7 @@ func (b *BlockGen) AddTxWithVMConfig(tx *types.Transaction, config vm.Config) {
 }
 
 // GetBalance returns the balance of the given address at the generated block.
-func (b *BlockGen) GetBalance(addr common.Address) *big.Int {
+func (b *BlockGen) GetBalance(addr common.Address) *uint256.Int {
 	return b.statedb.GetBalance(addr)
 }
 
@@ -277,7 +278,7 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 	}
 	cm := newChainMaker(parent, config, engine)
 
-	genblock := func(i int, parent *types.Block, triedb *trie.Database, statedb *state.StateDB) (*types.Block, types.Receipts, error) {
+	genblock := func(i int, parent *types.Block, triedb *triedb.Database, statedb *state.StateDB) (*types.Block, types.Receipts, error) {
 		b := &BlockGen{i: i, cm: cm, parent: parent, statedb: statedb, engine: engine}
 		b.header = cm.makeHeader(parent, gap, statedb, b.engine)
 
@@ -297,7 +298,7 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		}
 
 		// Write state changes to db
-		root, err := statedb.Commit(b.header.Number.Uint64(), config.IsEIP158(b.header.Number), false)
+		root, err := statedb.Commit(b.header.Number.Uint64(), config.IsEIP158(b.header.Number))
 		if err != nil {
 			panic(fmt.Sprintf("state write error: %v", err))
 		}
@@ -309,8 +310,9 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		}
 		return block, b.receipts, nil
 	}
+
 	// Forcibly use hash-based state scheme for retaining all nodes in disk.
-	triedb := trie.NewDatabase(db, trie.HashDefaults)
+	triedb := triedb.NewDatabase(db, triedb.HashDefaults)
 	defer triedb.Close()
 
 	for i := 0; i < n; i++ {
@@ -358,7 +360,7 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 // then generate chain on top.
 func GenerateChainWithGenesis(genesis *Genesis, engine consensus.Engine, n int, gap uint64, gen func(int, *BlockGen)) (ethdb.Database, []*types.Block, []types.Receipts, error) {
 	db := rawdb.NewMemoryDatabase()
-	triedb := trie.NewDatabase(db, trie.HashDefaults)
+	triedb := triedb.NewDatabase(db, triedb.HashDefaults)
 	defer triedb.Close()
 	_, err := genesis.Commit(db, triedb)
 	if err != nil {
@@ -371,13 +373,13 @@ func GenerateChainWithGenesis(genesis *Genesis, engine consensus.Engine, n int, 
 func (cm *chainMaker) makeHeader(parent *types.Block, gap uint64, state *state.StateDB, engine consensus.Engine) *types.Header {
 	time := parent.Time() + gap // block time is fixed at [gap] seconds
 
-	var gasLimit uint64
-	if cm.config.IsCortina(time) {
-		gasLimit = params.CortinaGasLimit
-	} else if cm.config.IsApricotPhase1(time) {
-		gasLimit = params.ApricotPhase1GasLimit
-	} else {
-		gasLimit = CalcGasLimit(parent.GasUsed(), parent.GasLimit(), parent.GasLimit(), parent.GasLimit())
+	gasLimit, err := header.GasLimit(cm.config, parent.Header(), time)
+	if err != nil {
+		panic(err)
+	}
+	baseFee, err := header.BaseFee(cm.config, parent.Header(), time)
+	if err != nil {
+		panic(err)
 	}
 
 	header := &types.Header{
@@ -388,14 +390,9 @@ func (cm *chainMaker) makeHeader(parent *types.Block, gap uint64, state *state.S
 		GasLimit:   gasLimit,
 		Number:     new(big.Int).Add(parent.Number(), common.Big1),
 		Time:       time,
+		BaseFee:    baseFee,
 	}
-	if cm.config.IsApricotPhase3(time) {
-		var err error
-		header.Extra, header.BaseFee, err = dummy.CalcBaseFee(cm.config, parent.Header(), time)
-		if err != nil {
-			panic(err)
-		}
-	}
+
 	if cm.config.IsCancun(header.Number, header.Time) {
 		var (
 			parentExcessBlobGas uint64

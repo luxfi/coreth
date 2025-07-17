@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -38,7 +38,7 @@ const (
 	MaxGasLimit          uint64 = 0x7fffffffffffffff // Maximum the gas limit (2^63-1).
 	GenesisGasLimit      uint64 = 4712388            // Gas limit of the Genesis block.
 
-	// Note: MaximumExtraDataSize has been reduced to 32 in Geth, but is kept the same in Coreth for
+	// Note: MaximumExtraDataSize has been reduced to 32 in Geth, but is kept the same in Geth for
 	// backwards compatibility.
 	MaximumExtraDataSize  uint64 = 64    // Maximum size extra data may be after Genesis.
 	ExpByteGas            uint64 = 10    // Times ceil(log256(exponent)) for the EXP instruction.
@@ -174,7 +174,6 @@ const (
 
 	BlobTxBytesPerFieldElement         = 32      // Size in bytes of a field element
 	BlobTxFieldElementsPerBlob         = 4096    // Number of field elements stored in a single data blob
-	BlobTxHashVersion                  = 0x01    // Version byte of the commitment hash
 	BlobTxBlobGasPerBlob               = 1 << 17 // Gas consumption of a single data blob (== blob byte size)
 	BlobTxMinBlobGasprice              = 1       // Minimum gas price for data blobs
 	BlobTxBlobGaspriceUpdateFraction   = 3338477 // Controls the maximum rate of change for blob gas price

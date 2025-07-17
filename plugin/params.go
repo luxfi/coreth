@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc. All rights reserved.
+// (c) 2019-2020, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package main
@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-func corethFlagSet() *flag.FlagSet {
-	fs := flag.NewFlagSet("coreth", flag.ContinueOnError)
+func gethFlagSet() *flag.FlagSet {
+	fs := flag.NewFlagSet("geth", flag.ContinueOnError)
 
 	fs.Bool(versionKey, false, "If true, print version and quit")
 
@@ -22,7 +22,7 @@ func corethFlagSet() *flag.FlagSet {
 func getViper() (*viper.Viper, error) {
 	v := viper.New()
 
-	fs := corethFlagSet()
+	fs := gethFlagSet()
 	pflag.CommandLine.AddGoFlagSet(fs)
 	pflag.Parse()
 	if err := v.BindPFlags(pflag.CommandLine); err != nil {

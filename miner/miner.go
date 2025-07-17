@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -47,7 +47,8 @@ type Backend interface {
 
 // Config is the configuration parameters of mining.
 type Config struct {
-	Etherbase common.Address `toml:",omitempty"` // Public address for block mining rewards
+	Etherbase                    common.Address `toml:",omitempty"` // Public address for block mining rewards
+	TestOnlyAllowDuplicateBlocks bool           // Allow mining of duplicate blocks (used in tests only)
 }
 
 type Miner struct {

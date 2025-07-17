@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -39,7 +39,7 @@ import (
 )
 
 // The ABI holds information about a contract's context and available
-// invokable methods. It will allow you to type check function calls and
+// invocable methods. It will allow you to type check function calls and
 // packs data accordingly.
 type ABI struct {
 	Constructor Method

@@ -1,12 +1,10 @@
-// (c) 2023, Lux Industries Inc. All rights reserved.
+// (c) 2023, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 // Defines the stateless interface for unmarshalling an arbitrary config of a precompile
 package precompileconfig
 
 import (
-	"github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/snow"
 	"github.com/luxfi/node/snow/engine/snowman/block"
 	"github.com/luxfi/node/vms/platformvm/warp"
@@ -53,28 +51,21 @@ type Predicater interface {
 	VerifyPredicate(predicateContext *PredicateContext, predicateBytes []byte) error
 }
 
-// SharedMemoryWriter defines an interface to allow a precompile's Accepter to write operations
-// into shared memory to be committed atomically on block accept.
-type SharedMemoryWriter interface {
-	AddSharedMemoryRequests(chainID ids.ID, requests *atomic.Requests)
-}
-
 type WarpMessageWriter interface {
 	AddMessage(unsignedMessage *warp.UnsignedMessage) error
 }
 
 // AcceptContext defines the context passed in to a precompileconfig's Accepter
 type AcceptContext struct {
-	SnowCtx      *snow.Context
-	SharedMemory SharedMemoryWriter
-	Warp         WarpMessageWriter
+	SnowCtx *snow.Context
+	Warp    WarpMessageWriter
 }
 
 // Accepter is an optional interface for StatefulPrecompiledContracts to implement.
 // If implemented, Accept will be called for every log with the address of the precompile when the block is accepted.
-// WARNING: If you are implementing a custom precompile, beware that coreth
+// WARNING: If you are implementing a custom precompile, beware that geth
 // will not maintain backwards compatibility of this interface and your code should not
-// rely on this. Designed for use only by precompiles that ship with coreth.
+// rely on this. Designed for use only by precompiles that ship with geth.
 type Accepter interface {
 	Accept(acceptCtx *AcceptContext, blockHash common.Hash, blockNumber uint64, txHash common.Hash, logIndex int, topics []common.Hash, logData []byte) error
 }

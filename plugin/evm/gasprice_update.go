@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/luxfi/geth/core/txpool"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/utils"
 )
@@ -25,10 +26,23 @@ type gasPriceSetter interface {
 	SetMinFee(price *big.Int)
 }
 
+// gasPriceSetterAdapter adapts txpool.TxPool to the gasPriceSetter interface
+type gasPriceSetterAdapter struct {
+	pool *txpool.TxPool
+}
+
+func (a *gasPriceSetterAdapter) SetGasPrice(price *big.Int) {
+	a.pool.SetGasTip(price)
+}
+
+func (a *gasPriceSetterAdapter) SetMinFee(price *big.Int) {
+	a.pool.SetMinFee(price)
+}
+
 // handleGasPriceUpdates creates and runs an instance of
 func (vm *VM) handleGasPriceUpdates() {
 	gpu := &gasPriceUpdater{
-		setter:       &gasPriceSetterWrapper{pool: vm.txPool},
+		setter:       &gasPriceSetterAdapter{pool: vm.txPool},
 		chainConfig:  vm.chainConfig,
 		shutdownChan: vm.shutdownChan,
 		wg:           &vm.shutdownWg,

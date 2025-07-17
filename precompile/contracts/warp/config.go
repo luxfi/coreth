@@ -1,4 +1,4 @@
-// (c) 2023, Lux Industries Inc. All rights reserved.
+// (c) 2023, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package warp
@@ -31,38 +31,41 @@ var (
 )
 
 var (
-	errOverflowSignersGasCost  = errors.New("overflow calculating warp signers gas cost")
-	errInvalidPredicateBytes   = errors.New("cannot unpack predicate bytes")
-	errInvalidWarpMsg          = errors.New("cannot unpack warp message")
-	errCannotParseWarpMsg      = errors.New("cannot parse warp message")
-	errInvalidWarpMsgPayload   = errors.New("cannot unpack warp message payload")
-	errInvalidAddressedPayload = errors.New("cannot unpack addressed payload")
-	errInvalidBlockHashPayload = errors.New("cannot unpack block hash payload")
-	errCannotGetNumSigners     = errors.New("cannot fetch num signers from warp message")
-	errWarpCannotBeActivated   = errors.New("warp cannot be activated before Durango")
-	errFailedVerification      = errors.New("cannot verify warp signature")
+	errOverflowSignersGasCost     = errors.New("overflow calculating warp signers gas cost")
+	errInvalidPredicateBytes      = errors.New("cannot unpack predicate bytes")
+	errInvalidWarpMsg             = errors.New("cannot unpack warp message")
+	errCannotParseWarpMsg         = errors.New("cannot parse warp message")
+	errInvalidWarpMsgPayload      = errors.New("cannot unpack warp message payload")
+	errInvalidAddressedPayload    = errors.New("cannot unpack addressed payload")
+	errInvalidBlockHashPayload    = errors.New("cannot unpack block hash payload")
+	errCannotGetNumSigners        = errors.New("cannot fetch num signers from warp message")
+	errWarpCannotBeActivated      = errors.New("warp cannot be activated before Durango")
+	errFailedVerification         = errors.New("cannot verify warp signature")
+	errCannotRetrieveValidatorSet = errors.New("cannot retrieve validator set")
 )
 
 // Config implements the precompileconfig.Config interface and
 // adds specific configuration for Warp.
 type Config struct {
 	precompileconfig.Upgrade
-	QuorumNumerator uint64 `json:"quorumNumerator"`
+	QuorumNumerator              uint64 `json:"quorumNumerator"`
+	RequirePrimaryNetworkSigners bool   `json:"requirePrimaryNetworkSigners"`
 }
 
 // NewConfig returns a config for a network upgrade at [blockTimestamp] that enables
 // Warp with the given quorum numerator.
-func NewConfig(blockTimestamp *uint64, quorumNumerator uint64) *Config {
+func NewConfig(blockTimestamp *uint64, quorumNumerator uint64, requirePrimaryNetworkSigners bool) *Config {
 	return &Config{
-		Upgrade:         precompileconfig.Upgrade{BlockTimestamp: blockTimestamp},
-		QuorumNumerator: quorumNumerator,
+		Upgrade:                      precompileconfig.Upgrade{BlockTimestamp: blockTimestamp},
+		QuorumNumerator:              quorumNumerator,
+		RequirePrimaryNetworkSigners: requirePrimaryNetworkSigners,
 	}
 }
 
 // NewDefaultConfig returns a config for a network upgrade at [blockTimestamp] that enables
 // Warp with the default quorum numerator (0 denotes using the default).
 func NewDefaultConfig(blockTimestamp *uint64) *Config {
-	return NewConfig(blockTimestamp, 0)
+	return NewConfig(blockTimestamp, 0, false)
 }
 
 // NewDisableConfig returns config for a network upgrade at [blockTimestamp]
@@ -198,16 +201,33 @@ func (c *Config) VerifyPredicate(predicateContext *precompileconfig.PredicateCon
 	}
 
 	log.Debug("verifying warp message", "warpMsg", warpMsg, "quorumNum", quorumNumerator, "quorumDenom", WarpQuorumDenominator)
-	err = warpMsg.Signature.Verify(
+
+	// Wrap validators.State on the chain snow context to special case the Primary Network
+	state := warpValidators.NewState(
+		predicateContext.SnowCtx.ValidatorState,
+		predicateContext.SnowCtx.SubnetID,
+		warpMsg.SourceChainID,
+		c.RequirePrimaryNetworkSigners,
+	)
+
+	validatorSet, err := warp.GetCanonicalValidatorSetFromChainID(
 		context.Background(),
+		state,
+		predicateContext.ProposerVMBlockCtx.PChainHeight,
+		warpMsg.UnsignedMessage.SourceChainID,
+	)
+	if err != nil {
+		log.Debug("failed to retrieve canonical validator set", "msgID", warpMsg.ID(), "err", err)
+		return fmt.Errorf("%w: %w", errCannotRetrieveValidatorSet, err)
+	}
+
+	err = warpMsg.Signature.Verify(
 		&warpMsg.UnsignedMessage,
 		predicateContext.SnowCtx.NetworkID,
-		warpValidators.NewState(predicateContext.SnowCtx), // Wrap validators.State on the chain snow context to special case the Primary Network
-		predicateContext.ProposerVMBlockCtx.PChainHeight,
+		validatorSet,
 		quorumNumerator,
 		WarpQuorumDenominator,
 	)
-
 	if err != nil {
 		log.Debug("failed to verify warp signature", "msgID", warpMsg.ID(), "err", err)
 		return fmt.Errorf("%w: %w", errFailedVerification, err)

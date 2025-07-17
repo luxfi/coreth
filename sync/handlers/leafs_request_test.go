@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package handlers
@@ -17,6 +17,7 @@ import (
 	"github.com/luxfi/geth/sync/handlers/stats"
 	"github.com/luxfi/geth/sync/syncutils"
 	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
@@ -27,7 +28,7 @@ func TestLeafsRequestHandler_OnLeafsRequest(t *testing.T) {
 	rand.Seed(1)
 	mockHandlerStats := &stats.MockHandlerStats{}
 	memdb := rawdb.NewMemoryDatabase()
-	trieDB := trie.NewDatabase(memdb, nil)
+	trieDB := triedb.NewDatabase(memdb, nil)
 
 	corruptedTrieRoot, _, _ := syncutils.GenerateTrie(t, trieDB, 100, common.HashLength)
 	tr, err := trie.New(trie.TrieID(corruptedTrieRoot), trieDB)

@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package statesync
@@ -10,7 +10,7 @@ import (
 
 	utils_math "github.com/luxfi/node/utils/math"
 	"github.com/luxfi/node/utils/timer"
-	"github.com/luxfi/geth/metrics"
+	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )
@@ -79,7 +79,7 @@ func (t *trieSyncStats) incLeafs(segment *trieSegment, count uint64, remaining u
 	}
 }
 
-// estimateSegmentsInProgressTime retrns the ETA for all trie segments
+// estimateSegmentsInProgressTime returns the ETA for all trie segments
 // in progress to finish (uses the one with most remaining leafs to estimate).
 func (t *trieSyncStats) estimateSegmentsInProgressTime() time.Duration {
 	if len(t.remainingLeafs) == 0 {

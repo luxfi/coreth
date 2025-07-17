@@ -1,4 +1,4 @@
-// (c) 2024, Lux Industries Inc.
+// (c) 2024, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -29,7 +29,6 @@ package eth
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 	"reflect"
 	"strings"
 	"testing"
@@ -37,7 +36,8 @@ import (
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
+	"github.com/holiman/uint256"
 
 	"github.com/davecgh/go-spew/spew"
 
@@ -76,7 +76,7 @@ func TestAccountRange(t *testing.T) {
 	t.Parallel()
 
 	var (
-		statedb = state.NewDatabaseWithConfig(rawdb.NewMemoryDatabase(), &trie.Config{Preimages: true})
+		statedb = state.NewDatabaseWithConfig(rawdb.NewMemoryDatabase(), &triedb.Config{Preimages: true})
 		sdb, _  = state.New(types.EmptyRootHash, statedb, nil)
 		addrs   = [AccountRangeMaxResults * 2]common.Address{}
 		m       = map[common.Address]bool{}
@@ -86,14 +86,14 @@ func TestAccountRange(t *testing.T) {
 		hash := common.HexToHash(fmt.Sprintf("%x", i))
 		addr := common.BytesToAddress(crypto.Keccak256Hash(hash.Bytes()).Bytes())
 		addrs[i] = addr
-		sdb.SetBalance(addrs[i], big.NewInt(1))
+		sdb.SetBalance(addrs[i], uint256.NewInt(1))
 		if _, ok := m[addr]; ok {
 			t.Fatalf("bad")
 		} else {
 			m[addr] = true
 		}
 	}
-	root, _ := sdb.Commit(0, true, false)
+	root, _ := sdb.Commit(0, true)
 	sdb, _ = state.New(root, statedb, nil)
 
 	trie, err := statedb.OpenTrie(root)
@@ -151,7 +151,7 @@ func TestEmptyAccountRange(t *testing.T) {
 		st, _   = state.New(types.EmptyRootHash, statedb, nil)
 	)
 	// Commit(although nothing to flush) and re-init the statedb
-	st.Commit(0, true, false)
+	st.Commit(0, true)
 	st, _ = state.New(types.EmptyRootHash, statedb, nil)
 
 	results := st.RawDump(&state.DumpConfig{
@@ -173,7 +173,7 @@ func TestStorageRangeAt(t *testing.T) {
 
 	// Create a state where account 0x010000... has a few storage entries.
 	var (
-		db          = state.NewDatabaseWithConfig(rawdb.NewMemoryDatabase(), &trie.Config{Preimages: true})
+		db          = state.NewDatabaseWithConfig(rawdb.NewMemoryDatabase(), &triedb.Config{Preimages: true})
 		sdb, _      = state.New(types.EmptyRootHash, db, nil)
 		addr        = common.Address{0x01}
 		keys        = []common.Hash{}
@@ -185,7 +185,7 @@ func TestStorageRangeAt(t *testing.T) {
 			{Key: &common.Hash{0x00, 0x03}, Value: common.Hash{0x04}},
 		}
 	)
-	// Note: This test is modified compared to upstream since coreth normalizes
+	// Note: This test is modified compared to upstream since geth normalizes
 	// state keys before storing them. This means the original values cannot be
 	// used, and the keys array and storage map must be re-calculated.
 	for _, entry := range storageList {
@@ -197,7 +197,7 @@ func TestStorageRangeAt(t *testing.T) {
 	for _, entry := range storage {
 		sdb.SetState(addr, *entry.Key, entry.Value)
 	}
-	root, _ := sdb.Commit(0, false, false)
+	root, _ := sdb.Commit(0, false)
 	sdb, _ = state.New(root, db, nil)
 
 	// Check a few combinations of limit and start/end.

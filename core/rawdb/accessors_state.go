@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -53,7 +53,7 @@ func WritePreimages(db ethdb.KeyValueWriter, preimages map[common.Hash][]byte) {
 
 // ReadCode retrieves the contract code of the provided code hash.
 func ReadCode(db ethdb.KeyValueReader, hash common.Hash) []byte {
-	// Try with the prefixed code scheme first and only. The legacy scheme was never used in coreth.
+	// Try with the prefixed code scheme first and only. The legacy scheme was never used in geth.
 	data, _ := db.Get(codeKey(hash))
 	return data
 }
@@ -61,7 +61,7 @@ func ReadCode(db ethdb.KeyValueReader, hash common.Hash) []byte {
 // HasCode checks if the contract code corresponding to the
 // provided code hash is present in the db.
 func HasCode(db ethdb.KeyValueReader, hash common.Hash) bool {
-	// Try with the prefixed code scheme first and only. The legacy scheme was never used in coreth.
+	// Try with the prefixed code scheme first and only. The legacy scheme was never used in geth.
 	ok, _ := db.Has(codeKey(hash))
 	return ok
 }

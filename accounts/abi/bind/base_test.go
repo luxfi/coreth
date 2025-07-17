@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -65,7 +65,7 @@ func (mt *mockTransactor) AcceptedCodeAt(ctx context.Context, account common.Add
 	return []byte{1}, nil
 }
 
-func (mt *mockTransactor) AcceptedNonceAt(ctx context.Context, account common.Address) (uint64, error) {
+func (mt *mockTransactor) NonceAt(ctx context.Context, account common.Address, blockNum *big.Int) (uint64, error) {
 	return 0, nil
 }
 

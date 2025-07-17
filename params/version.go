@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -33,7 +33,7 @@ import (
 const (
 	VersionMajor = 1        // Major version component of the current release
 	VersionMinor = 13       // Minor version component of the current release
-	VersionPatch = 8        // Patch version component of the current release
+	VersionPatch = 14       // Patch version component of the current release
 	VersionMeta  = "stable" // Version metadata to append to the version string
 )
 

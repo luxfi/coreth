@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -37,7 +37,6 @@ import (
 	"github.com/luxfi/node/utils/timer/mockable"
 	"github.com/luxfi/geth/accounts"
 	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/consensus/dummy"
 	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/bloombits"
 	"github.com/luxfi/geth/core/rawdb"
@@ -127,11 +126,11 @@ func roundUpCacheSize(input int, allocSize int) int {
 func New(
 	stack *node.Node,
 	config *Config,
-	cb dummy.ConsensusCallbacks,
 	gossiper PushGossiper,
 	chainDb ethdb.Database,
 	settings Settings,
 	lastAcceptedHash common.Hash,
+	engine consensus.Engine,
 	clock *mockable.Clock,
 ) (*Ethereum, error) {
 	if chainDb == nil {
@@ -177,7 +176,7 @@ func New(
 		chainDb:           chainDb,
 		eventMux:          new(event.TypeMux),
 		accountManager:    stack.AccountManager(),
-		engine:            dummy.NewFakerWithClock(cb, clock),
+		engine:            engine,
 		closeBloomHandler: make(chan struct{}),
 		networkID:         networkID,
 		etherbase:         config.Miner.Etherbase,
@@ -195,7 +194,7 @@ func New(
 
 	if !config.SkipBcVersionCheck {
 		if bcVersion != nil && *bcVersion > core.BlockChainVersion {
-			return nil, fmt.Errorf("database version is v%d, Coreth %s only supports v%d", *bcVersion, params.VersionWithMeta, core.BlockChainVersion)
+			return nil, fmt.Errorf("database version is v%d, Geth %s only supports v%d", *bcVersion, params.VersionWithMeta, core.BlockChainVersion)
 		} else if bcVersion == nil || *bcVersion < core.BlockChainVersion {
 			log.Warn("Upgrade blockchain database version", "from", dbVer, "to", core.BlockChainVersion)
 			rawdb.WriteDatabaseVersion(chainDb, core.BlockChainVersion)
@@ -223,7 +222,7 @@ func New(
 			SnapshotNoBuild:                 config.SkipSnapshotRebuild,
 			Preimages:                       config.Preimages,
 			AcceptedCacheSize:               config.AcceptedCacheSize,
-			TxLookupLimit:                   config.TxLookupLimit,
+			TransactionHistory:              config.TransactionHistory,
 			SkipTxIndexing:                  config.SkipTxIndexing,
 			StateHistory:                    config.StateHistory,
 			StateScheme:                     scheme,
@@ -251,7 +250,7 @@ func New(
 
 	legacyPool := legacypool.New(config.TxPool, eth.blockchain)
 
-	eth.txPool, err = txpool.New(new(big.Int).SetUint64(config.TxPool.PriceLimit), eth.blockchain, []txpool.SubPool{legacyPool}) //, blobPool})
+	eth.txPool, err = txpool.New(config.TxPool.PriceLimit, eth.blockchain, []txpool.SubPool{legacyPool}) //, blobPool})
 	if err != nil {
 		return nil, err
 	}
@@ -264,16 +263,18 @@ func New(
 	}
 
 	eth.APIBackend = &EthAPIBackend{
-		extRPCEnabled:            stack.Config().ExtRPCEnabled(),
-		allowUnprotectedTxs:      config.AllowUnprotectedTxs,
-		allowUnprotectedTxHashes: allowUnprotectedTxHashes,
-		allowUnfinalizedQueries:  config.AllowUnfinalizedQueries,
-		eth:                      eth,
+		extRPCEnabled:              stack.Config().ExtRPCEnabled(),
+		allowUnprotectedTxs:        config.AllowUnprotectedTxs,
+		allowUnprotectedTxHashes:   allowUnprotectedTxHashes,
+		allowUnfinalizedQueries:    config.AllowUnfinalizedQueries,
+		historicalProofQueryWindow: config.HistoricalProofQueryWindow,
+		eth:                        eth,
 	}
 	if config.AllowUnprotectedTxs {
 		log.Info("Unprotected transactions allowed")
 	}
 	gpoParams := config.GPO
+	gpoParams.MinPrice = new(big.Int).SetUint64(config.TxPool.PriceLimit)
 	eth.APIBackend.gpo, err = gasprice.NewOracle(eth.APIBackend, gpoParams)
 	if err != nil {
 		return nil, err

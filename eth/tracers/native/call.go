@@ -1,4 +1,4 @@
-// (c) 2020-2025, Lux Industries Inc.
+// (c) 2020-2021, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -172,7 +172,7 @@ func (t *callTracer) CaptureState(pc uint64, op vm.OpCode, gas, cost uint64, sco
 		return
 	}
 	// Avoid processing nested calls when only caring about top call
-	if t.config.OnlyTopCall && depth > 0 {
+	if t.config.OnlyTopCall && depth > 1 {
 		return
 	}
 	// Skip if tracing was interrupted

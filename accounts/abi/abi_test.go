@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -1210,7 +1210,6 @@ func TestUnpackRevert(t *testing.T) {
 		{"4e487b7100000000000000000000000000000000000000000000000000000000000000ff", "unknown panic code: 0xff", nil},
 	}
 	for index, c := range cases {
-		index, c := index, c
 		t.Run(fmt.Sprintf("case %d", index), func(t *testing.T) {
 			t.Parallel()
 			got, err := UnpackRevert(common.Hex2Bytes(c.input))

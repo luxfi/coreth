@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -35,8 +35,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
-
-var MaxHash = common.HexToHash("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
 func TestMakeTopics(t *testing.T) {
 	t.Parallel()
@@ -86,7 +84,7 @@ func TestMakeTopics(t *testing.T) {
 				{big.NewInt(math.MinInt64)},
 			}},
 			[][]common.Hash{
-				{MaxHash},
+				{common.MaxHash},
 				{common.HexToHash("ffffffffffffffffffffffffffffffffffffffffffffffff8000000000000000")},
 			},
 			false,
@@ -149,7 +147,6 @@ func TestMakeTopics(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got, err := MakeTopics(tt.args.query...)
@@ -385,7 +382,6 @@ func TestParseTopics(t *testing.T) {
 	tests := setupTopicsTests()
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			createObj := tt.args.createObj()
@@ -405,7 +401,6 @@ func TestParseTopicsIntoMap(t *testing.T) {
 	tests := setupTopicsTests()
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			outMap := make(map[string]interface{})

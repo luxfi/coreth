@@ -32,7 +32,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ava-labs/libevm/crypto"
 )
 
 // Tests that transactions can be added to strict lists and list contents and

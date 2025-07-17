@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2022, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -92,10 +92,17 @@ func (f *feeInfoProvider) addHeader(ctx context.Context, header *types.Header) (
 		timestamp: header.Time,
 		baseFee:   header.BaseFee,
 	}
+
+	totalGasUsed := new(big.Int).SetUint64(header.GasUsed)
+	if header.ExtDataGasUsed != nil {
+		totalGasUsed.Add(totalGasUsed, header.ExtDataGasUsed)
+	}
+	minGasUsed := new(big.Int).SetUint64(f.minGasUsed)
+
 	// Don't bias the estimate with blocks containing a limited number of transactions paying to
 	// expedite block production.
 	var err error
-	if f.minGasUsed <= header.GasUsed {
+	if minGasUsed.Cmp(totalGasUsed) <= 0 {
 		// Compute minimum required tip to be included in previous block
 		//
 		// NOTE: Using this approach, we will never recommend that the caller

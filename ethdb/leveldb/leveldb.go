@@ -39,8 +39,8 @@ import (
 
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/metrics"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/ava-labs/libevm/common"
+	"github.com/ava-labs/libevm/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/filter"

@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -90,7 +90,7 @@ type Backend interface {
 	BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error)
 	BlockByNumber(ctx context.Context, number rpc.BlockNumber) (*types.Block, error)
 	BadBlocks() ([]*types.Block, []*core.BadBlockReason)
-	GetTransaction(ctx context.Context, txHash common.Hash) (*types.Transaction, common.Hash, uint64, uint64, error)
+	GetTransaction(ctx context.Context, txHash common.Hash) (bool, *types.Transaction, common.Hash, uint64, uint64, error)
 	RPCGasCap() uint64
 	ChainConfig() *params.ChainConfig
 	Engine() consensus.Engine
@@ -874,12 +874,12 @@ func containsTx(block *types.Block, hash common.Hash) bool {
 // TraceTransaction returns the structured logs created during the execution of EVM
 // and returns them as a JSON object.
 func (api *API) TraceTransaction(ctx context.Context, hash common.Hash, config *TraceConfig) (interface{}, error) {
-	tx, blockHash, blockNumber, index, err := api.backend.GetTransaction(ctx, hash)
+	found, _, blockHash, blockNumber, index, err := api.backend.GetTransaction(ctx, hash)
 	if err != nil {
-		return nil, err
+		return nil, ethapi.NewTxIndexingError()
 	}
 	// Only mined txes are supported
-	if tx == nil {
+	if !found {
 		return nil, errTxNotFound
 	}
 	// It shouldn't happen in practice.
@@ -975,7 +975,7 @@ func (api *API) TraceCall(ctx context.Context, args ethapi.TransactionArgs, bloc
 		}
 	}
 	// Execute the trace
-	msg, err := args.ToMessage(api.backend.RPCGasCap(), block.BaseFee())
+	msg, err := args.ToMessage(api.backend.RPCGasCap(), vmctx.BaseFee)
 	if err != nil {
 		return nil, err
 	}
@@ -1060,7 +1060,7 @@ func overrideConfig(original *params.ChainConfig, override *params.ChainConfig) 
 	canon := true
 
 	// Apply network upgrades (after Berlin) to the copy.
-	// Note in coreth, ApricotPhase2 is the "equivalent" to Berlin.
+	// Note in geth, ApricotPhase2 is the "equivalent" to Berlin.
 	if timestamp := override.ApricotPhase2BlockTimestamp; timestamp != nil {
 		copy.ApricotPhase2BlockTimestamp = timestamp
 		canon = false
@@ -1101,8 +1101,20 @@ func overrideConfig(original *params.ChainConfig, override *params.ChainConfig) 
 		copy.DurangoBlockTimestamp = timestamp
 		canon = false
 	}
+	if timestamp := override.EtnaTimestamp; timestamp != nil {
+		copy.EtnaTimestamp = timestamp
+		canon = false
+	}
+	if timestamp := override.FortunaTimestamp; timestamp != nil {
+		copy.FortunaTimestamp = timestamp
+		canon = false
+	}
 	if timestamp := override.CancunTime; timestamp != nil {
 		copy.CancunTime = timestamp
+		canon = false
+	}
+	if timestamp := override.VerkleTime; timestamp != nil {
+		copy.VerkleTime = timestamp
 		canon = false
 	}
 

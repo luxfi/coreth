@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package statesyncclient
@@ -25,7 +25,7 @@ import (
 	"github.com/luxfi/geth/sync/handlers"
 	handlerstats "github.com/luxfi/geth/sync/handlers/stats"
 	"github.com/luxfi/geth/sync/syncutils"
-	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -143,7 +143,7 @@ func TestGetBlocks(t *testing.T) {
 		Config: params.TestChainConfig,
 	}
 	memdb := rawdb.NewMemoryDatabase()
-	tdb := trie.NewDatabase(memdb, nil)
+	tdb := triedb.NewDatabase(memdb, nil)
 	genesis := gspec.MustCommit(memdb, tdb)
 	engine := dummy.NewETHFaker()
 	numBlocks := 110
@@ -411,7 +411,7 @@ func TestGetLeafs(t *testing.T) {
 
 	const leafsLimit = 1024
 
-	trieDB := trie.NewDatabase(rawdb.NewMemoryDatabase(), nil)
+	trieDB := triedb.NewDatabase(rawdb.NewMemoryDatabase(), nil)
 	largeTrieRoot, largeTrieKeys, _ := syncutils.GenerateTrie(t, trieDB, 100_000, common.HashLength)
 	smallTrieRoot, _, _ := syncutils.GenerateTrie(t, trieDB, leafsLimit, common.HashLength)
 
@@ -794,7 +794,7 @@ func TestGetLeafs(t *testing.T) {
 func TestGetLeafsRetries(t *testing.T) {
 	rand.Seed(1)
 
-	trieDB := trie.NewDatabase(rawdb.NewMemoryDatabase(), nil)
+	trieDB := triedb.NewDatabase(rawdb.NewMemoryDatabase(), nil)
 	root, _, _ := syncutils.GenerateTrie(t, trieDB, 100_000, common.HashLength)
 
 	handler := handlers.NewLeafsRequestHandler(trieDB, nil, message.Codec, handlerstats.NewNoopHandlerStats())

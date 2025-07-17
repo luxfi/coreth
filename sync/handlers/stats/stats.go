@@ -1,4 +1,4 @@
-// (c) 2021-2025, Lux Industries Inc. All rights reserved.
+// (c) 2021-2022, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package stats
@@ -6,7 +6,7 @@ package stats
 import (
 	"time"
 
-	"github.com/luxfi/geth/metrics"
+	"github.com/ethereum/go-ethereum/metrics"
 )
 
 // HandlerStats reports prometheus metrics for the state sync handlers

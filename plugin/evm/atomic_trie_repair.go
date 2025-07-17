@@ -10,7 +10,7 @@ import (
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/trie/trienode"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/ava-labs/libevm/log"
 )
 
 var (
@@ -70,9 +70,14 @@ func (a *atomicTrie) repairAtomicTrie(bonusBlockIDs map[uint64]ids.ID, bonusBloc
 		}
 		heightsRepaired++
 	}
-	newRoot, nodes, _ := tr.Commit(false)
+	newRoot, nodes, err := tr.Commit(false)
+	if err != nil {
+		return 0, err
+	}
 	if nodes != nil {
-		if err := a.trieDB.Update(newRoot, root, lastCommitted, trienode.NewWithNodeSet(nodes), nil); err != nil {
+		mergedNodes := trienode.NewMergedNodeSet()
+		mergedNodes.Merge(nodes)
+		if err := a.trieDB.Update(types.EmptyRootHash, newRoot, lastCommitted, mergedNodes, nil); err != nil {
 			return 0, err
 		}
 		if err := a.commit(lastCommitted, newRoot); err != nil {

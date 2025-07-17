@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2021, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -38,9 +38,11 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/geth/precompile/contracts/warp"
 	"github.com/luxfi/geth/trie"
-	"github.com/luxfi/geth/trie/triedb/pathdb"
+	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/luxfi/geth/utils"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
@@ -48,7 +50,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupGenesisBlock(db ethdb.Database, triedb *trie.Database, genesis *Genesis, lastAcceptedHash common.Hash) (*params.ChainConfig, common.Hash, error) {
+func setupGenesisBlock(db ethdb.Database, triedb *triedb.Database, genesis *Genesis, lastAcceptedHash common.Hash) (*params.ChainConfig, common.Hash, error) {
 	return SetupGenesisBlock(db, triedb, genesis, lastAcceptedHash, false)
 }
 
@@ -72,7 +74,7 @@ func testSetupGenesis(t *testing.T, scheme string) {
 		customghash = common.HexToHash("0x1099a11e9e454bd3ef31d688cf21936671966407bc330f051d754b5ce401e7ed")
 		customg     = Genesis{
 			Config: &apricotPhase1Config,
-			Alloc: GenesisAlloc{
+			Alloc: types.GenesisAlloc{
 				{1}: {Balance: big.NewInt(1), Storage: map[common.Hash]common.Hash{{1}: {1}}},
 			},
 		}
@@ -92,7 +94,7 @@ func testSetupGenesis(t *testing.T, scheme string) {
 		{
 			name: "genesis without ChainConfig",
 			fn: func(db ethdb.Database) (*params.ChainConfig, common.Hash, error) {
-				return setupGenesisBlock(db, trie.NewDatabase(db, newDbConfig(scheme)), new(Genesis), common.Hash{})
+				return setupGenesisBlock(db, triedb.NewDatabase(db, newDbConfig(scheme)), new(Genesis), common.Hash{})
 			},
 			wantErr:    errGenesisNoConfig,
 			wantConfig: nil,
@@ -100,7 +102,7 @@ func testSetupGenesis(t *testing.T, scheme string) {
 		{
 			name: "no block in DB, genesis == nil",
 			fn: func(db ethdb.Database) (*params.ChainConfig, common.Hash, error) {
-				return setupGenesisBlock(db, trie.NewDatabase(db, newDbConfig(scheme)), nil, common.Hash{})
+				return setupGenesisBlock(db, triedb.NewDatabase(db, newDbConfig(scheme)), nil, common.Hash{})
 			},
 			wantErr:    ErrNoGenesis,
 			wantConfig: nil,
@@ -108,7 +110,7 @@ func testSetupGenesis(t *testing.T, scheme string) {
 		{
 			name: "custom block in DB, genesis == nil",
 			fn: func(db ethdb.Database) (*params.ChainConfig, common.Hash, error) {
-				tdb := trie.NewDatabase(db, newDbConfig(scheme))
+				tdb := triedb.NewDatabase(db, newDbConfig(scheme))
 				customg.Commit(db, tdb)
 				return setupGenesisBlock(db, tdb, nil, common.Hash{})
 			},
@@ -118,7 +120,7 @@ func testSetupGenesis(t *testing.T, scheme string) {
 		{
 			name: "compatible config in DB",
 			fn: func(db ethdb.Database) (*params.ChainConfig, common.Hash, error) {
-				tdb := trie.NewDatabase(db, newDbConfig(scheme))
+				tdb := triedb.NewDatabase(db, newDbConfig(scheme))
 				oldcustomg.Commit(db, tdb)
 				return setupGenesisBlock(db, tdb, &customg, customghash)
 			},
@@ -126,11 +128,11 @@ func testSetupGenesis(t *testing.T, scheme string) {
 			wantConfig: customg.Config,
 		},
 		{
-			name: "incompatible config for lux fork in DB",
+			name: "incompatible config for avalanche fork in DB",
 			fn: func(db ethdb.Database) (*params.ChainConfig, common.Hash, error) {
 				// Commit the 'old' genesis block with ApricotPhase1 transition at 90.
 				// Advance to block #4, past the ApricotPhase1 transition block of customg.
-				tdb := trie.NewDatabase(db, newDbConfig(scheme))
+				tdb := triedb.NewDatabase(db, newDbConfig(scheme))
 				genesis, err := oldcustomg.Commit(db, tdb)
 				if err != nil {
 					t.Fatal(err)
@@ -195,7 +197,7 @@ func TestNetworkUpgradeBetweenHeadAndAcceptedBlock(t *testing.T) {
 	db := rawdb.NewMemoryDatabase()
 	customg := Genesis{
 		Config: params.TestApricotPhase1Config,
-		Alloc: GenesisAlloc{
+		Alloc: types.GenesisAlloc{
 			{1}: {Balance: big.NewInt(1), Storage: map[common.Hash]common.Hash{{1}: {1}}},
 		},
 	}
@@ -232,7 +234,7 @@ func TestNetworkUpgradeBetweenHeadAndAcceptedBlock(t *testing.T) {
 	require.Less(bc.lastAccepted.Time(), *apricotPhase2Timestamp)
 
 	// This should not return any error since the last accepted block is before the activation block.
-	config, _, err := setupGenesisBlock(db, trie.NewDatabase(db, nil), &activatedGenesis, bc.lastAccepted.Hash())
+	config, _, err := setupGenesisBlock(db, triedb.NewDatabase(db, nil), &activatedGenesis, bc.lastAccepted.Hash())
 	require.NoError(err)
 	if !reflect.DeepEqual(config, activatedGenesis.Config) {
 		t.Errorf("returned %v\nwant     %v", config, activatedGenesis.Config)
@@ -244,13 +246,13 @@ func TestGenesisWriteUpgradesRegression(t *testing.T) {
 	config := *params.TestChainConfig
 	genesis := &Genesis{
 		Config: &config,
-		Alloc: GenesisAlloc{
+		Alloc: types.GenesisAlloc{
 			{1}: {Balance: big.NewInt(1), Storage: map[common.Hash]common.Hash{{1}: {1}}},
 		},
 	}
 
 	db := rawdb.NewMemoryDatabase()
-	trieDB := trie.NewDatabase(db, trie.HashDefaults)
+	trieDB := triedb.NewDatabase(db, triedb.HashDefaults)
 	genesisBlock := genesis.MustCommit(db, trieDB)
 
 	_, _, err := SetupGenesisBlock(db, trieDB, genesis, genesisBlock.Hash(), false)
@@ -258,7 +260,7 @@ func TestGenesisWriteUpgradesRegression(t *testing.T) {
 
 	genesis.Config.UpgradeConfig.PrecompileUpgrades = []params.PrecompileUpgrade{
 		{
-			Config: warp.NewConfig(utils.NewUint64(51), 0),
+			Config: warp.NewConfig(utils.NewUint64(51), 0, false),
 		},
 	}
 	_, _, err = SetupGenesisBlock(db, trieDB, genesis, genesisBlock.Hash(), false)
@@ -280,11 +282,11 @@ func TestGenesisWriteUpgradesRegression(t *testing.T) {
 	require.NoError(err)
 }
 
-func newDbConfig(scheme string) *trie.Config {
+func newDbConfig(scheme string) *triedb.Config {
 	if scheme == rawdb.HashScheme {
-		return trie.HashDefaults
+		return triedb.HashDefaults
 	}
-	return &trie.Config{PathDB: pathdb.Defaults}
+	return &triedb.Config{PathDB: pathdb.Defaults}
 }
 
 func TestVerkleGenesisCommit(t *testing.T) {
@@ -300,16 +302,19 @@ func TestVerkleGenesisCommit(t *testing.T) {
 		PetersburgBlock:     big.NewInt(0),
 		IstanbulBlock:       big.NewInt(0),
 		MuirGlacierBlock:    big.NewInt(0),
+		BerlinBlock:         big.NewInt(0),
+		LondonBlock:         big.NewInt(0),
+		ShanghaiTime:        &verkleTime,
 		CancunTime:          &verkleTime,
 		VerkleTime:          &verkleTime,
 	}
 
 	genesis := &Genesis{
-		BaseFee:    big.NewInt(params.ApricotPhase3InitialBaseFee),
+		BaseFee:    big.NewInt(ap3.InitialBaseFee),
 		Config:     verkleConfig,
 		Timestamp:  verkleTime,
 		Difficulty: big.NewInt(0),
-		Alloc: GenesisAlloc{
+		Alloc: types.GenesisAlloc{
 			{1}: {Balance: big.NewInt(1), Storage: map[common.Hash]common.Hash{{1}: {1}}},
 		},
 	}
@@ -321,7 +326,7 @@ func TestVerkleGenesisCommit(t *testing.T) {
 	}
 
 	db := rawdb.NewMemoryDatabase()
-	triedb := trie.NewDatabase(db, &trie.Config{IsVerkle: true, PathDB: pathdb.Defaults})
+	triedb := triedb.NewDatabase(db, &triedb.Config{IsVerkle: true, PathDB: pathdb.Defaults})
 	block := genesis.MustCommit(db, triedb)
 	if !bytes.Equal(block.Root().Bytes(), expected) {
 		t.Fatalf("invalid genesis state root, expected %x, got %x", expected, got)

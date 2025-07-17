@@ -9,7 +9,7 @@ import (
 	"github.com/luxfi/node/database"
 	"github.com/luxfi/node/database/memdb"
 	"github.com/luxfi/node/database/versiondb"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ava-labs/libevm/common"
 	"github.com/stretchr/testify/require"
 )
 

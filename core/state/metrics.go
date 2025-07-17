@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2021, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -26,7 +26,7 @@
 
 package state
 
-import "github.com/luxfi/geth/metrics"
+import "github.com/ethereum/go-ethereum/metrics"
 
 var (
 	accountUpdatedMeter      = metrics.NewRegisteredMeter("state/update/account", nil)

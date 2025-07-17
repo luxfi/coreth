@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2021, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -44,6 +44,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/plugin/evm/upgrade/ap3"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
 )
@@ -84,7 +85,7 @@ func (basic *snapshotTestBasic) prepare(t *testing.T) (*BlockChain, []*types.Blo
 	// Initialize a fresh chain
 	var (
 		gspec = &Genesis{
-			BaseFee: big.NewInt(params.ApricotPhase3InitialBaseFee),
+			BaseFee: big.NewInt(ap3.InitialBaseFee),
 			Config:  params.TestChainConfig,
 		}
 		engine = dummy.NewFullFaker()

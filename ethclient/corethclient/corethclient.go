@@ -1,4 +1,4 @@
-// (c) 2019-2025, Lux Industries Inc.
+// (c) 2019-2020, Lux Industries, Inc.
 //
 // This file is a derived work, based on the go-ethereum library whose original
 // notices appear below.
@@ -24,8 +24,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package corethclient provides an RPC client for coreth-specific APIs.
-package corethclient
+// Package gethclient provides an RPC client for geth-specific APIs.
+package gethclient
 
 import (
 	"context"
@@ -196,6 +196,12 @@ func toCallArg(msg interfaces.CallMsg) interface{} {
 	}
 	if msg.GasPrice != nil {
 		arg["gasPrice"] = (*hexutil.Big)(msg.GasPrice)
+	}
+	if msg.GasFeeCap != nil {
+		arg["maxFeePerGas"] = (*hexutil.Big)(msg.GasFeeCap)
+	}
+	if msg.GasTipCap != nil {
+		arg["maxPriorityFeePerGas"] = (*hexutil.Big)(msg.GasTipCap)
 	}
 	if msg.AccessList != nil {
 		arg["accessList"] = msg.AccessList
