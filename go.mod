@@ -1,6 +1,6 @@
 module github.com/luxfi/geth
 
-go 1.21.12
+go 1.22
 
 require (
 	github.com/VictoriaMetrics/fastcache v1.12.1
