@@ -15,6 +15,13 @@ func TimeToNewUint64(time time.Time) *uint64 {
 	return NewUint64(unix)
 }
 
+func TimePtrToNewUint64(timePtr *time.Time) *uint64 {
+	if timePtr == nil {
+		return nil
+	}
+	return TimeToNewUint64(*timePtr)
+}
+
 func Uint64ToTime(val *uint64) time.Time {
 	timestamp := int64(*val)
 	return time.Unix(timestamp, 0)

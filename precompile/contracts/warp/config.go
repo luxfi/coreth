@@ -210,21 +210,12 @@ func (c *Config) VerifyPredicate(predicateContext *precompileconfig.PredicateCon
 		c.RequirePrimaryNetworkSigners,
 	)
 
-	validatorSet, err := warp.GetCanonicalValidatorSetFromChainID(
-		context.Background(),
-		state,
-		predicateContext.ProposerVMBlockCtx.PChainHeight,
-		warpMsg.UnsignedMessage.SourceChainID,
-	)
-	if err != nil {
-		log.Debug("failed to retrieve canonical validator set", "msgID", warpMsg.ID(), "err", err)
-		return fmt.Errorf("%w: %w", errCannotRetrieveValidatorSet, err)
-	}
-
 	err = warpMsg.Signature.Verify(
+		context.Background(),
 		&warpMsg.UnsignedMessage,
 		predicateContext.SnowCtx.NetworkID,
-		validatorSet,
+		state,
+		predicateContext.ProposerVMBlockCtx.PChainHeight,
 		quorumNumerator,
 		WarpQuorumDenominator,
 	)

@@ -8,7 +8,7 @@ package ap4
 import (
 	"math"
 
-	safemath "github.com/luxfi/node/utils/math"
+	safemath "github.com/luxfi/node/utils/safemath"
 	"github.com/luxfi/geth/utils"
 )
 
@@ -62,15 +62,15 @@ func BlockGasCost(
 	}
 
 	var (
-		op                 = safemath.Add[uint64]
+		cost        uint64
 		defaultCost uint64 = MaxBlockGasCost
 	)
 	if timeElapsed > TargetBlockRate {
-		op = safemath.Sub
+		cost, err = safemath.Sub(parentCost, change)
 		defaultCost = MinBlockGasCost
+	} else {
+		cost, err = safemath.Add(parentCost, change)
 	}
-
-	cost, err := op(parentCost, change)
 	if err != nil {
 		cost = defaultCost
 	}

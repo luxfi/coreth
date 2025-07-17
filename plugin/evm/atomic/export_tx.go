@@ -27,6 +27,7 @@ import (
 	"github.com/luxfi/node/vms/components/verify"
 	"github.com/luxfi/node/vms/secp256k1fx"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -70,6 +71,15 @@ func (utx *UnsignedExportTx) InputUTXOs() set.Set[ids.ID] {
 		set.Add(ids.ID(rawID))
 	}
 	return set
+}
+
+// secp256k1ToEthAddress converts a secp256k1 private key to an Ethereum address
+func secp256k1ToEthAddress(key *secp256k1.PrivateKey) common.Address {
+	pubKey := key.PublicKey()
+	pubKeyBytes := pubKey.Bytes()
+	// The secp256k1 public key bytes are already in the uncompressed format
+	// so we can directly compute the address
+	return common.BytesToAddress(crypto.Keccak256(pubKeyBytes[1:])[12:])
 }
 
 // Verify this transaction is well-formed
@@ -242,7 +252,13 @@ func (utx *UnsignedExportTx) SemanticVerify(
 		if err != nil {
 			return err
 		}
-		if input.Address != pubKey.EthAddress() {
+		// Convert secp256k1 public key to ecdsa.PublicKey for crypto.PubkeyToAddress
+		pubKeyBytes := pubKey.Bytes()
+		ecdsaPubKey, err := crypto.UnmarshalPubkey(pubKeyBytes)
+		if err != nil {
+			return err
+		}
+		if input.Address != crypto.PubkeyToAddress(*ecdsaPubKey) {
 			return errPublicKeySignatureMismatch
 		}
 	}
@@ -433,7 +449,7 @@ func GetSpendableFunds(
 		if amount == 0 {
 			break
 		}
-		addr := key.EthAddress()
+		addr := secp256k1ToEthAddress(key)
 		var balance uint64
 		if assetID == ctx.LUXAssetID {
 			// If the asset is LUX, we divide by the x2cRate to convert back to the correct
@@ -516,7 +532,7 @@ func GetSpendableLUXWithFee(
 
 		additionalFee := newFee - prevFee
 
-		addr := key.EthAddress()
+		addr := secp256k1ToEthAddress(key)
 		// Since the asset is LUX, we divide by the x2cRate to convert back to
 		// the correct denomination of LUX that can be exported.
 		balance := new(uint256.Int).Div(state.GetBalance(addr), X2CRate).Uint64()

@@ -13,6 +13,7 @@ import (
 	"github.com/luxfi/node/snow/validators"
 	"github.com/luxfi/node/snow/validators/validatorstest"
 	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/node/utils/crypto/bls"
 	"github.com/luxfi/node/utils/crypto/bls/signer/localsigner"
 	"github.com/luxfi/node/utils/logging"
 	"github.com/luxfi/node/vms/platformvm/warp"
@@ -29,7 +30,7 @@ func TestSnowContext() *snow.Context {
 	if err != nil {
 		panic(err)
 	}
-	pk := sk.PublicKey()
+	pk := bls.PublicFromSecretKey(sk)
 	networkID := constants.UnitTestID
 	chainID := testChainID
 
@@ -71,8 +72,8 @@ func NewTestValidatorState() *validatorstest.State {
 		GetValidatorSetF: func(context.Context, uint64, ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
 			return map[ids.NodeID]*validators.GetValidatorOutput{}, nil
 		},
-		GetCurrentValidatorSetF: func(context.Context, ids.ID) (map[ids.ID]*validators.GetCurrentValidatorOutput, uint64, error) {
-			return map[ids.ID]*validators.GetCurrentValidatorOutput{}, 0, nil
+		GetCurrentValidatorSetF: func(context.Context, ids.ID) (map[ids.NodeID]interface{}, uint64, error) {
+			return map[ids.NodeID]interface{}{}, 0, nil
 		},
 	}
 }
