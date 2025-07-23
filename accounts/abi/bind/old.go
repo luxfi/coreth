@@ -27,16 +27,16 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/abigen"
-	bind2 "github.com/ethereum/go-ethereum/accounts/abi/bind/v2"
-	"github.com/ethereum/go-ethereum/accounts/external"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxfi/geth/accounts"
+	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/geth/accounts/abi/abigen"
+	bind2 "github.com/luxfi/geth/accounts/abi/bind/v2"
+	"github.com/luxfi/geth/accounts/external"
+	"github.com/luxfi/geth/accounts/keystore"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/geth/log"
 )
 
 // Bind generates a v1 contract binding.

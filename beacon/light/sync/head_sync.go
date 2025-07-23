@@ -17,9 +17,9 @@
 package sync
 
 import (
-	"github.com/ethereum/go-ethereum/beacon/light/request"
-	"github.com/ethereum/go-ethereum/beacon/types"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxfi/geth/beacon/light/request"
+	"github.com/luxfi/geth/beacon/types"
+	"github.com/luxfi/geth/log"
 )
 
 type headTracker interface {

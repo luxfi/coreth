@@ -25,10 +25,10 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common/lru"
-	"github.com/ethereum/go-ethereum/internal/era"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxfi/geth/common/lru"
+	"github.com/luxfi/geth/internal/era"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/rlp"
 )
 
 const openFileLimit = 64

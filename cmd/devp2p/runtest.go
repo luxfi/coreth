@@ -19,10 +19,10 @@ package main
 import (
 	"os"
 
-	"github.com/ethereum/go-ethereum/cmd/devp2p/internal/v4test"
-	"github.com/ethereum/go-ethereum/internal/flags"
-	"github.com/ethereum/go-ethereum/internal/utesting"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/luxfi/geth/cmd/devp2p/internal/v4test"
+	"github.com/luxfi/geth/internal/flags"
+	"github.com/luxfi/geth/internal/utesting"
+	"github.com/luxfi/geth/log"
 	"github.com/urfave/cli/v2"
 )
 
