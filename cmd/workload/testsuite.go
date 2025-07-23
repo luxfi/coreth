@@ -22,12 +22,12 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/ethereum/go-ethereum/core/history"
-	"github.com/ethereum/go-ethereum/internal/flags"
-	"github.com/ethereum/go-ethereum/internal/utesting"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/luxfi/geth/core/history"
+	"github.com/luxfi/geth/internal/flags"
+	"github.com/luxfi/geth/internal/utesting"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/rpc"
 	"github.com/urfave/cli/v2"
 )
 

@@ -22,15 +22,15 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/lru"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/common/lru"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/event"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/rpc"
 )
 
 const sampleNumber = 3 // Number of transactions sampled in a block

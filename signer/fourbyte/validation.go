@@ -21,8 +21,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/signer/core/apitypes"
 )
 
 // ValidateTransaction does a number of checks on the supplied transaction, and

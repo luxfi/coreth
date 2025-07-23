@@ -22,11 +22,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb/eradb"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/rawdb/eradb"
+	"github.com/luxfi/geth/ethdb"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/params"
 )
 
 const (

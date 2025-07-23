@@ -23,9 +23,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/crypto"
 )
 
 func TestIndexReaderBasic(t *testing.T) {

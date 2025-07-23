@@ -24,12 +24,12 @@ import (
 	"slices"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/filtermaps"
-	"github.com/ethereum/go-ethereum/core/history"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/filtermaps"
+	"github.com/luxfi/geth/core/history"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/rpc"
 )
 
 // Filter can be used to retrieve and filter logs.

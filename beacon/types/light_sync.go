@@ -20,10 +20,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/beacon/merkle"
-	"github.com/ethereum/go-ethereum/beacon/params"
-	"github.com/ethereum/go-ethereum/common"
-	ctypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/luxfi/geth/beacon/merkle"
+	"github.com/luxfi/geth/beacon/params"
+	"github.com/luxfi/geth/common"
+	ctypes "github.com/luxfi/geth/core/types"
 )
 
 // HeadInfo represents an unvalidated new head announcement.

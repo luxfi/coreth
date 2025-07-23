@@ -17,18 +17,18 @@
 package core
 
 import (
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/lru"
-	"github.com/ethereum/go-ethereum/consensus/beacon"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/stateless"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/trie"
-	"github.com/ethereum/go-ethereum/triedb"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/common/lru"
+	"github.com/luxfi/geth/consensus/beacon"
+	"github.com/luxfi/geth/consensus/ethash"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/stateless"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
 )
 
 // ExecuteStateless runs a stateless execution based on a witness, verifies

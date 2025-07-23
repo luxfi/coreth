@@ -22,10 +22,10 @@ import (
 	"math"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/ethdb"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/rlp"
 )
 
 // memoryTable is used to store a list of sequential items in memory.

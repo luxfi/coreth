@@ -26,14 +26,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/cmd/devp2p/internal/v4test"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/luxfi/geth/cmd/devp2p/internal/v4test"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/p2p/discover"
+	"github.com/luxfi/geth/p2p/enode"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/rpc"
 	"github.com/urfave/cli/v2"
 )
 

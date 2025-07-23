@@ -20,9 +20,9 @@ import (
 	"encoding/json"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/tracing"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/tracing"
+	"github.com/luxfi/geth/params"
 )
 
 // Context contains some contextual infos for a transaction execution that is not
