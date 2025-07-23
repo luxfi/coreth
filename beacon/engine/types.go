@@ -21,11 +21,11 @@ import (
 	"math/big"
 	"slices"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/common/hexutil"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/trie"
 )
 
 // PayloadVersion denotes the version of PayloadAttributes used to request the

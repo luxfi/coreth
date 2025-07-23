@@ -20,15 +20,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/txpool"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/txpool"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/geth/p2p"
+	"github.com/luxfi/geth/p2p/enode"
+	"github.com/luxfi/geth/p2p/enr"
+	"github.com/luxfi/geth/params"
 )
 
 const (

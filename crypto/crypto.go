@@ -30,9 +30,9 @@ import (
 	"os"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/common/math"
+	"github.com/luxfi/geth/rlp"
 	"golang.org/x/crypto/sha3"
 )
 

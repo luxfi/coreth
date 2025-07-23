@@ -19,11 +19,11 @@ package vm
 import (
 	"errors"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/core/tracing"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/common/math"
+	"github.com/luxfi/geth/core/tracing"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
 )
 
 func makeGasSStoreFunc(clearingRefund uint64) gasFunc {

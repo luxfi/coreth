@@ -25,13 +25,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxfi/geth/common/mclock"
+	"github.com/luxfi/geth/event"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/geth/p2p/enode"
+	"github.com/luxfi/geth/p2p/enr"
+	"github.com/luxfi/geth/rlp"
 )
 
 var (

@@ -22,13 +22,13 @@ import (
 	"os"
 	"slices"
 
-	"github.com/ethereum/go-ethereum/beacon/blsync"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/internal/debug"
-	"github.com/ethereum/go-ethereum/internal/flags"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/luxfi/geth/beacon/blsync"
+	"github.com/luxfi/geth/cmd/utils"
+	"github.com/luxfi/geth/internal/debug"
+	"github.com/luxfi/geth/internal/flags"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/node"
+	"github.com/luxfi/geth/rpc"
 	"github.com/urfave/cli/v2"
 )
 

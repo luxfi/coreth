@@ -25,9 +25,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/geth/rlp"
 )
 
 var (

@@ -28,7 +28,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/luxfi/geth/accounts/abi"
 )
 
 // underlyingBindType returns a string representation of the Go type

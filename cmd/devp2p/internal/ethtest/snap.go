@@ -24,14 +24,14 @@ import (
 	"math/rand"
 	"reflect"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/eth/protocols/snap"
-	"github.com/ethereum/go-ethereum/internal/utesting"
-	"github.com/ethereum/go-ethereum/trie"
-	"github.com/ethereum/go-ethereum/trie/trienode"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/geth/eth/protocols/snap"
+	"github.com/luxfi/geth/internal/utesting"
+	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/trie/trienode"
 )
 
 func (c *Conn) snapRequest(code uint64, msg any) (any, error) {

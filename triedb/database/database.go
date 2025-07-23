@@ -17,8 +17,8 @@
 package database
 
 import (
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/types"
 )
 
 // NodeReader wraps the Node method of a backing trie reader.

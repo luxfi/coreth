@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/metrics"
 )
 
 var (

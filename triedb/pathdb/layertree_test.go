@@ -20,9 +20,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/trie/trienode"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/trie/trienode"
 )
 
 func newTestLayerTree() *layerTree {

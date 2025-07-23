@@ -23,14 +23,14 @@ import (
 	"fmt"
 	"mime"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/consensus/clique"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/luxfi/geth/accounts"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/common/hexutil"
+	"github.com/luxfi/geth/consensus/clique"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/geth/rlp"
+	"github.com/luxfi/geth/signer/core/apitypes"
 )
 
 // sign receives a request and produces a signature

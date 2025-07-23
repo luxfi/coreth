@@ -22,9 +22,9 @@ import (
 	"math"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/geth/rlp"
 )
 
 // hasherPool holds LegacyKeccak256 hashers for rlpHash.

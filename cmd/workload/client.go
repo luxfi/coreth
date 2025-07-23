@@ -20,12 +20,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/ethclient/gethclient"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/common/hexutil"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/ethclient"
+	"github.com/luxfi/geth/ethclient/gethclient"
+	"github.com/luxfi/geth/rpc"
 	"github.com/urfave/cli/v2"
 )
 

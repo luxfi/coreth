@@ -19,9 +19,9 @@ package state
 import (
 	"maps"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/trie/trienode"
-	"github.com/ethereum/go-ethereum/triedb"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/trie/trienode"
+	"github.com/luxfi/geth/triedb"
 )
 
 // contractCode represents a contract code with associated metadata.

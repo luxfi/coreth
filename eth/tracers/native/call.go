@@ -22,14 +22,14 @@ import (
 	"math/big"
 	"sync/atomic"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/tracing"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/eth/tracers"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/common/hexutil"
+	"github.com/luxfi/geth/core/tracing"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/geth/eth/tracers"
+	"github.com/luxfi/geth/params"
 )
 
 //go:generate go run github.com/fjl/gencodec -type callFrame -field-override callFrameMarshaling -out gen_callframe_json.go

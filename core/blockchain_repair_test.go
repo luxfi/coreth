@@ -26,12 +26,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethdb/pebble"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/consensus/ethash"
+	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/ethdb/pebble"
+	"github.com/luxfi/geth/params"
 )
 
 // Tests a recovery for a short canonical chain where a recent block was already
