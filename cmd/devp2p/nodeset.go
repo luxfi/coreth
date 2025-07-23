@@ -25,8 +25,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/p2p/enode"
 )
 
 const jsonIndent = "    "

@@ -19,7 +19,7 @@
 // invoked by the go-ethereum core at various points in the state transition.
 //
 // To create a tracer that can be invoked with Geth, you need to register it using
-// [github.com/ethereum/go-ethereum/eth/tracers.LiveDirectory.Register].
+// [github.com/luxfi/geth/eth/tracers.LiveDirectory.Register].
 //
 // See https://geth.ethereum.org/docs/developers/evm-tracing/live-tracing for a tutorial.
 package tracing
@@ -27,9 +27,9 @@ package tracing
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/params"
 	"github.com/holiman/uint256"
 )
 

@@ -29,11 +29,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/p2p/netutil"
+	"github.com/luxfi/geth/common/mclock"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/p2p/enode"
+	"github.com/luxfi/geth/p2p/enr"
+	"github.com/luxfi/geth/p2p/netutil"
 )
 
 const (

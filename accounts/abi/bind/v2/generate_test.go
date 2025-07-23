@@ -23,10 +23,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/abigen"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/common/compiler"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/luxfi/geth/accounts/abi/abigen"
+	"github.com/luxfi/geth/cmd/utils"
+	"github.com/luxfi/geth/common/compiler"
+	"github.com/luxfi/geth/crypto"
 )
 
 // Run go generate to recreate the test bindings.

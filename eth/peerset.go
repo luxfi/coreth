@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/eth/protocols/eth"
-	"github.com/ethereum/go-ethereum/eth/protocols/snap"
-	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/eth/protocols/eth"
+	"github.com/luxfi/geth/eth/protocols/snap"
+	"github.com/luxfi/geth/p2p"
 )
 
 var (

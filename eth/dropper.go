@@ -22,11 +22,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/common/mclock"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/geth/p2p"
 )
 
 const (
