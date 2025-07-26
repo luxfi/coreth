@@ -159,10 +159,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace github.com/luxfi/database => ../database
 
-replace github.com/luxfi/node => ../node
 
-replace github.com/luxfi/ids => ../ids
 
-replace github.com/luxfi/crypto => ../crypto
