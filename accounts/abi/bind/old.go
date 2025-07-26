@@ -15,7 +15,7 @@
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 // Package bind is the runtime for abigen v1 generated contract bindings.
-// Deprecated: please use github.com/ethereum/go-ethereum/bind/v2
+// Deprecated: please use github.com/luxfi/geth/bind/v2
 package bind
 
 import (
@@ -40,7 +40,7 @@ import (
 )
 
 // Bind generates a v1 contract binding.
-// Deprecated: binding generation has moved to github.com/ethereum/go-ethereum/accounts/abi/abigen
+// Deprecated: binding generation has moved to github.com/luxfi/geth/accounts/abi/abigen
 func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]string, pkg string, libs map[string]string, aliases map[string]string) (string, error) {
 	return abigen.Bind(types, abis, bytecodes, fsigs, pkg, libs, aliases)
 }
