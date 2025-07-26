@@ -10,27 +10,32 @@ GORUN = go run
 
 #? geth: Build geth.
 geth:
-	$(GORUN) build/ci.go install ./cmd/geth
+	go build -o $(GOBIN)/geth ./cmd/geth
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/geth\" to launch geth."
 
 #? evm: Build evm.
 evm:
-	$(GORUN) build/ci.go install ./cmd/evm
+	go build -o $(GOBIN)/evm ./cmd/evm
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/evm\" to launch evm."
 
 #? all: Build all packages and executables.
 all:
-	$(GORUN) build/ci.go install
+	go build -o $(GOBIN)/geth ./cmd/geth
+	go build -o $(GOBIN)/evm ./cmd/evm
+	go build -o $(GOBIN)/abigen ./cmd/abigen
+	go build -o $(GOBIN)/rlpdump ./cmd/rlpdump
+	go build -o $(GOBIN)/clef ./cmd/clef
 
 #? test: Run the tests.
 test: all
-	$(GORUN) build/ci.go test
+	go test ./...
 
 #? lint: Run certain pre-selected linters.
 lint: ## Run linters.
-	$(GORUN) build/ci.go lint
+	go vet ./...
+	gofmt -s -l .
 
 #? fmt: Ensure consistent code formatting.
 fmt:
