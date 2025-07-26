@@ -23,7 +23,6 @@ import (
 
 	db "github.com/luxfi/database"
 	"github.com/luxfi/database/badgerdb"
-	db "github.com/luxfi/database/badgerdb"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/prometheus/client_golang/prometheus"
 )
