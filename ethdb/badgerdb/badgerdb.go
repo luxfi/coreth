@@ -20,9 +20,10 @@ package badgerdb
 import (
 	"bytes"
 	"errors"
-	
-	"github.com/luxfi/db"
-	"github.com/luxfi/db/badgerdb"
+
+	db "github.com/luxfi/database"
+	"github.com/luxfi/database/badgerdb"
+	db "github.com/luxfi/database/badgerdb"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -36,11 +37,11 @@ func New(file string, cache int, handles int, namespace string, readonly bool) (
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &database{db: luxDB}, nil
 }
 
-// database wraps a luxfi/db database to implement ethdb.Database
+// database wraps a luxfi/database to implement ethdb.Database
 type database struct {
 	db db.Database
 }
@@ -75,7 +76,7 @@ func (d *database) DeleteRange(start, end []byte) error {
 	// BadgerDB doesn't have native DeleteRange, so we iterate and delete
 	it := d.db.NewIteratorWithStartAndPrefix(start, nil)
 	defer it.Release()
-	
+
 	batch := d.db.NewBatch()
 	for it.Next() {
 		key := it.Key()
@@ -187,7 +188,7 @@ func (d *database) MigrateTable(kind string, convert func([]byte) ([]byte, error
 	return nil
 }
 
-// batch wraps a luxfi/db batch to implement ethdb.Batch
+// batch wraps a luxfi/database batch to implement ethdb.Batch
 type batch struct {
 	b    db.Batch
 	size int
@@ -250,7 +251,7 @@ func (w *wrapper) Delete(key []byte) error {
 	return w.w.Put(key, nil)
 }
 
-// iterator wraps a luxfi/db iterator to implement ethdb.Iterator
+// iterator wraps a luxfi/database iterator to implement ethdb.Iterator
 type iterator struct {
 	it db.Iterator
 }
