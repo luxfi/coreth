@@ -31,11 +31,11 @@ import (
 
 // Run go generate to recreate the test bindings.
 //
-//go:generate go run github.com/ethereum/go-ethereum/cmd/abigen -v2 -combined-json internal/contracts/db/combined-abi.json -type DBStats -pkg db -out internal/contracts/db/bindings.go
-//go:generate go run github.com/ethereum/go-ethereum/cmd/abigen -v2 -combined-json internal/contracts/events/combined-abi.json -type C -pkg events -out internal/contracts/events/bindings.go
-//go:generate go run github.com/ethereum/go-ethereum/cmd/abigen -v2 -combined-json internal/contracts/nested_libraries/combined-abi.json -type C1 -pkg nested_libraries -out internal/contracts/nested_libraries/bindings.go
-//go:generate go run github.com/ethereum/go-ethereum/cmd/abigen -v2 -combined-json internal/contracts/solc_errors/combined-abi.json -type C -pkg solc_errors -out internal/contracts/solc_errors/bindings.go
-//go:generate go run github.com/ethereum/go-ethereum/cmd/abigen -v2 -combined-json internal/contracts/uint256arrayreturn/combined-abi.json -type C -pkg uint256arrayreturn -out internal/contracts/uint256arrayreturn/bindings.go
+//go:generate go run github.com/luxfi/geth/cmd/abigen -v2 -combined-json internal/contracts/db/combined-abi.json -type DBStats -pkg db -out internal/contracts/db/bindings.go
+//go:generate go run github.com/luxfi/geth/cmd/abigen -v2 -combined-json internal/contracts/events/combined-abi.json -type C -pkg events -out internal/contracts/events/bindings.go
+//go:generate go run github.com/luxfi/geth/cmd/abigen -v2 -combined-json internal/contracts/nested_libraries/combined-abi.json -type C1 -pkg nested_libraries -out internal/contracts/nested_libraries/bindings.go
+//go:generate go run github.com/luxfi/geth/cmd/abigen -v2 -combined-json internal/contracts/solc_errors/combined-abi.json -type C -pkg solc_errors -out internal/contracts/solc_errors/bindings.go
+//go:generate go run github.com/luxfi/geth/cmd/abigen -v2 -combined-json internal/contracts/uint256arrayreturn/combined-abi.json -type C -pkg uint256arrayreturn -out internal/contracts/uint256arrayreturn/bindings.go
 
 // TestBindingGeneration tests that re-running generation of bindings does not result in
 // mutations to the binding code.
