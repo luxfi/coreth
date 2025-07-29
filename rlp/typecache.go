@@ -23,7 +23,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/luxfi/geth/rlp/internal/rlpstruct"
+	"github.com/luxfi/geth/rlp/rlpstruct"
 )
 
 // typeinfo is an entry in the type cache.
