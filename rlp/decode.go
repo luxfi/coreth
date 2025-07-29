@@ -28,7 +28,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/luxfi/geth/rlp/internal/rlpstruct"
+	"github.com/luxfi/geth/rlp/rlpstruct"
 	"github.com/holiman/uint256"
 )
 
