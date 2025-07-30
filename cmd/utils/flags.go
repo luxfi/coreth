@@ -49,10 +49,10 @@ import (
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/crypto/kzg4844"
 	"github.com/luxfi/geth/eth"
-	"github.com/luxfi/geth/eth/catalyst"
 	"github.com/luxfi/geth/eth/ethconfig"
 	"github.com/luxfi/geth/eth/filters"
 	"github.com/luxfi/geth/eth/gasprice"
+	"github.com/luxfi/geth/eth/syncer"
 	"github.com/luxfi/geth/eth/tracers"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/ethdb/remotedb"
@@ -102,7 +102,7 @@ var (
 	}
 	DBEngineFlag = &cli.StringFlag{
 		Name:     "db.engine",
-		Usage:    "Backing database implementation to use ('pebble', 'leveldb', or 'badgerdb')",
+		Usage:    "Backing database implementation to use ('pebble' or 'leveldb')",
 		Value:    node.DefaultConfig.DBEngine,
 		Category: flags.EthCategory,
 	}
@@ -1389,8 +1389,8 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	}
 	if ctx.IsSet(DBEngineFlag.Name) {
 		dbEngine := ctx.String(DBEngineFlag.Name)
-		if dbEngine != "leveldb" && dbEngine != "pebble" && dbEngine != "badgerdb" {
-			Fatalf("Invalid choice for db.engine '%s', allowed 'leveldb', 'pebble', or 'badgerdb'", dbEngine)
+		if dbEngine != "leveldb" && dbEngine != "pebble" {
+			Fatalf("Invalid choice for db.engine '%s', allowed 'leveldb' or 'pebble'", dbEngine)
 		}
 		log.Info(fmt.Sprintf("Using %s as db engine", dbEngine))
 		cfg.DBEngine = dbEngine
@@ -1997,10 +1997,14 @@ func RegisterFilterAPI(stack *node.Node, backend ethapi.Backend, ethcfg *ethconf
 	return filterSystem
 }
 
-// RegisterFullSyncTester adds the full-sync tester service into node.
-func RegisterFullSyncTester(stack *node.Node, eth *eth.Ethereum, target common.Hash, exitWhenSynced bool) {
-	catalyst.RegisterFullSyncTester(stack, eth, target, exitWhenSynced)
-	log.Info("Registered full-sync tester", "hash", target, "exitWhenSynced", exitWhenSynced)
+// RegisterSyncOverrideService adds the synchronization override service into node.
+func RegisterSyncOverrideService(stack *node.Node, eth *eth.Ethereum, target common.Hash, exitWhenSynced bool) {
+	if target != (common.Hash{}) {
+		log.Info("Registered sync override service", "hash", target, "exitWhenSynced", exitWhenSynced)
+	} else {
+		log.Info("Registered sync override service")
+	}
+	syncer.Register(stack, eth, target, exitWhenSynced)
 }
 
 // SetupMetrics configures the metrics system.
