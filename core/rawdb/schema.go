@@ -185,9 +185,11 @@ func headerKey(number uint64, hash common.Hash) []byte {
 	return append(append(headerPrefix, encodeBlockNumber(number)...), hash.Bytes()...)
 }
 
-// headerHashKey = headerPrefix + num (uint64 big endian) + headerHashSuffix
+// headerHashKey = headerPrefix + num (uint64 big endian)
+// Modified to use 9-byte format (no suffix) to match migrated data
 func headerHashKey(number uint64) []byte {
-	return append(append(headerPrefix, encodeBlockNumber(number)...), headerHashSuffix...)
+	// Force 9-byte key: 1 byte prefix + 8 bytes number
+	return append(headerPrefix, encodeBlockNumber(number)...)
 }
 
 // headerNumberKey = headerNumberPrefix + hash
