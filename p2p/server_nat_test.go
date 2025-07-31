@@ -38,7 +38,7 @@ func TestServerPortMapping(t *testing.T) {
 			ListenAddr: ":0",
 			DiscAddr:   ":0",
 			NAT:        mockNAT,
-			Logger:     testlog.Logger(t, log.LvlTrace),
+			Logger:     testlog.Logger(t, log.LevelTrace),
 			clock:      clock,
 		},
 	}

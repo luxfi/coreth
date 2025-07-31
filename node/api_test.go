@@ -249,7 +249,7 @@ func TestStartRPC(t *testing.T) {
 
 			// Apply some sane defaults.
 			config := test.cfg
-			// config.Logger = testlog.Logger(t, log.LvlDebug)
+			// config.Logger = testlog.Logger(t, log.LevelDebug)
 			config.P2P.NoDiscovery = true
 			if config.HTTPTimeouts == (rpc.HTTPTimeouts{}) {
 				config.HTTPTimeouts = rpc.DefaultHTTPTimeouts

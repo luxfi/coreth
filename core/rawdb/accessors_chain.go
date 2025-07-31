@@ -130,7 +130,7 @@ func ReadAllCanonicalHashes(db ethdb.Iteratee, from uint64, to uint64, limit int
 		if bytes.Compare(it.Key(), end) >= 0 {
 			break
 		}
-		if key := it.Key(); len(key) == len(headerPrefix)+8+1 && bytes.Equal(key[len(key)-1:], headerHashSuffix) {
+		if key := it.Key(); len(key) == len(headerPrefix)+8 {
 			numbers = append(numbers, binary.BigEndian.Uint64(key[len(headerPrefix):len(headerPrefix)+8]))
 			hashes = append(hashes, common.BytesToHash(it.Value()))
 			// If the accumulated entries reaches the limit threshold, return.
