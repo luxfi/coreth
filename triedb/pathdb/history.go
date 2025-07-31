@@ -1,4 +1,15 @@
-// Copyright 2023 The go-ethereum Authors
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
+// Copyright 2022 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
 // The go-ethereum library is free software: you can redistribute it and/or modify
@@ -12,7 +23,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>
 
 package pathdb
 
@@ -21,15 +32,10 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"maps"
-	"slices"
-	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/log"
+	"github.com/luxfi/geth/trie/triestate"
+	"golang.org/x/exp/slices"
 )
 
 // State history records the state changes involved in executing a block. The
@@ -67,11 +73,9 @@ import (
 const (
 	accountIndexSize = common.AddressLength + 13 // The length of encoded account index
 	slotIndexSize    = common.HashLength + 5     // The length of encoded slot index
-	historyMetaSize  = 9 + 2*common.HashLength   // The length of encoded history meta
+	historyMetaSize  = 9 + 2*common.HashLength   // The length of fixed size part of meta object
 
-	stateHistoryV0 = uint8(0)       // initial version of state history structure
-	stateHistoryV1 = uint8(1)       // use the storage slot raw key as the identifier instead of the key hash
-	historyVersion = stateHistoryV1 // the default state history version
+	stateHistoryVersion = uint8(0) // initial version of state history structure.
 )
 
 // Each state history entry is consisted of five elements:
@@ -172,18 +176,15 @@ func (i *accountIndex) decode(blob []byte) {
 
 // slotIndex describes the metadata belonging to a storage slot.
 type slotIndex struct {
-	// the identifier of the storage slot. Specifically
-	// in v0, it's the hash of the raw storage slot key (32 bytes);
-	// in v1, it's the raw storage slot key (32 bytes);
-	id     common.Hash
-	length uint8  // The length of storage slot, up to 32 bytes defined in protocol
-	offset uint32 // The offset of item in storage slot data table
+	hash   common.Hash // The hash of slot key
+	length uint8       // The length of storage slot, up to 32 bytes defined in protocol
+	offset uint32      // The offset of item in storage slot data table
 }
 
 // encode packs slot index into byte stream.
 func (i *slotIndex) encode() []byte {
 	var buf [slotIndexSize]byte
-	copy(buf[:common.HashLength], i.id.Bytes())
+	copy(buf[:common.HashLength], i.hash.Bytes())
 	buf[common.HashLength] = i.length
 	binary.BigEndian.PutUint32(buf[common.HashLength+1:], i.offset)
 	return buf[:]
@@ -191,43 +192,54 @@ func (i *slotIndex) encode() []byte {
 
 // decode unpack slot index from the byte stream.
 func (i *slotIndex) decode(blob []byte) {
-	i.id = common.BytesToHash(blob[:common.HashLength])
+	i.hash = common.BytesToHash(blob[:common.HashLength])
 	i.length = blob[common.HashLength]
 	i.offset = binary.BigEndian.Uint32(blob[common.HashLength+1:])
 }
 
 // meta describes the meta data of state history object.
 type meta struct {
-	version uint8       // version tag of history object
-	parent  common.Hash // prev-state root before the state transition
-	root    common.Hash // post-state root after the state transition
-	block   uint64      // associated block number
+	version    uint8            // version tag of history object
+	parent     common.Hash      // prev-state root before the state transition
+	root       common.Hash      // post-state root after the state transition
+	block      uint64           // associated block number
+	incomplete []common.Address // list of address whose storage set is incomplete
 }
 
 // encode packs the meta object into byte stream.
 func (m *meta) encode() []byte {
-	buf := make([]byte, historyMetaSize)
+	buf := make([]byte, historyMetaSize+len(m.incomplete)*common.AddressLength)
 	buf[0] = m.version
 	copy(buf[1:1+common.HashLength], m.parent.Bytes())
 	copy(buf[1+common.HashLength:1+2*common.HashLength], m.root.Bytes())
 	binary.BigEndian.PutUint64(buf[1+2*common.HashLength:historyMetaSize], m.block)
+	for i, h := range m.incomplete {
+		copy(buf[i*common.AddressLength+historyMetaSize:], h.Bytes())
+	}
 	return buf[:]
 }
 
 // decode unpacks the meta object from byte stream.
 func (m *meta) decode(blob []byte) error {
 	if len(blob) < 1 {
-		return errors.New("no version tag")
+		return fmt.Errorf("no version tag")
 	}
 	switch blob[0] {
-	case stateHistoryV0, stateHistoryV1:
-		if len(blob) != historyMetaSize {
+	case stateHistoryVersion:
+		if len(blob) < historyMetaSize {
 			return fmt.Errorf("invalid state history meta, len: %d", len(blob))
+		}
+		if (len(blob)-historyMetaSize)%common.AddressLength != 0 {
+			return fmt.Errorf("corrupted state history meta, len: %d", len(blob))
 		}
 		m.version = blob[0]
 		m.parent = common.BytesToHash(blob[1 : 1+common.HashLength])
 		m.root = common.BytesToHash(blob[1+common.HashLength : 1+2*common.HashLength])
 		m.block = binary.BigEndian.Uint64(blob[1+2*common.HashLength : historyMetaSize])
+		for pos := historyMetaSize; pos < len(blob); {
+			m.incomplete = append(m.incomplete, common.BytesToAddress(blob[pos:pos+common.AddressLength]))
+			pos += common.AddressLength
+		}
 		return nil
 	default:
 		return fmt.Errorf("unknown version %d", blob[0])
@@ -248,58 +260,43 @@ type history struct {
 }
 
 // newHistory constructs the state history object with provided state change set.
-func newHistory(root common.Hash, parent common.Hash, block uint64, accounts map[common.Address][]byte, storages map[common.Address]map[common.Hash][]byte, rawStorageKey bool) *history {
+func newHistory(root common.Hash, parent common.Hash, block uint64, states *triestate.Set) *history {
 	var (
-		accountList = slices.SortedFunc(maps.Keys(accounts), common.Address.Cmp)
+		accountList []common.Address
 		storageList = make(map[common.Address][]common.Hash)
+		incomplete  []common.Address
 	)
-	for addr, slots := range storages {
-		storageList[addr] = slices.SortedFunc(maps.Keys(slots), common.Hash.Cmp)
+	for addr := range states.Accounts {
+		accountList = append(accountList, addr)
 	}
-	version := historyVersion
-	if !rawStorageKey {
-		version = stateHistoryV0
+	slices.SortFunc(accountList, common.Address.Cmp)
+
+	for addr, slots := range states.Storages {
+		slist := make([]common.Hash, 0, len(slots))
+		for slotHash := range slots {
+			slist = append(slist, slotHash)
+		}
+		slices.SortFunc(slist, common.Hash.Cmp)
+		storageList[addr] = slist
 	}
+	for addr := range states.Incomplete {
+		incomplete = append(incomplete, addr)
+	}
+	slices.SortFunc(incomplete, common.Address.Cmp)
+
 	return &history{
 		meta: &meta{
-			version: version,
-			parent:  parent,
-			root:    root,
-			block:   block,
+			version:    stateHistoryVersion,
+			parent:     parent,
+			root:       root,
+			block:      block,
+			incomplete: incomplete,
 		},
-		accounts:    accounts,
+		accounts:    states.Accounts,
 		accountList: accountList,
-		storages:    storages,
+		storages:    states.Storages,
 		storageList: storageList,
 	}
-}
-
-// stateSet returns the state set, keyed by the hash of the account address
-// and the hash of the storage slot key.
-func (h *history) stateSet() (map[common.Hash][]byte, map[common.Hash]map[common.Hash][]byte) {
-	var (
-		accounts = make(map[common.Hash][]byte)
-		storages = make(map[common.Hash]map[common.Hash][]byte)
-	)
-	for addr, blob := range h.accounts {
-		addrHash := crypto.Keccak256Hash(addr.Bytes())
-		accounts[addrHash] = blob
-
-		storage, exist := h.storages[addr]
-		if !exist {
-			continue
-		}
-		if h.meta.version == stateHistoryV0 {
-			storages[addrHash] = storage
-		} else {
-			subset := make(map[common.Hash][]byte)
-			for key, slot := range storage {
-				subset[crypto.Keccak256Hash(key.Bytes())] = slot
-			}
-			storages[addrHash] = subset
-		}
-	}
-	return accounts, storages
 }
 
 // encode serializes the state history and returns four byte streams represent
@@ -323,7 +320,7 @@ func (h *history) encode() ([]byte, []byte, []byte, []byte) {
 			// Encode storage slots in order
 			for _, slotHash := range h.storageList[addr] {
 				sIndex := slotIndex{
-					id:     slotHash,
+					hash:   slotHash,
 					length: uint8(len(slots[slotHash])),
 					offset: uint32(len(storageData)),
 				}
@@ -411,12 +408,11 @@ func (r *decoder) readAccount(pos int) (accountIndex, []byte, error) {
 // readStorage parses the storage slots from the byte stream with specified account.
 func (r *decoder) readStorage(accIndex accountIndex) ([]common.Hash, map[common.Hash][]byte, error) {
 	var (
-		last    *common.Hash
-		count   = int(accIndex.storageSlots)
-		list    = make([]common.Hash, 0, count)
-		storage = make(map[common.Hash][]byte, count)
+		last    common.Hash
+		list    []common.Hash
+		storage = make(map[common.Hash][]byte)
 	)
-	for j := 0; j < count; j++ {
+	for j := 0; j < int(accIndex.storageSlots); j++ {
 		var (
 			index slotIndex
 			start = (accIndex.storageOffset + uint32(j)) * uint32(slotIndexSize)
@@ -436,10 +432,8 @@ func (r *decoder) readStorage(accIndex accountIndex) ([]common.Hash, map[common.
 		}
 		index.decode(r.storageIndexes[start:end])
 
-		if last != nil {
-			if bytes.Compare(last.Bytes(), index.id.Bytes()) >= 0 {
-				return nil, nil, fmt.Errorf("storage slot is not in order, last: %x, current: %x", *last, index.id)
-			}
+		if bytes.Compare(last.Bytes(), index.hash.Bytes()) >= 0 {
+			return nil, nil, errors.New("storage slot is not in order")
 		}
 		if index.offset != r.lastSlotDataRead {
 			return nil, nil, errors.New("storage data buffer is gapped")
@@ -448,10 +442,10 @@ func (r *decoder) readStorage(accIndex accountIndex) ([]common.Hash, map[common.
 		if uint32(len(r.storageData)) < sEnd {
 			return nil, nil, errors.New("storage data buffer is corrupted")
 		}
-		storage[index.id] = r.storageData[r.lastSlotDataRead:sEnd]
-		list = append(list, index.id)
+		storage[index.hash] = r.storageData[r.lastSlotDataRead:sEnd]
+		list = append(list, index.hash)
 
-		last = &index.id
+		last = index.hash
 		r.lastSlotIndexRead = end
 		r.lastSlotDataRead = sEnd
 	}
@@ -461,10 +455,9 @@ func (r *decoder) readStorage(accIndex accountIndex) ([]common.Hash, map[common.
 // decode deserializes the account and storage data from the provided byte stream.
 func (h *history) decode(accountData, storageData, accountIndexes, storageIndexes []byte) error {
 	var (
-		count       = len(accountIndexes) / accountIndexSize
-		accounts    = make(map[common.Address][]byte, count)
+		accounts    = make(map[common.Address][]byte)
 		storages    = make(map[common.Address]map[common.Hash][]byte)
-		accountList = make([]common.Address, 0, count)
+		accountList []common.Address
 		storageList = make(map[common.Address][]common.Hash)
 
 		r = &decoder{
@@ -477,7 +470,7 @@ func (h *history) decode(accountData, storageData, accountIndexes, storageIndexe
 	if err := r.verify(); err != nil {
 		return err
 	}
-	for i := 0; i < count; i++ {
+	for i := 0; i < len(accountIndexes)/accountIndexSize; i++ {
 		// Resolve account first
 		accIndex, accData, err := r.readAccount(i)
 		if err != nil {
@@ -501,180 +494,4 @@ func (h *history) decode(accountData, storageData, accountIndexes, storageIndexe
 	h.storages = storages
 	h.storageList = storageList
 	return nil
-}
-
-// readHistory reads and decodes the state history object by the given id.
-func readHistory(reader ethdb.AncientReader, id uint64) (*history, error) {
-	mData, accountIndexes, storageIndexes, accountData, storageData, err := rawdb.ReadStateHistory(reader, id)
-	if err != nil {
-		return nil, err
-	}
-	var m meta
-	if err := m.decode(mData); err != nil {
-		return nil, err
-	}
-	h := history{meta: &m}
-	if err := h.decode(accountData, storageData, accountIndexes, storageIndexes); err != nil {
-		return nil, err
-	}
-	return &h, nil
-}
-
-// readHistories reads and decodes a list of state histories with the specific
-// history range.
-func readHistories(freezer ethdb.AncientReader, start uint64, count uint64) ([]*history, error) {
-	var histories []*history
-	metaList, aIndexList, sIndexList, aDataList, sDataList, err := rawdb.ReadStateHistoryList(freezer, start, count)
-	if err != nil {
-		return nil, err
-	}
-	for i := 0; i < len(metaList); i++ {
-		var m meta
-		if err := m.decode(metaList[i]); err != nil {
-			return nil, err
-		}
-		h := history{meta: &m}
-		if err := h.decode(aDataList[i], sDataList[i], aIndexList[i], sIndexList[i]); err != nil {
-			return nil, err
-		}
-		histories = append(histories, &h)
-	}
-	return histories, nil
-}
-
-// writeHistory persists the state history with the provided state set.
-func writeHistory(writer ethdb.AncientWriter, dl *diffLayer) error {
-	// Short circuit if state set is not available.
-	if dl.states == nil {
-		return errors.New("state change set is not available")
-	}
-	var (
-		start   = time.Now()
-		history = newHistory(dl.rootHash(), dl.parentLayer().rootHash(), dl.block, dl.states.accountOrigin, dl.states.storageOrigin, dl.states.rawStorageKey)
-	)
-	accountData, storageData, accountIndex, storageIndex := history.encode()
-	dataSize := common.StorageSize(len(accountData) + len(storageData))
-	indexSize := common.StorageSize(len(accountIndex) + len(storageIndex))
-
-	// Write history data into five freezer table respectively.
-	if err := rawdb.WriteStateHistory(writer, dl.stateID(), history.meta.encode(), accountIndex, storageIndex, accountData, storageData); err != nil {
-		return err
-	}
-	historyDataBytesMeter.Mark(int64(dataSize))
-	historyIndexBytesMeter.Mark(int64(indexSize))
-	historyBuildTimeMeter.UpdateSince(start)
-	log.Debug("Stored state history", "id", dl.stateID(), "block", dl.block, "data", dataSize, "index", indexSize, "elapsed", common.PrettyDuration(time.Since(start)))
-
-	return nil
-}
-
-// checkHistories retrieves a batch of meta objects with the specified range
-// and performs the callback on each item.
-func checkHistories(reader ethdb.AncientReader, start, count uint64, check func(*meta) error) error {
-	for count > 0 {
-		number := count
-		if number > 10000 {
-			number = 10000 // split the big read into small chunks
-		}
-		blobs, err := rawdb.ReadStateHistoryMetaList(reader, start, number)
-		if err != nil {
-			return err
-		}
-		for _, blob := range blobs {
-			var dec meta
-			if err := dec.decode(blob); err != nil {
-				return err
-			}
-			if err := check(&dec); err != nil {
-				return err
-			}
-		}
-		count -= uint64(len(blobs))
-		start += uint64(len(blobs))
-	}
-	return nil
-}
-
-// truncateFromHead removes the extra state histories from the head with the given
-// parameters. It returns the number of items removed from the head.
-func truncateFromHead(db ethdb.Batcher, store ethdb.AncientStore, nhead uint64) (int, error) {
-	ohead, err := store.Ancients()
-	if err != nil {
-		return 0, err
-	}
-	otail, err := store.Tail()
-	if err != nil {
-		return 0, err
-	}
-	// Ensure that the truncation target falls within the specified range.
-	if ohead < nhead || nhead < otail {
-		return 0, fmt.Errorf("out of range, tail: %d, head: %d, target: %d", otail, ohead, nhead)
-	}
-	// Short circuit if nothing to truncate.
-	if ohead == nhead {
-		return 0, nil
-	}
-	// Load the meta objects in range [nhead+1, ohead]
-	blobs, err := rawdb.ReadStateHistoryMetaList(store, nhead+1, ohead-nhead)
-	if err != nil {
-		return 0, err
-	}
-	batch := db.NewBatch()
-	for _, blob := range blobs {
-		var m meta
-		if err := m.decode(blob); err != nil {
-			return 0, err
-		}
-		rawdb.DeleteStateID(batch, m.root)
-	}
-	if err := batch.Write(); err != nil {
-		return 0, err
-	}
-	ohead, err = store.TruncateHead(nhead)
-	if err != nil {
-		return 0, err
-	}
-	return int(ohead - nhead), nil
-}
-
-// truncateFromTail removes the extra state histories from the tail with the given
-// parameters. It returns the number of items removed from the tail.
-func truncateFromTail(db ethdb.Batcher, store ethdb.AncientStore, ntail uint64) (int, error) {
-	ohead, err := store.Ancients()
-	if err != nil {
-		return 0, err
-	}
-	otail, err := store.Tail()
-	if err != nil {
-		return 0, err
-	}
-	// Ensure that the truncation target falls within the specified range.
-	if otail > ntail || ntail > ohead {
-		return 0, fmt.Errorf("out of range, tail: %d, head: %d, target: %d", otail, ohead, ntail)
-	}
-	// Short circuit if nothing to truncate.
-	if otail == ntail {
-		return 0, nil
-	}
-	// Load the meta objects in range [otail+1, ntail]
-	blobs, err := rawdb.ReadStateHistoryMetaList(store, otail+1, ntail-otail)
-	if err != nil {
-		return 0, err
-	}
-	batch := db.NewBatch()
-	for _, blob := range blobs {
-		var m meta
-		if err := m.decode(blob); err != nil {
-			return 0, err
-		}
-		rawdb.DeleteStateID(batch, m.root)
-	}
-	if err := batch.Write(); err != nil {
-		return 0, err
-	}
-	otail, err = store.TruncateTail(ntail)
-	if err != nil {
-		return 0, err
-	}
-	return int(ntail - otail), nil
 }

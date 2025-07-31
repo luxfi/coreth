@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -77,18 +88,18 @@ func (arguments Arguments) isTuple() bool {
 }
 
 // Unpack performs the operation hexdata -> Go format.
-func (arguments Arguments) Unpack(data []byte) ([]any, error) {
+func (arguments Arguments) Unpack(data []byte) ([]interface{}, error) {
 	if len(data) == 0 {
 		if len(arguments.NonIndexed()) != 0 {
 			return nil, errors.New("abi: attempting to unmarshal an empty string while arguments are expected")
 		}
-		return make([]any, 0), nil
+		return make([]interface{}, 0), nil
 	}
 	return arguments.UnpackValues(data)
 }
 
 // UnpackIntoMap performs the operation hexdata -> mapping of argument name to argument value.
-func (arguments Arguments) UnpackIntoMap(v map[string]any, data []byte) error {
+func (arguments Arguments) UnpackIntoMap(v map[string]interface{}, data []byte) error {
 	// Make sure map is not nil
 	if v == nil {
 		return errors.New("abi: cannot unpack into a nil map")
@@ -110,7 +121,7 @@ func (arguments Arguments) UnpackIntoMap(v map[string]any, data []byte) error {
 }
 
 // Copy performs the operation go format -> provided struct.
-func (arguments Arguments) Copy(v any, values []any) error {
+func (arguments Arguments) Copy(v interface{}, values []interface{}) error {
 	// make sure the passed value is arguments pointer
 	if reflect.Ptr != reflect.ValueOf(v).Kind() {
 		return fmt.Errorf("abi: Unpack(non-pointer %T)", v)
@@ -127,8 +138,8 @@ func (arguments Arguments) Copy(v any, values []any) error {
 	return arguments.copyAtomic(v, values[0])
 }
 
-// copyAtomic copies ( hexdata -> go ) a single value
-func (arguments Arguments) copyAtomic(v any, marshalledValues any) error {
+// unpackAtomic unpacks ( hexdata -> go ) a single value
+func (arguments Arguments) copyAtomic(v interface{}, marshalledValues interface{}) error {
 	dst := reflect.ValueOf(v).Elem()
 	src := reflect.ValueOf(marshalledValues)
 
@@ -139,7 +150,7 @@ func (arguments Arguments) copyAtomic(v any, marshalledValues any) error {
 }
 
 // copyTuple copies a batch of values from marshalledValues to v.
-func (arguments Arguments) copyTuple(v any, marshalledValues []any) error {
+func (arguments Arguments) copyTuple(v interface{}, marshalledValues []interface{}) error {
 	value := reflect.ValueOf(v).Elem()
 	nonIndexedArgs := arguments.NonIndexed()
 
@@ -181,17 +192,11 @@ func (arguments Arguments) copyTuple(v any, marshalledValues []any) error {
 // UnpackValues can be used to unpack ABI-encoded hexdata according to the ABI-specification,
 // without supplying a struct to unpack into. Instead, this method returns a list containing the
 // values. An atomic argument will be a list with one element.
-func (arguments Arguments) UnpackValues(data []byte) ([]any, error) {
-	var (
-		retval      = make([]any, 0)
-		virtualArgs = 0
-		index       = 0
-	)
-
-	for _, arg := range arguments {
-		if arg.Indexed {
-			continue
-		}
+func (arguments Arguments) UnpackValues(data []byte) ([]interface{}, error) {
+	nonIndexedArgs := arguments.NonIndexed()
+	retval := make([]interface{}, 0, len(nonIndexedArgs))
+	virtualArgs := 0
+	for index, arg := range nonIndexedArgs {
 		marshalledValue, err := toGoType((index+virtualArgs)*32, arg.Type, data)
 		if err != nil {
 			return nil, err
@@ -214,19 +219,18 @@ func (arguments Arguments) UnpackValues(data []byte) ([]any, error) {
 			virtualArgs += getTypeSize(arg.Type)/32 - 1
 		}
 		retval = append(retval, marshalledValue)
-		index++
 	}
 	return retval, nil
 }
 
 // PackValues performs the operation Go format -> Hexdata.
 // It is the semantic opposite of UnpackValues.
-func (arguments Arguments) PackValues(args []any) ([]byte, error) {
+func (arguments Arguments) PackValues(args []interface{}) ([]byte, error) {
 	return arguments.Pack(args...)
 }
 
 // Pack performs the operation Go format -> Hexdata.
-func (arguments Arguments) Pack(args ...any) ([]byte, error) {
+func (arguments Arguments) Pack(args ...interface{}) ([]byte, error) {
 	// Make sure arguments match up and pack them
 	abiArgs := arguments
 	if len(args) != len(abiArgs) {

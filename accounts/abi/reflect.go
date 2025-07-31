@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2016 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -24,7 +35,7 @@ import (
 	"strings"
 )
 
-// ConvertType converts an interface of a runtime type into an interface of the
+// ConvertType converts an interface of a runtime type into a interface of the
 // given type, e.g. turn this code:
 //
 //	var fields []reflect.StructField
@@ -33,7 +44,7 @@ import (
 //			Name: "X",
 //			Type: reflect.TypeOf(new(big.Int)),
 //			Tag:  reflect.StructTag("json:\"" + "x" + "\""),
-//	})
+//	}
 //
 // into:
 //

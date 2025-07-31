@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -19,13 +30,34 @@ package backends
 import (
 	"context"
 
+	"github.com/luxfi/coreth/accounts/abi/bind"
+	"github.com/luxfi/coreth/ethclient/simulated"
+	"github.com/luxfi/coreth/interfaces"
+	ethereum "github.com/luxfi/geth"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/ethclient/simulated"
+)
+
+// Verify that SimulatedBackend implements required interfaces
+var (
+	_ bind.AcceptedContractCaller = (*SimulatedBackend)(nil)
+	_ bind.ContractBackend        = (*SimulatedBackend)(nil)
+	_ bind.DeployBackend          = (*SimulatedBackend)(nil)
+
+	_ ethereum.ChainReader              = (*SimulatedBackend)(nil)
+	_ ethereum.ChainStateReader         = (*SimulatedBackend)(nil)
+	_ ethereum.TransactionReader        = (*SimulatedBackend)(nil)
+	_ ethereum.TransactionSender        = (*SimulatedBackend)(nil)
+	_ ethereum.ContractCaller           = (*SimulatedBackend)(nil)
+	_ ethereum.GasEstimator             = (*SimulatedBackend)(nil)
+	_ ethereum.GasPricer                = (*SimulatedBackend)(nil)
+	_ ethereum.LogFilterer              = (*SimulatedBackend)(nil)
+	_ interfaces.AcceptedStateReader    = (*SimulatedBackend)(nil)
+	_ interfaces.AcceptedContractCaller = (*SimulatedBackend)(nil)
 )
 
 // SimulatedBackend is a simulated blockchain.
-// Deprecated: use package github.com/ethereum/go-ethereum/ethclient/simulated instead.
+// Deprecated: use package github.com/luxfi/coreth/ethclient/simulated instead.
 type SimulatedBackend struct {
 	*simulated.Backend
 	simulated.Client
@@ -42,7 +74,7 @@ func (b *SimulatedBackend) Fork(ctx context.Context, parentHash common.Hash) err
 // A simulated backend always uses chainID 1337.
 //
 // Deprecated: please use simulated.Backend from package
-// github.com/ethereum/go-ethereum/ethclient/simulated instead.
+// github.com/luxfi/coreth/ethclient/simulated instead.
 func NewSimulatedBackend(alloc types.GenesisAlloc, gasLimit uint64) *SimulatedBackend {
 	b := simulated.NewBackend(alloc, simulated.WithBlockGasLimit(gasLimit))
 	return &SimulatedBackend{

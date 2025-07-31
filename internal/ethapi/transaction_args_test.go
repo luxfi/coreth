@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2022 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -22,28 +33,17 @@ import (
 	"math/big"
 	"reflect"
 	"testing"
-	"time"
 
-	"github.com/luxfi/geth"
-	"github.com/luxfi/geth/accounts"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/filtermaps"
-	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/rpc"
 )
+
+var _ feeBackend = &backendMock{}
 
 // TestSetFeeDefaults tests the logic for filling in default fee values works as expected.
 func TestSetFeeDefaults(t *testing.T) {
-	t.Parallel()
-
 	type test struct {
 		name string
 		fork string // options: legacy, london, cancun
@@ -238,7 +238,7 @@ func TestSetFeeDefaults(t *testing.T) {
 			t.Fatalf("failed to set fork: %v", err)
 		}
 		got := test.in
-		err := got.setFeeDefaults(ctx, b, b.CurrentHeader())
+		err := got.setFeeDefaults(ctx, b)
 		if err != nil {
 			if test.err == nil {
 				t.Fatalf("test %d (%s): unexpected error: %s", i, test.name, err)
@@ -276,10 +276,8 @@ func newBackendMock() *backendMock {
 		PetersburgBlock:     big.NewInt(0),
 		IstanbulBlock:       big.NewInt(0),
 		MuirGlacierBlock:    big.NewInt(0),
-		BerlinBlock:         big.NewInt(0),
-		LondonBlock:         big.NewInt(1000),
+		LondonBlock:         big.NewInt(1100),
 		CancunTime:          &cancunTime,
-		BlobScheduleConfig:  params.DefaultBlobSchedule,
 	}
 	return &backendMock{
 		current: &types.Header{
@@ -317,97 +315,5 @@ func (b *backendMock) setFork(fork string) error {
 func (b *backendMock) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
 	return big.NewInt(42), nil
 }
-func (b *backendMock) BlobBaseFee(ctx context.Context) *big.Int { return big.NewInt(42) }
-
 func (b *backendMock) CurrentHeader() *types.Header     { return b.current }
 func (b *backendMock) ChainConfig() *params.ChainConfig { return b.config }
-
-// Other methods needed to implement Backend interface.
-func (b *backendMock) SyncProgress(ctx context.Context) ethereum.SyncProgress {
-	return ethereum.SyncProgress{}
-}
-func (b *backendMock) FeeHistory(ctx context.Context, blockCount uint64, lastBlock rpc.BlockNumber, rewardPercentiles []float64) (*big.Int, [][]*big.Int, []*big.Int, []float64, []*big.Int, []float64, error) {
-	return nil, nil, nil, nil, nil, nil, nil
-}
-func (b *backendMock) ChainDb() ethdb.Database           { return nil }
-func (b *backendMock) AccountManager() *accounts.Manager { return nil }
-func (b *backendMock) ExtRPCEnabled() bool               { return false }
-func (b *backendMock) RPCGasCap() uint64                 { return 0 }
-func (b *backendMock) RPCEVMTimeout() time.Duration      { return time.Second }
-func (b *backendMock) RPCTxFeeCap() float64              { return 0 }
-func (b *backendMock) UnprotectedAllowed() bool          { return false }
-func (b *backendMock) SetHead(number uint64)             {}
-func (b *backendMock) HeaderByNumber(ctx context.Context, number rpc.BlockNumber) (*types.Header, error) {
-	return nil, nil
-}
-func (b *backendMock) HeaderByHash(ctx context.Context, hash common.Hash) (*types.Header, error) {
-	return nil, nil
-}
-func (b *backendMock) HeaderByNumberOrHash(ctx context.Context, blockNrOrHash rpc.BlockNumberOrHash) (*types.Header, error) {
-	return nil, nil
-}
-func (b *backendMock) CurrentBlock() *types.Header { return nil }
-func (b *backendMock) BlockByNumber(ctx context.Context, number rpc.BlockNumber) (*types.Block, error) {
-	return nil, nil
-}
-func (b *backendMock) BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error) {
-	return nil, nil
-}
-func (b *backendMock) BlockByNumberOrHash(ctx context.Context, blockNrOrHash rpc.BlockNumberOrHash) (*types.Block, error) {
-	return nil, nil
-}
-func (b *backendMock) GetBody(ctx context.Context, hash common.Hash, number rpc.BlockNumber) (*types.Body, error) {
-	return nil, nil
-}
-func (b *backendMock) StateAndHeaderByNumber(ctx context.Context, number rpc.BlockNumber) (*state.StateDB, *types.Header, error) {
-	return nil, nil, nil
-}
-func (b *backendMock) StateAndHeaderByNumberOrHash(ctx context.Context, blockNrOrHash rpc.BlockNumberOrHash) (*state.StateDB, *types.Header, error) {
-	return nil, nil, nil
-}
-func (b *backendMock) Pending() (*types.Block, types.Receipts, *state.StateDB) { return nil, nil, nil }
-func (b *backendMock) GetReceipts(ctx context.Context, hash common.Hash) (types.Receipts, error) {
-	return nil, nil
-}
-func (b *backendMock) GetCanonicalReceipt(tx *types.Transaction, blockHash common.Hash, blockNumber, blockIndex uint64) (*types.Receipt, error) {
-	return nil, nil
-}
-func (b *backendMock) GetLogs(ctx context.Context, blockHash common.Hash, number uint64) ([][]*types.Log, error) {
-	return nil, nil
-}
-func (b *backendMock) GetEVM(ctx context.Context, state *state.StateDB, header *types.Header, vmConfig *vm.Config, blockCtx *vm.BlockContext) *vm.EVM {
-	return nil
-}
-func (b *backendMock) SubscribeChainEvent(ch chan<- core.ChainEvent) event.Subscription { return nil }
-func (b *backendMock) SubscribeChainHeadEvent(ch chan<- core.ChainHeadEvent) event.Subscription {
-	return nil
-}
-func (b *backendMock) SendTx(ctx context.Context, signedTx *types.Transaction) error { return nil }
-func (b *backendMock) GetCanonicalTransaction(txHash common.Hash) (bool, *types.Transaction, common.Hash, uint64, uint64) {
-	return false, nil, [32]byte{}, 0, 0
-}
-func (b *backendMock) TxIndexDone() bool                                        { return true }
-func (b *backendMock) GetPoolTransactions() (types.Transactions, error)         { return nil, nil }
-func (b *backendMock) GetPoolTransaction(txHash common.Hash) *types.Transaction { return nil }
-func (b *backendMock) GetPoolNonce(ctx context.Context, addr common.Address) (uint64, error) {
-	return 0, nil
-}
-func (b *backendMock) Stats() (pending int, queued int) { return 0, 0 }
-func (b *backendMock) TxPoolContent() (map[common.Address][]*types.Transaction, map[common.Address][]*types.Transaction) {
-	return nil, nil
-}
-func (b *backendMock) TxPoolContentFrom(addr common.Address) ([]*types.Transaction, []*types.Transaction) {
-	return nil, nil
-}
-func (b *backendMock) SubscribeNewTxsEvent(chan<- core.NewTxsEvent) event.Subscription { return nil }
-func (b *backendMock) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscription    { return nil }
-func (b *backendMock) SubscribeRemovedLogsEvent(ch chan<- core.RemovedLogsEvent) event.Subscription {
-	return nil
-}
-
-func (b *backendMock) Engine() consensus.Engine { return nil }
-
-func (b *backendMock) CurrentView() *filtermaps.ChainView           { return nil }
-func (b *backendMock) NewMatcherBackend() filtermaps.MatcherBackend { return nil }
-
-func (b *backendMock) HistoryPruningCutoff() uint64 { return 0 }

@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -19,12 +30,14 @@ package tests
 import (
 	"fmt"
 	"math/big"
+	"os"
 	"sort"
+	"strings"
 
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/params/extras"
+	"github.com/luxfi/coreth/utils"
 )
-
-func u64(val uint64) *uint64 { return &val }
 
 // Forks table defines supported forks and their chain config.
 var Forks = map[string]*params.ChainConfig{
@@ -156,314 +169,223 @@ var Forks = map[string]*params.ChainConfig{
 		PetersburgBlock:     big.NewInt(0),
 		IstanbulBlock:       big.NewInt(5),
 	},
-	"Berlin": {
-		ChainID:             big.NewInt(1),
-		HomesteadBlock:      big.NewInt(0),
-		EIP150Block:         big.NewInt(0),
-		EIP155Block:         big.NewInt(0),
-		EIP158Block:         big.NewInt(0),
-		ByzantiumBlock:      big.NewInt(0),
-		ConstantinopleBlock: big.NewInt(0),
-		PetersburgBlock:     big.NewInt(0),
-		IstanbulBlock:       big.NewInt(0),
-		MuirGlacierBlock:    big.NewInt(0),
-		BerlinBlock:         big.NewInt(0),
-	},
-	"BerlinToLondonAt5": {
-		ChainID:             big.NewInt(1),
-		HomesteadBlock:      big.NewInt(0),
-		EIP150Block:         big.NewInt(0),
-		EIP155Block:         big.NewInt(0),
-		EIP158Block:         big.NewInt(0),
-		ByzantiumBlock:      big.NewInt(0),
-		ConstantinopleBlock: big.NewInt(0),
-		PetersburgBlock:     big.NewInt(0),
-		IstanbulBlock:       big.NewInt(0),
-		MuirGlacierBlock:    big.NewInt(0),
-		BerlinBlock:         big.NewInt(0),
-		LondonBlock:         big.NewInt(5),
-	},
-	"London": {
-		ChainID:             big.NewInt(1),
-		HomesteadBlock:      big.NewInt(0),
-		EIP150Block:         big.NewInt(0),
-		EIP155Block:         big.NewInt(0),
-		EIP158Block:         big.NewInt(0),
-		ByzantiumBlock:      big.NewInt(0),
-		ConstantinopleBlock: big.NewInt(0),
-		PetersburgBlock:     big.NewInt(0),
-		IstanbulBlock:       big.NewInt(0),
-		MuirGlacierBlock:    big.NewInt(0),
-		BerlinBlock:         big.NewInt(0),
-		LondonBlock:         big.NewInt(0),
-	},
-	"ArrowGlacier": {
-		ChainID:             big.NewInt(1),
-		HomesteadBlock:      big.NewInt(0),
-		EIP150Block:         big.NewInt(0),
-		EIP155Block:         big.NewInt(0),
-		EIP158Block:         big.NewInt(0),
-		ByzantiumBlock:      big.NewInt(0),
-		ConstantinopleBlock: big.NewInt(0),
-		PetersburgBlock:     big.NewInt(0),
-		IstanbulBlock:       big.NewInt(0),
-		MuirGlacierBlock:    big.NewInt(0),
-		BerlinBlock:         big.NewInt(0),
-		LondonBlock:         big.NewInt(0),
-		ArrowGlacierBlock:   big.NewInt(0),
-	},
-	"ArrowGlacierToParisAtDiffC0000": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		GrayGlacierBlock:        big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0xC0000),
-	},
-	"GrayGlacier": {
-		ChainID:             big.NewInt(1),
-		HomesteadBlock:      big.NewInt(0),
-		EIP150Block:         big.NewInt(0),
-		EIP155Block:         big.NewInt(0),
-		EIP158Block:         big.NewInt(0),
-		ByzantiumBlock:      big.NewInt(0),
-		ConstantinopleBlock: big.NewInt(0),
-		PetersburgBlock:     big.NewInt(0),
-		IstanbulBlock:       big.NewInt(0),
-		MuirGlacierBlock:    big.NewInt(0),
-		BerlinBlock:         big.NewInt(0),
-		LondonBlock:         big.NewInt(0),
-		ArrowGlacierBlock:   big.NewInt(0),
-		GrayGlacierBlock:    big.NewInt(0),
-	},
-	"Paris": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0),
-	},
-	"Merge": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0),
-	},
-	"Shanghai": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0),
-		ShanghaiTime:            u64(0),
-	},
-	"ParisToShanghaiAtTime15k": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0),
-		ShanghaiTime:            u64(15_000),
-	},
-	"Cancun": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0),
-		ShanghaiTime:            u64(0),
-		CancunTime:              u64(0),
-		BlobScheduleConfig: &params.BlobScheduleConfig{
-			Cancun: params.DefaultCancunBlobConfig,
+	"ApricotPhase1": params.WithExtra(
+		&params.ChainConfig{
+			ChainID:             big.NewInt(1),
+			HomesteadBlock:      big.NewInt(0),
+			EIP150Block:         big.NewInt(0),
+			EIP155Block:         big.NewInt(0),
+			EIP158Block:         big.NewInt(0),
+			ByzantiumBlock:      big.NewInt(0),
+			ConstantinopleBlock: big.NewInt(0),
+			PetersburgBlock:     big.NewInt(0),
+			IstanbulBlock:       big.NewInt(0),
 		},
-	},
-	"ShanghaiToCancunAtTime15k": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0),
-		ShanghaiTime:            u64(0),
-		CancunTime:              u64(15_000),
-		BlobScheduleConfig: &params.BlobScheduleConfig{
-			Cancun: params.DefaultCancunBlobConfig,
+		&extras.ChainConfig{
+			NetworkUpgrades: extras.NetworkUpgrades{
+				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
+			},
 		},
-	},
-	"Prague": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0),
-		ShanghaiTime:            u64(0),
-		CancunTime:              u64(0),
-		PragueTime:              u64(0),
-		DepositContractAddress:  params.MainnetChainConfig.DepositContractAddress,
-		BlobScheduleConfig: &params.BlobScheduleConfig{
-			Cancun: params.DefaultCancunBlobConfig,
-			Prague: params.DefaultPragueBlobConfig,
+	),
+	"ApricotPhase2": params.WithExtra(
+		&params.ChainConfig{
+			ChainID:             big.NewInt(1),
+			HomesteadBlock:      big.NewInt(0),
+			EIP150Block:         big.NewInt(0),
+			EIP155Block:         big.NewInt(0),
+			EIP158Block:         big.NewInt(0),
+			ByzantiumBlock:      big.NewInt(0),
+			ConstantinopleBlock: big.NewInt(0),
+			PetersburgBlock:     big.NewInt(0),
+			IstanbulBlock:       big.NewInt(0),
+			MuirGlacierBlock:    big.NewInt(0),
+			BerlinBlock:         big.NewInt(0),
 		},
-	},
-	"CancunToPragueAtTime15k": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0),
-		ShanghaiTime:            u64(0),
-		CancunTime:              u64(0),
-		PragueTime:              u64(15_000),
-		DepositContractAddress:  params.MainnetChainConfig.DepositContractAddress,
-		BlobScheduleConfig: &params.BlobScheduleConfig{
-			Cancun: params.DefaultCancunBlobConfig,
-			Prague: params.DefaultPragueBlobConfig,
+		&extras.ChainConfig{
+			NetworkUpgrades: extras.NetworkUpgrades{
+				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
+			},
 		},
-	},
-	"Osaka": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0),
-		ShanghaiTime:            u64(0),
-		CancunTime:              u64(0),
-		PragueTime:              u64(0),
-		OsakaTime:               u64(0),
-		DepositContractAddress:  params.MainnetChainConfig.DepositContractAddress,
-		BlobScheduleConfig: &params.BlobScheduleConfig{
-			Cancun: params.DefaultCancunBlobConfig,
-			Prague: params.DefaultPragueBlobConfig,
-			Osaka:  params.DefaultOsakaBlobConfig,
+	),
+	"ApricotPhase3": params.WithExtra(
+		&params.ChainConfig{
+			ChainID:             big.NewInt(1),
+			HomesteadBlock:      big.NewInt(0),
+			EIP150Block:         big.NewInt(0),
+			EIP155Block:         big.NewInt(0),
+			EIP158Block:         big.NewInt(0),
+			ByzantiumBlock:      big.NewInt(0),
+			ConstantinopleBlock: big.NewInt(0),
+			PetersburgBlock:     big.NewInt(0),
+			IstanbulBlock:       big.NewInt(0),
+			MuirGlacierBlock:    big.NewInt(0),
+			BerlinBlock:         big.NewInt(0),
+			LondonBlock:         big.NewInt(0),
 		},
-	},
-	"PragueToOsakaAtTime15k": {
-		ChainID:                 big.NewInt(1),
-		HomesteadBlock:          big.NewInt(0),
-		EIP150Block:             big.NewInt(0),
-		EIP155Block:             big.NewInt(0),
-		EIP158Block:             big.NewInt(0),
-		ByzantiumBlock:          big.NewInt(0),
-		ConstantinopleBlock:     big.NewInt(0),
-		PetersburgBlock:         big.NewInt(0),
-		IstanbulBlock:           big.NewInt(0),
-		MuirGlacierBlock:        big.NewInt(0),
-		BerlinBlock:             big.NewInt(0),
-		LondonBlock:             big.NewInt(0),
-		ArrowGlacierBlock:       big.NewInt(0),
-		MergeNetsplitBlock:      big.NewInt(0),
-		TerminalTotalDifficulty: big.NewInt(0),
-		ShanghaiTime:            u64(0),
-		CancunTime:              u64(0),
-		PragueTime:              u64(0),
-		OsakaTime:               u64(15_000),
-		DepositContractAddress:  params.MainnetChainConfig.DepositContractAddress,
-		BlobScheduleConfig: &params.BlobScheduleConfig{
-			Cancun: params.DefaultCancunBlobConfig,
-			Prague: params.DefaultPragueBlobConfig,
-			Osaka:  params.DefaultOsakaBlobConfig,
+		&extras.ChainConfig{
+			NetworkUpgrades: extras.NetworkUpgrades{
+				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
+			},
 		},
-	},
+	),
+	"ApricotPhase4": params.WithExtra(
+		&params.ChainConfig{
+			ChainID:             big.NewInt(1),
+			HomesteadBlock:      big.NewInt(0),
+			EIP150Block:         big.NewInt(0),
+			EIP155Block:         big.NewInt(0),
+			EIP158Block:         big.NewInt(0),
+			ByzantiumBlock:      big.NewInt(0),
+			ConstantinopleBlock: big.NewInt(0),
+			PetersburgBlock:     big.NewInt(0),
+			IstanbulBlock:       big.NewInt(0),
+			MuirGlacierBlock:    big.NewInt(0),
+			BerlinBlock:         big.NewInt(0),
+			LondonBlock:         big.NewInt(0),
+		},
+		&extras.ChainConfig{
+			NetworkUpgrades: extras.NetworkUpgrades{
+				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
+			},
+		},
+	),
+	"ApricotPhase5": params.WithExtra(
+		&params.ChainConfig{
+			ChainID:             big.NewInt(1),
+			HomesteadBlock:      big.NewInt(0),
+			EIP150Block:         big.NewInt(0),
+			EIP155Block:         big.NewInt(0),
+			EIP158Block:         big.NewInt(0),
+			ByzantiumBlock:      big.NewInt(0),
+			ConstantinopleBlock: big.NewInt(0),
+			PetersburgBlock:     big.NewInt(0),
+			IstanbulBlock:       big.NewInt(0),
+			BerlinBlock:         big.NewInt(0),
+			LondonBlock:         big.NewInt(0),
+		},
+		&extras.ChainConfig{
+			NetworkUpgrades: extras.NetworkUpgrades{
+				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase5BlockTimestamp: utils.NewUint64(0),
+			},
+		},
+	),
+	"Banff": params.WithExtra(
+		&params.ChainConfig{
+			ChainID:             big.NewInt(1),
+			HomesteadBlock:      big.NewInt(0),
+			EIP150Block:         big.NewInt(0),
+			EIP155Block:         big.NewInt(0),
+			EIP158Block:         big.NewInt(0),
+			ByzantiumBlock:      big.NewInt(0),
+			ConstantinopleBlock: big.NewInt(0),
+			PetersburgBlock:     big.NewInt(0),
+			IstanbulBlock:       big.NewInt(0),
+			BerlinBlock:         big.NewInt(0),
+			LondonBlock:         big.NewInt(0),
+		},
+		&extras.ChainConfig{
+			NetworkUpgrades: extras.NetworkUpgrades{
+				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase5BlockTimestamp: utils.NewUint64(0),
+				BanffBlockTimestamp:         utils.NewUint64(0),
+			},
+		},
+	),
+	"Cortina": params.WithExtra(
+		&params.ChainConfig{
+			ChainID:             big.NewInt(1),
+			HomesteadBlock:      big.NewInt(0),
+			EIP150Block:         big.NewInt(0),
+			EIP155Block:         big.NewInt(0),
+			EIP158Block:         big.NewInt(0),
+			ByzantiumBlock:      big.NewInt(0),
+			ConstantinopleBlock: big.NewInt(0),
+			PetersburgBlock:     big.NewInt(0),
+			IstanbulBlock:       big.NewInt(0),
+			BerlinBlock:         big.NewInt(0),
+			LondonBlock:         big.NewInt(0),
+		},
+		&extras.ChainConfig{
+			NetworkUpgrades: extras.NetworkUpgrades{
+				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase5BlockTimestamp: utils.NewUint64(0),
+				BanffBlockTimestamp:         utils.NewUint64(0),
+				CortinaBlockTimestamp:       utils.NewUint64(0),
+			},
+		},
+	),
+	"Durango": params.WithExtra(
+		&params.ChainConfig{
+			ChainID:             big.NewInt(1),
+			HomesteadBlock:      big.NewInt(0),
+			EIP150Block:         big.NewInt(0),
+			EIP155Block:         big.NewInt(0),
+			EIP158Block:         big.NewInt(0),
+			ByzantiumBlock:      big.NewInt(0),
+			ConstantinopleBlock: big.NewInt(0),
+			PetersburgBlock:     big.NewInt(0),
+			IstanbulBlock:       big.NewInt(0),
+			BerlinBlock:         big.NewInt(0),
+			LondonBlock:         big.NewInt(0),
+		},
+		&extras.ChainConfig{
+			NetworkUpgrades: extras.NetworkUpgrades{
+				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase5BlockTimestamp: utils.NewUint64(0),
+				BanffBlockTimestamp:         utils.NewUint64(0),
+				CortinaBlockTimestamp:       utils.NewUint64(0),
+				DurangoBlockTimestamp:       utils.NewUint64(0),
+			},
+		},
+	),
+	"Cancun": params.WithExtra(
+		&params.ChainConfig{
+			ChainID:             big.NewInt(1),
+			HomesteadBlock:      big.NewInt(0),
+			EIP150Block:         big.NewInt(0),
+			EIP155Block:         big.NewInt(0),
+			EIP158Block:         big.NewInt(0),
+			ByzantiumBlock:      big.NewInt(0),
+			ConstantinopleBlock: big.NewInt(0),
+			PetersburgBlock:     big.NewInt(0),
+			IstanbulBlock:       big.NewInt(0),
+			BerlinBlock:         big.NewInt(0),
+			LondonBlock:         big.NewInt(0),
+			ShanghaiTime:        utils.NewUint64(0),
+			CancunTime:          utils.NewUint64(0),
+		},
+		&extras.ChainConfig{
+			NetworkUpgrades: extras.NetworkUpgrades{
+				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
+				ApricotPhase5BlockTimestamp: utils.NewUint64(0),
+				BanffBlockTimestamp:         utils.NewUint64(0),
+				CortinaBlockTimestamp:       utils.NewUint64(0),
+				DurangoBlockTimestamp:       utils.NewUint64(0),
+			},
+		},
+	),
 }
 
 // AvailableForks returns the set of defined fork names
@@ -483,4 +405,24 @@ type UnsupportedForkError struct {
 
 func (e UnsupportedForkError) Error() string {
 	return fmt.Sprintf("unsupported fork %q", e.Name)
+}
+
+func GetRepoRootPath(suffix string) string {
+	// - When executed via a test binary, the working directory will be wherever
+	// the binary is executed from, but scripts should require execution from
+	// the repo root.
+	//
+	// - When executed via ginkgo (nicer for development + supports
+	// parallel execution) the working directory will always be the
+	// target path (e.g. [repo root]./tests/warp) and getting the repo
+	// root will require stripping the target path suffix.
+	//
+	// TODO(marun) Avoid relying on the current working directory to find test
+	// dependencies by embedding data where possible (e.g. for genesis) and
+	// explicitly configuring paths for execution.
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	return strings.TrimSuffix(cwd, suffix)
 }

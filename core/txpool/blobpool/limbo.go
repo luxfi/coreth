@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2023 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -21,7 +32,7 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/log"
+	"github.com/luxfi/geth/log"
 	"github.com/luxfi/geth/rlp"
 	"github.com/holiman/billy"
 )
@@ -48,7 +59,7 @@ type limbo struct {
 }
 
 // newLimbo opens and indexes a set of limboed blob transactions.
-func newLimbo(datadir string, maxBlobsPerTransaction int) (*limbo, error) {
+func newLimbo(datadir string) (*limbo, error) {
 	l := &limbo{
 		index:  make(map[common.Hash]uint64),
 		groups: make(map[uint64]map[uint64]common.Hash),
@@ -60,7 +71,7 @@ func newLimbo(datadir string, maxBlobsPerTransaction int) (*limbo, error) {
 			fails = append(fails, id)
 		}
 	}
-	store, err := billy.Open(billy.Options{Path: datadir, Repair: true}, newSlotter(maxBlobsPerTransaction), index)
+	store, err := billy.Open(billy.Options{Path: datadir}, newSlotter(), index)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +127,7 @@ func (l *limbo) finalize(final *types.Header) {
 	// Just in case there's no final block yet (network not yet merged, weird
 	// restart, sethead, etc), fail gracefully.
 	if final == nil {
-		log.Warn("Nil finalized block cannot evict old blobs")
+		log.Error("Nil finalized block cannot evict old blobs")
 		return
 	}
 	for block, ids := range l.groups {
@@ -139,11 +150,11 @@ func (l *limbo) push(tx *types.Transaction, block uint64) error {
 	// If the blobs are already tracked by the limbo, consider it a programming
 	// error. There's not much to do against it, but be loud.
 	if _, ok := l.index[tx.Hash()]; ok {
-		log.Error("Limbo cannot push already tracked blobs", "tx", tx.Hash())
+		log.Error("Limbo cannot push already tracked blobs", "tx", tx)
 		return errors.New("already tracked blob transaction")
 	}
 	if err := l.setAndIndex(tx, block); err != nil {
-		log.Error("Failed to set and index limboed blobs", "tx", tx.Hash(), "err", err)
+		log.Error("Failed to set and index limboed blobs", "tx", tx, "err", err)
 		return err
 	}
 	return nil

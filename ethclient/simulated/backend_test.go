@@ -1,4 +1,7 @@
-// Copyright 2024 The go-ethereum Authors
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
+// Copyright 2019 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
 // The go-ethereum library is free software: you can redistribute it and/or modify
@@ -19,29 +22,25 @@ package simulated
 import (
 	"context"
 	"crypto/ecdsa"
-	"crypto/sha256"
 	"math/big"
 	"math/rand"
 	"testing"
 	"time"
 
-	"github.com/luxfi/geth/accounts/abi/bind"
+	"github.com/luxfi/coreth/accounts/abi/bind"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/crypto/kzg4844"
-	"github.com/luxfi/geth/params"
-	"github.com/holiman/uint256"
-	"go.uber.org/goleak"
+	"github.com/stretchr/testify/require"
 )
 
 var _ bind.ContractBackend = (Client)(nil)
 
 var (
-	testKey, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	testAddr    = crypto.PubkeyToAddress(testKey.PublicKey)
-	testKey2, _ = crypto.HexToECDSA("7ee346e3f7efc685250053bfbafbfc880d58dc6145247053d4fb3cb0f66dfcb2")
-	testAddr2   = crypto.PubkeyToAddress(testKey2.PublicKey)
+	testKey, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	testAddr   = crypto.PubkeyToAddress(testKey.PublicKey)
 )
 
 func simTestBackend(testAddr common.Address) *Backend {
@@ -52,42 +51,6 @@ func simTestBackend(testAddr common.Address) *Backend {
 	)
 }
 
-func newBlobTx(sim *Backend, key *ecdsa.PrivateKey) (*types.Transaction, error) {
-	client := sim.Client()
-
-	testBlob := &kzg4844.Blob{0x00}
-	testBlobCommit, _ := kzg4844.BlobToCommitment(testBlob)
-	testBlobProof, _ := kzg4844.ComputeBlobProof(testBlob, testBlobCommit)
-	testBlobVHash := kzg4844.CalcBlobHashV1(sha256.New(), &testBlobCommit)
-
-	head, _ := client.HeaderByNumber(context.Background(), nil) // Should be child's, good enough
-	gasPrice := new(big.Int).Add(head.BaseFee, big.NewInt(params.GWei))
-	gasPriceU256, _ := uint256.FromBig(gasPrice)
-	gasTipCapU256, _ := uint256.FromBig(big.NewInt(params.GWei))
-
-	addr := crypto.PubkeyToAddress(key.PublicKey)
-	chainid, _ := client.ChainID(context.Background())
-	nonce, err := client.PendingNonceAt(context.Background(), addr)
-	if err != nil {
-		return nil, err
-	}
-
-	chainidU256, _ := uint256.FromBig(chainid)
-	tx := types.NewTx(&types.BlobTx{
-		ChainID:    chainidU256,
-		GasTipCap:  gasTipCapU256,
-		GasFeeCap:  gasPriceU256,
-		BlobFeeCap: uint256.NewInt(1),
-		Gas:        21000,
-		Nonce:      nonce,
-		To:         addr,
-		AccessList: nil,
-		BlobHashes: []common.Hash{testBlobVHash},
-		Sidecar:    types.NewBlobTxSidecar(types.BlobSidecarVersion0, []kzg4844.Blob{*testBlob}, []kzg4844.Commitment{testBlobCommit}, []kzg4844.Proof{testBlobProof}),
-	})
-	return types.SignTx(tx, types.LatestSignerForChainID(chainid), key)
-}
-
 func newTx(sim *Backend, key *ecdsa.PrivateKey) (*types.Transaction, error) {
 	client := sim.Client()
 
@@ -96,7 +59,7 @@ func newTx(sim *Backend, key *ecdsa.PrivateKey) (*types.Transaction, error) {
 	gasPrice := new(big.Int).Add(head.BaseFee, big.NewInt(params.GWei))
 	addr := crypto.PubkeyToAddress(key.PublicKey)
 	chainid, _ := client.ChainID(context.Background())
-	nonce, err := client.PendingNonceAt(context.Background(), addr)
+	nonce, err := client.NonceAt(context.Background(), addr, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +71,6 @@ func newTx(sim *Backend, key *ecdsa.PrivateKey) (*types.Transaction, error) {
 		Gas:       21000,
 		To:        &addr,
 	})
-
 	return types.SignTx(tx, types.LatestSignerForChainID(chainid), key)
 }
 
@@ -125,7 +87,7 @@ func TestNewBackend(t *testing.T) {
 		t.Fatalf("expected 0 got %v", num)
 	}
 	// Create a block
-	sim.Commit()
+	sim.Commit(true)
 	num, err = client.BlockNumber(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -149,7 +111,7 @@ func TestAdjustTime(t *testing.T) {
 	block2, _ := client.BlockByNumber(context.Background(), nil)
 	prevTime := block1.Time()
 	newTime := block2.Time()
-	if newTime-prevTime != 60 {
+	if newTime-prevTime != uint64(time.Minute) {
 		t.Errorf("adjusted time not equal to 60 seconds. prev: %v, new: %v", prevTime, newTime)
 	}
 }
@@ -170,7 +132,7 @@ func TestSendTransaction(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not add tx to pending block: %v", err)
 	}
-	sim.Commit()
+	sim.Commit(false)
 	block, err := client.BlockByNumber(ctx, big.NewInt(1))
 	if err != nil {
 		t.Errorf("could not get block at height 1: %v", err)
@@ -206,7 +168,7 @@ func TestFork(t *testing.T) {
 	// 2.
 	n := int(rand.Int31n(21))
 	for i := 0; i < n; i++ {
-		sim.Commit()
+		sim.Commit(false)
 	}
 
 	// 3.
@@ -220,7 +182,7 @@ func TestFork(t *testing.T) {
 
 	// 5.
 	for i := 0; i < n+1; i++ {
-		sim.Commit()
+		sim.Commit(false)
 	}
 
 	// 6.
@@ -237,8 +199,8 @@ func TestFork(t *testing.T) {
 //  2. Send a transaction.
 //  3. Check that the TX is included in block 1.
 //  4. Fork by using the parent block as ancestor.
-//  5. Mine a block. We expect the out-forked tx to have trickled to the pool, and into the new block.
-//  6. Check that the TX is now included in (the new) block 1.
+//  5. Mine a block, Re-send the transaction and mine another one.
+//  6. Check that the TX is now included in block 2.
 func TestForkResendTx(t *testing.T) {
 	t.Parallel()
 	testAddr := crypto.PubkeyToAddress(testKey.PublicKey)
@@ -256,16 +218,19 @@ func TestForkResendTx(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not create transaction: %v", err)
 	}
-	if err := client.SendTransaction(ctx, tx); err != nil {
-		t.Fatalf("sending transaction: %v", err)
-	}
-	sim.Commit()
+	client.SendTransaction(ctx, tx)
+	sim.Commit(false)
 
 	// 3.
-	receipt, _ := client.TransactionReceipt(ctx, tx.Hash())
-	if h := receipt.BlockNumber.Uint64(); h != 1 {
-		t.Errorf("TX included in wrong block: %d", h)
-	}
+	// Note this test is revised from upstream since we cannot get the receipt
+	// for a pending transaction. (Receipts only written for accepted blocks).
+	require := require.New(t)
+	pendingBlockNum := big.NewInt(int64(rpc.PendingBlockNumber))
+	b1, err := client.BlockByNumber(ctx, pendingBlockNum)
+	require.NoError(err)
+	require.Len(b1.Transactions(), 1)
+	require.Equal(tx.Hash(), b1.Transactions()[0].Hash())
+	require.Equal(uint64(1), b1.NumberU64())
 
 	// 4.
 	if err := sim.Fork(parent.Hash()); err != nil {
@@ -273,9 +238,13 @@ func TestForkResendTx(t *testing.T) {
 	}
 
 	// 5.
-	sim.Commit()
-	receipt, _ = client.TransactionReceipt(ctx, tx.Hash())
-	if h := receipt.BlockNumber.Uint64(); h != 1 {
+	sim.Commit(false)
+	if err := client.SendTransaction(ctx, tx); err != nil {
+		t.Fatalf("sending transaction: %v", err)
+	}
+	sim.Commit(true)
+	receipt, _ := client.TransactionReceipt(ctx, tx.Hash())
+	if h := receipt.BlockNumber.Uint64(); h != 2 {
 		t.Errorf("TX included in wrong block: %d", h)
 	}
 }
@@ -288,24 +257,28 @@ func TestCommitReturnValue(t *testing.T) {
 
 	client := sim.Client()
 	ctx := context.Background()
+	chainid, _ := client.ChainID(context.Background())
 
 	// Test if Commit returns the correct block hash
-	h1 := sim.Commit()
+	h1 := sim.Commit(false)
 	cur, _ := client.HeaderByNumber(ctx, nil)
 	if h1 != cur.Hash() {
 		t.Error("Commit did not return the hash of the last block.")
 	}
 
 	// Create a block in the original chain (containing a transaction to force different block hashes)
-	tx, _ := newTx(sim, testKey)
+	head, _ := client.HeaderByNumber(ctx, nil) // Should be child's, good enough
+	gasPrice := new(big.Int).Add(head.BaseFee, big.NewInt(1))
+	_tx := types.NewTransaction(0, testAddr, big.NewInt(1000), params.TxGas, gasPrice, nil)
+	tx, _ := types.SignTx(_tx, types.LatestSignerForChainID(chainid), testKey)
 	if err := client.SendTransaction(ctx, tx); err != nil {
-		t.Errorf("sending transaction: %v", err)
+		t.Fatalf("sending transaction: %v", err)
 	}
 
-	h2 := sim.Commit()
+	h2 := sim.Commit(false)
 
 	// Create another block in the original chain
-	sim.Commit()
+	sim.Commit(false)
 
 	// Fork at the first bock
 	if err := sim.Fork(h1); err != nil {
@@ -313,7 +286,7 @@ func TestCommitReturnValue(t *testing.T) {
 	}
 
 	// Test if Commit returns the correct block hash after the reorg
-	h2fork := sim.Commit()
+	h2fork := sim.Commit(false)
 	if h2 == h2fork {
 		t.Error("The block in the fork and the original block are the same block!")
 	}
@@ -333,33 +306,16 @@ func TestAdjustTimeAfterFork(t *testing.T) {
 	client := sim.Client()
 	ctx := context.Background()
 
-	sim.Commit() // h1
+	sim.Commit(false) // h1
 	h1, _ := client.HeaderByNumber(ctx, nil)
 
-	sim.Commit() // h2
+	sim.Commit(false) // h2
 	sim.Fork(h1.Hash())
 	sim.AdjustTime(1 * time.Second)
-	sim.Commit()
+	sim.Commit(false)
 
 	head, _ := client.HeaderByNumber(ctx, nil)
 	if head.Number.Uint64() == 2 && head.ParentHash != h1.Hash() {
 		t.Errorf("failed to build block on fork")
 	}
-}
-
-func createAndCloseSimBackend() {
-	genesisData := types.GenesisAlloc{}
-	simulatedBackend := NewBackend(genesisData)
-	defer simulatedBackend.Close()
-}
-
-// TestCheckSimBackendGoroutineLeak checks whether creation of a simulated backend leaks go-routines.  Any long-lived go-routines
-// spawned by global variables are not considered leaked.
-func TestCheckSimBackendGoroutineLeak(t *testing.T) {
-	createAndCloseSimBackend()
-	ignoreCur := goleak.IgnoreCurrent()
-	// ignore this leveldb function:  this go-routine is guaranteed to be terminated 1 second after closing db handle
-	ignoreLdb := goleak.IgnoreAnyFunction("github.com/syndtr/goleveldb/leveldb.(*DB).mpoolDrain")
-	createAndCloseSimBackend()
-	goleak.VerifyNone(t, ignoreCur, ignoreLdb)
 }

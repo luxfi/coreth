@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -20,12 +31,15 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/params/extras"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/params"
 	"github.com/holiman/uint256"
 )
 
@@ -56,32 +70,34 @@ type Config struct {
 // sets defaults on the config
 func setDefaults(cfg *Config) {
 	if cfg.ChainConfig == nil {
-		var (
-			shanghaiTime = uint64(0)
-			cancunTime   = uint64(0)
+		cfg.ChainConfig = params.WithExtra(
+			&params.ChainConfig{
+				ChainID:             big.NewInt(1),
+				HomesteadBlock:      new(big.Int),
+				DAOForkBlock:        new(big.Int),
+				DAOForkSupport:      false,
+				EIP150Block:         new(big.Int),
+				EIP155Block:         new(big.Int),
+				EIP158Block:         new(big.Int),
+				ByzantiumBlock:      new(big.Int),
+				ConstantinopleBlock: new(big.Int),
+				PetersburgBlock:     new(big.Int),
+				IstanbulBlock:       new(big.Int),
+				MuirGlacierBlock:    new(big.Int),
+				LondonBlock:         new(big.Int),
+				BerlinBlock:         new(big.Int),
+			},
+			&extras.ChainConfig{
+				NetworkUpgrades: extras.NetworkUpgrades{
+					ApricotPhase1BlockTimestamp: new(uint64),
+					ApricotPhase2BlockTimestamp: new(uint64),
+					ApricotPhase3BlockTimestamp: new(uint64),
+					ApricotPhase4BlockTimestamp: new(uint64),
+				},
+			},
 		)
-		cfg.ChainConfig = &params.ChainConfig{
-			ChainID:                 big.NewInt(1),
-			HomesteadBlock:          new(big.Int),
-			DAOForkBlock:            new(big.Int),
-			DAOForkSupport:          false,
-			EIP150Block:             new(big.Int),
-			EIP155Block:             new(big.Int),
-			EIP158Block:             new(big.Int),
-			ByzantiumBlock:          new(big.Int),
-			ConstantinopleBlock:     new(big.Int),
-			PetersburgBlock:         new(big.Int),
-			IstanbulBlock:           new(big.Int),
-			MuirGlacierBlock:        new(big.Int),
-			BerlinBlock:             new(big.Int),
-			LondonBlock:             new(big.Int),
-			ArrowGlacierBlock:       nil,
-			GrayGlacierBlock:        nil,
-			TerminalTotalDifficulty: big.NewInt(0),
-			MergeNetsplitBlock:      nil,
-			ShanghaiTime:            &shanghaiTime,
-			CancunTime:              &cancunTime}
 	}
+
 	if cfg.Difficulty == nil {
 		cfg.Difficulty = new(big.Int)
 	}
@@ -103,12 +119,11 @@ func setDefaults(cfg *Config) {
 		}
 	}
 	if cfg.BaseFee == nil {
-		cfg.BaseFee = big.NewInt(params.InitialBaseFee)
+		cfg.BaseFee = big.NewInt(ap3.InitialBaseFee)
 	}
 	if cfg.BlobBaseFee == nil {
 		cfg.BlobBaseFee = big.NewInt(params.BlobTxMinBlobGasprice)
 	}
-	cfg.Random = &(common.Hash{})
 }
 
 // Execute executes the code using the input as call data during the execution.
@@ -123,34 +138,30 @@ func Execute(code, input []byte, cfg *Config) ([]byte, *state.StateDB, error) {
 	setDefaults(cfg)
 
 	if cfg.State == nil {
-		cfg.State, _ = state.New(types.EmptyRootHash, state.NewDatabaseForTesting())
+		cfg.State, _ = state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 	}
 	var (
 		address = common.BytesToAddress([]byte("contract"))
 		vmenv   = NewEnv(cfg)
-		rules   = cfg.ChainConfig.Rules(vmenv.Context.BlockNumber, vmenv.Context.Random != nil, vmenv.Context.Time)
+		sender  = vm.AccountRef(cfg.Origin)
+		rules   = cfg.ChainConfig.Rules(vmenv.Context.BlockNumber, params.IsMergeTODO, vmenv.Context.Time)
 	)
-	if cfg.EVMConfig.Tracer != nil && cfg.EVMConfig.Tracer.OnTxStart != nil {
-		cfg.EVMConfig.Tracer.OnTxStart(vmenv.GetVMContext(), types.NewTx(&types.LegacyTx{To: &address, Data: input, Value: cfg.Value, Gas: cfg.GasLimit}), cfg.Origin)
-	}
 	// Execute the preparatory steps for state transition which includes:
-	// - prepare accessList(post-berlin)
+	// - prepare accessList(post-berlin/ApricotPhase2)
 	// - reset transient storage(eip 1153)
 	cfg.State.Prepare(rules, cfg.Origin, cfg.Coinbase, &address, vm.ActivePrecompiles(rules), nil)
+
 	cfg.State.CreateAccount(address)
 	// set the receiver's (the executing contract) code for execution.
 	cfg.State.SetCode(address, code)
 	// Call the code with the given configuration.
-	ret, leftOverGas, err := vmenv.Call(
-		cfg.Origin,
+	ret, _, err := vmenv.Call(
+		sender,
 		common.BytesToAddress([]byte("contract")),
 		input,
 		cfg.GasLimit,
 		uint256.MustFromBig(cfg.Value),
 	)
-	if cfg.EVMConfig.Tracer != nil && cfg.EVMConfig.Tracer.OnTxEnd != nil {
-		cfg.EVMConfig.Tracer.OnTxEnd(&types.Receipt{GasUsed: cfg.GasLimit - leftOverGas}, err)
-	}
 	return ret, cfg.State, err
 }
 
@@ -162,29 +173,25 @@ func Create(input []byte, cfg *Config) ([]byte, common.Address, uint64, error) {
 	setDefaults(cfg)
 
 	if cfg.State == nil {
-		cfg.State, _ = state.New(types.EmptyRootHash, state.NewDatabaseForTesting())
+		cfg.State, _ = state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 	}
 	var (
-		vmenv = NewEnv(cfg)
-		rules = cfg.ChainConfig.Rules(vmenv.Context.BlockNumber, vmenv.Context.Random != nil, vmenv.Context.Time)
+		vmenv  = NewEnv(cfg)
+		sender = vm.AccountRef(cfg.Origin)
+		rules  = cfg.ChainConfig.Rules(vmenv.Context.BlockNumber, params.IsMergeTODO, vmenv.Context.Time)
 	)
-	if cfg.EVMConfig.Tracer != nil && cfg.EVMConfig.Tracer.OnTxStart != nil {
-		cfg.EVMConfig.Tracer.OnTxStart(vmenv.GetVMContext(), types.NewTx(&types.LegacyTx{Data: input, Value: cfg.Value, Gas: cfg.GasLimit}), cfg.Origin)
-	}
 	// Execute the preparatory steps for state transition which includes:
-	// - prepare accessList(post-berlin)
+	// - prepare accessList(post-berlin/ApricotPhase2)
 	// - reset transient storage(eip 1153)
 	cfg.State.Prepare(rules, cfg.Origin, cfg.Coinbase, nil, vm.ActivePrecompiles(rules), nil)
+
 	// Call the code with the given configuration.
 	code, address, leftOverGas, err := vmenv.Create(
-		cfg.Origin,
+		sender,
 		input,
 		cfg.GasLimit,
 		uint256.MustFromBig(cfg.Value),
 	)
-	if cfg.EVMConfig.Tracer != nil && cfg.EVMConfig.Tracer.OnTxEnd != nil {
-		cfg.EVMConfig.Tracer.OnTxEnd(&types.Receipt{GasUsed: cfg.GasLimit - leftOverGas}, err)
-	}
 	return code, address, leftOverGas, err
 }
 
@@ -198,27 +205,22 @@ func Call(address common.Address, input []byte, cfg *Config) ([]byte, uint64, er
 
 	var (
 		vmenv   = NewEnv(cfg)
+		sender  = vm.AccountRef(cfg.Origin)
 		statedb = cfg.State
-		rules   = cfg.ChainConfig.Rules(vmenv.Context.BlockNumber, vmenv.Context.Random != nil, vmenv.Context.Time)
+		rules   = cfg.ChainConfig.Rules(vmenv.Context.BlockNumber, params.IsMergeTODO, vmenv.Context.Time)
 	)
-	if cfg.EVMConfig.Tracer != nil && cfg.EVMConfig.Tracer.OnTxStart != nil {
-		cfg.EVMConfig.Tracer.OnTxStart(vmenv.GetVMContext(), types.NewTx(&types.LegacyTx{To: &address, Data: input, Value: cfg.Value, Gas: cfg.GasLimit}), cfg.Origin)
-	}
 	// Execute the preparatory steps for state transition which includes:
-	// - prepare accessList(post-berlin)
+	// - prepare accessList(post-berlin/ApricotPhase2)
 	// - reset transient storage(eip 1153)
 	statedb.Prepare(rules, cfg.Origin, cfg.Coinbase, &address, vm.ActivePrecompiles(rules), nil)
 
 	// Call the code with the given configuration.
 	ret, leftOverGas, err := vmenv.Call(
-		cfg.Origin,
+		sender,
 		address,
 		input,
 		cfg.GasLimit,
 		uint256.MustFromBig(cfg.Value),
 	)
-	if cfg.EVMConfig.Tracer != nil && cfg.EVMConfig.Tracer.OnTxEnd != nil {
-		cfg.EVMConfig.Tracer.OnTxEnd(&types.Receipt{GasUsed: cfg.GasLimit - leftOverGas}, err)
-	}
 	return ret, leftOverGas, err
 }

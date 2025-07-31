@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2023 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -13,7 +24,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-
 package legacypool
 
 import (
@@ -22,8 +32,8 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/event"
@@ -51,7 +61,7 @@ func fillPool(t testing.TB, pool *LegacyPool) {
 	nonExecutableTxs := types.Transactions{}
 	for i := 0; i < 384; i++ {
 		key, _ := crypto.GenerateKey()
-		pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(10000000000), tracing.BalanceChangeUnspecified)
+		pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(10000000000))
 		// Add executable ones
 		for j := 0; j < int(pool.config.AccountSlots); j++ {
 			executableTxs = append(executableTxs, pricedTransaction(uint64(j), 100000, big.NewInt(300), key))
@@ -80,22 +90,20 @@ func TestTransactionFutureAttack(t *testing.T) {
 	t.Parallel()
 
 	// Create the pool to test the limit enforcement with
-	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabaseForTesting())
+	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 	blockchain := newTestBlockChain(eip1559Config, 1000000, statedb, new(event.Feed))
-
 	config := testTxPoolConfig
 	config.GlobalQueue = 100
 	config.GlobalSlots = 100
 	pool := New(config, blockchain)
-	pool.Init(config.PriceLimit, blockchain.CurrentBlock(), newReserver())
+	pool.Init(config.PriceLimit, blockchain.CurrentBlock(), makeAddressReserver())
 	defer pool.Close()
-
 	fillPool(t, pool)
 	pending, _ := pool.Stats()
 	// Now, future transaction attack starts, let's add a bunch of expensive non-executables, and see if the pending-count drops
 	{
 		key, _ := crypto.GenerateKey()
-		pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(100000000000), tracing.BalanceChangeUnspecified)
+		pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(100000000000))
 		futureTxs := types.Transactions{}
 		for j := 0; j < int(pool.config.GlobalSlots+pool.config.GlobalQueue); j++ {
 			futureTxs = append(futureTxs, pricedTransaction(1000+uint64(j), 100000, big.NewInt(500), key))
@@ -119,10 +127,10 @@ func TestTransactionFutureAttack(t *testing.T) {
 func TestTransactionFuture1559(t *testing.T) {
 	t.Parallel()
 	// Create the pool to test the pricing enforcement with
-	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabaseForTesting())
+	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 	blockchain := newTestBlockChain(eip1559Config, 1000000, statedb, new(event.Feed))
 	pool := New(testTxPoolConfig, blockchain)
-	pool.Init(testTxPoolConfig.PriceLimit, blockchain.CurrentBlock(), newReserver())
+	pool.Init(testTxPoolConfig.PriceLimit, blockchain.CurrentBlock(), makeAddressReserver())
 	defer pool.Close()
 
 	// Create a number of test accounts, fund them and make transactions
@@ -132,7 +140,7 @@ func TestTransactionFuture1559(t *testing.T) {
 	// Now, future transaction attack starts, let's add a bunch of expensive non-executables, and see if the pending-count drops
 	{
 		key, _ := crypto.GenerateKey()
-		pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(100000000000), tracing.BalanceChangeUnspecified)
+		pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(100000000000))
 		futureTxs := types.Transactions{}
 		for j := 0; j < int(pool.config.GlobalSlots+pool.config.GlobalQueue); j++ {
 			futureTxs = append(futureTxs, dynamicFeeTx(1000+uint64(j), 100000, big.NewInt(200), big.NewInt(101), key))
@@ -152,10 +160,10 @@ func TestTransactionFuture1559(t *testing.T) {
 func TestTransactionZAttack(t *testing.T) {
 	t.Parallel()
 	// Create the pool to test the pricing enforcement with
-	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabaseForTesting())
+	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 	blockchain := newTestBlockChain(eip1559Config, 1000000, statedb, new(event.Feed))
 	pool := New(testTxPoolConfig, blockchain)
-	pool.Init(testTxPoolConfig.PriceLimit, blockchain.CurrentBlock(), newReserver())
+	pool.Init(testTxPoolConfig.PriceLimit, blockchain.CurrentBlock(), makeAddressReserver())
 	defer pool.Close()
 	// Create a number of test accounts, fund them and make transactions
 	fillPool(t, pool)
@@ -165,12 +173,12 @@ func TestTransactionZAttack(t *testing.T) {
 		var ivpendingNum int
 		pendingtxs, _ := pool.Content()
 		for account, txs := range pendingtxs {
-			curBalance := new(big.Int).Set(pool.currentState.GetBalance(account).ToBig())
+			cur_balance := new(big.Int).Set(pool.currentState.GetBalance(account).ToBig())
 			for _, tx := range txs {
-				if curBalance.Cmp(tx.Value()) <= 0 {
+				if cur_balance.Cmp(tx.Value()) <= 0 {
 					ivpendingNum++
 				} else {
-					curBalance.Sub(curBalance, tx.Value())
+					cur_balance.Sub(cur_balance, tx.Value())
 				}
 			}
 		}
@@ -182,13 +190,11 @@ func TestTransactionZAttack(t *testing.T) {
 	ivPending := countInvalidPending()
 	t.Logf("invalid pending: %d\n", ivPending)
 
-	// Now, DETER-Z attack starts, let's add a bunch of expensive non-executables
-	// (from N accounts) along with balance-overdraft txs (from one account), and
-	// see if the pending-count drops
+	// Now, DETER-Z attack starts, let's add a bunch of expensive non-executables (from N accounts) along with balance-overdraft txs (from one account), and see if the pending-count drops
 	for j := 0; j < int(pool.config.GlobalQueue); j++ {
 		futureTxs := types.Transactions{}
 		key, _ := crypto.GenerateKey()
-		pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(100000000000), tracing.BalanceChangeUnspecified)
+		pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(100000000000))
 		futureTxs = append(futureTxs, pricedTransaction(1000+uint64(j), 21000, big.NewInt(500), key))
 		pool.addRemotesSync(futureTxs)
 	}
@@ -196,7 +202,7 @@ func TestTransactionZAttack(t *testing.T) {
 	overDraftTxs := types.Transactions{}
 	{
 		key, _ := crypto.GenerateKey()
-		pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(100000000000), tracing.BalanceChangeUnspecified)
+		pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(100000000000))
 		for j := 0; j < int(pool.config.GlobalSlots); j++ {
 			overDraftTxs = append(overDraftTxs, pricedValuedTransaction(uint64(j), 600000000000, 21000, big.NewInt(500), key))
 		}
@@ -222,18 +228,18 @@ func TestTransactionZAttack(t *testing.T) {
 
 func BenchmarkFutureAttack(b *testing.B) {
 	// Create the pool to test the limit enforcement with
-	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabaseForTesting())
+	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 	blockchain := newTestBlockChain(eip1559Config, 1000000, statedb, new(event.Feed))
 	config := testTxPoolConfig
 	config.GlobalQueue = 100
 	config.GlobalSlots = 100
 	pool := New(config, blockchain)
-	pool.Init(testTxPoolConfig.PriceLimit, blockchain.CurrentBlock(), newReserver())
+	pool.Init(testTxPoolConfig.PriceLimit, blockchain.CurrentBlock(), makeAddressReserver())
 	defer pool.Close()
 	fillPool(b, pool)
 
 	key, _ := crypto.GenerateKey()
-	pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(100000000000), tracing.BalanceChangeUnspecified)
+	pool.currentState.AddBalance(crypto.PubkeyToAddress(key.PublicKey), uint256.NewInt(100000000000))
 	futureTxs := types.Transactions{}
 
 	for n := 0; n < b.N; n++ {

@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -27,8 +38,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/luxfi/geth/log"
 	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/luxfi/log"
 	"github.com/gorilla/websocket"
 )
 
@@ -48,6 +59,10 @@ var wsBufferPool = new(sync.Pool)
 // allowedOrigins should be a comma-separated list of allowed origin URLs.
 // To allow connections with any origin, pass "*".
 func (s *Server) WebsocketHandler(allowedOrigins []string) http.Handler {
+	return s.WebsocketHandlerWithDuration(allowedOrigins, 0, 0, 0)
+}
+
+func (s *Server) WebsocketHandlerWithDuration(allowedOrigins []string, apiMaxDuration, refillRate, maxStored time.Duration) http.Handler {
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  wsReadBuffer,
 		WriteBufferSize: wsWriteBuffer,
@@ -61,7 +76,7 @@ func (s *Server) WebsocketHandler(allowedOrigins []string) http.Handler {
 			return
 		}
 		codec := newWebsocketCodec(conn, r.Host, r.Header, wsDefaultReadLimit)
-		s.ServeCodec(codec, 0)
+		s.ServeCodec(codec, 0, apiMaxDuration, refillRate, maxStored)
 	})
 }
 
@@ -120,10 +135,6 @@ func (e wsHandshakeError) Error() string {
 		s += " (HTTP status " + e.status + ")"
 	}
 	return s
-}
-
-func (e wsHandshakeError) Unwrap() error {
-	return e.err
 }
 
 func originIsAllowed(allowedOrigins mapset.Set[string], browserOrigin string) bool {
@@ -333,7 +344,11 @@ func (wc *websocketCodec) peerInfo() PeerInfo {
 }
 
 func (wc *websocketCodec) writeJSON(ctx context.Context, v interface{}, isError bool) error {
-	err := wc.jsonCodec.writeJSON(ctx, v, isError)
+	return wc.writeJSONSkipDeadline(ctx, v, isError, false)
+}
+
+func (wc *websocketCodec) writeJSONSkipDeadline(ctx context.Context, v interface{}, isError bool, skip bool) error {
+	err := wc.jsonCodec.writeJSONSkipDeadline(ctx, v, isError, skip)
 	if err == nil {
 		// Notify pingLoop to delay the next idle ping.
 		select {

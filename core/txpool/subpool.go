@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2023 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -20,8 +31,8 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
 	"github.com/holiman/uint256"
@@ -66,6 +77,10 @@ type LazyResolver interface {
 	Get(hash common.Hash) *types.Transaction
 }
 
+// AddressReserver is passed by the main transaction pool to subpools, so they
+// may request (and relinquish) exclusive access to certain addresses.
+type AddressReserver func(addr common.Address, reserve bool) error
+
 // PendingFilter is a collection of filter rules to allow retrieving a subset
 // of transactions for announcement or mining.
 //
@@ -73,19 +88,12 @@ type LazyResolver interface {
 // a very specific call site in mind and each one can be evaluated very cheaply
 // by the pool implementations. Only add new ones that satisfy those constraints.
 type PendingFilter struct {
-	MinTip      *uint256.Int // Minimum miner tip required to include a transaction
-	BaseFee     *uint256.Int // Minimum 1559 basefee needed to include a transaction
-	BlobFee     *uint256.Int // Minimum 4844 blobfee needed to include a blob transaction
-	GasLimitCap uint64       // Maximum gas can be used for a single transaction execution (0 means no limit)
+	MinTip  *uint256.Int // Minimum miner tip required to include a transaction
+	BaseFee *uint256.Int // Minimum 1559 basefee needed to include a transaction
+	BlobFee *uint256.Int // Minimum 4844 blobfee needed to include a blob transaction
 
 	OnlyPlainTxs bool // Return only plain EVM transactions (peer-join announces, block space filling)
 	OnlyBlobTxs  bool // Return only blob transactions (block blob-space filling)
-}
-
-// TxMetadata denotes the metadata of a transaction.
-type TxMetadata struct {
-	Type uint8  // The type of the transaction
-	Size uint64 // The length of the 'rlp encoding' of a transaction
 }
 
 // SubPool represents a specialized transaction pool that lives on its own (e.g.
@@ -105,7 +113,7 @@ type SubPool interface {
 	// These should not be passed as a constructor argument - nor should the pools
 	// start by themselves - in order to keep multiple subpools in lockstep with
 	// one another.
-	Init(gasTip uint64, head *types.Header, reserver Reserver) error
+	Init(gasTip uint64, head *types.Header, reserve AddressReserver) error
 
 	// Close terminates any background processing threads and releases any held
 	// resources.
@@ -118,31 +126,20 @@ type SubPool interface {
 	// SetGasTip updates the minimum price required by the subpool for a new
 	// transaction, and drops all transactions below this threshold.
 	SetGasTip(tip *big.Int)
+	SetMinFee(fee *big.Int)
 
 	// Has returns an indicator whether subpool has a transaction cached with the
 	// given hash.
 	Has(hash common.Hash) bool
+	HasLocal(hash common.Hash) bool
 
 	// Get returns a transaction if it is contained in the pool, or nil otherwise.
 	Get(hash common.Hash) *types.Transaction
 
-	// GetRLP returns a RLP-encoded transaction if it is contained in the pool.
-	GetRLP(hash common.Hash) []byte
-
-	// GetMetadata returns the transaction type and transaction size with the
-	// given transaction hash.
-	GetMetadata(hash common.Hash) *TxMetadata
-
-	// ValidateTxBasics checks whether a transaction is valid according to the consensus
-	// rules, but does not check state-dependent validation such as sufficient balance.
-	// This check is meant as a static check which can be performed without holding the
-	// pool mutex.
-	ValidateTxBasics(tx *types.Transaction) error
-
 	// Add enqueues a batch of transactions into the pool if they are valid. Due
 	// to the large transaction churn, add may postpone fully integrating the tx
 	// to a later point to batch multiple ones together.
-	Add(txs []*types.Transaction, sync bool) []error
+	Add(txs []*types.Transaction, local bool, sync bool) []error
 
 	// Pending retrieves all currently processable transactions, grouped by origin
 	// account and sorted by nonce.
@@ -150,6 +147,7 @@ type SubPool interface {
 	// The transactions can also be pre-filtered by the dynamic fee components to
 	// reduce allocations and load on downstream subsystems.
 	Pending(filter PendingFilter) map[common.Address][]*LazyTransaction
+	IteratePending(f func(tx *types.Transaction) bool) bool // Returns false if iteration was interrupted.
 
 	// SubscribeTransactions subscribes to new transaction events. The subscriber
 	// can decide whether to receive notifications only for newly seen transactions
@@ -172,10 +170,10 @@ type SubPool interface {
 	// pending as well as queued transactions of this address, grouped by nonce.
 	ContentFrom(addr common.Address) ([]*types.Transaction, []*types.Transaction)
 
+	// Locals retrieves the accounts currently considered local by the pool.
+	Locals() []common.Address
+
 	// Status returns the known status (unknown/pending/queued) of a transaction
 	// identified by their hashes.
 	Status(hash common.Hash) TxStatus
-
-	// Clear removes all tracked transactions from the pool
-	Clear()
 }

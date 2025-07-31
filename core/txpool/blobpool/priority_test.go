@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2023 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -52,7 +63,7 @@ func TestPriorityCalculation(t *testing.T) {
 func BenchmarkDynamicFeeJumpCalculation(b *testing.B) {
 	fees := make([]*uint256.Int, b.N)
 	for i := 0; i < b.N; i++ {
-		fees[i] = uint256.NewInt(rnd.Uint64())
+		fees[i] = uint256.NewInt(rand.Uint64())
 	}
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -76,8 +87,8 @@ func BenchmarkPriorityCalculation(b *testing.B) {
 	txBasefeeJumps := make([]float64, b.N)
 	txBlobfeeJumps := make([]float64, b.N)
 	for i := 0; i < b.N; i++ {
-		txBasefeeJumps[i] = dynamicFeeJumps(uint256.NewInt(rnd.Uint64()))
-		txBlobfeeJumps[i] = dynamicFeeJumps(uint256.NewInt(rnd.Uint64()))
+		txBasefeeJumps[i] = dynamicFeeJumps(uint256.NewInt(rand.Uint64()))
+		txBlobfeeJumps[i] = dynamicFeeJumps(uint256.NewInt(rand.Uint64()))
 	}
 	b.ResetTimer()
 	b.ReportAllocs()

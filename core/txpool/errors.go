@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2014 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -16,9 +27,7 @@
 
 package txpool
 
-import (
-	"errors"
-)
+import "errors"
 
 var (
 	// ErrAlreadyKnown is returned if the transactions is already contained
@@ -28,18 +37,13 @@ var (
 	// ErrInvalidSender is returned if the transaction contains an invalid signature.
 	ErrInvalidSender = errors.New("invalid sender")
 
-	// ErrUnderpriced is returned if a transaction's gas price is too low to be
-	// included in the pool. If the gas price is lower than the minimum configured
-	// one for the transaction pool, use ErrTxGasPriceTooLow instead.
+	// ErrUnderpriced is returned if a transaction's gas price is below the minimum
+	// configured for the transaction pool.
 	ErrUnderpriced = errors.New("transaction underpriced")
 
 	// ErrReplaceUnderpriced is returned if a transaction is attempted to be replaced
 	// with a different one without the required price bump.
 	ErrReplaceUnderpriced = errors.New("replacement transaction underpriced")
-
-	// ErrTxGasPriceTooLow is returned if a transaction's gas price is below the
-	// minimum configured for the transaction pool.
-	ErrTxGasPriceTooLow = errors.New("transaction gas price below minimum")
 
 	// ErrAccountLimitExceeded is returned if a transaction would exceed the number
 	// allowed by a pool for a single account.
@@ -58,17 +62,13 @@ var (
 	// making the transaction invalid, rather a DOS protection.
 	ErrOversizedData = errors.New("oversized data")
 
-	// ErrTxBlobLimitExceeded is returned if a transaction would exceed the number
-	// of blobs allowed by blobpool.
-	ErrTxBlobLimitExceeded = errors.New("transaction blob limit exceeded")
+	// ErrFutureReplacePending is returned if a future transaction replaces a pending
+	// one. Future transactions should only be able to replace other future transactions.
+	ErrFutureReplacePending = errors.New("future transaction tries to replace pending")
 
 	// ErrAlreadyReserved is returned if the sender address has a pending transaction
 	// in a different subpool. For example, this error is returned in response to any
 	// input transaction of non-blob type when a blob transaction from this sender
 	// remains pending (and vice-versa).
 	ErrAlreadyReserved = errors.New("address already reserved")
-
-	// ErrInflightTxLimitReached is returned when the maximum number of in-flight
-	// transactions is reached for specific accounts.
-	ErrInflightTxLimitReached = errors.New("in-flight transaction limit reached for delegated accounts")
 )

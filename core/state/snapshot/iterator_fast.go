@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2019 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -18,15 +29,14 @@ package snapshot
 
 import (
 	"bytes"
-	"cmp"
 	"fmt"
-	"slices"
 	"sort"
 
 	"github.com/luxfi/geth/common"
+	"golang.org/x/exp/slices"
 )
 
-// weightedIterator is an iterator with an assigned weight. It is used to prioritise
+// weightedIterator is a iterator with an assigned weight. It is used to prioritise
 // which account or storage slot is the correct one if multiple iterators find the
 // same one (modified in multiple consecutive blocks).
 type weightedIterator struct {
@@ -46,7 +56,13 @@ func (it *weightedIterator) Cmp(other *weightedIterator) int {
 		return 1
 	}
 	// Same account/storage-slot in multiple layers, split by priority
-	return cmp.Compare(it.priority, other.priority)
+	if it.priority < other.priority {
+		return -1
+	}
+	if it.priority > other.priority {
+		return 1
+	}
+	return 0
 }
 
 // fastIterator is a more optimized multi-layer iterator which maintains a
@@ -67,9 +83,9 @@ type fastIterator struct {
 // newFastIterator creates a new hierarchical account or storage iterator with one
 // element per diff layer. The returned combo iterator can be used to walk over
 // the entire snapshot diff stack simultaneously.
-func newFastIterator(tree *Tree, root common.Hash, account common.Hash, seek common.Hash, accountIterator bool) (*fastIterator, error) {
-	snap := tree.Snapshot(root)
-	if snap == nil {
+func newFastIterator(tree *Tree, root common.Hash, account common.Hash, seek common.Hash, accountIterator bool, holdsTreeLock bool) (*fastIterator, error) {
+	current := tree.getSnapshot(root, holdsTreeLock)
+	if current == nil {
 		return nil, fmt.Errorf("unknown snapshot: %x", root)
 	}
 	fi := &fastIterator{
@@ -77,7 +93,6 @@ func newFastIterator(tree *Tree, root common.Hash, account common.Hash, seek com
 		root:    root,
 		account: accountIterator,
 	}
-	current := snap.(snapshot)
 	for depth := 0; current != nil; depth++ {
 		if accountIterator {
 			fi.iterators = append(fi.iterators, &weightedIterator{
@@ -85,10 +100,18 @@ func newFastIterator(tree *Tree, root common.Hash, account common.Hash, seek com
 				priority: depth,
 			})
 		} else {
+			// If the whole storage is destructed in this layer, don't
+			// bother deeper layer anymore. But we should still keep
+			// the iterator for this layer, since the iterator can contain
+			// some valid slots which belongs to the re-created account.
+			it, destructed := current.StorageIterator(account, seek)
 			fi.iterators = append(fi.iterators, &weightedIterator{
-				it:       current.StorageIterator(account, seek),
+				it:       it,
 				priority: depth,
 			})
+			if destructed {
+				break
+			}
 		}
 		current = current.Parent()
 	}
@@ -319,13 +342,13 @@ func (fi *fastIterator) Debug() {
 // newFastAccountIterator creates a new hierarchical account iterator with one
 // element per diff layer. The returned combo iterator can be used to walk over
 // the entire snapshot diff stack simultaneously.
-func newFastAccountIterator(tree *Tree, root common.Hash, seek common.Hash) (AccountIterator, error) {
-	return newFastIterator(tree, root, common.Hash{}, seek, true)
+func newFastAccountIterator(tree *Tree, root common.Hash, seek common.Hash, holdsTreeLock bool) (AccountIterator, error) {
+	return newFastIterator(tree, root, common.Hash{}, seek, true, holdsTreeLock)
 }
 
 // newFastStorageIterator creates a new hierarchical storage iterator with one
 // element per diff layer. The returned combo iterator can be used to walk over
 // the entire snapshot diff stack simultaneously.
-func newFastStorageIterator(tree *Tree, root common.Hash, account common.Hash, seek common.Hash) (StorageIterator, error) {
-	return newFastIterator(tree, root, account, seek, false)
+func newFastStorageIterator(tree *Tree, root common.Hash, account common.Hash, seek common.Hash, holdsTreeLock bool) (StorageIterator, error) {
+	return newFastIterator(tree, root, account, seek, false, holdsTreeLock)
 }

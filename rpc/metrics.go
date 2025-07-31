@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2020 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -21,17 +32,26 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/metrics"
+
+	// Force geth metrics of the same name to be registered first.
+	_ "github.com/luxfi/geth/rpc"
 )
 
+// ====== If resolving merge conflicts ======
+//
+// All calls to metrics.NewRegistered*() for metrics also defined in geth/rpc have
+// been replaced with metrics.GetOrRegister*() to get metrics already registered in
+// geth/rpc or register them here otherwise. These replacements ensure the same
+// metrics are shared between the two packages.
 var (
-	rpcRequestGauge        = metrics.NewRegisteredGauge("rpc/requests", nil)
-	successfulRequestGauge = metrics.NewRegisteredGauge("rpc/success", nil)
-	failedRequestGauge     = metrics.NewRegisteredGauge("rpc/failure", nil)
+	rpcRequestGauge        = metrics.GetOrRegisterGauge("rpc/requests", nil)
+	successfulRequestGauge = metrics.GetOrRegisterGauge("rpc/success", nil)
+	failedRequestGauge     = metrics.GetOrRegisterGauge("rpc/failure", nil)
 
 	// serveTimeHistName is the prefix of the per-request serving time histograms.
 	serveTimeHistName = "rpc/duration"
 
-	rpcServingTimer = metrics.NewRegisteredTimer("rpc/duration/all", nil)
+	rpcServingTimer = metrics.GetOrRegisterTimer("rpc/duration/all", nil)
 )
 
 // updateServeTimeHistogram tracks the serving time of a remote RPC call.

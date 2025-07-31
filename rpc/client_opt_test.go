@@ -1,19 +1,13 @@
-// Copyright 2022 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
 //
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-
+// Much love to the original authors for their work.
 package rpc_test
 
 import (
@@ -21,7 +15,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // This example configures a HTTP-based RPC client with two options - one setting the

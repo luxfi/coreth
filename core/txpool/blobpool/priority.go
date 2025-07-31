@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2023 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -23,8 +34,8 @@ import (
 	"github.com/holiman/uint256"
 )
 
-// log1_125 is used in the eviction priority calculation.
-var log1_125 = math.Log(1.125)
+// log2_1_125 is used in the eviction priority calculation.
+var log2_1_125 = math.Log2(1.125)
 
 // evictionPriority calculates the eviction priority based on the algorithm
 // described in the BlobPool docs for both fee components.
@@ -57,8 +68,8 @@ func evictionPriority1D(basefeeJumps float64, txfeeJumps float64) int {
 
 // dynamicFeeJumps calculates the log1.125(fee), namely the number of fee jumps
 // needed to reach the requested one. We only use it when calculating the jumps
-// between 2 fees, so it doesn't matter from what exact number it returns.
-// It returns the result from (0, 1, 1.125).
+// between 2 fees, so it doesn't matter from what exact number with returns.
+// it returns the result from (0, 1, 1.125).
 //
 // This method is very expensive, taking about 75ns on a very recent laptop CPU,
 // but the result does not change with the lifetime of a transaction, so it can
@@ -67,7 +78,7 @@ func dynamicFeeJumps(fee *uint256.Int) float64 {
 	if fee.IsZero() {
 		return 0 // can't log2 zero, should never happen outside tests, but don't choke
 	}
-	return math.Log(fee.Float64()) / log1_125
+	return math.Log2(fee.Float64()) / log2_1_125
 }
 
 // intLog2 is a helper to calculate the integral part of a log2 of an unsigned

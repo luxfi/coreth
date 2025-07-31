@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2014 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -18,23 +29,18 @@
 package miner
 
 import (
-	"fmt"
-	"math/big"
-	"sync"
-	"time"
-
+	"github.com/luxfi/node/utils/timer/mockable"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/txpool"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/event"
 )
 
-// Backend wraps all methods required for mining. Only full node is capable
-// to offer all the functions here.
+// Backend wraps all methods required for mining.
 type Backend interface {
 	BlockChain() *core.BlockChain
 	TxPool() *txpool.TxPool
@@ -42,132 +48,30 @@ type Backend interface {
 
 // Config is the configuration parameters of mining.
 type Config struct {
-	Etherbase           common.Address `toml:"-"`          // Deprecated
-	PendingFeeRecipient common.Address `toml:"-"`          // Address for pending block rewards.
-	ExtraData           hexutil.Bytes  `toml:",omitempty"` // Block extra data set by the miner
-	GasCeil             uint64         // Target gas ceiling for mined blocks.
-	GasPrice            *big.Int       // Minimum gas price for mining a transaction
-	Recommit            time.Duration  // The time interval for miner to re-create mining work.
+	Etherbase                    common.Address `toml:",omitempty"` // Public address for block mining rewards
+	TestOnlyAllowDuplicateBlocks bool           // Allow mining of duplicate blocks (used in tests only)
 }
 
-// DefaultConfig contains default settings for miner.
-var DefaultConfig = Config{
-	GasCeil:  45_000_000,
-	GasPrice: big.NewInt(params.GWei / 1000),
-
-	// The default recommit time is chosen as two seconds since
-	// consensus-layer usually will wait a half slot of time(6s)
-	// for payload generation. It should be enough for Geth to
-	// run 3 rounds.
-	Recommit: 2 * time.Second,
-}
-
-// Miner is the main object which takes care of submitting new work to consensus
-// engine and gathering the sealing result.
 type Miner struct {
-	confMu      sync.RWMutex // The lock used to protect the config fields: GasCeil, GasTip and Extradata
-	config      *Config
-	chainConfig *params.ChainConfig
-	engine      consensus.Engine
-	txpool      *txpool.TxPool
-	prio        []common.Address // A list of senders to prioritize
-	chain       *core.BlockChain
-	pending     *pending
-	pendingMu   sync.Mutex // Lock protects the pending block
+	worker *worker
 }
 
-// New creates a new miner with provided config.
-func New(eth Backend, config Config, engine consensus.Engine) *Miner {
+func New(eth Backend, config *Config, chainConfig *params.ChainConfig, mux *event.TypeMux, engine consensus.Engine, clock *mockable.Clock) *Miner {
 	return &Miner{
-		config:      &config,
-		chainConfig: eth.BlockChain().Config(),
-		engine:      engine,
-		txpool:      eth.TxPool(),
-		chain:       eth.BlockChain(),
-		pending:     &pending{},
+		worker: newWorker(config, chainConfig, engine, eth, mux, clock),
 	}
 }
 
-// Pending returns the currently pending block and associated receipts, logs
-// and statedb. The returned values can be nil in case the pending block is
-// not initialized.
-func (miner *Miner) Pending() (*types.Block, types.Receipts, *state.StateDB) {
-	pending := miner.getPending()
-	if pending == nil {
-		return nil, nil, nil
-	}
-	return pending.block, pending.receipts, pending.stateDB.Copy()
+func (miner *Miner) SetEtherbase(addr common.Address) {
+	miner.worker.setEtherbase(addr)
 }
 
-// SetExtra sets the content used to initialize the block extra field.
-func (miner *Miner) SetExtra(extra []byte) error {
-	if uint64(len(extra)) > params.MaximumExtraDataSize {
-		return fmt.Errorf("extra exceeds max length. %d > %v", len(extra), params.MaximumExtraDataSize)
-	}
-	miner.confMu.Lock()
-	miner.config.ExtraData = extra
-	miner.confMu.Unlock()
-	return nil
+func (miner *Miner) GenerateBlock(predicateContext *precompileconfig.PredicateContext) (*types.Block, error) {
+	return miner.worker.commitNewWork(predicateContext)
 }
 
-// SetPrioAddresses sets a list of addresses to prioritize for transaction inclusion.
-func (miner *Miner) SetPrioAddresses(prio []common.Address) {
-	miner.confMu.Lock()
-	miner.prio = prio
-	miner.confMu.Unlock()
-}
-
-// SetGasCeil sets the gaslimit to strive for when mining blocks post 1559.
-// For pre-1559 blocks, it sets the ceiling.
-func (miner *Miner) SetGasCeil(ceil uint64) {
-	miner.confMu.Lock()
-	miner.config.GasCeil = ceil
-	miner.confMu.Unlock()
-}
-
-// SetGasTip sets the minimum gas tip for inclusion.
-func (miner *Miner) SetGasTip(tip *big.Int) error {
-	miner.confMu.Lock()
-	miner.config.GasPrice = tip
-	miner.confMu.Unlock()
-	return nil
-}
-
-// BuildPayload builds the payload according to the provided parameters.
-func (miner *Miner) BuildPayload(args *BuildPayloadArgs, witness bool) (*Payload, error) {
-	return miner.buildPayload(args, witness)
-}
-
-// getPending retrieves the pending block based on the current head block.
-// The result might be nil if pending generation is failed.
-func (miner *Miner) getPending() *newPayloadResult {
-	header := miner.chain.CurrentHeader()
-	miner.pendingMu.Lock()
-	defer miner.pendingMu.Unlock()
-	if cached := miner.pending.resolve(header.Hash()); cached != nil {
-		return cached
-	}
-
-	var (
-		timestamp  = uint64(time.Now().Unix())
-		withdrawal types.Withdrawals
-	)
-	if miner.chainConfig.IsShanghai(new(big.Int).Add(header.Number, big.NewInt(1)), timestamp) {
-		withdrawal = []*types.Withdrawal{}
-	}
-	ret := miner.generateWork(&generateParams{
-		timestamp:   timestamp,
-		forceTime:   false,
-		parentHash:  header.Hash(),
-		coinbase:    miner.config.PendingFeeRecipient,
-		random:      common.Hash{},
-		withdrawals: withdrawal,
-		beaconRoot:  nil,
-		noTxs:       false,
-	}, false) // we will never make a witness for a pending block
-	if ret.err != nil {
-		return nil
-	}
-	miner.pending.update(header.Hash(), ret)
-	return ret
+// SubscribePendingLogs starts delivering logs from pending transactions
+// to the given channel.
+func (miner *Miner) SubscribePendingLogs(ch chan<- []*types.Log) event.Subscription {
+	return miner.worker.pendingLogsFeed.Subscribe(ch)
 }

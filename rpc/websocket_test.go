@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2018 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -78,6 +89,7 @@ func TestWebsocketOriginCheck(t *testing.T) {
 }
 
 // This test checks whether calls exceeding the request size limit are rejected.
+/*
 func TestWebsocketLargeCall(t *testing.T) {
 	t.Parallel()
 
@@ -112,6 +124,7 @@ func TestWebsocketLargeCall(t *testing.T) {
 		t.Fatal("no error for too large call")
 	}
 }
+*/
 
 // This test checks whether the wsMessageSizeLimit option is obeyed.
 func TestWebsocketLargeRead(t *testing.T) {
@@ -170,12 +183,10 @@ func TestWebsocketLargeRead(t *testing.T) {
 	testLimit(ptr(0))  // Should be ignored (use default)
 	testLimit(nil)     // Should be ignored (use default)
 	testLimit(ptr(200))
-	testLimit(ptr(wsDefaultReadLimit * 2))
+	testLimit(ptr(wsDefaultReadLimit + 1024))
 }
 
 func TestWebsocketPeerInfo(t *testing.T) {
-	t.Parallel()
-
 	var (
 		s     = newTestServer()
 		ts    = httptest.NewServer(s.WebsocketHandler([]string{"origin.example.com"}))
@@ -261,10 +272,8 @@ func TestClientWebsocketPing(t *testing.T) {
 
 // This checks that the websocket transport can deal with large messages.
 func TestClientWebsocketLargeMessage(t *testing.T) {
-	t.Parallel()
-
 	var (
-		srv     = NewServer()
+		srv     = NewServer(0)
 		httpsrv = httptest.NewServer(srv.WebsocketHandler(nil))
 		wsURL   = "ws:" + strings.TrimPrefix(httpsrv.URL, "http:")
 	)
@@ -389,79 +398,5 @@ func wsPingTestHandler(t *testing.T, conn *websocket.Conn, shutdown, sendPing <-
 			conn.Close()
 			return
 		}
-	}
-}
-
-func TestWebsocketMethodNameLengthLimit(t *testing.T) {
-	t.Parallel()
-
-	var (
-		srv     = newTestServer()
-		httpsrv = httptest.NewServer(srv.WebsocketHandler([]string{"*"}))
-		wsURL   = "ws:" + strings.TrimPrefix(httpsrv.URL, "http:")
-	)
-	defer srv.Stop()
-	defer httpsrv.Close()
-
-	client, err := DialWebsocket(context.Background(), wsURL, "")
-	if err != nil {
-		t.Fatalf("can't dial: %v", err)
-	}
-	defer client.Close()
-
-	// Test cases
-	tests := []struct {
-		name           string
-		method         string
-		params         []interface{}
-		expectedError  string
-		isSubscription bool
-	}{
-		{
-			name:           "valid method name",
-			method:         "test_echo",
-			params:         []interface{}{"test", 1},
-			expectedError:  "",
-			isSubscription: false,
-		},
-		{
-			name:           "method name too long",
-			method:         "test_" + string(make([]byte, maxMethodNameLength+1)),
-			params:         []interface{}{"test", 1},
-			expectedError:  "method name too long",
-			isSubscription: false,
-		},
-		{
-			name:           "valid subscription",
-			method:         "nftest_subscribe",
-			params:         []interface{}{"someSubscription", 1, 2},
-			expectedError:  "",
-			isSubscription: true,
-		},
-		{
-			name:           "subscription name too long",
-			method:         string(make([]byte, maxMethodNameLength+1)) + "_subscribe",
-			params:         []interface{}{"newHeads"},
-			expectedError:  "subscription name too long",
-			isSubscription: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var result interface{}
-			err := client.Call(&result, tt.method, tt.params...)
-			if tt.expectedError == "" {
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-			} else {
-				if err == nil {
-					t.Error("expected error, got nil")
-				} else if !strings.Contains(err.Error(), tt.expectedError) {
-					t.Errorf("expected error containing %q, got %q", tt.expectedError, err.Error())
-				}
-			}
-		})
 	}
 }

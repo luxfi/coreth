@@ -1,3 +1,6 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
 // Copyright 2023 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -18,22 +21,31 @@ package simulated
 
 import (
 	"errors"
+	"math/big"
 	"time"
 
-	"github.com/luxfi/geth"
+	"github.com/luxfi/node/utils/timer/mockable"
+	"github.com/luxfi/coreth/consensus/dummy"
+	"github.com/luxfi/coreth/constants"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/eth"
+	"github.com/luxfi/coreth/eth/ethconfig"
+	"github.com/luxfi/coreth/ethclient"
+	"github.com/luxfi/coreth/interfaces"
+	"github.com/luxfi/coreth/node"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/rpc"
+	ethereum "github.com/luxfi/geth"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/eth"
-	"github.com/luxfi/geth/eth/catalyst"
-	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/eth/filters"
-	"github.com/luxfi/geth/ethclient"
-	"github.com/luxfi/geth/node"
-	"github.com/luxfi/geth/p2p"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/rpc"
 )
+
+var _ eth.PushGossiper = (*fakePushGossiper)(nil)
+
+type fakePushGossiper struct{}
+
+func (*fakePushGossiper) Add(*types.Transaction) {}
 
 // Client exposes the methods provided by the Ethereum RPC client.
 type Client interface {
@@ -46,8 +58,8 @@ type Client interface {
 	ethereum.GasPricer1559
 	ethereum.FeeHistoryReader
 	ethereum.LogFilterer
-	ethereum.PendingStateReader
-	ethereum.PendingContractCaller
+	interfaces.AcceptedStateReader
+	interfaces.AcceptedContractCaller
 	ethereum.TransactionReader
 	ethereum.TransactionSender
 	ethereum.ChainIDReader
@@ -62,9 +74,10 @@ type simClient struct {
 // Backend is a simulated blockchain. You can use it to test your contracts or
 // other code that interacts with the Ethereum chain.
 type Backend struct {
-	node   *node.Node
-	beacon *catalyst.SimulatedBeacon
+	eth    *eth.Ethereum
 	client simClient
+	clock  *mockable.Clock
+	server *rpc.Server
 }
 
 // NewBackend creates a new simulated blockchain that can be used as a backend for
@@ -72,19 +85,21 @@ type Backend struct {
 //
 // A simulated backend always uses chainID 1337.
 func NewBackend(alloc types.GenesisAlloc, options ...func(nodeConf *node.Config, ethConf *ethconfig.Config)) *Backend {
+	chainConfig := *params.TestChainConfig
+	chainConfig.ChainID = big.NewInt(1337)
+
 	// Create the default configurations for the outer node shell and the Ethereum
 	// service to mutate with the options afterwards
 	nodeConf := node.DefaultConfig
-	nodeConf.DataDir = ""
-	nodeConf.P2P = p2p.Config{NoDiscovery: true}
 
-	ethConf := ethconfig.Defaults
+	ethConf := ethconfig.DefaultConfig
 	ethConf.Genesis = &core.Genesis{
-		Config:   params.AllDevChainProtocolChanges,
-		GasLimit: ethconfig.Defaults.Miner.GasCeil,
-		Alloc:    alloc,
+		Config: &chainConfig,
+		Alloc:  alloc,
 	}
-	ethConf.SyncMode = ethconfig.FullSync
+	ethConf.AllowUnfinalizedQueries = true
+	ethConf.Miner.Etherbase = constants.BlackholeAddr
+	ethConf.Miner.TestOnlyAllowDuplicateBlocks = true
 	ethConf.TxPool.NoLocals = true
 
 	for _, option := range options {
@@ -105,33 +120,32 @@ func NewBackend(alloc types.GenesisAlloc, options ...func(nodeConf *node.Config,
 // newWithNode sets up a simulated backend on an existing node. The provided node
 // must not be started and will be started by this method.
 func newWithNode(stack *node.Node, conf *eth.Config, blockPeriod uint64) (*Backend, error) {
-	backend, err := eth.New(stack, conf)
+	chaindb := rawdb.NewMemoryDatabase()
+	clock := &mockable.Clock{}
+	clock.Set(time.Unix(0, 0))
+
+	engine := dummy.NewFakerWithModeAndClock(
+		dummy.Mode{ModeSkipCoinbase: true}, clock,
+	)
+
+	backend, err := eth.New(
+		stack, conf, &fakePushGossiper{}, chaindb, eth.Settings{}, common.Hash{},
+		engine, clock,
+	)
 	if err != nil {
 		return nil, err
 	}
-	// Register the filter system
-	filterSystem := filters.NewFilterSystem(backend.APIBackend, filters.Config{})
-	stack.RegisterAPIs([]rpc.API{{
-		Namespace: "eth",
-		Service:   filters.NewFilterAPI(filterSystem),
-	}})
-	// Start the node
-	if err := stack.Start(); err != nil {
-		return nil, err
-	}
-	// Set up the simulated beacon
-	beacon, err := catalyst.NewSimulatedBeacon(blockPeriod, common.Address{}, backend)
-	if err != nil {
-		return nil, err
-	}
-	// Reorg our chain back to genesis
-	if err := beacon.Fork(backend.BlockChain().GetCanonicalHash(0)); err != nil {
-		return nil, err
+	server := rpc.NewServer(0)
+	for _, api := range backend.APIs() {
+		if err := server.RegisterName(api.Namespace, api.Service); err != nil {
+			return nil, err
+		}
 	}
 	return &Backend{
-		node:   stack,
-		beacon: beacon,
-		client: simClient{ethclient.NewClient(stack.Attach())},
+		eth:    backend,
+		client: simClient{ethclient.NewClient(rpc.DialInProc(server))},
+		clock:  clock,
+		server: server,
 	}, nil
 }
 
@@ -140,28 +154,74 @@ func newWithNode(stack *node.Node, conf *eth.Config, blockPeriod uint64) (*Backe
 func (n *Backend) Close() error {
 	if n.client.Client != nil {
 		n.client.Close()
-		n.client = simClient{}
 	}
-	var err error
-	if n.beacon != nil {
-		err = n.beacon.Stop()
-		n.beacon = nil
-	}
-	if n.node != nil {
-		err = errors.Join(err, n.node.Close())
-		n.node = nil
-	}
-	return err
+	n.server.Stop()
+	return nil
 }
 
 // Commit seals a block and moves the chain forward to a new empty block.
-func (n *Backend) Commit() common.Hash {
-	return n.beacon.Commit()
+func (n *Backend) Commit(accept bool) common.Hash {
+	hash, err := n.buildBlock(accept, 10)
+	if err != nil {
+		panic(err)
+	}
+	return hash
+}
+
+func (n *Backend) buildBlock(accept bool, gap uint64) (common.Hash, error) {
+	chain := n.eth.BlockChain()
+	parent := chain.CurrentBlock()
+
+	if err := n.eth.TxPool().Sync(); err != nil {
+		return common.Hash{}, err
+	}
+
+	n.clock.Set(time.Unix(int64(parent.Time+gap), 0))
+	block, err := n.eth.Miner().GenerateBlock(nil)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	if err := chain.InsertBlock(block); err != nil {
+		return common.Hash{}, err
+	}
+	if accept {
+		if err := n.acceptAncestors(block); err != nil {
+			return common.Hash{}, err
+		}
+		chain.DrainAcceptorQueue()
+	}
+	return block.Hash(), nil
+}
+
+func (n *Backend) acceptAncestors(block *types.Block) error {
+	chain := n.eth.BlockChain()
+	lastAccepted := chain.LastConsensusAcceptedBlock()
+
+	// Accept all ancestors of the block
+	toAccept := []*types.Block{block}
+	for block.ParentHash() != lastAccepted.Hash() {
+		block = chain.GetBlockByHash(block.ParentHash())
+		toAccept = append(toAccept, block)
+		if block.NumberU64() < lastAccepted.NumberU64() {
+			return errors.New("last accepted must be an ancestor of the block to accept")
+		}
+	}
+
+	for i := len(toAccept) - 1; i >= 0; i-- {
+		if err := chain.Accept(toAccept[i]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Rollback removes all pending transactions, reverting to the last committed state.
 func (n *Backend) Rollback() {
-	n.beacon.Rollback()
+	// Flush all transactions from the transaction pools
+	maxUint256 := new(big.Int).Sub(new(big.Int).Lsh(common.Big1, 256), common.Big1)
+	original := n.eth.TxPool().GasTip()
+	n.eth.TxPool().SetGasTip(maxUint256)
+	n.eth.TxPool().SetGasTip(original)
 }
 
 // Fork creates a side-chain that can be used to simulate reorgs.
@@ -177,13 +237,43 @@ func (n *Backend) Rollback() {
 // There is a % chance that the side chain becomes canonical at the same length
 // to simulate live network behavior.
 func (n *Backend) Fork(parentHash common.Hash) error {
-	return n.beacon.Fork(parentHash)
+	chain := n.eth.BlockChain()
+
+	if chain.CurrentBlock().Hash() == parentHash {
+		return nil
+	}
+
+	parent := chain.GetBlockByHash(parentHash)
+	if parent == nil {
+		return errors.New("parent block not found")
+	}
+
+	ch := make(chan core.NewTxPoolReorgEvent, 1)
+	sub := n.eth.TxPool().SubscribeNewReorgEvent(ch)
+	defer sub.Unsubscribe()
+
+	if err := n.eth.BlockChain().SetPreference(parent); err != nil {
+		return err
+	}
+	for {
+		select {
+		case reorg := <-ch:
+			// Wait for tx pool to reorg, then flush the tx pool
+			if reorg.Head.Hash() == parent.Hash() {
+				n.Rollback()
+				return nil
+			}
+		case <-time.After(2 * time.Second):
+			return errors.New("fork not accepted")
+		}
+	}
 }
 
 // AdjustTime changes the block timestamp and creates a new block.
 // It can only be called on empty blocks.
 func (n *Backend) AdjustTime(adjustment time.Duration) error {
-	return n.beacon.AdjustTime(adjustment)
+	_, err := n.buildBlock(false, uint64(adjustment))
+	return err
 }
 
 // Client returns a client that accesses the simulated chain.

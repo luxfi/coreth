@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2020 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -29,7 +40,7 @@ import (
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/log"
+	"github.com/luxfi/geth/log"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
 )
@@ -50,12 +61,22 @@ type (
 	leafCallbackFn func(db ethdb.KeyValueWriter, accountHash, codeHash common.Hash, stat *generateStats) (common.Hash, error)
 )
 
+// GenerateAccountTrieRoot takes an account iterator and reproduces the root hash.
+func GenerateAccountTrieRoot(it AccountIterator) (common.Hash, error) {
+	return generateTrieRoot(nil, "", it, common.Hash{}, stackTrieGenerate, nil, newGenerateStats(), true)
+}
+
+// GenerateStorageTrieRoot takes a storage iterator and reproduces the root hash.
+func GenerateStorageTrieRoot(account common.Hash, it StorageIterator) (common.Hash, error) {
+	return generateTrieRoot(nil, "", it, account, stackTrieGenerate, nil, newGenerateStats(), true)
+}
+
 // GenerateTrie takes the whole snapshot tree as the input, traverses all the
 // accounts as well as the corresponding storages and regenerate the whole state
 // (account trie + all storage tries).
 func GenerateTrie(snaptree *Tree, root common.Hash, src ethdb.Database, dst ethdb.KeyValueWriter) error {
 	// Traverse all state by snapshot, re-generate the whole state trie
-	acctIt, err := snaptree.AccountIterator(root, common.Hash{})
+	acctIt, err := snaptree.AccountIterator(root, common.Hash{}, false)
 	if err != nil {
 		return err // The required snapshot might not exist.
 	}
@@ -352,15 +373,15 @@ func generateTrieRoot(db ethdb.KeyValueWriter, scheme string, it Iterator, accou
 }
 
 func stackTrieGenerate(db ethdb.KeyValueWriter, scheme string, owner common.Hash, in chan trieKV, out chan common.Hash) {
-	var onTrieNode trie.OnTrieNode
+	options := trie.NewStackTrieOptions()
 	if db != nil {
-		onTrieNode = func(path []byte, hash common.Hash, blob []byte) {
+		options = options.WithWriter(func(path []byte, hash common.Hash, blob []byte) {
 			rawdb.WriteTrieNode(db, owner, path, hash, blob, scheme)
-		}
+		})
 	}
-	t := trie.NewStackTrie(onTrieNode)
+	t := trie.NewStackTrie(options)
 	for leaf := range in {
 		t.Update(leaf.key[:], leaf.value)
 	}
-	out <- t.Hash()
+	out <- t.Commit()
 }

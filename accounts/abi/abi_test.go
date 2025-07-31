@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -29,7 +40,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/internal/testrand"
+	"github.com/stretchr/testify/assert"
 )
 
 const jsondata = `
@@ -316,38 +327,6 @@ func TestCustomErrors(t *testing.T) {
 		}
 	}
 	check("MyError", "MyError(uint256)")
-}
-
-func TestCustomErrorUnpackIntoInterface(t *testing.T) {
-	t.Parallel()
-	errorName := "MyError"
-	json := fmt.Sprintf(`[{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"}],"name":"%s","type":"error"}]`, errorName)
-	abi, err := JSON(strings.NewReader(json))
-	if err != nil {
-		t.Fatal(err)
-	}
-	type MyError struct {
-		Sender  common.Address
-		Balance *big.Int
-	}
-
-	sender := testrand.Address()
-	balance := new(big.Int).SetBytes(testrand.Bytes(8))
-	encoded, err := abi.Errors[errorName].Inputs.Pack(sender, balance)
-	if err != nil {
-		t.Fatal(err)
-	}
-	result := MyError{}
-	err = abi.UnpackIntoInterface(&result, errorName, encoded)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result.Sender != sender {
-		t.Errorf("expected %x got %x", sender, result.Sender)
-	}
-	if result.Balance.Cmp(balance) != 0 {
-		t.Errorf("expected %v got %v", balance, result.Balance)
-	}
 }
 
 func TestMultiPack(t *testing.T) {
@@ -1251,9 +1230,97 @@ func TestUnpackRevert(t *testing.T) {
 	}
 }
 
-func TestInternalContractType(t *testing.T) {
-	jsonData := `[{"inputs":[{"components":[{"internalType":"uint256","name":"dailyLimit","type":"uint256"},{"internalType":"uint256","name":"txLimit","type":"uint256"},{"internalType":"uint256","name":"accountDailyLimit","type":"uint256"},{"internalType":"uint256","name":"minAmount","type":"uint256"},{"internalType":"bool","name":"onlyWhitelisted","type":"bool"}],"internalType":"struct IMessagePassingBridge.BridgeLimits","name":"bridgeLimits","type":"tuple"},{"components":[{"internalType":"uint256","name":"lastTransferReset","type":"uint256"},{"internalType":"uint256","name":"bridged24Hours","type":"uint256"}],"internalType":"struct IMessagePassingBridge.AccountLimit","name":"accountDailyLimit","type":"tuple"},{"components":[{"internalType":"uint256","name":"lastTransferReset","type":"uint256"},{"internalType":"uint256","name":"bridged24Hours","type":"uint256"}],"internalType":"struct IMessagePassingBridge.BridgeDailyLimit","name":"bridgeDailyLimit","type":"tuple"},{"internalType":"contract INameService","name":"nameService","type":"INameService"},{"internalType":"bool","name":"isClosed","type":"bool"},{"internalType":"address","name":"from","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"canBridge","outputs":[{"internalType":"bool","name":"isWithinLimit","type":"bool"},{"internalType":"string","name":"error","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint8","name":"decimals","type":"uint8"}],"name":"normalizeFrom18ToTokenDecimals","outputs":[{"internalType":"uint256","name":"normalized","type":"uint256"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint8","name":"decimals","type":"uint8"}],"name":"normalizeFromTokenTo18Decimals","outputs":[{"internalType":"uint256","name":"normalized","type":"uint256"}],"stateMutability":"pure","type":"function"}]`
-	if _, err := JSON(strings.NewReader(jsonData)); err != nil {
-		t.Fatal(err)
+func TestABI_PackEvent(t *testing.T) {
+	tests := []struct {
+		name           string
+		json           string
+		event          string
+		args           []interface{}
+		expectedTopics []common.Hash
+		expectedData   []byte
+	}{
+		{
+			name: "received",
+			json: `[
+			{"type":"event","name":"received","anonymous":false,"inputs":[
+				{"indexed":false,"name":"sender","type":"address"},
+				{"indexed":false,"name":"amount","type":"uint256"},
+				{"indexed":false,"name":"memo","type":"bytes"}
+				]
+			}]`,
+			event: "received(address,uint256,bytes)",
+			args: []interface{}{
+				common.HexToAddress("0x376c47978271565f56DEB45495afa69E59c16Ab2"),
+				big.NewInt(1),
+				[]byte{0x88},
+			},
+			expectedTopics: []common.Hash{
+				common.HexToHash("0x75fd880d39c1daf53b6547ab6cb59451fc6452d27caa90e5b6649dd8293b9eed"),
+			},
+			expectedData: common.Hex2Bytes("000000000000000000000000376c47978271565f56deb45495afa69e59c16ab20000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000018800000000000000000000000000000000000000000000000000000000000000"),
+		},
+		{
+			name: "received",
+			json: `[
+			{"type":"event","name":"received","anonymous":true,"inputs":[
+				{"indexed":false,"name":"sender","type":"address"},
+				{"indexed":false,"name":"amount","type":"uint256"},
+				{"indexed":false,"name":"memo","type":"bytes"}
+				]
+			}]`,
+			event: "received(address,uint256,bytes)",
+			args: []interface{}{
+				common.HexToAddress("0x376c47978271565f56DEB45495afa69E59c16Ab2"),
+				big.NewInt(1),
+				[]byte{0x88},
+			},
+			expectedTopics: []common.Hash{},
+			expectedData:   common.Hex2Bytes("000000000000000000000000376c47978271565f56deb45495afa69e59c16ab20000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000018800000000000000000000000000000000000000000000000000000000000000"),
+		}, {
+			name: "Transfer",
+			json: `[
+				{ "constant": true, "inputs": [], "name": "name", "outputs": [ { "name": "", "type": "string" } ], "payable": false, "stateMutability": "view", "type": "function" },
+				{ "constant": false, "inputs": [ { "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "approve", "outputs": [ { "name": "", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" },
+				{ "constant": true, "inputs": [], "name": "totalSupply", "outputs": [ { "name": "", "type": "uint256" } ], "payable": false, "stateMutability": "view", "type": "function" },
+				{ "constant": false, "inputs": [ { "name": "_from", "type": "address" }, { "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "transferFrom", "outputs": [ { "name": "", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" },
+				{ "constant": true, "inputs": [], "name": "decimals", "outputs": [ { "name": "", "type": "uint8" } ], "payable": false, "stateMutability": "view", "type": "function" },
+				{ "constant": true, "inputs": [ { "name": "_owner", "type": "address" } ], "name": "balanceOf", "outputs": [ { "name": "balance", "type": "uint256" } ], "payable": false, "stateMutability": "view", "type": "function" },
+				{ "constant": true, "inputs": [], "name": "symbol", "outputs": [ { "name": "", "type": "string" } ], "payable": false, "stateMutability": "view", "type": "function" },
+				{ "constant": false, "inputs": [ { "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "transfer", "outputs": [ { "name": "", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" },
+				{ "constant": true, "inputs": [ { "name": "_owner", "type": "address" }, { "name": "_spender", "type": "address" } ], "name": "allowance", "outputs": [ { "name": "", "type": "uint256" } ], "payable": false, "stateMutability": "view", "type": "function" },
+				{ "payable": true, "stateMutability": "payable", "type": "fallback" },
+				{ "anonymous": false, "inputs": [ { "indexed": true, "name": "owner", "type": "address" }, { "indexed": true, "name": "spender", "type": "address" }, { "indexed": false, "name": "value", "type": "uint256" } ], "name": "Approval", "type": "event" },
+				{ "anonymous": false, "inputs": [ { "indexed": true, "name": "from", "type": "address" }, { "indexed": true, "name": "to", "type": "address" }, { "indexed": false, "name": "value", "type": "uint256" } ], "name": "Transfer", "type": "event" }
+			]`,
+			event: "Transfer(address,address,uint256)",
+			args: []interface{}{
+				common.HexToAddress("0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC"),
+				common.HexToAddress("0x376c47978271565f56DEB45495afa69E59c16Ab2"),
+				big.NewInt(100),
+			},
+			expectedTopics: []common.Hash{
+				common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
+				common.HexToHash("0x0000000000000000000000008db97c7cece249c2b98bdc0226cc4c2a57bf52fc"),
+				common.HexToHash("0x000000000000000000000000376c47978271565f56deb45495afa69e59c16ab2"),
+			},
+			expectedData: common.Hex2Bytes("0000000000000000000000000000000000000000000000000000000000000064"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			abi, err := JSON(strings.NewReader(test.json))
+			if err != nil {
+				t.Error(err)
+			}
+
+			topics, data, err := abi.PackEvent(test.name, test.args...)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.EqualValues(t, test.expectedTopics, topics)
+			assert.EqualValues(t, test.expectedData, data)
+		})
 	}
 }

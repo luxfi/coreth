@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -98,7 +109,7 @@ Subscriptions are deleted when the user sends an unsubscribe request or when the
 connection which was used to create the subscription is closed. This can be initiated by
 the client and server. The server will close the connection for any write error.
 
-For more information about subscriptions, see https://geth.ethereum.org/docs/interacting-with-geth/rpc/pubsub
+For more information about subscriptions, see https://github.com/ethereum/go-ethereum/wiki/RPC-PUB-SUB.
 
 # Reverse Calls
 

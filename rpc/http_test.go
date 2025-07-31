@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2017 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -41,7 +52,7 @@ func confirmStatusCode(t *testing.T, got, want int) {
 func confirmRequestValidationCode(t *testing.T, method, contentType, body string, expectedStatusCode int) {
 	t.Helper()
 
-	s := NewServer()
+	s := NewServer(0)
 	request := httptest.NewRequest(method, "http://url.com", strings.NewReader(body))
 	if len(contentType) > 0 {
 		request.Header.Set("Content-Type", contentType)
@@ -58,34 +69,24 @@ func confirmRequestValidationCode(t *testing.T, method, contentType, body string
 }
 
 func TestHTTPErrorResponseWithDelete(t *testing.T) {
-	t.Parallel()
-
 	confirmRequestValidationCode(t, http.MethodDelete, contentType, "", http.StatusMethodNotAllowed)
 }
 
 func TestHTTPErrorResponseWithPut(t *testing.T) {
-	t.Parallel()
-
 	confirmRequestValidationCode(t, http.MethodPut, contentType, "", http.StatusMethodNotAllowed)
 }
 
 func TestHTTPErrorResponseWithMaxContentLength(t *testing.T) {
-	t.Parallel()
-
 	body := make([]rune, defaultBodyLimit+1)
 	confirmRequestValidationCode(t,
 		http.MethodPost, contentType, string(body), http.StatusRequestEntityTooLarge)
 }
 
 func TestHTTPErrorResponseWithEmptyContentType(t *testing.T) {
-	t.Parallel()
-
 	confirmRequestValidationCode(t, http.MethodPost, "", "", http.StatusUnsupportedMediaType)
 }
 
 func TestHTTPErrorResponseWithValidRequest(t *testing.T) {
-	t.Parallel()
-
 	confirmRequestValidationCode(t, http.MethodPost, contentType, "", 0)
 }
 
@@ -111,18 +112,14 @@ func confirmHTTPRequestYieldsStatusCode(t *testing.T, method, contentType, body 
 }
 
 func TestHTTPResponseWithEmptyGet(t *testing.T) {
-	t.Parallel()
-
 	confirmHTTPRequestYieldsStatusCode(t, http.MethodGet, "", "", http.StatusOK)
 }
 
 // This checks that maxRequestContentLength is not applied to the response of a request.
 func TestHTTPRespBodyUnlimited(t *testing.T) {
-	t.Parallel()
-
 	const respLength = defaultBodyLimit * 3
 
-	s := NewServer()
+	s := NewServer(0)
 	defer s.Stop()
 	s.RegisterName("test", largeRespService{respLength})
 	ts := httptest.NewServer(s)
@@ -146,8 +143,6 @@ func TestHTTPRespBodyUnlimited(t *testing.T) {
 // Tests that an HTTP error results in an HTTPError instance
 // being returned with the expected attributes.
 func TestHTTPErrorResponse(t *testing.T) {
-	t.Parallel()
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error has occurred!", http.StatusTeapot)
 	}))
@@ -185,8 +180,6 @@ func TestHTTPErrorResponse(t *testing.T) {
 }
 
 func TestHTTPPeerInfo(t *testing.T) {
-	t.Parallel()
-
 	s := newTestServer()
 	defer s.Stop()
 	ts := httptest.NewServer(s)
@@ -223,8 +216,6 @@ func TestHTTPPeerInfo(t *testing.T) {
 }
 
 func TestNewContextWithHeaders(t *testing.T) {
-	t.Parallel()
-
 	expectedHeaders := 0
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		for i := 0; i < expectedHeaders; i++ {

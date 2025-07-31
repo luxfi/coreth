@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2016 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -17,17 +28,81 @@
 package core
 
 import (
+	"bytes"
 	"math/big"
 
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/consensus/misc/eip4844"
+	"github.com/luxfi/coreth/core/extstate"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/params/extras"
+	customheader "github.com/luxfi/coreth/plugin/evm/header"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/consensus/misc/eip4844"
-	"github.com/luxfi/geth/core/tracing"
+	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/geth/stateconf"
 	"github.com/holiman/uint256"
 )
+
+func init() {
+	vm.RegisterHooks(hooks{})
+}
+
+type hooks struct{}
+
+// OverrideNewEVMArgs is a hook that is called in [vm.NewEVM].
+// It allows for the modification of the EVM arguments before the EVM is created.
+// Specifically, we set Random to be the same as Difficulty since Shanghai.
+// This allows using the same jump table as upstream.
+// Then we set Difficulty to 0 as it is post Merge in upstream.
+// Additionally we wrap the StateDB with the appropriate StateDB wrapper,
+// which is used in coreth to process historical pre-AP1 blocks with the
+// [StateDbAP1.GetCommittedState] method as it was historically.
+func (hooks) OverrideNewEVMArgs(args *vm.NewEVMArgs) *vm.NewEVMArgs {
+	rules := args.ChainConfig.Rules(args.BlockContext.BlockNumber, params.IsMergeTODO, args.BlockContext.Time)
+	args.StateDB = wrapStateDB(rules, args.StateDB)
+
+	if rules.IsShanghai {
+		args.BlockContext.Random = new(common.Hash)
+		args.BlockContext.Random.SetBytes(args.BlockContext.Difficulty.Bytes())
+		args.BlockContext.Difficulty = new(big.Int)
+	}
+
+	return args
+}
+
+func (hooks) OverrideEVMResetArgs(rules params.Rules, args *vm.EVMResetArgs) *vm.EVMResetArgs {
+	args.StateDB = wrapStateDB(rules, args.StateDB)
+	return args
+}
+
+func wrapStateDB(rules params.Rules, statedb vm.StateDB) vm.StateDB {
+	wrappedStateDB := extstate.New(statedb.(*state.StateDB))
+	if params.GetRulesExtra(rules).IsApricotPhase1 {
+		return wrappedStateDB
+	}
+	return &StateDBAP0{wrappedStateDB}
+}
+
+// StateDBAP0 implements the GetCommittedState behavior that existed prior to
+// the AP1 upgrade.
+//
+// Since launch, state keys have been normalized to allow for multicoin
+// balances. However, at launch GetCommittedState was not updated. This meant
+// that gas refunds were not calculated as expected for SSTORE opcodes.
+//
+// This oversight was fixed in AP1, but in order to execute blocks prior to AP1
+// and generate the same merkle root, this behavior must be maintained.
+//
+// See the [extstate] package for details around state key normalization.
+type StateDBAP0 struct {
+	*extstate.StateDB
+}
+
+func (s *StateDBAP0) GetCommittedState(addr common.Address, key common.Hash, _ ...stateconf.StateDBStateOption) common.Hash {
+	return s.StateDB.GetCommittedState(addr, key, stateconf.SkipStateKeyTransformation())
+}
 
 // ChainContext supports retrieving headers and consensus parameters from the
 // current blockchain to be used during transaction processing.
@@ -37,9 +112,6 @@ type ChainContext interface {
 
 	// GetHeader returns the header corresponding to the hash/number argument pair.
 	GetHeader(common.Hash, uint64) *types.Header
-
-	// Config returns the chain's configuration.
-	Config() *params.ChainConfig
 }
 
 // NewEVMBlockContext creates a new context for use in the EVM.
@@ -48,7 +120,6 @@ func NewEVMBlockContext(header *types.Header, chain ChainContext, author *common
 		beneficiary common.Address
 		baseFee     *big.Int
 		blobBaseFee *big.Int
-		random      *common.Hash
 	)
 
 	// If we don't have an explicit author (i.e. not mining), extract from the header
@@ -61,10 +132,7 @@ func NewEVMBlockContext(header *types.Header, chain ChainContext, author *common
 		baseFee = new(big.Int).Set(header.BaseFee)
 	}
 	if header.ExcessBlobGas != nil {
-		blobBaseFee = eip4844.CalcBlobFee(chain.Config(), header)
-	}
-	if header.Difficulty.Sign() == 0 {
-		random = &header.MixDigest
+		blobBaseFee = eip4844.CalcBlobFee(*header.ExcessBlobGas)
 	}
 	return vm.BlockContext{
 		CanTransfer: CanTransfer,
@@ -77,8 +145,27 @@ func NewEVMBlockContext(header *types.Header, chain ChainContext, author *common
 		BaseFee:     baseFee,
 		BlobBaseFee: blobBaseFee,
 		GasLimit:    header.GasLimit,
-		Random:      random,
+		Header: &types.Header{
+			Number: new(big.Int).Set(header.Number),
+			Time:   header.Time,
+			Extra:  header.Extra,
+		},
 	}
+}
+
+// NewEVMBlockContextWithPredicateResults creates a new context for use in the
+// EVM with an override for the predicate results. The miner uses this to pass
+// predicate results to the EVM when header.Extra is not fully formed yet.
+func NewEVMBlockContextWithPredicateResults(rules extras.LuxRules, header *types.Header, chain ChainContext, author *common.Address, predicateBytes []byte) vm.BlockContext {
+	blockCtx := NewEVMBlockContext(header, chain, author)
+	// Note this only sets the block context, which is the hand-off point for
+	// the EVM. The actual header is not modified.
+	blockCtx.Header.Extra = customheader.SetPredicateBytesInExtra(
+		rules,
+		bytes.Clone(header.Extra),
+		predicateBytes,
+	)
+	return blockCtx
 }
 
 // NewEVMTxContext creates a new transaction context for a single transaction.
@@ -141,6 +228,6 @@ func CanTransfer(db vm.StateDB, addr common.Address, amount *uint256.Int) bool {
 
 // Transfer subtracts amount from sender and adds amount to recipient using the given Db
 func Transfer(db vm.StateDB, sender, recipient common.Address, amount *uint256.Int) {
-	db.SubBalance(sender, amount, tracing.BalanceChangeTransfer)
-	db.AddBalance(recipient, amount, tracing.BalanceChangeTransfer)
+	db.SubBalance(sender, amount)
+	db.AddBalance(recipient, amount)
 }

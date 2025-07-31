@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2023 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -25,13 +36,13 @@ package blobpool
 // The slotter also creates a shelf for 0-blob transactions. Whilst those are not
 // allowed in the current protocol, having an empty shelf is not a relevant use
 // of resources, but it makes stress testing with junk transactions simpler.
-func newSlotter(maxBlobsPerTransaction int) func() (uint32, bool) {
+func newSlotter() func() (uint32, bool) {
 	slotsize := uint32(txAvgSize)
 	slotsize -= uint32(blobSize) // underflows, it's ok, will overflow back in the first return
 
 	return func() (size uint32, done bool) {
 		slotsize += blobSize
-		finished := slotsize > uint32(maxBlobsPerTransaction)*blobSize+txMaxSize
+		finished := slotsize > maxBlobsPerTransaction*blobSize+txMaxSize
 
 		return slotsize, finished
 	}

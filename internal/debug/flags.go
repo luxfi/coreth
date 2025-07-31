@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2016 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -19,7 +30,6 @@ package debug
 import (
 	"fmt"
 	"io"
-	"log/slog"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
@@ -27,13 +37,12 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/log"
-	"github.com/luxfi/geth/metrics"
-	"github.com/luxfi/geth/metrics/exp"
+	"github.com/luxfi/coreth/internal/flags"
+	"github.com/luxfi/geth/log"
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/slog"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -55,13 +64,13 @@ var (
 		Usage:    "Per-module verbosity: comma-separated list of <pattern>=<level> (e.g. eth/*=5,p2p=4)",
 		Value:    "",
 		Hidden:   true,
-		Category: flags.DeprecatedCategory,
+		Category: flags.LoggingCategory,
 	}
 	logjsonFlag = &cli.BoolFlag{
 		Name:     "log.json",
 		Usage:    "Format logs with JSON",
 		Hidden:   true,
-		Category: flags.DeprecatedCategory,
+		Category: flags.LoggingCategory,
 	}
 	logFormatFlag = &cli.StringFlag{
 		Name:     "log.format",
@@ -136,8 +145,8 @@ var (
 		Category: flags.LoggingCategory,
 	}
 	traceFlag = &cli.StringFlag{
-		Name:     "go-execution-trace",
-		Usage:    "Write Go execution trace to the given file",
+		Name:     "trace",
+		Usage:    "Write execution trace to the given file",
 		Category: flags.LoggingCategory,
 	}
 )
@@ -165,14 +174,11 @@ var Flags = []cli.Flag{
 }
 
 var (
+	glogger       *log.GlogHandler
 	logOutputFile io.WriteCloser
 )
 
-// Global glog handler for API access
-var glogger *log.GlogHandler
-
 func init() {
-	// Initialize default logger with basic terminal handler
 	glogger = log.NewGlogHandler(log.NewTerminalHandler(os.Stderr, false))
 }
 
@@ -267,6 +273,8 @@ func Setup(ctx *cli.Context) error {
 	}
 	glogger.Vmodule(vmodule)
 
+	log.SetDefault(log.NewLogger(glogger))
+
 	// profiling, tracing
 	runtime.MemProfileRate = memprofilerateFlag.Value
 	if ctx.IsSet(memprofilerateFlag.Name) {
@@ -295,9 +303,7 @@ func Setup(ctx *cli.Context) error {
 		port := ctx.Int(pprofPortFlag.Name)
 
 		address := net.JoinHostPort(listenHost, fmt.Sprintf("%d", port))
-		// This context value ("metrics.addr") represents the utils.MetricsHTTPFlag.Name.
-		// It cannot be imported because it will cause a cyclical dependency.
-		StartPProf(address, !ctx.IsSet("metrics.addr"))
+		StartPProf(address)
 	}
 	if len(logFile) > 0 || rotation {
 		log.Info("Logging configured", context...)
@@ -305,12 +311,7 @@ func Setup(ctx *cli.Context) error {
 	return nil
 }
 
-func StartPProf(address string, withMetrics bool) {
-	// Hook go-metrics into expvar on any /debug/metrics request, load all vars
-	// from the registry into expvar, and execute regular expvar handler.
-	if withMetrics {
-		exp.Exp(metrics.DefaultRegistry)
-	}
+func StartPProf(address string) {
 	log.Info("Starting pprof server", "addr", fmt.Sprintf("http://%s/debug/pprof", address))
 	go func() {
 		if err := http.ListenAndServe(address, nil); err != nil {

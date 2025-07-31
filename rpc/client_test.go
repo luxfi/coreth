@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2016 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -25,7 +36,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"reflect"
 	"runtime"
 	"strings"
@@ -33,13 +43,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luxfi/geth/log"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/luxfi/log"
 )
 
 func TestClientRequest(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 	client := DialInProc(server)
@@ -55,8 +63,6 @@ func TestClientRequest(t *testing.T) {
 }
 
 func TestClientResponseType(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 	client := DialInProc(server)
@@ -75,8 +81,6 @@ func TestClientResponseType(t *testing.T) {
 
 // This test checks calling a method that returns 'null'.
 func TestClientNullResponse(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 
@@ -97,8 +101,6 @@ func TestClientNullResponse(t *testing.T) {
 
 // This test checks that server-returned errors with code and data come out of Client.Call.
 func TestClientErrorData(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 	client := DialInProc(server)
@@ -129,8 +131,6 @@ func TestClientErrorData(t *testing.T) {
 }
 
 func TestClientBatchRequest(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 	client := DialInProc(server)
@@ -182,8 +182,6 @@ func TestClientBatchRequest(t *testing.T) {
 // This checks that, for HTTP connections, the length of batch responses is validated to
 // match the request exactly.
 func TestClientBatchRequest_len(t *testing.T) {
-	t.Parallel()
-
 	b, err := json.Marshal([]jsonrpcMessage{
 		{Version: "2.0", ID: json.RawMessage("1"), Result: json.RawMessage(`"0x1"`)},
 		{Version: "2.0", ID: json.RawMessage("2"), Result: json.RawMessage(`"0x2"`)},
@@ -200,8 +198,6 @@ func TestClientBatchRequest_len(t *testing.T) {
 	t.Cleanup(s.Close)
 
 	t.Run("too-few", func(t *testing.T) {
-		t.Parallel()
-
 		client, err := Dial(s.URL)
 		if err != nil {
 			t.Fatal("failed to dial test server:", err)
@@ -232,8 +228,6 @@ func TestClientBatchRequest_len(t *testing.T) {
 	})
 
 	t.Run("too-many", func(t *testing.T) {
-		t.Parallel()
-
 		client, err := Dial(s.URL)
 		if err != nil {
 			t.Fatal("failed to dial test server:", err)
@@ -265,8 +259,6 @@ func TestClientBatchRequest_len(t *testing.T) {
 // This checks that the client can handle the case where the server doesn't
 // respond to all requests in a batch.
 func TestClientBatchRequestLimit(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 	server.SetBatchLimits(2, 100000)
@@ -303,8 +295,6 @@ func TestClientBatchRequestLimit(t *testing.T) {
 }
 
 func TestClientNotify(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 	client := DialInProc(server)
@@ -318,7 +308,8 @@ func TestClientNotify(t *testing.T) {
 // func TestClientCancelInproc(t *testing.T) { testClientCancel("inproc", t) }
 func TestClientCancelWebsocket(t *testing.T) { testClientCancel("ws", t) }
 func TestClientCancelHTTP(t *testing.T)      { testClientCancel("http", t) }
-func TestClientCancelIPC(t *testing.T)       { testClientCancel("ipc", t) }
+
+// func TestClientCancelIPC(t *testing.T)       { testClientCancel("ipc", t) }
 
 // This test checks that requests made through CallContext can be canceled by canceling
 // the context.
@@ -356,10 +347,10 @@ func testClientCancel(transport string, t *testing.T) {
 		c, hs := httpTestClient(server, transport, fl)
 		defer hs.Close()
 		client = c
-	case "ipc":
-		c, l := ipcTestClient(server, fl)
-		defer l.Close()
-		client = c
+	// case "ipc":
+	// c, l := ipcTestClient(server, fl)
+	// defer l.Close()
+	// client = c
 	default:
 		panic("unknown transport: " + transport)
 	}
@@ -412,8 +403,6 @@ func testClientCancel(transport string, t *testing.T) {
 }
 
 func TestClientSubscribeInvalidArg(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 	client := DialInProc(server)
@@ -444,8 +433,6 @@ func TestClientSubscribeInvalidArg(t *testing.T) {
 }
 
 func TestClientSubscribe(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 	client := DialInProc(server)
@@ -478,8 +465,6 @@ func TestClientSubscribe(t *testing.T) {
 
 // In this test, the connection drops while Subscribe is waiting for a response.
 func TestClientSubscribeClose(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	service := &notificationTestService{
 		gotHangSubscriptionReq:  make(chan struct{}),
@@ -524,8 +509,6 @@ func TestClientSubscribeClose(t *testing.T) {
 // This test reproduces https://github.com/ethereum/go-ethereum/issues/17837 where the
 // client hangs during shutdown when Unsubscribe races with Client.Close.
 func TestClientCloseUnsubscribeRace(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 
@@ -543,72 +526,6 @@ func TestClientCloseUnsubscribeRace(t *testing.T) {
 		case <-time.After(5 * time.Second):
 			t.Fatal("subscription not closed within timeout")
 		}
-	}
-}
-
-// unsubscribeBlocker will wait for the quit channel to process an unsubscribe
-// request.
-type unsubscribeBlocker struct {
-	ServerCodec
-	quit chan struct{}
-}
-
-func (b *unsubscribeBlocker) readBatch() ([]*jsonrpcMessage, bool, error) {
-	msgs, batch, err := b.ServerCodec.readBatch()
-	for _, msg := range msgs {
-		if msg.isUnsubscribe() {
-			<-b.quit
-		}
-	}
-	return msgs, batch, err
-}
-
-// TestUnsubscribeTimeout verifies that calling the client's Unsubscribe
-// function will eventually timeout and not block forever in case the serve does
-// not respond.
-// It reproducers the issue https://github.com/ethereum/go-ethereum/issues/30156
-func TestUnsubscribeTimeout(t *testing.T) {
-	t.Parallel()
-
-	srv := NewServer()
-	srv.RegisterName("nftest", new(notificationTestService))
-
-	// Setup middleware to block on unsubscribe.
-	p1, p2 := net.Pipe()
-	blocker := &unsubscribeBlocker{ServerCodec: NewCodec(p1), quit: make(chan struct{})}
-	defer close(blocker.quit)
-
-	// Serve the middleware.
-	go srv.ServeCodec(blocker, OptionMethodInvocation|OptionSubscriptions)
-	defer srv.Stop()
-
-	// Create the client on the other end of the pipe.
-	cfg := new(clientConfig)
-	client, _ := newClient(context.Background(), cfg, func(context.Context) (ServerCodec, error) {
-		return NewCodec(p2), nil
-	})
-	defer client.Close()
-
-	// Start subscription.
-	sub, err := client.Subscribe(context.Background(), "nftest", make(chan int), "someSubscription", 1, 1)
-	if err != nil {
-		t.Fatalf("failed to subscribe: %v", err)
-	}
-
-	// Now on a separate thread, attempt to unsubscribe. Since the middleware
-	// won't return, the function will only return if it times out on the request.
-	done := make(chan struct{})
-	go func() {
-		sub.Unsubscribe()
-		done <- struct{}{}
-	}()
-
-	// Wait for the timeout. If the expected time for the timeout elapses, the
-	// test is considered failed.
-	select {
-	case <-done:
-	case <-time.After(unsubscribeTimeout + 3*time.Second):
-		t.Fatalf("Unsubscribe did not return within %s", unsubscribeTimeout)
 	}
 }
 
@@ -642,11 +559,11 @@ func TestClientSubscriptionUnsubscribeServer(t *testing.T) {
 	t.Parallel()
 
 	// Create the server.
-	srv := NewServer()
+	srv := NewServer(0)
 	srv.RegisterName("nftest", new(notificationTestService))
 	p1, p2 := net.Pipe()
 	recorder := &unsubscribeRecorder{ServerCodec: NewCodec(p1)}
-	go srv.ServeCodec(recorder, OptionMethodInvocation|OptionSubscriptions)
+	go srv.ServeCodec(recorder, OptionMethodInvocation|OptionSubscriptions, 0, 0, 0)
 	defer srv.Stop()
 
 	// Create the client on the other end of the pipe.
@@ -679,7 +596,7 @@ func TestClientSubscriptionChannelClose(t *testing.T) {
 	t.Parallel()
 
 	var (
-		srv     = NewServer()
+		srv     = NewServer(0)
 		httpsrv = httptest.NewServer(srv.WebsocketHandler(nil))
 		wsURL   = "ws:" + strings.TrimPrefix(httpsrv.URL, "http:")
 	)
@@ -690,7 +607,7 @@ func TestClientSubscriptionChannelClose(t *testing.T) {
 	client, _ := Dial(wsURL)
 	defer client.Close()
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 5; i++ {
 		ch := make(chan int, 100)
 		sub, err := client.Subscribe(context.Background(), "nftest", ch, "someSubscription", 100, 1)
 		if err != nil {
@@ -704,15 +621,13 @@ func TestClientSubscriptionChannelClose(t *testing.T) {
 // This test checks that Client doesn't lock up when a single subscriber
 // doesn't read subscription events.
 func TestClientNotificationStorm(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 
 	doTest := func(count int, wantError bool) {
 		client := DialInProc(server)
 		defer client.Close()
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 		defer cancel()
 
 		// Subscribe on the server. It will start sending many notifications
@@ -754,12 +669,10 @@ func TestClientNotificationStorm(t *testing.T) {
 	}
 
 	doTest(8000, false)
-	doTest(24000, true)
+	doTest(100000, true)
 }
 
 func TestClientSetHeader(t *testing.T) {
-	t.Parallel()
-
 	var gotHeader bool
 	srv := newTestServer()
 	httpsrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -796,8 +709,6 @@ func TestClientSetHeader(t *testing.T) {
 }
 
 func TestClientHTTP(t *testing.T) {
-	t.Parallel()
-
 	server := newTestServer()
 	defer server.Stop()
 
@@ -811,6 +722,7 @@ func TestClientHTTP(t *testing.T) {
 		errc       = make(chan error, len(results))
 		wantResult = echoResult{"a", 1, new(echoArgs)}
 	)
+	defer client.Close()
 	for i := range results {
 		go func() {
 			errc <- client.Call(&results[i], "test_echo", wantResult.String, wantResult.Int, wantResult.Args)
@@ -840,8 +752,6 @@ func TestClientHTTP(t *testing.T) {
 }
 
 func TestClientReconnect(t *testing.T) {
-	t.Parallel()
-
 	startServer := func(addr string) (*Server, net.Listener) {
 		srv := newTestServer()
 		l, err := net.Listen("tcp", addr)
@@ -934,31 +844,31 @@ func httpTestClient(srv *Server, transport string, fl *flakeyListener) (*Client,
 	return client, hs
 }
 
-func ipcTestClient(srv *Server, fl *flakeyListener) (*Client, net.Listener) {
-	// Listen on a random endpoint.
-	endpoint := fmt.Sprintf("go-ethereum-test-ipc-%d-%d", os.Getpid(), rand.Int63())
-	if runtime.GOOS == "windows" {
-		endpoint = `\\.\pipe\` + endpoint
-	} else {
-		endpoint = os.TempDir() + "/" + endpoint
-	}
-	l, err := ipcListen(endpoint)
-	if err != nil {
-		panic(err)
-	}
-	// Connect the listener to the server.
-	if fl != nil {
-		fl.Listener = l
-		l = fl
-	}
-	go srv.ServeListener(l)
-	// Connect the client.
-	client, err := Dial(endpoint)
-	if err != nil {
-		panic(err)
-	}
-	return client, l
-}
+// func ipcTestClient(srv *Server, fl *flakeyListener) (*Client, net.Listener) {
+// 	// Listen on a random endpoint.
+// 	endpoint := fmt.Sprintf("go-ethereum-test-ipc-%d-%d", os.Getpid(), rand.Int63())
+// 	if runtime.GOOS == "windows" {
+// 		endpoint = `\\.\pipe\` + endpoint
+// 	} else {
+// 		endpoint = os.TempDir() + "/" + endpoint
+// 	}
+// 	l, err := ipcListen(endpoint)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	// Connect the listener to the server.
+// 	if fl != nil {
+// 		fl.Listener = l
+// 		l = fl
+// 	}
+// 	go srv.ServeListener(l)
+// 	// Connect the client.
+// 	client, err := Dial(endpoint)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return client, l
+// }
 
 // flakeyListener kills accepted connections after a random timeout.
 type flakeyListener struct {

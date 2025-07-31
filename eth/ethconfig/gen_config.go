@@ -5,143 +5,149 @@ package ethconfig
 import (
 	"time"
 
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/txpool/blobpool"
+	"github.com/luxfi/coreth/core/txpool/legacypool"
+	"github.com/luxfi/coreth/eth/gasprice"
+	"github.com/luxfi/coreth/internal/ethapi"
+	"github.com/luxfi/coreth/miner"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/history"
-	"github.com/luxfi/geth/core/txpool/blobpool"
-	"github.com/luxfi/geth/core/txpool/legacypool"
-	"github.com/luxfi/geth/eth/gasprice"
-	"github.com/luxfi/geth/miner"
 )
 
 // MarshalTOML marshals as TOML.
 func (c Config) MarshalTOML() (interface{}, error) {
 	type Config struct {
-		Genesis                 *core.Genesis `toml:",omitempty"`
-		NetworkId               uint64
-		SyncMode                SyncMode
-		HistoryMode             history.HistoryMode
-		EthDiscoveryURLs        []string
-		SnapDiscoveryURLs       []string
-		NoPruning               bool
-		NoPrefetch              bool
-		TxLookupLimit           uint64 `toml:",omitempty"`
-		TransactionHistory      uint64 `toml:",omitempty"`
-		LogHistory              uint64 `toml:",omitempty"`
-		LogNoHistory            bool   `toml:",omitempty"`
-		LogExportCheckpoints    string
-		StateHistory            uint64                 `toml:",omitempty"`
-		StateScheme             string                 `toml:",omitempty"`
-		RequiredBlocks          map[uint64]common.Hash `toml:"-"`
-		SkipBcVersionCheck      bool                   `toml:"-"`
-		DatabaseHandles         int                    `toml:"-"`
-		DatabaseCache           int
-		DatabaseFreezer         string
-		DatabaseEra             string
-		TrieCleanCache          int
-		TrieDirtyCache          int
-		TrieTimeout             time.Duration
-		SnapshotCache           int
-		Preimages               bool
-		FilterLogCacheSize      int
-		Miner                   miner.Config
-		TxPool                  legacypool.Config
-		BlobPool                blobpool.Config
-		GPO                     gasprice.Config
-		EnablePreimageRecording bool
-		VMTrace                 string
-		VMTraceJsonConfig       string
-		RPCGasCap               uint64
-		RPCEVMTimeout           time.Duration
-		RPCTxFeeCap             float64
-		OverrideOsaka           *uint64 `toml:",omitempty"`
-		OverrideVerkle          *uint64 `toml:",omitempty"`
+		Genesis                         *core.Genesis `toml:",omitempty"`
+		NetworkId                       uint64
+		Pruning                         bool
+		AcceptorQueueLimit              int
+		CommitInterval                  uint64
+		PopulateMissingTries            *uint64
+		PopulateMissingTriesParallelism int
+		AllowMissingTries               bool
+		SnapshotDelayInit               bool
+		SnapshotWait                    bool
+		SnapshotVerify                  bool
+		SkipSnapshotRebuild             bool
+		SkipBcVersionCheck              bool `toml:"-"`
+		TrieCleanCache                  int
+		TrieDirtyCache                  int
+		TrieDirtyCommitTarget           int
+		TriePrefetcherParallelism       int
+		SnapshotCache                   int
+		Preimages                       bool
+		AcceptedCacheSize               int
+		Miner                           miner.Config
+		TxPool                          legacypool.Config
+		BlobPool                        blobpool.Config
+		GPO                             gasprice.Config
+		EnablePreimageRecording         bool
+		RPCGasCap                       uint64 `toml:",omitempty"`
+		RPCEVMTimeout                   time.Duration
+		RPCTxFeeCap                     float64 `toml:",omitempty"`
+		AllowUnfinalizedQueries         bool
+		HistoricalProofQueryWindow      uint64
+		AllowUnprotectedTxs             bool
+		AllowUnprotectedTxHashes        []common.Hash
+		OfflinePruning                  bool
+		OfflinePruningBloomFilterSize   uint64
+		OfflinePruningDataDirectory     string
+		SkipUpgradeCheck                bool
+		TransactionHistory              uint64 `toml:",omitempty"`
+		StateHistory                    uint64 `toml:",omitempty"`
+		StateScheme                     string `toml:",omitempty"`
+		SkipTxIndexing                  bool
+		PriceOptionConfig               ethapi.PriceOptionConfig
 	}
 	var enc Config
 	enc.Genesis = c.Genesis
 	enc.NetworkId = c.NetworkId
-	enc.SyncMode = c.SyncMode
-	enc.HistoryMode = c.HistoryMode
-	enc.EthDiscoveryURLs = c.EthDiscoveryURLs
-	enc.SnapDiscoveryURLs = c.SnapDiscoveryURLs
-	enc.NoPruning = c.NoPruning
-	enc.NoPrefetch = c.NoPrefetch
-	enc.TxLookupLimit = c.TxLookupLimit
-	enc.TransactionHistory = c.TransactionHistory
-	enc.LogHistory = c.LogHistory
-	enc.LogNoHistory = c.LogNoHistory
-	enc.LogExportCheckpoints = c.LogExportCheckpoints
-	enc.StateHistory = c.StateHistory
-	enc.StateScheme = c.StateScheme
-	enc.RequiredBlocks = c.RequiredBlocks
+	enc.Pruning = c.Pruning
+	enc.AcceptorQueueLimit = c.AcceptorQueueLimit
+	enc.CommitInterval = c.CommitInterval
+	enc.PopulateMissingTries = c.PopulateMissingTries
+	enc.PopulateMissingTriesParallelism = c.PopulateMissingTriesParallelism
+	enc.AllowMissingTries = c.AllowMissingTries
+	enc.SnapshotDelayInit = c.SnapshotDelayInit
+	enc.SnapshotWait = c.SnapshotWait
+	enc.SnapshotVerify = c.SnapshotVerify
+	enc.SkipSnapshotRebuild = c.SkipSnapshotRebuild
 	enc.SkipBcVersionCheck = c.SkipBcVersionCheck
-	enc.DatabaseHandles = c.DatabaseHandles
-	enc.DatabaseCache = c.DatabaseCache
-	enc.DatabaseFreezer = c.DatabaseFreezer
-	enc.DatabaseEra = c.DatabaseEra
 	enc.TrieCleanCache = c.TrieCleanCache
 	enc.TrieDirtyCache = c.TrieDirtyCache
-	enc.TrieTimeout = c.TrieTimeout
+	enc.TrieDirtyCommitTarget = c.TrieDirtyCommitTarget
+	enc.TriePrefetcherParallelism = c.TriePrefetcherParallelism
 	enc.SnapshotCache = c.SnapshotCache
 	enc.Preimages = c.Preimages
-	enc.FilterLogCacheSize = c.FilterLogCacheSize
+	enc.AcceptedCacheSize = c.AcceptedCacheSize
 	enc.Miner = c.Miner
 	enc.TxPool = c.TxPool
 	enc.BlobPool = c.BlobPool
 	enc.GPO = c.GPO
 	enc.EnablePreimageRecording = c.EnablePreimageRecording
-	enc.VMTrace = c.VMTrace
-	enc.VMTraceJsonConfig = c.VMTraceJsonConfig
 	enc.RPCGasCap = c.RPCGasCap
 	enc.RPCEVMTimeout = c.RPCEVMTimeout
 	enc.RPCTxFeeCap = c.RPCTxFeeCap
-	enc.OverrideOsaka = c.OverrideOsaka
-	enc.OverrideVerkle = c.OverrideVerkle
+	enc.AllowUnfinalizedQueries = c.AllowUnfinalizedQueries
+	enc.HistoricalProofQueryWindow = c.HistoricalProofQueryWindow
+	enc.AllowUnprotectedTxs = c.AllowUnprotectedTxs
+	enc.AllowUnprotectedTxHashes = c.AllowUnprotectedTxHashes
+	enc.OfflinePruning = c.OfflinePruning
+	enc.OfflinePruningBloomFilterSize = c.OfflinePruningBloomFilterSize
+	enc.OfflinePruningDataDirectory = c.OfflinePruningDataDirectory
+	enc.SkipUpgradeCheck = c.SkipUpgradeCheck
+	enc.TransactionHistory = c.TransactionHistory
+	enc.StateHistory = c.StateHistory
+	enc.StateScheme = c.StateScheme
+	enc.SkipTxIndexing = c.SkipTxIndexing
+	enc.PriceOptionConfig = c.PriceOptionConfig
 	return &enc, nil
 }
 
 // UnmarshalTOML unmarshals from TOML.
 func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	type Config struct {
-		Genesis                 *core.Genesis `toml:",omitempty"`
-		NetworkId               *uint64
-		SyncMode                *SyncMode
-		HistoryMode             *history.HistoryMode
-		EthDiscoveryURLs        []string
-		SnapDiscoveryURLs       []string
-		NoPruning               *bool
-		NoPrefetch              *bool
-		TxLookupLimit           *uint64 `toml:",omitempty"`
-		TransactionHistory      *uint64 `toml:",omitempty"`
-		LogHistory              *uint64 `toml:",omitempty"`
-		LogNoHistory            *bool   `toml:",omitempty"`
-		LogExportCheckpoints    *string
-		StateHistory            *uint64                `toml:",omitempty"`
-		StateScheme             *string                `toml:",omitempty"`
-		RequiredBlocks          map[uint64]common.Hash `toml:"-"`
-		SkipBcVersionCheck      *bool                  `toml:"-"`
-		DatabaseHandles         *int                   `toml:"-"`
-		DatabaseCache           *int
-		DatabaseFreezer         *string
-		DatabaseEra             *string
-		TrieCleanCache          *int
-		TrieDirtyCache          *int
-		TrieTimeout             *time.Duration
-		SnapshotCache           *int
-		Preimages               *bool
-		FilterLogCacheSize      *int
-		Miner                   *miner.Config
-		TxPool                  *legacypool.Config
-		BlobPool                *blobpool.Config
-		GPO                     *gasprice.Config
-		EnablePreimageRecording *bool
-		VMTrace                 *string
-		VMTraceJsonConfig       *string
-		RPCGasCap               *uint64
-		RPCEVMTimeout           *time.Duration
-		RPCTxFeeCap             *float64
-		OverrideOsaka           *uint64 `toml:",omitempty"`
-		OverrideVerkle          *uint64 `toml:",omitempty"`
+		Genesis                         *core.Genesis `toml:",omitempty"`
+		NetworkId                       *uint64
+		Pruning                         *bool
+		AcceptorQueueLimit              *int
+		CommitInterval                  *uint64
+		PopulateMissingTries            *uint64
+		PopulateMissingTriesParallelism *int
+		AllowMissingTries               *bool
+		SnapshotDelayInit               *bool
+		SnapshotWait                    *bool
+		SnapshotVerify                  *bool
+		SkipSnapshotRebuild             *bool
+		SkipBcVersionCheck              *bool `toml:"-"`
+		TrieCleanCache                  *int
+		TrieDirtyCache                  *int
+		TrieDirtyCommitTarget           *int
+		TriePrefetcherParallelism       *int
+		SnapshotCache                   *int
+		Preimages                       *bool
+		AcceptedCacheSize               *int
+		Miner                           *miner.Config
+		TxPool                          *legacypool.Config
+		BlobPool                        *blobpool.Config
+		GPO                             *gasprice.Config
+		EnablePreimageRecording         *bool
+		RPCGasCap                       *uint64 `toml:",omitempty"`
+		RPCEVMTimeout                   *time.Duration
+		RPCTxFeeCap                     *float64 `toml:",omitempty"`
+		AllowUnfinalizedQueries         *bool
+		HistoricalProofQueryWindow      *uint64
+		AllowUnprotectedTxs             *bool
+		AllowUnprotectedTxHashes        []common.Hash
+		OfflinePruning                  *bool
+		OfflinePruningBloomFilterSize   *uint64
+		OfflinePruningDataDirectory     *string
+		SkipUpgradeCheck                *bool
+		TransactionHistory              *uint64 `toml:",omitempty"`
+		StateHistory                    *uint64 `toml:",omitempty"`
+		StateScheme                     *string `toml:",omitempty"`
+		SkipTxIndexing                  *bool
+		PriceOptionConfig               *ethapi.PriceOptionConfig
 	}
 	var dec Config
 	if err := unmarshal(&dec); err != nil {
@@ -153,62 +159,38 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	if dec.NetworkId != nil {
 		c.NetworkId = *dec.NetworkId
 	}
-	if dec.SyncMode != nil {
-		c.SyncMode = *dec.SyncMode
+	if dec.Pruning != nil {
+		c.Pruning = *dec.Pruning
 	}
-	if dec.HistoryMode != nil {
-		c.HistoryMode = *dec.HistoryMode
+	if dec.AcceptorQueueLimit != nil {
+		c.AcceptorQueueLimit = *dec.AcceptorQueueLimit
 	}
-	if dec.EthDiscoveryURLs != nil {
-		c.EthDiscoveryURLs = dec.EthDiscoveryURLs
+	if dec.CommitInterval != nil {
+		c.CommitInterval = *dec.CommitInterval
 	}
-	if dec.SnapDiscoveryURLs != nil {
-		c.SnapDiscoveryURLs = dec.SnapDiscoveryURLs
+	if dec.PopulateMissingTries != nil {
+		c.PopulateMissingTries = dec.PopulateMissingTries
 	}
-	if dec.NoPruning != nil {
-		c.NoPruning = *dec.NoPruning
+	if dec.PopulateMissingTriesParallelism != nil {
+		c.PopulateMissingTriesParallelism = *dec.PopulateMissingTriesParallelism
 	}
-	if dec.NoPrefetch != nil {
-		c.NoPrefetch = *dec.NoPrefetch
+	if dec.AllowMissingTries != nil {
+		c.AllowMissingTries = *dec.AllowMissingTries
 	}
-	if dec.TxLookupLimit != nil {
-		c.TxLookupLimit = *dec.TxLookupLimit
+	if dec.SnapshotDelayInit != nil {
+		c.SnapshotDelayInit = *dec.SnapshotDelayInit
 	}
-	if dec.TransactionHistory != nil {
-		c.TransactionHistory = *dec.TransactionHistory
+	if dec.SnapshotWait != nil {
+		c.SnapshotWait = *dec.SnapshotWait
 	}
-	if dec.LogHistory != nil {
-		c.LogHistory = *dec.LogHistory
+	if dec.SnapshotVerify != nil {
+		c.SnapshotVerify = *dec.SnapshotVerify
 	}
-	if dec.LogNoHistory != nil {
-		c.LogNoHistory = *dec.LogNoHistory
-	}
-	if dec.LogExportCheckpoints != nil {
-		c.LogExportCheckpoints = *dec.LogExportCheckpoints
-	}
-	if dec.StateHistory != nil {
-		c.StateHistory = *dec.StateHistory
-	}
-	if dec.StateScheme != nil {
-		c.StateScheme = *dec.StateScheme
-	}
-	if dec.RequiredBlocks != nil {
-		c.RequiredBlocks = dec.RequiredBlocks
+	if dec.SkipSnapshotRebuild != nil {
+		c.SkipSnapshotRebuild = *dec.SkipSnapshotRebuild
 	}
 	if dec.SkipBcVersionCheck != nil {
 		c.SkipBcVersionCheck = *dec.SkipBcVersionCheck
-	}
-	if dec.DatabaseHandles != nil {
-		c.DatabaseHandles = *dec.DatabaseHandles
-	}
-	if dec.DatabaseCache != nil {
-		c.DatabaseCache = *dec.DatabaseCache
-	}
-	if dec.DatabaseFreezer != nil {
-		c.DatabaseFreezer = *dec.DatabaseFreezer
-	}
-	if dec.DatabaseEra != nil {
-		c.DatabaseEra = *dec.DatabaseEra
 	}
 	if dec.TrieCleanCache != nil {
 		c.TrieCleanCache = *dec.TrieCleanCache
@@ -216,8 +198,11 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	if dec.TrieDirtyCache != nil {
 		c.TrieDirtyCache = *dec.TrieDirtyCache
 	}
-	if dec.TrieTimeout != nil {
-		c.TrieTimeout = *dec.TrieTimeout
+	if dec.TrieDirtyCommitTarget != nil {
+		c.TrieDirtyCommitTarget = *dec.TrieDirtyCommitTarget
+	}
+	if dec.TriePrefetcherParallelism != nil {
+		c.TriePrefetcherParallelism = *dec.TriePrefetcherParallelism
 	}
 	if dec.SnapshotCache != nil {
 		c.SnapshotCache = *dec.SnapshotCache
@@ -225,8 +210,8 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	if dec.Preimages != nil {
 		c.Preimages = *dec.Preimages
 	}
-	if dec.FilterLogCacheSize != nil {
-		c.FilterLogCacheSize = *dec.FilterLogCacheSize
+	if dec.AcceptedCacheSize != nil {
+		c.AcceptedCacheSize = *dec.AcceptedCacheSize
 	}
 	if dec.Miner != nil {
 		c.Miner = *dec.Miner
@@ -243,12 +228,6 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	if dec.EnablePreimageRecording != nil {
 		c.EnablePreimageRecording = *dec.EnablePreimageRecording
 	}
-	if dec.VMTrace != nil {
-		c.VMTrace = *dec.VMTrace
-	}
-	if dec.VMTraceJsonConfig != nil {
-		c.VMTraceJsonConfig = *dec.VMTraceJsonConfig
-	}
 	if dec.RPCGasCap != nil {
 		c.RPCGasCap = *dec.RPCGasCap
 	}
@@ -258,11 +237,44 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	if dec.RPCTxFeeCap != nil {
 		c.RPCTxFeeCap = *dec.RPCTxFeeCap
 	}
-	if dec.OverrideOsaka != nil {
-		c.OverrideOsaka = dec.OverrideOsaka
+	if dec.AllowUnfinalizedQueries != nil {
+		c.AllowUnfinalizedQueries = *dec.AllowUnfinalizedQueries
 	}
-	if dec.OverrideVerkle != nil {
-		c.OverrideVerkle = dec.OverrideVerkle
+	if dec.HistoricalProofQueryWindow != nil {
+		c.HistoricalProofQueryWindow = *dec.HistoricalProofQueryWindow
+	}
+	if dec.AllowUnprotectedTxs != nil {
+		c.AllowUnprotectedTxs = *dec.AllowUnprotectedTxs
+	}
+	if dec.AllowUnprotectedTxHashes != nil {
+		c.AllowUnprotectedTxHashes = dec.AllowUnprotectedTxHashes
+	}
+	if dec.OfflinePruning != nil {
+		c.OfflinePruning = *dec.OfflinePruning
+	}
+	if dec.OfflinePruningBloomFilterSize != nil {
+		c.OfflinePruningBloomFilterSize = *dec.OfflinePruningBloomFilterSize
+	}
+	if dec.OfflinePruningDataDirectory != nil {
+		c.OfflinePruningDataDirectory = *dec.OfflinePruningDataDirectory
+	}
+	if dec.SkipUpgradeCheck != nil {
+		c.SkipUpgradeCheck = *dec.SkipUpgradeCheck
+	}
+	if dec.TransactionHistory != nil {
+		c.TransactionHistory = *dec.TransactionHistory
+	}
+	if dec.StateHistory != nil {
+		c.StateHistory = *dec.StateHistory
+	}
+	if dec.StateScheme != nil {
+		c.StateScheme = *dec.StateScheme
+	}
+	if dec.SkipTxIndexing != nil {
+		c.SkipTxIndexing = *dec.SkipTxIndexing
+	}
+	if dec.PriceOptionConfig != nil {
+		c.PriceOptionConfig = *dec.PriceOptionConfig
 	}
 	return nil
 }
