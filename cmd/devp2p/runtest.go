@@ -83,7 +83,9 @@ func runTests(ctx *cli.Context, tests []utesting.Test) error {
 	}
 	// Disable logging unless explicitly enabled.
 	if !ctx.IsSet("verbosity") && !ctx.IsSet("vmodule") {
-		log.SetDefault(log.NewLogger(log.DiscardHandler()))
+		// Set a no-op logger for tests
+		noopLogger := log.NewNoOpLogger()
+		log.SetGlobalLogger(noopLogger)
 	}
 	// Run the tests.
 	var run = utesting.RunTests

@@ -239,6 +239,12 @@ github.com/labstack/echo/v4 v4.2.1/go.mod h1:AA49e0DZ8kk5jTOOCKNuPR6oTnBS0dYiM4F
 github.com/labstack/gommon v0.3.0/go.mod h1:MULnywXg0yavhxWKc+lOruYdAhDwPK9wf0OL7NoOu+k=
 github.com/leanovate/gopter v0.2.11 h1:vRjThO1EKPb/1NsDXuDrzldR28RLkBflWYcU9CvzWu4=
 github.com/leanovate/gopter v0.2.11/go.mod h1:aK3tzZP/C+p1m3SPRE4SYZFGP7jjkuSI4f7Xvpt0S9c=
+github.com/luxfi/crypto v1.1.1 h1:6roT/QzdwUoz3v7Fv2bM1s1CyCp/UpEnG7yRVWbw0do=
+github.com/luxfi/crypto v1.1.1/go.mod h1:Wt4fomM14VWfQ/89PZh1dApz+0XteEG9x99Q9SHIRtY=
+github.com/luxfi/database v1.1.4 h1:C8yFA7ilwYnde/+tjSif9RgBlC9mN8Lj52jIIv/Vayk=
+github.com/luxfi/database v1.1.4/go.mod h1:/dUq+IYFvgFitQEXr4zj/9jJ0cjT/bf5558pB1rKpX8=
+github.com/luxfi/ids v0.1.1 h1:ga/sNdsDEpkOB1B89BWVsGowCECOK3FfXiy7EgeumzQ=
+github.com/luxfi/ids v0.1.1/go.mod h1:eDCgoPXogp6hvVTSbxuplbc297jq0r6ftOZEKt6jSgY=
 github.com/luxfi/log v0.1.1 h1:KRTOIGqyPTrN3nWcBMVI50B6EXTayYex2+HyGjJ06Ew=
 github.com/luxfi/log v0.1.1/go.mod h1:trb99HbI+YW6nu+So4jWKey20oHeRhlee70xbuR6Gak=
 github.com/luxfi/node v1.13.13 h1:8EyGguh1PfN0XzTPAeTBEXqniMHG+l1JQq8wVHKfYX8=
@@ -267,6 +273,8 @@ github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyua
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/mitchellh/pointerstructure v1.2.1 h1:ZhBBeX8tSlRpu/FFhXH4RC4OJzFlqsQhoHZAz4x7TIw=
 github.com/mitchellh/pointerstructure v1.2.1/go.mod h1:BRAsLI5zgXmw97Lf6s25bs8ohIXc3tViBH44KcwB2g4=
+github.com/mr-tron/base58 v1.2.0 h1:T/HDJBh4ZCPbU39/+c3rRvE0uKBQlU27+QI8LJ4t64o=
+github.com/mr-tron/base58 v1.2.0/go.mod h1:BinMc/sQntlIE1frQmRFPUoPA1Zkr8VRgBdjWI2mNwc=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/naoina/go-stringutil v0.1.0 h1:rCUeRUHjBjGTSHl0VC00jUPLz8/F9dDzYI70Hzifhks=

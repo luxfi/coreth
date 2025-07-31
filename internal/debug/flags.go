@@ -165,11 +165,14 @@ var Flags = []cli.Flag{
 }
 
 var (
-	glogger       *log.GlogHandler
 	logOutputFile io.WriteCloser
 )
 
+// Global glog handler for API access
+var glogger *log.GlogHandler
+
 func init() {
+	// Initialize default logger with basic terminal handler
 	glogger = log.NewGlogHandler(log.NewTerminalHandler(os.Stderr, false))
 }
 
@@ -263,8 +266,6 @@ func Setup(ctx *cli.Context) error {
 		}
 	}
 	glogger.Vmodule(vmodule)
-
-	log.Root().SetHandler(glogger)
 
 	// profiling, tracing
 	runtime.MemProfileRate = memprofilerateFlag.Value

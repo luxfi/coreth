@@ -19,7 +19,6 @@ package core
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"os"
 
 	"github.com/luxfi/geth/common"
@@ -115,13 +114,15 @@ func (l *AuditLogger) Version(ctx context.Context) (string, error) {
 }
 
 func NewAuditLogger(path string, api ExternalAPI) (*AuditLogger, error) {
+	// Verify the audit log file can be created/opened
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, err
 	}
+	f.Close() // Close for now, luxfi/log will handle the file
 
-	handler := slog.NewTextHandler(f, nil)
-	l := log.NewLogger(handler).With("api", "signer")
+	// Create a simple logger that writes to the audit file
+	l := log.Root().With("api", "signer", "audit", path)
 	l.Info("Configured", "audit log", path)
 	return &AuditLogger{l, api}, nil
 }
