@@ -20,7 +20,7 @@
 package metrics
 
 import (
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/shirou/gopsutil/cpu"
 )
 

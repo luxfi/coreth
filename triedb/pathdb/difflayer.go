@@ -21,7 +21,7 @@ import (
 	"sync"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // diffLayer represents a collection of modifications made to the in-memory tries

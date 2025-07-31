@@ -29,7 +29,7 @@ import (
 	"github.com/luxfi/geth/beacon/merkle"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"gopkg.in/yaml.v3"
 )
 

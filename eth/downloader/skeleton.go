@@ -29,7 +29,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/eth/protocols/eth"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // scratchHeaders is the number of headers to store in a scratch space to allow

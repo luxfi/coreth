@@ -19,7 +19,7 @@ package sync
 import (
 	"github.com/luxfi/geth/beacon/light/request"
 	"github.com/luxfi/geth/beacon/types"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 type headTracker interface {

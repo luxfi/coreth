@@ -27,7 +27,7 @@ import (
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/eth/tracers"
 	"github.com/luxfi/geth/internal/utesting"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/urfave/cli/v2"
 )
 

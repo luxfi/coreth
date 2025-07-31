@@ -26,7 +26,7 @@ import (
 	"github.com/luxfi/geth/cmd/utils"
 	"github.com/luxfi/geth/internal/debug"
 	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/node"
 	"github.com/luxfi/geth/rpc"
 	"github.com/urfave/cli/v2"

@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/cloudflare/cloudflare-go"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/p2p/dnsdisc"
 	"github.com/urfave/cli/v2"
 )

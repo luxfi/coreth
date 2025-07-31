@@ -23,7 +23,7 @@ import (
 	"github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/holiman/uint256"
 )
 

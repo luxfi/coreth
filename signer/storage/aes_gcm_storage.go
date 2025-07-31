@@ -24,7 +24,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 type storedCredential struct {

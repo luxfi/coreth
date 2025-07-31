@@ -27,7 +27,7 @@ import (
 
 	"github.com/luxfi/geth/common/lru"
 	"github.com/luxfi/geth/internal/era"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rlp"
 )
 

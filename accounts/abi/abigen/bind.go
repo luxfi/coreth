@@ -30,7 +30,7 @@ import (
 	"unicode"
 
 	"github.com/luxfi/geth/accounts/abi"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 func isKeyWord(arg string) bool {

@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/luxfi/geth/internal/ethapi"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rpc"
 )
 

@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	stunV2 "github.com/pion/stun/v2"
 )
 

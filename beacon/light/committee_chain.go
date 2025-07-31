@@ -30,7 +30,7 @@ import (
 	"github.com/luxfi/geth/common/mclock"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 var (

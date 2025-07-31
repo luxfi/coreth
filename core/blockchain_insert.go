@@ -22,7 +22,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/mclock"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // insertStats tracks and reports on block insertion.

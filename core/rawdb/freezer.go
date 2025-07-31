@@ -26,7 +26,7 @@ import (
 	"sync/atomic"
 
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/metrics"
 	"github.com/gofrs/flock"
 )

@@ -44,7 +44,7 @@ import (
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/internal/ethapi"
 	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/node"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/rlp"

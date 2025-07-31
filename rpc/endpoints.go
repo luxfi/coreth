@@ -20,7 +20,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // StartIPCEndpoint starts an IPC endpoint.

@@ -25,7 +25,7 @@ import (
 
 	"github.com/luxfi/geth/common/mclock"
 	"github.com/luxfi/geth/internal/testlog"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 func TestServerPortMapping(t *testing.T) {

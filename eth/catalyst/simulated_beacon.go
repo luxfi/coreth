@@ -32,7 +32,7 @@ import (
 	"github.com/luxfi/geth/crypto/kzg4844"
 	"github.com/luxfi/geth/eth"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/node"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/params/forks"

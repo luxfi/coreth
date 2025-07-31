@@ -41,7 +41,7 @@ import (
 	"github.com/luxfi/geth/eth/gasestimator"
 	"github.com/luxfi/geth/eth/tracers/logger"
 	"github.com/luxfi/geth/internal/ethapi/override"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/p2p"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/rlp"
