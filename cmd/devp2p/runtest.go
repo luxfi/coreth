@@ -22,7 +22,7 @@ import (
 	"github.com/luxfi/geth/cmd/devp2p/internal/v4test"
 	"github.com/luxfi/geth/internal/flags"
 	"github.com/luxfi/geth/internal/utesting"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/urfave/cli/v2"
 )
 

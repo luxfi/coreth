@@ -22,7 +22,7 @@ package metrics
 import (
 	syscall "golang.org/x/sys/unix"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // getProcessCPUTime retrieves the process' CPU time since program startup.

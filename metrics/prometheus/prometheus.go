@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/metrics"
 )
 

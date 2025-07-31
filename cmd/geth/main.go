@@ -33,7 +33,7 @@ import (
 	"github.com/luxfi/geth/ethclient"
 	"github.com/luxfi/geth/internal/debug"
 	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/node"
 	"go.uber.org/automaxprocs/maxprocs"
 

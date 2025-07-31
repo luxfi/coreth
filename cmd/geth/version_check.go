@@ -26,7 +26,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/jedisct1/go-minisign"
 	"github.com/urfave/cli/v2"
 )

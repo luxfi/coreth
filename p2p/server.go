@@ -35,7 +35,7 @@ import (
 	"github.com/luxfi/geth/common/mclock"
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/p2p/discover"
 	"github.com/luxfi/geth/p2p/enode"
 	"github.com/luxfi/geth/p2p/enr"

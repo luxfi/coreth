@@ -19,7 +19,7 @@ package request
 import (
 	"sync"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // Module represents a mechanism which is typically responsible for downloading

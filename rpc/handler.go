@@ -28,7 +28,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // handler handles JSON-RPC messages. There is one handler per connection. Note that

@@ -24,7 +24,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/prque"
 	"github.com/luxfi/geth/eth/protocols/eth"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // timeoutGracePeriod is the amount of time to allow for a peer to deliver a

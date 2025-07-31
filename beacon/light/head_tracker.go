@@ -24,7 +24,7 @@ import (
 	"github.com/luxfi/geth/beacon/params"
 	"github.com/luxfi/geth/beacon/types"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // HeadTracker keeps track of the latest validated head and the "prefetch" head

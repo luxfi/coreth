@@ -23,7 +23,7 @@ import (
 	"github.com/luxfi/geth/beacon/light/sync"
 	"github.com/luxfi/geth/beacon/types"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // ApiServer is a wrapper around BeaconLightApi that implements request.requestServer.

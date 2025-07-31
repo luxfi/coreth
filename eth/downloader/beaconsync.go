@@ -25,7 +25,7 @@ import (
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // beaconBackfiller is the chain and state backfilling that can be commenced once

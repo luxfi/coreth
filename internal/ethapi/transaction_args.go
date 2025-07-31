@@ -31,7 +31,7 @@ import (
 	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/crypto/kzg4844"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/rpc"
 	"github.com/holiman/uint256"

@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/internal/testlog"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rpc"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/websocket"

@@ -28,7 +28,7 @@ import (
 	"runtime"
 
 	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/metrics/exp"
 	"github.com/mattn/go-colorable"
@@ -264,7 +264,7 @@ func Setup(ctx *cli.Context) error {
 	}
 	glogger.Vmodule(vmodule)
 
-	log.SetDefault(log.NewLogger(glogger))
+	log.Root().SetHandler(glogger)
 
 	// profiling, tracing
 	runtime.MemProfileRate = memprofilerateFlag.Value

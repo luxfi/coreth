@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rpc"
 )
 

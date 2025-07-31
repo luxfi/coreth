@@ -28,7 +28,7 @@ import (
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/luxfi/geth/console/prompt"
 	"github.com/luxfi/geth/internal/ethapi"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 type CommandlineUI struct {

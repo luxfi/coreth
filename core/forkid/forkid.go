@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/params"
 )
 

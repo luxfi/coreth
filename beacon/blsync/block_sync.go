@@ -24,7 +24,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/lru"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // beaconBlockSync implements request.Module; it fetches the beacon blocks belonging

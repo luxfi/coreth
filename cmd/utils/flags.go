@@ -60,7 +60,7 @@ import (
 	"github.com/luxfi/geth/graphql"
 	"github.com/luxfi/geth/internal/ethapi"
 	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/metrics/exp"
 	"github.com/luxfi/geth/metrics/influxdb"

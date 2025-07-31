@@ -23,7 +23,7 @@ import (
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/ethdb/leveldb"
 	"github.com/luxfi/geth/ethdb/pebble"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // DatabaseOptions contains the options to apply when opening a database.

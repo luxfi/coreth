@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	"github.com/luxfi/geth/common/mclock"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/p2p/enode"
 	"github.com/luxfi/geth/p2p/nat"
 	"github.com/luxfi/geth/p2p/netutil"

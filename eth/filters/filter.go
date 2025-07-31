@@ -28,7 +28,7 @@ import (
 	"github.com/luxfi/geth/core/filtermaps"
 	"github.com/luxfi/geth/core/history"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rpc"
 )
 

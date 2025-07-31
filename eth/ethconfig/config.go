@@ -32,7 +32,7 @@ import (
 	"github.com/luxfi/geth/core/txpool/legacypool"
 	"github.com/luxfi/geth/eth/gasprice"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/miner"
 	"github.com/luxfi/geth/params"
 )

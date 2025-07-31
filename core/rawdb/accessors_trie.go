@@ -22,7 +22,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // HashScheme is the legacy hash-based state scheme with which trie nodes are

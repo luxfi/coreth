@@ -30,7 +30,7 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/internal/testlog"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/p2p/discover/v4wire"
 	"github.com/luxfi/geth/p2p/discover/v5wire"
 	"github.com/luxfi/geth/p2p/enode"

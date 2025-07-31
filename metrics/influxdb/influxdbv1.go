@@ -5,7 +5,7 @@ import (
 	uurl "net/url"
 	"time"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/metrics"
 	client "github.com/influxdata/influxdb1-client/v2"
 )

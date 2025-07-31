@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	natpmp "github.com/jackpal/go-nat-pmp"
 )
 

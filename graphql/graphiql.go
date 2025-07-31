@@ -28,7 +28,7 @@ import (
 	"path/filepath"
 
 	"github.com/luxfi/geth/graphql/internal/graphiql"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // GraphiQL is an in-browser IDE for exploring GraphiQL APIs.

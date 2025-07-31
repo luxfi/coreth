@@ -26,7 +26,7 @@ import (
 	"github.com/dop251/goja"
 	"github.com/luxfi/geth/internal/ethapi"
 	"github.com/luxfi/geth/internal/jsre/deps"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/signer/core"
 	"github.com/luxfi/geth/signer/storage"
 )

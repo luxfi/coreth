@@ -22,7 +22,7 @@ import (
 	"sync"
 
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 const tmpSuffix = ".tmp"

@@ -30,7 +30,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/eth/tracers"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/params"
 	"gopkg.in/natefinch/lumberjack.v2"
 )

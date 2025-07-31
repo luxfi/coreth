@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/holiman/uint256"
 	"github.com/urfave/cli/v2"
 )
