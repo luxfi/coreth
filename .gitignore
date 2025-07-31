@@ -58,3 +58,4 @@ cmd/rlpdump/rlpdump
 cmd/workload/workload
 bin/
 geth
+build/

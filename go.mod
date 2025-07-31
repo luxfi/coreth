@@ -45,6 +45,7 @@ require (
 	github.com/jedisct1/go-minisign v0.0.0-20230811132847-661be99b8267
 	github.com/karalabe/hid v1.0.1-0.20240306101548-573246063e52
 	github.com/kylelemons/godebug v1.1.0
+	github.com/luxfi/node v1.13.13
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416
@@ -146,4 +147,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace github.com/luxfi/node => ../node
