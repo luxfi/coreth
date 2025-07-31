@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2023 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -23,14 +34,13 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/internal/ethapi/override"
-	"github.com/luxfi/log"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/log"
 )
 
 // Options are the contextual parameters to execute the requested call.
@@ -39,11 +49,10 @@ import (
 // these together, it would be excessively hard to test. Splitting the parts out
 // allows testing without needing a proper live chain.
 type Options struct {
-	Config         *params.ChainConfig      // Chain configuration for hard fork selection
-	Chain          core.ChainContext        // Chain context to access past block hashes
-	Header         *types.Header            // Header defining the block context to execute in
-	State          *state.StateDB           // Pre-state on top of which to estimate the gas
-	BlockOverrides *override.BlockOverrides // Block overrides to apply during the estimation
+	Config *params.ChainConfig // Chain configuration for hard fork selection
+	Chain  core.ChainContext   // Chain context to access past block hashes
+	Header *types.Header       // Header defining the block context to execute in
+	State  *state.StateDB      // Pre-state on top of which to estimate the gas
 
 	ErrorRatio float64 // Allowed overestimation ratio for faster estimation termination
 }
@@ -81,16 +90,6 @@ func Estimate(ctx context.Context, call *core.Message, opts *Options, gasCap uin
 				return 0, nil, core.ErrInsufficientFundsForTransfer
 			}
 			available.Sub(available, call.Value)
-		}
-		if opts.Config.IsCancun(opts.Header.Number, opts.Header.Time) && len(call.BlobHashes) > 0 {
-			blobGasPerBlob := new(big.Int).SetInt64(params.BlobTxBlobGasPerBlob)
-			blobBalanceUsage := new(big.Int).SetInt64(int64(len(call.BlobHashes)))
-			blobBalanceUsage.Mul(blobBalanceUsage, blobGasPerBlob)
-			blobBalanceUsage.Mul(blobBalanceUsage, call.BlobGasFeeCap)
-			if blobBalanceUsage.Cmp(available) >= 0 {
-				return 0, nil, core.ErrInsufficientFunds
-			}
-			available.Sub(available, blobBalanceUsage)
 		}
 		allowance := new(big.Int).Div(available, feeCap)
 
@@ -144,7 +143,7 @@ func Estimate(ctx context.Context, call *core.Message, opts *Options, gasCap uin
 	// There's a fairly high chance for the transaction to execute successfully
 	// with gasLimit set to the first execution's usedGas + gasRefund. Explicitly
 	// check that gas amount and use as a limit for the binary search.
-	optimisticGasLimit := (result.MaxUsedGas + params.CallStipend) * 64 / 63
+	optimisticGasLimit := (result.UsedGas + result.RefundedGas + params.CallStipend) * 64 / 63
 	if optimisticGasLimit < hi {
 		failed, _, err = execute(ctx, call, opts, optimisticGasLimit)
 		if err != nil {
@@ -170,7 +169,7 @@ func Estimate(ctx context.Context, call *core.Message, opts *Options, gasCap uin
 				break
 			}
 		}
-		mid := lo + (hi-lo)/2
+		mid := (hi + lo) / 2
 		if mid > lo*2 {
 			// Most txs don't need much higher gas limit than their gas used, and most txs don't
 			// require near the full block limit of gas, so the selection of where to bisect the
@@ -219,24 +218,12 @@ func execute(ctx context.Context, call *core.Message, opts *Options, gasLimit ui
 func run(ctx context.Context, call *core.Message, opts *Options) (*core.ExecutionResult, error) {
 	// Assemble the call and the call context
 	var (
+		msgContext = core.NewEVMTxContext(call)
 		evmContext = core.NewEVMBlockContext(opts.Header, opts.Chain, nil)
-		dirtyState = opts.State.Copy()
-	)
-	if opts.BlockOverrides != nil {
-		if err := opts.BlockOverrides.Apply(&evmContext); err != nil {
-			return nil, err
-		}
-	}
-	// Lower the basefee to 0 to avoid breaking EVM
-	// invariants (basefee < feecap).
-	if call.GasPrice.Sign() == 0 {
-		evmContext.BaseFee = new(big.Int)
-	}
-	if call.BlobGasFeeCap != nil && call.BlobGasFeeCap.BitLen() == 0 {
-		evmContext.BlobBaseFee = new(big.Int)
-	}
-	evm := vm.NewEVM(evmContext, dirtyState, opts.Config, vm.Config{NoBaseFee: true})
 
+		dirtyState = opts.State.Copy()
+		evm        = vm.NewEVM(evmContext, msgContext, dirtyState, opts.Config, vm.Config{NoBaseFee: true})
+	)
 	// Monitor the outer context and interrupt the EVM upon cancellation. To avoid
 	// a dangling goroutine until the outer estimation finishes, create an internal
 	// context for the lifetime of this method call.

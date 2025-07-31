@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -13,6 +24,9 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+//
+// NOTE: this piece of code is modified by Ted Yin.
+// The modification is also licensed under the same LGPL.
 
 package miner
 
@@ -20,287 +34,298 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"sync/atomic"
+	"sync"
 	"time"
 
+	"github.com/luxfi/node/utils/timer/mockable"
+	"github.com/luxfi/node/utils/units"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/consensus/misc/eip4844"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/extstate"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/params"
+	customheader "github.com/luxfi/coreth/plugin/evm/header"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/cortina"
+	"github.com/luxfi/coreth/precompile/precompileconfig"
+	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus/misc/eip1559"
-	"github.com/luxfi/geth/consensus/misc/eip4844"
-	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/stateless"
-	"github.com/luxfi/geth/core/txpool"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/log"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/event"
+	"github.com/luxfi/geth/log"
 	"github.com/holiman/uint256"
 )
 
-var (
-	errBlockInterruptedByNewHead  = errors.New("new head arrived while building block")
-	errBlockInterruptedByRecommit = errors.New("recommit interrupt while building block")
-	errBlockInterruptedByTimeout  = errors.New("timeout while building block")
+const (
+	// Leaves 256 KBs for other sections of the block (limit is 2MB).
+	// This should suffice for atomic txs, proposervm header, and serialization overhead.
+	targetTxsSize = 1792 * units.KiB
 )
 
-// environment is the worker's current environment and holds all
-// information of the sealing block generation.
-type environment struct {
-	signer   types.Signer
-	state    *state.StateDB // apply state changes here
-	tcount   int            // tx count in cycle
-	size     uint64         // size of the block we are building
-	gasPool  *core.GasPool  // available gas used to pack transactions
-	coinbase common.Address
-	evm      *vm.EVM
+var ErrInsufficientGasCapacityToBuild = errors.New("insufficient gas capacity to build block")
 
+// environment is the worker's current environment and holds all of the current state information.
+type environment struct {
+	signer  types.Signer
+	state   *state.StateDB // apply state changes here
+	tcount  int            // tx count in cycle
+	gasPool *core.GasPool  // available gas used to pack transactions
+
+	parent   *types.Header
 	header   *types.Header
 	txs      []*types.Transaction
 	receipts []*types.Receipt
 	sidecars []*types.BlobTxSidecar
 	blobs    int
+	size     uint64
 
-	witness *stateless.Witness
+	rules            params.Rules
+	predicateContext *precompileconfig.PredicateContext
+	// predicateResults contains the results of checking the predicates for each transaction in the miner.
+	// The results are accumulated as transactions are executed by the miner and set on the BlockContext.
+	// If a transaction is dropped, its results must explicitly be removed from predicateResults in the same
+	// way that the gas pool and state is reset.
+	predicateResults *predicate.Results
+
+	start time.Time // Time that block building began
 }
 
-// txFits reports whether the transaction fits into the block size limit.
-func (env *environment) txFitsSize(tx *types.Transaction) bool {
-	return env.size+tx.Size() < params.MaxBlockSize-maxBlockSizeBufferZone
+// worker is the main object which takes care of submitting new work to consensus engine
+// and gathering the sealing result.
+type worker struct {
+	config      *Config
+	chainConfig *params.ChainConfig
+	engine      consensus.Engine
+	eth         Backend
+	chain       *core.BlockChain
+
+	// Feeds
+	// TODO remove since this will never be written to
+	pendingLogsFeed event.Feed
+
+	// Subscriptions
+	mux        *event.TypeMux // TODO replace
+	mu         sync.RWMutex   // The lock used to protect the coinbase and extra fields
+	coinbase   common.Address
+	clock      *mockable.Clock // Allows us mock the clock for testing
+	beaconRoot *common.Hash    // TODO: set to empty hash, retained for upstream compatibility and future use
 }
 
-const (
-	commitInterruptNone int32 = iota
-	commitInterruptNewHead
-	commitInterruptResubmit
-	commitInterruptTimeout
-)
+func newWorker(config *Config, chainConfig *params.ChainConfig, engine consensus.Engine, eth Backend, mux *event.TypeMux, clock *mockable.Clock) *worker {
+	worker := &worker{
+		config:      config,
+		chainConfig: chainConfig,
+		engine:      engine,
+		eth:         eth,
+		chain:       eth.BlockChain(),
+		mux:         mux,
+		coinbase:    config.Etherbase,
+		clock:       clock,
+		beaconRoot:  &common.Hash{},
+	}
 
-// Block size is capped by the protocol at params.MaxBlockSize. When producing blocks, we
-// try to say below the size including a buffer zone, this is to avoid going over the
-// maximum size with auxiliary data added into the block.
-const maxBlockSizeBufferZone = 1_000_000
-
-// newPayloadResult is the result of payload generation.
-type newPayloadResult struct {
-	err      error
-	block    *types.Block
-	fees     *big.Int               // total block fees
-	sidecars []*types.BlobTxSidecar // collected blobs of blob transactions
-	stateDB  *state.StateDB         // StateDB after executing the transactions
-	receipts []*types.Receipt       // Receipts collected during construction
-	requests [][]byte               // Consensus layer requests collected during block construction
-	witness  *stateless.Witness     // Witness is an optional stateless proof
+	return worker
 }
 
-// generateParams wraps various settings for generating sealing task.
-type generateParams struct {
-	timestamp   uint64            // The timestamp for sealing task
-	forceTime   bool              // Flag whether the given timestamp is immutable or not
-	parentHash  common.Hash       // Parent block hash, empty means the latest chain head
-	coinbase    common.Address    // The fee recipient address for including transaction
-	random      common.Hash       // The randomness generated by beacon chain, empty before the merge
-	withdrawals types.Withdrawals // List of withdrawals to include in block (shanghai field)
-	beaconRoot  *common.Hash      // The beacon root (cancun field).
-	noTxs       bool              // Flag whether an empty block without any transaction is expected
+// setEtherbase sets the etherbase used to initialize the block coinbase field.
+func (w *worker) setEtherbase(addr common.Address) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	w.coinbase = addr
 }
 
-// generateWork generates a sealing block based on the given parameters.
-func (miner *Miner) generateWork(genParam *generateParams, witness bool) *newPayloadResult {
-	work, err := miner.prepareWork(genParam, witness)
-	if err != nil {
-		return &newPayloadResult{err: err}
-	}
+// commitNewWork generates several new sealing tasks based on the parent block.
+func (w *worker) commitNewWork(predicateContext *precompileconfig.PredicateContext) (*types.Block, error) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 
-	// Check withdrawals fit max block size.
-	// Due to the cap on withdrawal count, this can actually never happen, but we still need to
-	// check to ensure the CL notices there's a problem if the withdrawal cap is ever lifted.
-	maxBlockSize := params.MaxBlockSize - maxBlockSizeBufferZone
-	if genParam.withdrawals.Size() > maxBlockSize {
-		return &newPayloadResult{err: errors.New("withdrawals exceed max block size")}
-	}
-	// Also add size of withdrawals to work block size.
-	work.size += uint64(genParam.withdrawals.Size())
-
-	if !genParam.noTxs {
-		interrupt := new(atomic.Int32)
-		timer := time.AfterFunc(miner.config.Recommit, func() {
-			interrupt.Store(commitInterruptTimeout)
-		})
-		defer timer.Stop()
-
-		err := miner.fillTransactions(interrupt, work)
-		if errors.Is(err, errBlockInterruptedByTimeout) {
-			log.Warn("Block building is interrupted", "allowance", common.PrettyDuration(miner.config.Recommit))
-		}
-	}
-	body := types.Body{Transactions: work.txs, Withdrawals: genParam.withdrawals}
-
-	allLogs := make([]*types.Log, 0)
-	for _, r := range work.receipts {
-		allLogs = append(allLogs, r.Logs...)
-	}
-
-	// Collect consensus-layer requests if Prague is enabled.
-	var requests [][]byte
-	if miner.chainConfig.IsPrague(work.header.Number, work.header.Time) {
-		requests = [][]byte{}
-		// EIP-6110 deposits
-		if err := core.ParseDepositLogs(&requests, allLogs, miner.chainConfig); err != nil {
-			return &newPayloadResult{err: err}
-		}
-		// EIP-7002
-		if err := core.ProcessWithdrawalQueue(&requests, work.evm); err != nil {
-			return &newPayloadResult{err: err}
-		}
-		// EIP-7251 consolidations
-		if err := core.ProcessConsolidationQueue(&requests, work.evm); err != nil {
-			return &newPayloadResult{err: err}
-		}
-	}
-	if requests != nil {
-		reqHash := types.CalcRequestsHash(requests)
-		work.header.RequestsHash = &reqHash
-	}
-
-	block, err := miner.engine.FinalizeAndAssemble(miner.chain, work.header, work.state, &body, work.receipts)
-	if err != nil {
-		return &newPayloadResult{err: err}
-	}
-	return &newPayloadResult{
-		block:    block,
-		fees:     totalFees(block, work.receipts),
-		sidecars: work.sidecars,
-		stateDB:  work.state,
-		receipts: work.receipts,
-		requests: requests,
-		witness:  work.witness,
-	}
-}
-
-// prepareWork constructs the sealing task according to the given parameters,
-// either based on the last chain head or specified parent. In this function
-// the pending transactions are not filled yet, only the empty task returned.
-func (miner *Miner) prepareWork(genParams *generateParams, witness bool) (*environment, error) {
-	miner.confMu.RLock()
-	defer miner.confMu.RUnlock()
-
-	// Find the parent block for sealing task
-	parent := miner.chain.CurrentBlock()
-	if genParams.parentHash != (common.Hash{}) {
-		block := miner.chain.GetBlockByHash(genParams.parentHash)
-		if block == nil {
-			return nil, errors.New("missing parent")
-		}
-		parent = block.Header()
-	}
-	// Sanity check the timestamp correctness, recap the timestamp
-	// to parent+1 if the mutation is allowed.
-	timestamp := genParams.timestamp
+	tstart := w.clock.Time()
+	timestamp := uint64(tstart.Unix())
+	parent := w.chain.CurrentBlock()
+	// Note: in order to support asynchronous block production, blocks are allowed to have
+	// the same timestamp as their parent. This allows more than one block to be produced
+	// per second.
 	if parent.Time >= timestamp {
-		if genParams.forceTime {
-			return nil, fmt.Errorf("invalid timestamp, parent %d given %d", parent.Time, timestamp)
-		}
-		timestamp = parent.Time + 1
+		timestamp = parent.Time
 	}
-	// Construct the sealing block header.
+
+	chainExtra := params.GetExtra(w.chainConfig)
+	gasLimit, err := customheader.GasLimit(chainExtra, parent, timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("calculating new gas limit: %w", err)
+	}
+	baseFee, err := customheader.BaseFee(chainExtra, parent, timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate new base fee: %w", err)
+	}
+
 	header := &types.Header{
 		ParentHash: parent.Hash(),
 		Number:     new(big.Int).Add(parent.Number, common.Big1),
-		GasLimit:   core.CalcGasLimit(parent.GasLimit, miner.config.GasCeil),
+		GasLimit:   gasLimit,
 		Time:       timestamp,
-		Coinbase:   genParams.coinbase,
+		BaseFee:    baseFee,
 	}
-	// Set the extra field.
-	if len(miner.config.ExtraData) != 0 {
-		header.Extra = miner.config.ExtraData
-	}
-	// Set the randomness field from the beacon chain if it's available.
-	if genParams.random != (common.Hash{}) {
-		header.MixDigest = genParams.random
-	}
-	// Set baseFee and GasLimit if we are on an EIP-1559 chain
-	if miner.chainConfig.IsLondon(header.Number) {
-		header.BaseFee = eip1559.CalcBaseFee(miner.chainConfig, parent)
-		if !miner.chainConfig.IsLondon(parent.Number) {
-			parentGasLimit := parent.GasLimit * miner.chainConfig.ElasticityMultiplier()
-			header.GasLimit = core.CalcGasLimit(parentGasLimit, miner.config.GasCeil)
-		}
-	}
-	// Run the consensus preparation with the default or customized consensus engine.
-	// Note that the `header.Time` may be changed.
-	if err := miner.engine.Prepare(miner.chain, header); err != nil {
-		log.Error("Failed to prepare header for sealing", "err", err)
-		return nil, err
-	}
+
 	// Apply EIP-4844, EIP-4788.
-	if miner.chainConfig.IsCancun(header.Number, header.Time) {
+	if w.chainConfig.IsCancun(header.Number, header.Time) {
 		var excessBlobGas uint64
-		if miner.chainConfig.IsCancun(parent.Number, parent.Time) {
-			excessBlobGas = eip4844.CalcExcessBlobGas(miner.chainConfig, parent, timestamp)
+		if w.chainConfig.IsCancun(parent.Number, parent.Time) {
+			excessBlobGas = eip4844.CalcExcessBlobGas(*parent.ExcessBlobGas, *parent.BlobGasUsed)
+		} else {
+			// For the first post-fork block, both parent.data_gas_used and parent.excess_data_gas are evaluated as 0
+			excessBlobGas = eip4844.CalcExcessBlobGas(0, 0)
 		}
 		header.BlobGasUsed = new(uint64)
 		header.ExcessBlobGas = &excessBlobGas
-		header.ParentBeaconRoot = genParams.beaconRoot
+		header.ParentBeaconRoot = w.beaconRoot
 	}
-	// Could potentially happen if starting to mine in an odd state.
-	// Note genParams.coinbase can be different with header.Coinbase
-	// since clique algorithm can modify the coinbase field in header.
-	env, err := miner.makeEnv(parent, header, genParams.coinbase, witness)
+
+	if w.coinbase == (common.Address{}) {
+		return nil, errors.New("cannot mine without etherbase")
+	}
+	header.Coinbase = w.coinbase
+	if err := w.engine.Prepare(w.chain, header); err != nil {
+		return nil, fmt.Errorf("failed to prepare header for mining: %w", err)
+	}
+
+	env, err := w.createCurrentEnvironment(predicateContext, parent, header, tstart)
 	if err != nil {
-		log.Error("Failed to create sealing context", "err", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to create new current environment: %w", err)
 	}
 	if header.ParentBeaconRoot != nil {
-		core.ProcessBeaconBlockRoot(*header.ParentBeaconRoot, env.evm)
+		context := core.NewEVMBlockContext(header, w.chain, nil)
+		vmenv := vm.NewEVM(context, vm.TxContext{}, env.state, w.chainConfig, vm.Config{})
+		core.ProcessBeaconBlockRoot(*header.ParentBeaconRoot, vmenv, env.state)
 	}
-	if miner.chainConfig.IsPrague(header.Number, header.Time) {
-		core.ProcessParentBlockHash(header.ParentHash, env.evm)
+	// Ensure we always stop prefetcher after block building is complete.
+	defer func() {
+		if env.state == nil {
+			return
+		}
+		env.state.StopPrefetcher()
+	}()
+	// Configure any upgrades that should go into effect during this block.
+	blockContext := core.NewBlockContext(header.Number, header.Time)
+	err = core.ApplyUpgrades(w.chainConfig, &parent.Time, blockContext, env.state)
+	if err != nil {
+		log.Error("failed to configure precompiles mining new block", "parent", parent.Hash(), "number", header.Number, "timestamp", header.Time, "err", err)
+		return nil, err
 	}
-	return env, nil
+
+	// Retrieve the pending transactions pre-filtered by the 1559/4844 dynamic fees
+	filter := txpool.PendingFilter{
+		MinTip: uint256.MustFromBig(w.eth.TxPool().GasTip()),
+	}
+	if env.header.BaseFee != nil {
+		filter.BaseFee = uint256.MustFromBig(env.header.BaseFee)
+	}
+	if env.header.ExcessBlobGas != nil {
+		filter.BlobFee = uint256.MustFromBig(eip4844.CalcBlobFee(*env.header.ExcessBlobGas))
+	}
+	filter.OnlyPlainTxs, filter.OnlyBlobTxs = true, false
+	pendingPlainTxs := w.eth.TxPool().Pending(filter)
+
+	filter.OnlyPlainTxs, filter.OnlyBlobTxs = false, true
+	pendingBlobTxs := w.eth.TxPool().Pending(filter)
+
+	// Split the pending transactions into locals and remotes.
+	localPlainTxs, remotePlainTxs := make(map[common.Address][]*txpool.LazyTransaction), pendingPlainTxs
+	localBlobTxs, remoteBlobTxs := make(map[common.Address][]*txpool.LazyTransaction), pendingBlobTxs
+	for _, account := range w.eth.TxPool().Locals() {
+		if txs := remotePlainTxs[account]; len(txs) > 0 {
+			delete(remotePlainTxs, account)
+			localPlainTxs[account] = txs
+		}
+		if txs := remoteBlobTxs[account]; len(txs) > 0 {
+			delete(remoteBlobTxs, account)
+			localBlobTxs[account] = txs
+		}
+	}
+	// Fill the block with all available pending transactions.
+	if len(localPlainTxs) > 0 || len(localBlobTxs) > 0 {
+		plainTxs := newTransactionsByPriceAndNonce(env.signer, localPlainTxs, env.header.BaseFee)
+		blobTxs := newTransactionsByPriceAndNonce(env.signer, localBlobTxs, env.header.BaseFee)
+
+		w.commitTransactions(env, plainTxs, blobTxs, env.header.Coinbase)
+	}
+	if len(remotePlainTxs) > 0 || len(remoteBlobTxs) > 0 {
+		plainTxs := newTransactionsByPriceAndNonce(env.signer, remotePlainTxs, env.header.BaseFee)
+		blobTxs := newTransactionsByPriceAndNonce(env.signer, remoteBlobTxs, env.header.BaseFee)
+
+		w.commitTransactions(env, plainTxs, blobTxs, env.header.Coinbase)
+	}
+
+	return w.commit(env)
 }
 
-// makeEnv creates a new environment for the sealing block.
-func (miner *Miner) makeEnv(parent *types.Header, header *types.Header, coinbase common.Address, witness bool) (*environment, error) {
-	// Retrieve the parent state to execute on top.
-	state, err := miner.chain.StateAt(parent.Root)
+func (w *worker) createCurrentEnvironment(predicateContext *precompileconfig.PredicateContext, parent *types.Header, header *types.Header, tstart time.Time) (*environment, error) {
+	currentState, err := w.chain.StateAt(parent.Root)
 	if err != nil {
 		return nil, err
 	}
-	if witness {
-		bundle, err := stateless.NewWitness(header, miner.chain)
-		if err != nil {
-			return nil, err
-		}
-		state.StartPrefetcher("miner", bundle)
+
+	chainConfigExtra := params.GetExtra(w.chainConfig)
+	capacity, err := customheader.GasCapacity(chainConfigExtra, parent, header.Time)
+	if err != nil {
+		return nil, fmt.Errorf("calculating gas capacity: %w", err)
 	}
-	// Note the passed coinbase may be different with header.Coinbase.
+	// If Fortuna has activated, enforce we only build a block when there is a minimum
+	// built up gas capacity.
+	if chainConfigExtra.IsFortuna(header.Time) {
+		// ACP-176 maintains a gas capacity bucket that fills up over time separate from the gas limit.
+		// Since smaller transactions can consume the available gas capacity every second, this can lead
+		// to transactions above this size stalling.
+		// To mitigate this, the block builder returns an error and waits until the gas capacity bucket
+		// has refilled to the desired minimum.
+		// We set that minimum to MaxCapacity - GasCapacityPerSecond to be available before building a block.
+		// This avoids waiting past the point where the gas capacity bucket is already full. If we waited
+		// until the MaxCapacity, then waiting beyond that point would "overflow" the bucket. Since we do
+		// not allow the bucket to overflow, this would waste potential gas capacity.
+		capacityPerSecond := header.GasLimit / acp176.TimeToFillCapacity
+		minimumBuildableCapacity := header.GasLimit - capacityPerSecond
+
+		// Since the GasLimit is configurable, only wait up to the GasLimit as of the Cortina upgrade.
+		// There is no need to continue scaling up beyond the GasLimit guaranteed prior to ACP-176 activation.
+		minimumBuildableCapacity = min(minimumBuildableCapacity, cortina.GasLimit)
+		if capacity < minimumBuildableCapacity {
+			return nil, fmt.Errorf("%w: %d waiting for %d", ErrInsufficientGasCapacityToBuild, capacity, minimumBuildableCapacity)
+		}
+	}
+	numPrefetchers := w.chain.CacheConfig().TriePrefetcherParallelism
+	currentState.StartPrefetcher("miner", extstate.WithConcurrentWorkers(numPrefetchers))
 	return &environment{
-		signer:   types.MakeSigner(miner.chainConfig, header.Number, header.Time),
-		state:    state,
-		size:     uint64(header.Size()),
-		coinbase: coinbase,
-		header:   header,
-		witness:  state.Witness(),
-		evm:      vm.NewEVM(core.NewEVMBlockContext(header, miner.chain, &coinbase), state, miner.chainConfig, vm.Config{}),
+		signer:           types.MakeSigner(w.chainConfig, header.Number, header.Time),
+		state:            currentState,
+		parent:           parent,
+		header:           header,
+		tcount:           0,
+		gasPool:          new(core.GasPool).AddGas(capacity),
+		rules:            w.chainConfig.Rules(header.Number, params.IsMergeTODO, header.Time),
+		predicateContext: predicateContext,
+		predicateResults: predicate.NewResults(),
+		start:            tstart,
 	}, nil
 }
 
-func (miner *Miner) commitTransaction(env *environment, tx *types.Transaction) error {
+func (w *worker) commitTransaction(env *environment, tx *types.Transaction, coinbase common.Address) ([]*types.Log, error) {
 	if tx.Type() == types.BlobTxType {
-		return miner.commitBlobTransaction(env, tx)
+		return w.commitBlobTransaction(env, tx, coinbase)
 	}
-	receipt, err := miner.applyTransaction(env, tx)
+	receipt, err := w.applyTransaction(env, tx, coinbase)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	env.txs = append(env.txs, tx)
 	env.receipts = append(env.receipts, receipt)
 	env.size += tx.Size()
-	env.tcount++
-	return nil
+	return receipt.Logs, nil
 }
 
-func (miner *Miner) commitBlobTransaction(env *environment, tx *types.Transaction) error {
+func (w *worker) commitBlobTransaction(env *environment, tx *types.Transaction, coinbase common.Address) ([]*types.Log, error) {
 	sc := tx.BlobTxSidecar()
 	if sc == nil {
 		panic("blob transaction without blobs in miner")
@@ -309,55 +334,58 @@ func (miner *Miner) commitBlobTransaction(env *environment, tx *types.Transactio
 	// isn't really a better place right now. The blob gas limit is checked at block validation time
 	// and not during execution. This means core.ApplyTransaction will not return an error if the
 	// tx has too many blobs. So we have to explicitly check it here.
-	maxBlobs := eip4844.MaxBlobsPerBlock(miner.chainConfig, env.header.Time)
-	if env.blobs+len(sc.Blobs) > maxBlobs {
-		return errors.New("max data blobs reached")
+	if (env.blobs+len(sc.Blobs))*params.BlobTxBlobGasPerBlob > params.MaxBlobGasPerBlock {
+		return nil, errors.New("max data blobs reached")
 	}
-	receipt, err := miner.applyTransaction(env, tx)
+	receipt, err := w.applyTransaction(env, tx, coinbase)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	txNoBlob := tx.WithoutBlobTxSidecar()
-	env.txs = append(env.txs, txNoBlob)
+	env.txs = append(env.txs, tx.WithoutBlobTxSidecar())
 	env.receipts = append(env.receipts, receipt)
 	env.sidecars = append(env.sidecars, sc)
 	env.blobs += len(sc.Blobs)
-	env.size += txNoBlob.Size()
 	*env.header.BlobGasUsed += receipt.BlobGasUsed
-	env.tcount++
-	return nil
+	return receipt.Logs, nil
 }
 
 // applyTransaction runs the transaction. If execution fails, state and gas pool are reverted.
-func (miner *Miner) applyTransaction(env *environment, tx *types.Transaction) (*types.Receipt, error) {
+func (w *worker) applyTransaction(env *environment, tx *types.Transaction, coinbase common.Address) (*types.Receipt, error) {
 	var (
-		snap = env.state.Snapshot()
-		gp   = env.gasPool.Gas()
+		snap         = env.state.Snapshot()
+		gp           = env.gasPool.Gas()
+		blockContext vm.BlockContext
 	)
-	receipt, err := core.ApplyTransaction(env.evm, env.gasPool, env.state, env.header, tx, &env.header.GasUsed)
+
+	rulesExtra := params.GetRulesExtra(env.rules)
+	if rulesExtra.IsDurango {
+		results, err := core.CheckPredicates(env.rules, env.predicateContext, tx)
+		if err != nil {
+			log.Debug("Transaction predicate failed verification in miner", "tx", tx.Hash(), "err", err)
+			return nil, err
+		}
+		env.predicateResults.SetTxResults(tx.Hash(), results)
+
+		predicateResultsBytes, err := env.predicateResults.Bytes()
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal predicate results: %w", err)
+		}
+		blockContext = core.NewEVMBlockContextWithPredicateResults(rulesExtra.LuxRules, env.header, w.chain, &coinbase, predicateResultsBytes)
+	} else {
+		blockContext = core.NewEVMBlockContext(env.header, w.chain, &coinbase)
+	}
+
+	receipt, err := core.ApplyTransaction(w.chainConfig, w.chain, blockContext, env.gasPool, env.state, env.header, tx, &env.header.GasUsed, *w.chain.GetVMConfig())
 	if err != nil {
 		env.state.RevertToSnapshot(snap)
 		env.gasPool.SetGas(gp)
+		env.predicateResults.DeleteTxResults(tx.Hash())
 	}
 	return receipt, err
 }
 
-func (miner *Miner) commitTransactions(env *environment, plainTxs, blobTxs *transactionsByPriceAndNonce, interrupt *atomic.Int32) error {
-	var (
-		isOsaka  = miner.chainConfig.IsOsaka(env.header.Number, env.header.Time)
-		isCancun = miner.chainConfig.IsCancun(env.header.Number, env.header.Time)
-		gasLimit = env.header.GasLimit
-	)
-	if env.gasPool == nil {
-		env.gasPool = new(core.GasPool).AddGas(gasLimit)
-	}
+func (w *worker) commitTransactions(env *environment, plainTxs, blobTxs *transactionsByPriceAndNonce, coinbase common.Address) {
 	for {
-		// Check interruption signal and abort building if it's fired.
-		if interrupt != nil {
-			if signal := interrupt.Load(); signal != commitInterruptNone {
-				return signalToErr(signal)
-			}
-		}
 		// If we don't have enough gas for any further transactions then we're done.
 		if env.gasPool.Gas() < params.TxGas {
 			log.Trace("Not enough gas for further transactions", "have", env.gasPool, "want", params.TxGas)
@@ -365,7 +393,14 @@ func (miner *Miner) commitTransactions(env *environment, plainTxs, blobTxs *tran
 		}
 		// If we don't have enough blob space for any further blob transactions,
 		// skip that list altogether
-		if !blobTxs.Empty() && env.blobs >= eip4844.MaxBlobsPerBlock(miner.chainConfig, env.header.Time) {
+		if !blobTxs.Empty() && env.blobs*params.BlobTxBlobGasPerBlob >= params.MaxBlobGasPerBlock {
+			log.Trace("Not enough blob space for further blob transactions")
+			blobTxs.Clear()
+			// Fall though to pick up any plain txs
+		}
+		// If we don't have enough blob space for any further blob transactions,
+		// skip that list altogether
+		if !blobTxs.Empty() && env.blobs*params.BlobTxBlobGasPerBlob >= params.MaxBlobGasPerBlock {
 			log.Trace("Not enough blob space for further blob transactions")
 			blobTxs.Clear()
 			// Fall though to pick up any plain txs
@@ -399,19 +434,11 @@ func (miner *Miner) commitTransactions(env *environment, plainTxs, blobTxs *tran
 			txs.Pop()
 			continue
 		}
-
-		// Most of the blob gas logic here is agnostic as to if the chain supports
-		// blobs or not, however the max check panics when called on a chain without
-		// a defined schedule, so we need to verify it's safe to call.
-		if isCancun {
-			left := eip4844.MaxBlobsPerBlock(miner.chainConfig, env.header.Time) - env.blobs
-			if left < int(ltx.BlobGas/params.BlobTxBlobGasPerBlob) {
-				log.Trace("Not enough blob space left for transaction", "hash", ltx.Hash, "left", left, "needed", ltx.BlobGas/params.BlobTxBlobGasPerBlob)
-				txs.Pop()
-				continue
-			}
+		if left := uint64(params.MaxBlobGasPerBlock - env.blobs*params.BlobTxBlobGasPerBlob); left < ltx.BlobGas {
+			log.Trace("Not enough blob gas left for transaction", "hash", ltx.Hash, "left", left, "needed", ltx.BlobGas)
+			txs.Pop()
+			continue
 		}
-
 		// Transaction seems to fit, pull it up from the pool
 		tx := ltx.Resolve()
 		if tx == nil {
@@ -419,42 +446,30 @@ func (miner *Miner) commitTransactions(env *environment, plainTxs, blobTxs *tran
 			txs.Pop()
 			continue
 		}
-
-		// if inclusion of the transaction would put the block size over the
-		// maximum we allow, don't add any more txs to the payload.
-		if !env.txFitsSize(tx) {
-			break
-		}
-
-		// Make sure all transactions after osaka have cell proofs
-		if isOsaka {
-			if sidecar := tx.BlobTxSidecar(); sidecar != nil {
-				if sidecar.Version == types.BlobSidecarVersion0 {
-					log.Info("Including blob tx with v0 sidecar, recomputing proofs", "hash", ltx.Hash)
-					if err := sidecar.ToV1(); err != nil {
-						txs.Pop()
-						log.Warn("Failed to recompute cell proofs", "hash", ltx.Hash, "err", err)
-						continue
-					}
-				}
-			}
+		// Abort transaction if it won't fit in the block and continue to search for a smaller
+		// transction that will fit.
+		if totalTxsSize := env.size + tx.Size(); totalTxsSize > targetTxsSize {
+			log.Trace("Skipping transaction that would exceed target size", "hash", tx.Hash(), "totalTxsSize", totalTxsSize, "txSize", tx.Size())
+			txs.Pop()
+			continue
 		}
 
 		// Error may be ignored here. The error has already been checked
-		// during transaction acceptance in the transaction pool.
+		// during transaction acceptance is the transaction pool.
 		from, _ := types.Sender(env.signer, tx)
 
 		// Check whether the tx is replay protected. If we're not in the EIP155 hf
 		// phase, start ignoring the sender until we do.
-		if tx.Protected() && !miner.chainConfig.IsEIP155(env.header.Number) {
-			log.Trace("Ignoring replay protected transaction", "hash", ltx.Hash, "eip155", miner.chainConfig.EIP155Block)
+		if tx.Protected() && !w.chainConfig.IsEIP155(env.header.Number) {
+			log.Trace("Ignoring replay protected transaction", "hash", ltx.Hash, "eip155", w.chainConfig.EIP155Block)
 			txs.Pop()
 			continue
 		}
+
 		// Start executing the transaction
 		env.state.SetTxContext(tx.Hash(), env.tcount)
 
-		err := miner.commitTransaction(env, tx)
+		_, err := w.commitTransaction(env, tx, coinbase)
 		switch {
 		case errors.Is(err, core.ErrNonceTooLow):
 			// New head notification data race between the transaction pool and miner, shift
@@ -462,7 +477,7 @@ func (miner *Miner) commitTransactions(env *environment, plainTxs, blobTxs *tran
 			txs.Shift()
 
 		case errors.Is(err, nil):
-			// Everything ok, collect the logs and shift in the next transaction from the same account
+			env.tcount++
 			txs.Shift()
 
 		default:
@@ -472,93 +487,96 @@ func (miner *Miner) commitTransactions(env *environment, plainTxs, blobTxs *tran
 			txs.Pop()
 		}
 	}
-	return nil
 }
 
-// fillTransactions retrieves the pending transactions from the txpool and fills them
-// into the given sealing block. The transaction selection and ordering strategy can
-// be customized with the plugin in the future.
-func (miner *Miner) fillTransactions(interrupt *atomic.Int32, env *environment) error {
-	miner.confMu.RLock()
-	tip := miner.config.GasPrice
-	prio := miner.prio
-	miner.confMu.RUnlock()
-
-	// Retrieve the pending transactions pre-filtered by the 1559/4844 dynamic fees
-	filter := txpool.PendingFilter{
-		MinTip: uint256.MustFromBig(tip),
-	}
-	if env.header.BaseFee != nil {
-		filter.BaseFee = uint256.MustFromBig(env.header.BaseFee)
-	}
-	if env.header.ExcessBlobGas != nil {
-		filter.BlobFee = uint256.MustFromBig(eip4844.CalcBlobFee(miner.chainConfig, env.header))
-	}
-	if miner.chainConfig.IsOsaka(env.header.Number, env.header.Time) {
-		filter.GasLimitCap = params.MaxTxGas
-	}
-	filter.OnlyPlainTxs, filter.OnlyBlobTxs = true, false
-	pendingPlainTxs := miner.txpool.Pending(filter)
-
-	filter.OnlyPlainTxs, filter.OnlyBlobTxs = false, true
-	pendingBlobTxs := miner.txpool.Pending(filter)
-
-	// Split the pending transactions into locals and remotes.
-	prioPlainTxs, normalPlainTxs := make(map[common.Address][]*txpool.LazyTransaction), pendingPlainTxs
-	prioBlobTxs, normalBlobTxs := make(map[common.Address][]*txpool.LazyTransaction), pendingBlobTxs
-
-	for _, account := range prio {
-		if txs := normalPlainTxs[account]; len(txs) > 0 {
-			delete(normalPlainTxs, account)
-			prioPlainTxs[account] = txs
+// commit runs any post-transaction state modifications, assembles the final block
+// and commits new work if consensus engine is running.
+func (w *worker) commit(env *environment) (*types.Block, error) {
+	if params.GetRulesExtra(env.rules).IsDurango {
+		predicateResultsBytes, err := env.predicateResults.Bytes()
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal predicate results: %w", err)
 		}
-		if txs := normalBlobTxs[account]; len(txs) > 0 {
-			delete(normalBlobTxs, account)
-			prioBlobTxs[account] = txs
-		}
+		env.header.Extra = append(env.header.Extra, predicateResultsBytes...)
 	}
-	// Fill the block with all available pending transactions.
-	if len(prioPlainTxs) > 0 || len(prioBlobTxs) > 0 {
-		plainTxs := newTransactionsByPriceAndNonce(env.signer, prioPlainTxs, env.header.BaseFee)
-		blobTxs := newTransactionsByPriceAndNonce(env.signer, prioBlobTxs, env.header.BaseFee)
+	// Deep copy receipts here to avoid interaction between different tasks.
+	receipts := copyReceipts(env.receipts)
+	block, err := w.engine.FinalizeAndAssemble(w.chain, env.header, env.parent, env.state, env.txs, nil, receipts)
+	if err != nil {
+		return nil, err
+	}
 
-		if err := miner.commitTransactions(env, plainTxs, blobTxs, interrupt); err != nil {
-			return err
-		}
-	}
-	if len(normalPlainTxs) > 0 || len(normalBlobTxs) > 0 {
-		plainTxs := newTransactionsByPriceAndNonce(env.signer, normalPlainTxs, env.header.BaseFee)
-		blobTxs := newTransactionsByPriceAndNonce(env.signer, normalBlobTxs, env.header.BaseFee)
+	return w.handleResult(env, block, time.Now(), receipts)
+}
 
-		if err := miner.commitTransactions(env, plainTxs, blobTxs, interrupt); err != nil {
-			return err
-		}
+func (w *worker) handleResult(env *environment, block *types.Block, createdAt time.Time, unfinishedReceipts []*types.Receipt) (*types.Block, error) {
+	// Short circuit when receiving duplicate result caused by resubmitting.
+	if !w.config.TestOnlyAllowDuplicateBlocks && w.chain.HasBlock(block.Hash(), block.NumberU64()) {
+		return nil, fmt.Errorf("produced duplicate block (Hash: %s, Number %d)", block.Hash(), block.NumberU64())
 	}
-	return nil
+	// Different block could share same sealhash, deep copy here to prevent write-write conflict.
+	var (
+		hash     = block.Hash()
+		receipts = make([]*types.Receipt, len(unfinishedReceipts))
+		logs     []*types.Log
+	)
+	for i, unfinishedReceipt := range unfinishedReceipts {
+		receipt := new(types.Receipt)
+		receipts[i] = receipt
+		*receipt = *unfinishedReceipt
+
+		// add block location fields
+		receipt.BlockHash = hash
+		receipt.BlockNumber = block.Number()
+		receipt.TransactionIndex = uint(i)
+
+		// Update the block hash in all logs since it is now available and not when the
+		// receipt/log of individual transactions were created.
+		receipt.Logs = make([]*types.Log, len(unfinishedReceipt.Logs))
+		for j, unfinishedLog := range unfinishedReceipt.Logs {
+			log := new(types.Log)
+			receipt.Logs[j] = log
+			*log = *unfinishedLog
+			log.BlockHash = hash
+		}
+		logs = append(logs, receipt.Logs...)
+	}
+	fees := totalFees(block, receipts)
+	feesInEther := new(big.Float).Quo(new(big.Float).SetInt(fees), big.NewFloat(params.Ether))
+	log.Info("Commit new mining work", "number", block.Number(), "hash", hash,
+		"uncles", 0, "txs", env.tcount,
+		"gas", block.GasUsed(), "fees", feesInEther,
+		"elapsed", common.PrettyDuration(time.Since(env.start)))
+
+	// Note: the miner no longer emits a NewMinedBlock event. Instead the caller
+	// is responsible for running any additional verification and then inserting
+	// the block with InsertChain, which will also emit a new head event.
+	return block, nil
+}
+
+// copyReceipts makes a deep copy of the given receipts.
+func copyReceipts(receipts []*types.Receipt) []*types.Receipt {
+	result := make([]*types.Receipt, len(receipts))
+	for i, l := range receipts {
+		cpy := *l
+		result[i] = &cpy
+	}
+	return result
 }
 
 // totalFees computes total consumed miner fees in Wei. Block transactions and receipts have to have the same order.
 func totalFees(block *types.Block, receipts []*types.Receipt) *big.Int {
 	feesWei := new(big.Int)
 	for i, tx := range block.Transactions() {
-		minerFee, _ := tx.EffectiveGasTip(block.BaseFee())
+		var minerFee *big.Int
+		if baseFee := block.BaseFee(); baseFee != nil {
+			// Note in coreth the coinbase payment is (baseFee + effectiveGasTip) * gasUsed
+			minerFee = new(big.Int).Add(baseFee, tx.EffectiveGasTipValue(baseFee))
+		} else {
+			// Prior to activation of EIP-1559, the coinbase payment was gasPrice * gasUsed
+			minerFee = tx.GasPrice()
+		}
 		feesWei.Add(feesWei, new(big.Int).Mul(new(big.Int).SetUint64(receipts[i].GasUsed), minerFee))
-		// TODO (MariusVanDerWijden) add blob fees
 	}
 	return feesWei
-}
-
-// signalToErr converts the interruption signal to a concrete error type for return.
-// The given signal must be a valid interruption signal.
-func signalToErr(signal int32) error {
-	switch signal {
-	case commitInterruptNewHead:
-		return errBlockInterruptedByNewHead
-	case commitInterruptResubmit:
-		return errBlockInterruptedByRecommit
-	case commitInterruptTimeout:
-		return errBlockInterruptedByTimeout
-	default:
-		panic(fmt.Errorf("undefined signal %d", signal))
-	}
 }

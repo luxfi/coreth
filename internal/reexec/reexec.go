@@ -1,5 +1,16 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // This file originates from Docker/Moby,
-// https://github.com/moby/moby/blob/master/pkg/reexec/reexec_deprecated.go
+// https://github.com/moby/moby/blob/master/pkg/reexec/reexec.go
 // Licensed under Apache License 2.0: https://github.com/moby/moby/blob/master/LICENSE
 // Copyright 2013-2018 Docker, Inc.
 //
@@ -7,7 +18,6 @@
 // we require because of the forking limitations of using Go.  Handlers can be
 // registered with a name and the argv 0 of the exec of the binary will be used
 // to find and execute custom init paths.
-
 package reexec
 
 import (

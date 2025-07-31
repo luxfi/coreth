@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2019 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -28,7 +39,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/log"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/metrics"
+	"golang.org/x/time/rate"
 )
 
 // handler handles JSON-RPC messages. There is one handler per connection. Note that
@@ -68,11 +81,16 @@ type handler struct {
 
 	subLock    sync.Mutex
 	serverSubs map[ID]*Subscription
+
+	deadlineContext time.Duration // limits execution after some time.Duration
+	limiter         *rate.Limiter
 }
 
 type callProc struct {
 	ctx       context.Context
 	notifiers []*Notifier
+	callStart time.Time
+	procStart time.Time
 }
 
 func newHandler(connCtx context.Context, conn jsonWriter, idgen func() ID, reg *serviceRegistry, batchRequestLimit, batchResponseMaxSize int) *handler {
@@ -163,8 +181,20 @@ func (b *batchCallBuffer) doWrite(ctx context.Context, conn jsonWriter, isErrorR
 	}
 	b.wrote = true // can only write once
 	if len(b.resp) > 0 {
-		conn.writeJSON(ctx, b.resp, isErrorResponse)
+		conn.writeJSONSkipDeadline(ctx, b.resp, isErrorResponse, true)
 	}
+}
+
+// addLimiter adds a rate limiter to the handler that will allow at most
+// [refillRate] cpu to be used per second. At most [maxStored] cpu time will be
+// stored for this limiter.
+// If any values are provided that would make the rate limiting trivial, then no
+// limiter is added.
+func (h *handler) addLimiter(refillRate, maxStored time.Duration) {
+	if refillRate <= 0 || maxStored < h.deadlineContext || h.deadlineContext <= 0 {
+		return
+	}
+	h.limiter = rate.NewLimiter(rate.Limit(refillRate), int(maxStored))
 }
 
 // handleBatch executes all messages in a batch and returns the responses.
@@ -173,7 +203,7 @@ func (h *handler) handleBatch(msgs []*jsonrpcMessage) {
 	if len(msgs) == 0 {
 		h.startCallProc(func(cp *callProc) {
 			resp := errorMessage(&invalidRequestError{"empty batch"})
-			h.conn.writeJSON(cp.ctx, resp, true)
+			h.conn.writeJSONSkipDeadline(cp.ctx, resp, true, h.deadlineContext > 0)
 		})
 		return
 	}
@@ -261,7 +291,7 @@ func (h *handler) respondWithBatchTooLarge(cp *callProc, batch []*jsonrpcMessage
 			break
 		}
 	}
-	h.conn.writeJSON(cp.ctx, []*jsonrpcMessage{resp}, true)
+	h.conn.writeJSONSkipDeadline(cp.ctx, []*jsonrpcMessage{resp}, true, h.deadlineContext > 0)
 }
 
 // handleMsg handles a single non-batch message.
@@ -291,7 +321,7 @@ func (h *handler) handleNonBatchCall(cp *callProc, msg *jsonrpcMessage) {
 			cancel()
 			responded.Do(func() {
 				resp := msg.errorResponse(&internalServerError{errcodeTimeout, errMsgTimeout})
-				h.conn.writeJSON(cp.ctx, resp, true)
+				h.conn.writeJSONSkipDeadline(cp.ctx, resp, true, h.deadlineContext > 0)
 			})
 		})
 	}
@@ -303,7 +333,7 @@ func (h *handler) handleNonBatchCall(cp *callProc, msg *jsonrpcMessage) {
 	h.addSubscriptions(cp.notifiers)
 	if answer != nil {
 		responded.Do(func() {
-			h.conn.writeJSON(cp.ctx, answer, false)
+			h.conn.writeJSONSkipDeadline(cp.ctx, answer, false, h.deadlineContext > 0)
 		})
 	}
 	for _, n := range cp.notifiers {
@@ -380,15 +410,74 @@ func (h *handler) cancelServerSubscriptions(err error) {
 	}
 }
 
+// awaitLimit blocks until the context is marked as done or the rate limiter is
+// full.
+func (h *handler) awaitLimit(ctx context.Context) {
+	if h.limiter == nil {
+		return
+	}
+
+	now := time.Now()
+	reservation := h.limiter.ReserveN(now, int(h.deadlineContext))
+	delay := reservation.Delay()
+	reservation.CancelAt(now)
+
+	timer := time.NewTimer(delay)
+	select {
+	case <-ctx.Done():
+	case <-timer.C:
+	}
+	timer.Stop()
+}
+
+// consumeLimit removes the time since [procStart] from the rate limiter. It is
+// assumed that the rate limiter is full.
+func (h *handler) consumeLimit(procStart time.Time) {
+	if h.limiter == nil {
+		return
+	}
+
+	stopTime := time.Now()
+	processingTime := stopTime.Sub(procStart)
+	if processingTime > h.deadlineContext {
+		processingTime = h.deadlineContext
+	}
+
+	h.limiter.ReserveN(stopTime, int(processingTime))
+}
+
 // startCallProc runs fn in a new goroutine and starts tracking it in the h.calls wait group.
 func (h *handler) startCallProc(fn func(*callProc)) {
 	h.callWG.Add(1)
-	go func() {
-		ctx, cancel := context.WithCancel(h.rootCtx)
+	callFn := func() {
+		var (
+			ctx    context.Context
+			cancel context.CancelFunc
+		)
+		if h.deadlineContext > 0 {
+			ctx, cancel = context.WithTimeout(h.rootCtx, h.deadlineContext)
+		} else {
+			ctx, cancel = context.WithCancel(h.rootCtx)
+		}
 		defer h.callWG.Done()
+
+		// Capture the time before we await for processing
+		callStart := time.Now()
+		h.awaitLimit(ctx)
+
+		// If we are not limiting CPU, [procStart] will be identical to
+		// [callStart]
+		procStart := time.Now()
 		defer cancel()
-		fn(&callProc{ctx: ctx})
-	}()
+
+		fn(&callProc{ctx: ctx, callStart: callStart, procStart: procStart})
+		h.consumeLimit(procStart)
+	}
+	if h.limiter == nil {
+		go callFn()
+	} else {
+		callFn()
+	}
 }
 
 // handleResponses processes method call responses.
@@ -462,23 +551,33 @@ func (h *handler) handleSubscriptionResult(msg *jsonrpcMessage) {
 
 // handleCallMsg executes a call message and returns the answer.
 func (h *handler) handleCallMsg(ctx *callProc, msg *jsonrpcMessage) *jsonrpcMessage {
-	start := time.Now()
+	// [callStart] is the time the message was enqueued for handler processing
+	callStart := ctx.callStart
+	// [procStart] is the time the message cleared the [limiter] and began to be
+	// processed by the handler
+	procStart := ctx.procStart
+	// [execStart] is the time the message began to be executed by the handler
+	//
+	// Note: This can be different than the executionStart in [startCallProc] as
+	// the goroutine that handles execution may not be executed right away.
+	execStart := time.Now()
+
 	switch {
 	case msg.isNotification():
 		h.handleCall(ctx, msg)
-		h.log.Debug("Served "+msg.Method, "duration", time.Since(start))
+		h.log.Debug("Served "+msg.Method, "execTime", time.Since(execStart), "procTime", time.Since(procStart), "totalTime", time.Since(callStart))
 		return nil
 
 	case msg.isCall():
 		resp := h.handleCall(ctx, msg)
 		var logctx []any
-		logctx = append(logctx, "reqid", idForLog{msg.ID}, "duration", time.Since(start))
+		logctx = append(logctx, "reqid", idForLog{msg.ID}, "execTime", time.Since(execStart), "procTime", time.Since(procStart), "totalTime", time.Since(callStart))
 		if resp.Error != nil {
 			logctx = append(logctx, "err", resp.Error.Message)
 			if resp.Error.Data != nil {
 				logctx = append(logctx, "errdata", formatErrorData(resp.Error.Data))
 			}
-			h.log.Warn("Served "+msg.Method, logctx...)
+			h.log.Info("Served "+msg.Method, logctx...)
 		} else {
 			h.log.Debug("Served "+msg.Method, logctx...)
 		}
@@ -501,10 +600,6 @@ func (h *handler) handleCall(cp *callProc, msg *jsonrpcMessage) *jsonrpcMessage 
 	if msg.isUnsubscribe() {
 		callb = h.unsubscribeCb
 	} else {
-		// Check method name length
-		if len(msg.Method) > maxMethodNameLength {
-			return msg.errorResponse(&invalidRequestError{fmt.Sprintf("method name too long: %d > %d", len(msg.Method), maxMethodNameLength)})
-		}
 		callb = h.reg.callback(msg.Method)
 	}
 	if callb == nil {
@@ -528,7 +623,9 @@ func (h *handler) handleCall(cp *callProc, msg *jsonrpcMessage) *jsonrpcMessage 
 			successfulRequestGauge.Inc(1)
 		}
 		rpcServingTimer.UpdateSince(start)
-		updateServeTimeHistogram(msg.Method, answer.Error == nil, time.Since(start))
+		if metrics.EnabledExpensive {
+			updateServeTimeHistogram(msg.Method, answer.Error == nil, time.Since(start))
+		}
 	}
 
 	return answer
@@ -538,11 +635,6 @@ func (h *handler) handleCall(cp *callProc, msg *jsonrpcMessage) *jsonrpcMessage 
 func (h *handler) handleSubscribe(cp *callProc, msg *jsonrpcMessage) *jsonrpcMessage {
 	if !h.allowSubscribe {
 		return msg.errorResponse(ErrNotificationsUnsupported)
-	}
-
-	// Check method name length
-	if len(msg.Method) > maxMethodNameLength {
-		return msg.errorResponse(&invalidRequestError{fmt.Sprintf("subscription name too long: %d > %d", len(msg.Method), maxMethodNameLength)})
 	}
 
 	// Subscription method name is first argument.

@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -21,15 +32,15 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/luxfi/coreth/consensus/dummy"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
-	"github.com/luxfi/geth/consensus/ethash"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/ethdb/pebble"
-	"github.com/luxfi/geth/params"
 )
 
 func BenchmarkInsertChain_empty_memdb(b *testing.B) {
@@ -50,12 +61,7 @@ func BenchmarkInsertChain_valueTx_100kB_memdb(b *testing.B) {
 func BenchmarkInsertChain_valueTx_100kB_diskdb(b *testing.B) {
 	benchInsertChain(b, true, genValueTx(100*1024))
 }
-func BenchmarkInsertChain_uncles_memdb(b *testing.B) {
-	benchInsertChain(b, false, genUncles)
-}
-func BenchmarkInsertChain_uncles_diskdb(b *testing.B) {
-	benchInsertChain(b, true, genUncles)
-}
+
 func BenchmarkInsertChain_ring200_memdb(b *testing.B) {
 	benchInsertChain(b, false, genTxRing(200))
 }
@@ -73,23 +79,17 @@ var (
 	// This is the content of the genesis block used by the benchmarks.
 	benchRootKey, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	benchRootAddr   = crypto.PubkeyToAddress(benchRootKey.PublicKey)
-	benchRootFunds  = math.BigPow(2, 200)
+	benchRootFunds  = math.BigPow(2, 100)
 )
 
 // genValueTx returns a block generator that includes a single
 // value-transfer transaction with n bytes of extra data in each
 // block.
 func genValueTx(nbytes int) func(int, *BlockGen) {
-	// We can reuse the data for all transactions.
-	// During signing, the method tx.WithSignature(s, sig)
-	// performs:
-	// 	cpy := tx.inner.copy()
-	//	cpy.setSignatureValues(signer.ChainID(), v, r, s)
-	// After this operation, the data can be reused by the caller.
-	data := make([]byte, nbytes)
 	return func(i int, gen *BlockGen) {
 		toaddr := common.Address{}
-		gas, _ := IntrinsicGas(data, nil, nil, false, false, false, false)
+		data := make([]byte, nbytes)
+		gas, _ := IntrinsicGas(data, nil, false, params.Rules{}) // Disable Istanbul and EIP-2028 for this test
 		signer := gen.Signer()
 		gasPrice := big.NewInt(0)
 		if gen.header.BaseFee != nil {
@@ -126,14 +126,11 @@ func init() {
 // and fills the blocks with many small transactions.
 func genTxRing(naccounts int) func(int, *BlockGen) {
 	from := 0
-	availableFunds := new(big.Int).Set(benchRootFunds)
+	fee := big.NewInt(0).SetUint64(params.TxGas * 225000000000)
+	amount := big.NewInt(0).Set(benchRootFunds)
 	return func(i int, gen *BlockGen) {
 		block := gen.PrevBlock(i - 1)
 		gas := block.GasLimit()
-		gasPrice := big.NewInt(0)
-		if gen.header.BaseFee != nil {
-			gasPrice = gen.header.BaseFee
-		}
 		signer := gen.Signer()
 		for {
 			gas -= params.TxGas
@@ -143,17 +140,13 @@ func genTxRing(naccounts int) func(int, *BlockGen) {
 			to := (from + 1) % naccounts
 			burn := new(big.Int).SetUint64(params.TxGas)
 			burn.Mul(burn, gen.header.BaseFee)
-			availableFunds.Sub(availableFunds, burn)
-			if availableFunds.Cmp(big.NewInt(1)) < 0 {
-				panic("not enough funds")
-			}
 			tx, err := types.SignNewTx(ringKeys[from], signer,
 				&types.LegacyTx{
 					Nonce:    gen.TxNonce(ringAddrs[from]),
 					To:       &ringAddrs[to],
-					Value:    availableFunds,
+					Value:    amount.Sub(amount, fee),
 					Gas:      params.TxGas,
-					GasPrice: gasPrice,
+					GasPrice: big.NewInt(225000000000),
 				})
 			if err != nil {
 				panic(err)
@@ -164,42 +157,32 @@ func genTxRing(naccounts int) func(int, *BlockGen) {
 	}
 }
 
-// genUncles generates blocks with two uncle headers.
-func genUncles(i int, gen *BlockGen) {
-	if i >= 7 {
-		b2 := gen.PrevBlock(i - 6).Header()
-		b2.Extra = []byte("foo")
-		gen.AddUncle(b2)
-		b3 := gen.PrevBlock(i - 6).Header()
-		b3.Extra = []byte("bar")
-		gen.AddUncle(b3)
-	}
-}
-
 func benchInsertChain(b *testing.B, disk bool, gen func(int, *BlockGen)) {
 	// Create the database in memory or in a temporary directory.
 	var db ethdb.Database
+	var err error
 	if !disk {
 		db = rawdb.NewMemoryDatabase()
 	} else {
-		pdb, err := pebble.New(b.TempDir(), 128, 128, "", false)
+		dir := b.TempDir()
+		db, err = rawdb.NewLevelDBDatabase(dir, 128, 128, "", false)
 		if err != nil {
 			b.Fatalf("cannot create temporary database: %v", err)
 		}
-		db = rawdb.NewDatabase(pdb)
 		defer db.Close()
 	}
+
 	// Generate a chain of b.N blocks using the supplied block
 	// generator function.
 	gspec := &Genesis{
 		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{benchRootAddr: {Balance: benchRootFunds}},
 	}
-	_, chain, _ := GenerateChainWithGenesis(gspec, ethash.NewFaker(), b.N, gen)
+	_, chain, _, _ := GenerateChainWithGenesis(gspec, dummy.NewCoinbaseFaker(), b.N, 10, gen)
 
 	// Time the insertion of the new chain.
 	// State and blocks are stored in the same DB.
-	chainman, _ := NewBlockChain(db, gspec, ethash.NewFaker(), nil)
+	chainman, _ := NewBlockChain(db, DefaultCacheConfig, gspec, dummy.NewCoinbaseFaker(), vm.Config{}, common.Hash{}, false)
 	defer chainman.Stop()
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -215,27 +198,15 @@ func BenchmarkChainRead_full_10k(b *testing.B) {
 	benchReadChain(b, true, 10000)
 }
 func BenchmarkChainRead_header_100k(b *testing.B) {
-	if testing.Short() {
-		b.Skip("Skipping in short-mode")
-	}
 	benchReadChain(b, false, 100000)
 }
 func BenchmarkChainRead_full_100k(b *testing.B) {
-	if testing.Short() {
-		b.Skip("Skipping in short-mode")
-	}
 	benchReadChain(b, true, 100000)
 }
 func BenchmarkChainRead_header_500k(b *testing.B) {
-	if testing.Short() {
-		b.Skip("Skipping in short-mode")
-	}
 	benchReadChain(b, false, 500000)
 }
 func BenchmarkChainRead_full_500k(b *testing.B) {
-	if testing.Short() {
-		b.Skip("Skipping in short-mode")
-	}
 	benchReadChain(b, true, 500000)
 }
 func BenchmarkChainWrite_header_10k(b *testing.B) {
@@ -251,15 +222,9 @@ func BenchmarkChainWrite_full_100k(b *testing.B) {
 	benchWriteChain(b, true, 100000)
 }
 func BenchmarkChainWrite_header_500k(b *testing.B) {
-	if testing.Short() {
-		b.Skip("Skipping in short-mode")
-	}
 	benchWriteChain(b, false, 500000)
 }
 func BenchmarkChainWrite_full_500k(b *testing.B) {
-	if testing.Short() {
-		b.Skip("Skipping in short-mode")
-	}
 	benchWriteChain(b, true, 500000)
 }
 
@@ -294,19 +259,18 @@ func makeChainForBench(db ethdb.Database, genesis *Genesis, full bool, count uin
 			block := types.NewBlockWithHeader(header)
 			rawdb.WriteBody(db, hash, n, block.Body())
 			rawdb.WriteReceipts(db, hash, n, nil)
-			rawdb.WriteHeadBlockHash(db, hash)
 		}
 	}
 }
 
 func benchWriteChain(b *testing.B, full bool, count uint64) {
-	genesis := &Genesis{Config: params.AllEthashProtocolChanges}
+	genesis := &Genesis{Config: params.TestChainConfig}
 	for i := 0; i < b.N; i++ {
-		pdb, err := pebble.New(b.TempDir(), 1024, 128, "", false)
+		dir := b.TempDir()
+		db, err := rawdb.NewLevelDBDatabase(dir, 128, 1024, "", false)
 		if err != nil {
-			b.Fatalf("error opening database: %v", err)
+			b.Fatalf("error opening database at %v: %v", dir, err)
 		}
-		db := rawdb.NewDatabase(pdb)
 		makeChainForBench(db, genesis, full, count)
 		db.Close()
 	}
@@ -315,30 +279,27 @@ func benchWriteChain(b *testing.B, full bool, count uint64) {
 func benchReadChain(b *testing.B, full bool, count uint64) {
 	dir := b.TempDir()
 
-	pdb, err := pebble.New(dir, 1024, 128, "", false)
+	db, err := rawdb.NewLevelDBDatabase(dir, 128, 1024, "", false)
 	if err != nil {
-		b.Fatalf("error opening database: %v", err)
+		b.Fatalf("error opening database at %v: %v", dir, err)
 	}
-	db := rawdb.NewDatabase(pdb)
-
-	genesis := &Genesis{Config: params.AllEthashProtocolChanges}
+	genesis := &Genesis{Config: params.TestChainConfig}
 	makeChainForBench(db, genesis, full, count)
 	db.Close()
-	options := DefaultConfig().WithArchive(true)
+
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		pdb, err = pebble.New(dir, 1024, 128, "", false)
+		db, err := rawdb.NewLevelDBDatabase(dir, 128, 1024, "", false)
 		if err != nil {
-			b.Fatalf("error opening database: %v", err)
+			b.Fatalf("error opening database at %v: %v", dir, err)
 		}
-		db = rawdb.NewDatabase(pdb)
-
-		chain, err := NewBlockChain(db, genesis, ethash.NewFaker(), options)
+		chain, err := NewBlockChain(db, DefaultCacheConfig, genesis, dummy.NewFaker(), vm.Config{}, common.Hash{}, false)
 		if err != nil {
 			b.Fatalf("error creating chain: %v", err)
 		}
+
 		for n := uint64(0); n < count; n++ {
 			header := chain.GetHeaderByNumber(n)
 			if full {

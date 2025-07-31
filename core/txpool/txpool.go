@@ -1,4 +1,15 @@
-// Copyright 2014 The go-ethereum Authors
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
+// Copyright 2023 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
 // The go-ethereum library is free software: you can redistribute it and/or modify
@@ -21,14 +32,20 @@ import (
 	"fmt"
 	"math/big"
 	"sync"
+	"sync/atomic"
 
+	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/log"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/geth/metrics"
+)
+
+var (
+	// ErrOverdraft is returned if a transaction would cause the senders balance to go negative
+	// thus invalidating a potential large number of transactions.
+	ErrOverdraft = errors.New("transaction would cause overdraft")
 )
 
 // TxStatus is the current status of a transaction as seen by the pool.
@@ -38,23 +55,25 @@ const (
 	TxStatusUnknown TxStatus = iota
 	TxStatusQueued
 	TxStatusPending
-	TxStatusIncluded
+)
+
+var (
+	// reservationsGaugeName is the prefix of a per-subpool address reservation
+	// metric.
+	//
+	// This is mostly a sanity metric to ensure there's no bug that would make
+	// some subpool hog all the reservations due to mis-accounting.
+	reservationsGaugeName = "txpool/reservations"
 )
 
 // BlockChain defines the minimal set of methods needed to back a tx pool with
 // a chain. Exists to allow mocking the live chain out of tests.
 type BlockChain interface {
-	// Config retrieves the chain's fork configuration.
-	Config() *params.ChainConfig
-
 	// CurrentBlock returns the current head of the chain.
 	CurrentBlock() *types.Header
 
 	// SubscribeChainHeadEvent subscribes to new blocks being added to the chain.
 	SubscribeChainHeadEvent(ch chan<- core.ChainHeadEvent) event.Subscription
-
-	// StateAt returns a state database for a given root hash (generally the head).
-	StateAt(root common.Hash) (*state.StateDB, error)
 }
 
 // TxPool is an aggregator for various transaction specific pools, collectively
@@ -64,17 +83,19 @@ type BlockChain interface {
 // resource constraints.
 type TxPool struct {
 	subpools []SubPool // List of subpools for specialized transaction handling
-	chain    BlockChain
-	signer   types.Signer
 
-	stateLock sync.RWMutex   // The lock for protecting state instance
-	state     *state.StateDB // Current state at the blockchain head
+	reservations map[common.Address]SubPool // Map with the account to pool reservations
+	reserveLock  sync.Mutex                 // Lock protecting the account reservations
 
 	subs event.SubscriptionScope // Subscription scope to unsubscribe all on shutdown
 	quit chan chan error         // Quit channel to tear down the head updater
 	term chan struct{}           // Termination channel to detect a closed pool
 
 	sync chan chan error // Testing / simulator channel to block until internal reset is done
+
+	gasTip    atomic.Pointer[big.Int] // Remember last value set so it can be retrieved
+	minFee    atomic.Pointer[big.Int] // Remember last value set so it can be retrieved (in tests)
+	reorgFeed event.Feed
 }
 
 // New creates a new transaction pool to gather, sort and filter inbound
@@ -85,40 +106,86 @@ func New(gasTip uint64, chain BlockChain, subpools []SubPool) (*TxPool, error) {
 	// during initialization.
 	head := chain.CurrentBlock()
 
-	// Initialize the state with head block, or fallback to empty one in
-	// case the head state is not available (might occur when node is not
-	// fully synced).
-	statedb, err := chain.StateAt(head.Root)
-	if err != nil {
-		statedb, err = chain.StateAt(types.EmptyRootHash)
-	}
-	if err != nil {
-		return nil, err
-	}
 	pool := &TxPool{
-		subpools: subpools,
-		chain:    chain,
-		signer:   types.LatestSigner(chain.Config()),
-		state:    statedb,
-		quit:     make(chan chan error),
-		term:     make(chan struct{}),
-		sync:     make(chan chan error),
+		subpools:     subpools,
+		reservations: make(map[common.Address]SubPool),
+		quit:         make(chan chan error),
+		term:         make(chan struct{}),
+		sync:         make(chan chan error),
 	}
-	reserver := NewReservationTracker()
+	pool.gasTip.Store(new(big.Int).SetUint64(gasTip))
+
 	for i, subpool := range subpools {
-		if err := subpool.Init(gasTip, head, reserver.NewHandle(i)); err != nil {
+		if err := subpool.Init(gasTip, head, pool.reserver(i, subpool)); err != nil {
 			for j := i - 1; j >= 0; j-- {
 				subpools[j].Close()
 			}
 			return nil, err
 		}
 	}
-	go pool.loop(head)
+
+	// Subscribe to chain head events to trigger subpool resets
+	var (
+		newHeadCh  = make(chan core.ChainHeadEvent)
+		newHeadSub = chain.SubscribeChainHeadEvent(newHeadCh)
+	)
+	go func() {
+		pool.loop(head, newHeadCh)
+		newHeadSub.Unsubscribe()
+	}()
 	return pool, nil
+}
+
+// reserver is a method to create an address reservation callback to exclusively
+// assign/deassign addresses to/from subpools. This can ensure that at any point
+// in time, only a single subpool is able to manage an account, avoiding cross
+// subpool eviction issues and nonce conflicts.
+func (p *TxPool) reserver(id int, subpool SubPool) AddressReserver {
+	return func(addr common.Address, reserve bool) error {
+		p.reserveLock.Lock()
+		defer p.reserveLock.Unlock()
+
+		owner, exists := p.reservations[addr]
+		if reserve {
+			// Double reservations are forbidden even from the same pool to
+			// avoid subtle bugs in the long term.
+			if exists {
+				if owner == subpool {
+					log.Error("pool attempted to reserve already-owned address", "address", addr)
+					return nil // Ignore fault to give the pool a chance to recover while the bug gets fixed
+				}
+				return ErrAlreadyReserved
+			}
+			p.reservations[addr] = subpool
+			if metrics.Enabled {
+				m := fmt.Sprintf("%s/%d", reservationsGaugeName, id)
+				metrics.GetOrRegisterGauge(m, nil).Inc(1)
+			}
+			return nil
+		}
+		// Ensure subpools only attempt to unreserve their own owned addresses,
+		// otherwise flag as a programming error.
+		if !exists {
+			log.Error("pool attempted to unreserve non-reserved address", "address", addr)
+			return errors.New("address not reserved")
+		}
+		if subpool != owner {
+			log.Error("pool attempted to unreserve non-owned address", "address", addr)
+			return errors.New("address not owned")
+		}
+		delete(p.reservations, addr)
+		if metrics.Enabled {
+			m := fmt.Sprintf("%s/%d", reservationsGaugeName, id)
+			metrics.GetOrRegisterGauge(m, nil).Dec(1)
+		}
+		return nil
+	}
 }
 
 // Close terminates the transaction pool and all its subpools.
 func (p *TxPool) Close() error {
+	p.subs.Close()
+
 	var errs []error
 
 	// Terminate the reset loop and wait for it to finish
@@ -145,16 +212,9 @@ func (p *TxPool) Close() error {
 // loop is the transaction pool's main event loop, waiting for and reacting to
 // outside blockchain events as well as for various reporting and transaction
 // eviction events.
-func (p *TxPool) loop(head *types.Header) {
+func (p *TxPool) loop(head *types.Header, newHeadCh <-chan core.ChainHeadEvent) {
 	// Close the termination marker when the pool stops
 	defer close(p.term)
-
-	// Subscribe to chain head events to trigger subpool resets
-	var (
-		newHeadCh  = make(chan core.ChainHeadEvent)
-		newHeadSub = p.chain.SubscribeChainHeadEvent(newHeadCh)
-	)
-	defer newHeadSub.Unsubscribe()
 
 	// Track the previous and current head to feed to an idle reset
 	var (
@@ -185,25 +245,13 @@ func (p *TxPool) loop(head *types.Header) {
 			// Try to inject a busy marker and start a reset if successful
 			select {
 			case resetBusy <- struct{}{}:
-				// Updates the statedb with the new chain head. The head state may be
-				// unavailable if the initial state sync has not yet completed.
-				if statedb, err := p.chain.StateAt(newHead.Root); err != nil {
-					log.Error("Failed to reset txpool state", "err", err)
-				} else {
-					p.stateLock.Lock()
-					p.state = statedb
-					p.stateLock.Unlock()
-				}
-
 				// Busy marker injected, start a new subpool reset
 				go func(oldHead, newHead *types.Header) {
 					for _, subpool := range p.subpools {
 						subpool.Reset(oldHead, newHead)
 					}
-					select {
-					case resetDone <- newHead:
-					case <-p.term:
-					}
+					p.reorgFeed.Send(core.NewTxPoolReorgEvent{Head: newHead})
+					resetDone <- newHead
 				}(oldHead, newHead)
 
 				// If the reset operation was explicitly requested, consider it
@@ -223,7 +271,7 @@ func (p *TxPool) loop(head *types.Header) {
 		select {
 		case event := <-newHeadCh:
 			// Chain moved forward, store the head for later consumption
-			newHead = event.Header
+			newHead = event.Block.Header()
 
 		case head := <-resetDone:
 			// Previous reset finished, update the old head and allow a new reset
@@ -256,11 +304,33 @@ func (p *TxPool) loop(head *types.Header) {
 	errc <- nil
 }
 
+// GasTip returns the current gas tip enforced by the transaction pool.
+func (p *TxPool) GasTip() *big.Int {
+	return new(big.Int).Set(p.gasTip.Load())
+}
+
 // SetGasTip updates the minimum gas tip required by the transaction pool for a
 // new transaction, and drops all transactions below this threshold.
 func (p *TxPool) SetGasTip(tip *big.Int) {
+	p.gasTip.Store(new(big.Int).Set(tip))
+
 	for _, subpool := range p.subpools {
 		subpool.SetGasTip(tip)
+	}
+}
+
+// MinFee returns the current minimum fee enforced by the transaction pool.
+func (p *TxPool) MinFee() *big.Int {
+	return new(big.Int).Set(p.minFee.Load())
+}
+
+// SetMinFee updates the minimum fee required by the transaction pool for a
+// new transaction, and drops all transactions below this threshold.
+func (p *TxPool) SetMinFee(fee *big.Int) {
+	p.minFee.Store(new(big.Int).Set(fee))
+
+	for _, subpool := range p.subpools {
+		subpool.SetMinFee(fee)
 	}
 }
 
@@ -269,6 +339,17 @@ func (p *TxPool) SetGasTip(tip *big.Int) {
 func (p *TxPool) Has(hash common.Hash) bool {
 	for _, subpool := range p.subpools {
 		if subpool.Has(hash) {
+			return true
+		}
+	}
+	return false
+}
+
+// HasLocal returns an indicator whether the pool has a local transaction cached
+// with the given hash.
+func (p *TxPool) HasLocal(hash common.Hash) bool {
+	for _, subpool := range p.subpools {
+		if subpool.HasLocal(hash) {
 			return true
 		}
 	}
@@ -285,35 +366,10 @@ func (p *TxPool) Get(hash common.Hash) *types.Transaction {
 	return nil
 }
 
-// GetRLP returns a RLP-encoded transaction if it is contained in the pool.
-func (p *TxPool) GetRLP(hash common.Hash) []byte {
-	for _, subpool := range p.subpools {
-		encoded := subpool.GetRLP(hash)
-		if len(encoded) != 0 {
-			return encoded
-		}
-	}
-	return nil
-}
-
-// GetMetadata returns the transaction type and transaction size with the given
-// hash.
-func (p *TxPool) GetMetadata(hash common.Hash) *TxMetadata {
-	for _, subpool := range p.subpools {
-		if meta := subpool.GetMetadata(hash); meta != nil {
-			return meta
-		}
-	}
-	return nil
-}
-
 // Add enqueues a batch of transactions into the pool if they are valid. Due
 // to the large transaction churn, add may postpone fully integrating the tx
 // to a later point to batch multiple ones together.
-//
-// Note, if sync is set the method will block until all internal maintenance
-// related to the add is finished. Only use this during tests for determinism.
-func (p *TxPool) Add(txs []*types.Transaction, sync bool) []error {
+func (p *TxPool) Add(txs []*types.Transaction, local bool, sync bool) []error {
 	// Split the input transactions between the subpools. It shouldn't really
 	// happen that we receive merged batches, but better graceful than strange
 	// errors.
@@ -340,13 +396,13 @@ func (p *TxPool) Add(txs []*types.Transaction, sync bool) []error {
 	// back the errors into the original sort order.
 	errsets := make([][]error, len(p.subpools))
 	for i := 0; i < len(p.subpools); i++ {
-		errsets[i] = p.subpools[i].Add(txsets[i], sync)
+		errsets[i] = p.subpools[i].Add(txsets[i], local, sync)
 	}
 	errs := make([]error, len(txs))
 	for i, split := range splits {
 		// If the transaction was rejected by all subpools, mark it unsupported
 		if split == -1 {
-			errs[i] = fmt.Errorf("%w: received type %d", core.ErrTxTypeNotSupported, txs[i].Type())
+			errs[i] = core.ErrTxTypeNotSupported
 			continue
 		}
 		// Find which subpool handled it and pull in the corresponding error
@@ -356,8 +412,13 @@ func (p *TxPool) Add(txs []*types.Transaction, sync bool) []error {
 	return errs
 }
 
+func (p *TxPool) AddRemotesSync(txs []*types.Transaction) []error {
+	return p.Add(txs, false, true)
+}
+
 // Pending retrieves all currently processable transactions, grouped by origin
-// account and sorted by nonce.
+// account and sorted by nonce. The returned transaction set is a copy and can be
+// freely modified by calling code.
 //
 // The transactions can also be pre-filtered by the dynamic fee components to
 // reduce allocations and load on downstream subsystems.
@@ -371,19 +432,53 @@ func (p *TxPool) Pending(filter PendingFilter) map[common.Address][]*LazyTransac
 	return txs
 }
 
+// PendingSize returns the number of pending txs in the tx pool.
+//
+// The filter parameter can be used to do an extra filtering on the pending
+// transactions.
+func (p *TxPool) PendingSize(filter PendingFilter) int {
+	count := 0
+	for _, subpool := range p.subpools {
+		for _, txs := range subpool.Pending(filter) {
+			count += len(txs)
+		}
+	}
+	return count
+}
+
+// IteratePending iterates over [pool.pending] until [f] returns false.
+// The caller must not modify [tx].
+func (p *TxPool) IteratePending(f func(tx *types.Transaction) bool) {
+	for _, subpool := range p.subpools {
+		if !subpool.IteratePending(f) {
+			return
+		}
+	}
+}
+
 // SubscribeTransactions registers a subscription for new transaction events,
 // supporting feeding only newly seen or also resurrected transactions.
 func (p *TxPool) SubscribeTransactions(ch chan<- core.NewTxsEvent, reorgs bool) event.Subscription {
-	subs := make([]event.Subscription, len(p.subpools))
-	for i, subpool := range p.subpools {
-		subs[i] = subpool.SubscribeTransactions(ch, reorgs)
+	subs := make([]event.Subscription, 0, len(p.subpools))
+	for _, subpool := range p.subpools {
+		subpool := subpool.SubscribeTransactions(ch, reorgs)
+		if subpool == nil {
+			continue
+		}
+		subs = append(subs, subpool)
 	}
 	return p.subs.Track(event.JoinSubscriptions(subs...))
 }
 
-// PoolNonce returns the next nonce of an account, with all transactions executable
+// SubscribeNewReorgEvent registers a subscription of NewReorgEvent and
+// starts sending event to the given channel.
+func (p *TxPool) SubscribeNewReorgEvent(ch chan<- core.NewTxPoolReorgEvent) event.Subscription {
+	return p.subs.Track(p.reorgFeed.Subscribe(ch))
+}
+
+// Nonce returns the next nonce of an account, with all transactions executable
 // by the pool already applied on top.
-func (p *TxPool) PoolNonce(addr common.Address) uint64 {
+func (p *TxPool) Nonce(addr common.Address) uint64 {
 	// Since (for now) accounts are unique to subpools, only one pool will have
 	// (at max) a non-state nonce. To avoid stateful lookups, just return the
 	// highest nonce for now.
@@ -394,15 +489,6 @@ func (p *TxPool) PoolNonce(addr common.Address) uint64 {
 		}
 	}
 	return nonce
-}
-
-// Nonce returns the next nonce of an account at the current chain head. Unlike
-// PoolNonce, this function does not account for pending executable transactions.
-func (p *TxPool) Nonce(addr common.Address) uint64 {
-	p.stateLock.RLock()
-	defer p.stateLock.RUnlock()
-
-	return p.state.GetNonce(addr)
 }
 
 // Stats retrieves the current pool stats, namely the number of pending and the
@@ -450,6 +536,23 @@ func (p *TxPool) ContentFrom(addr common.Address) ([]*types.Transaction, []*type
 	return []*types.Transaction{}, []*types.Transaction{}
 }
 
+// Locals retrieves the accounts currently considered local by the pool.
+func (p *TxPool) Locals() []common.Address {
+	// Retrieve the locals from each subpool and deduplicate them
+	locals := make(map[common.Address]struct{})
+	for _, subpool := range p.subpools {
+		for _, local := range subpool.Locals() {
+			locals[local] = struct{}{}
+		}
+	}
+	// Flatten and return the deduplicated local set
+	flat := make([]common.Address, 0, len(locals))
+	for local := range locals {
+		flat = append(flat, local)
+	}
+	return flat
+}
+
 // Status returns the known status (unknown/pending/queued) of a transaction
 // identified by its hash.
 func (p *TxPool) Status(hash common.Hash) TxStatus {
@@ -466,8 +569,8 @@ func (p *TxPool) Status(hash common.Hash) TxStatus {
 // internal background reset operations. This method will run an explicit reset
 // operation to ensure the pool stabilises, thus avoiding flakey behavior.
 //
-// Note, this method is only used for testing and is susceptible to DoS vectors.
-// In production code, the pool is meant to reset on a separate thread.
+// Note, do not use this in production / live code. In live code, the pool is
+// meant to reset on a separate thread to avoid DoS vectors.
 func (p *TxPool) Sync() error {
 	sync := make(chan error)
 	select {
@@ -475,19 +578,5 @@ func (p *TxPool) Sync() error {
 		return <-sync
 	case <-p.term:
 		return errors.New("pool already terminated")
-	}
-}
-
-// Clear removes all tracked txs from the subpools.
-//
-// Note, this method invokes Sync() and is only used for testing, because it is
-// susceptible to DoS vectors. In production code, the pool is meant to reset on
-// a separate thread.
-func (p *TxPool) Clear() {
-	// Invoke Sync to ensure that txs pending addition don't get added to the pool after
-	// the subpools are subsequently cleared
-	p.Sync()
-	for _, subpool := range p.subpools {
-		subpool.Clear()
 	}
 }

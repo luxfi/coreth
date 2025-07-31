@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2019 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -25,7 +36,7 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/luxfi/log"
+	"github.com/luxfi/geth/log"
 )
 
 var (
@@ -110,7 +121,7 @@ func (r *serviceRegistry) subscription(service, name string) *callback {
 }
 
 // suitableCallbacks iterates over the methods of the given type. It determines if a method
-// satisfies the criteria for an RPC callback or a subscription callback and adds it to the
+// satisfies the criteria for a RPC callback or a subscription callback and adds it to the
 // collection of callbacks. See server documentation for a summary of these criteria.
 func suitableCallbacks(receiver reflect.Value) map[string]*callback {
 	typ := receiver.Type()
@@ -227,7 +238,7 @@ func isSubscriptionType(t reflect.Type) bool {
 	return t == subscriptionType
 }
 
-// isPubSub tests whether the given method's first argument is a context.Context and
+// isPubSub tests whether the given method has as as first argument a context.Context and
 // returns the pair (Subscription, error).
 func isPubSub(methodType reflect.Type) bool {
 	// numIn(0) is the receiver type

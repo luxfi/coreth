@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2019 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -22,20 +33,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luxfi/coreth/triedb/hashdb"
+	"github.com/luxfi/coreth/triedb/pathdb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/log"
+	"github.com/luxfi/geth/log"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/triedb"
-	"github.com/luxfi/geth/triedb/hashdb"
-	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/holiman/uint256"
 	"golang.org/x/crypto/sha3"
 )
+
+var testBlockHash = common.HexToHash("0xdeadbeef")
 
 func hashData(input []byte) common.Hash {
 	var hasher = sha3.NewLegacyKeccak256()
@@ -57,30 +70,31 @@ func testGeneration(t *testing.T, scheme string) {
 	// a fake one manually. We're going with a small account trie of 3 accounts,
 	// two of which also has the same 3-slot storage trie attached.
 	var helper = newHelper(scheme)
-	stRoot := helper.makeStorageTrie("", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, false)
+	stRoot := helper.makeStorageTrie(common.Hash{}, []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, false)
 
 	helper.addTrieAccount("acc-1", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 	helper.addTrieAccount("acc-2", &types.StateAccount{Balance: uint256.NewInt(2), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()})
 	helper.addTrieAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(3), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 
-	helper.makeStorageTrie("acc-1", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
-	helper.makeStorageTrie("acc-3", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	helper.makeStorageTrie(hashData([]byte("acc-1")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	helper.makeStorageTrie(hashData([]byte("acc-3")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 
-	root, snap := helper.CommitAndGenerate()
-	if have, want := root, common.HexToHash("0xe3712f1a226f3782caca78ca770ccc19ee000552813a9f59d479f8611db9b1fd"); have != want {
+	root, snap := helper.CommitAndGenerate() // two of which also has the same 3-slot storage trie attached.
+
+	if have, want := root, common.HexToHash("0xa819054cfef894169a5b56ccc4e5e06f14829d4a57498e8b9fb13ff21491828d"); have != want {
 		t.Fatalf("have %#x want %#x", have, want)
 	}
 	select {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 
-	case <-time.After(3 * time.Second):
+	case <-time.After(250 * time.Millisecond):
 		t.Errorf("Snapshot generation failed")
 	}
 	checkSnapRoot(t, snap, root)
 
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -97,7 +111,7 @@ func testGenerateExistentState(t *testing.T, scheme string) {
 	// two of which also has the same 3-slot storage trie attached.
 	var helper = newHelper(scheme)
 
-	stRoot := helper.makeStorageTrie("acc-1", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	stRoot := helper.makeStorageTrie(hashData([]byte("acc-1")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 	helper.addTrieAccount("acc-1", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 	helper.addSnapAccount("acc-1", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 	helper.addSnapStorage("acc-1", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"})
@@ -105,7 +119,7 @@ func testGenerateExistentState(t *testing.T, scheme string) {
 	helper.addTrieAccount("acc-2", &types.StateAccount{Balance: uint256.NewInt(2), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()})
 	helper.addSnapAccount("acc-2", &types.StateAccount{Balance: uint256.NewInt(2), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()})
 
-	stRoot = helper.makeStorageTrie("acc-3", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	stRoot = helper.makeStorageTrie(hashData([]byte("acc-3")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 	helper.addTrieAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(3), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 	helper.addSnapAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(3), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 	helper.addSnapStorage("acc-3", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"})
@@ -115,26 +129,24 @@ func testGenerateExistentState(t *testing.T, scheme string) {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 
-	case <-time.After(3 * time.Second):
+	case <-time.After(250 * time.Millisecond):
 		t.Errorf("Snapshot generation failed")
 	}
 	checkSnapRoot(t, snap, root)
 
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
 
 func checkSnapRoot(t *testing.T, snap *diskLayer, trieRoot common.Hash) {
 	t.Helper()
-
 	accIt := snap.AccountIterator(common.Hash{})
 	defer accIt.Release()
-
 	snapRoot, err := generateTrieRoot(nil, "", accIt, common.Hash{}, stackTrieGenerate,
 		func(db ethdb.KeyValueWriter, accountHash, codeHash common.Hash, stat *generateStats) (common.Hash, error) {
-			storageIt := snap.StorageIterator(accountHash, common.Hash{})
+			storageIt, _ := snap.StorageIterator(accountHash, common.Hash{})
 			defer storageIt.Release()
 
 			hash, err := generateTrieRoot(nil, "", storageIt, accountHash, stackTrieGenerate, nil, stat, false)
@@ -159,38 +171,29 @@ type testHelper struct {
 	triedb  *triedb.Database
 	accTrie *trie.StateTrie
 	nodes   *trienode.MergedNodeSet
-	states  *triedb.StateSet
 }
 
 func newHelper(scheme string) *testHelper {
 	diskdb := rawdb.NewMemoryDatabase()
 	config := &triedb.Config{}
 	if scheme == rawdb.PathScheme {
-		config.PathDB = &pathdb.Config{
-			SnapshotNoBuild: true,
-			NoAsyncFlush:    true,
-		} // disable caching
+		config.DBOverride = pathdb.Config{}.BackendConstructor // disable caching
 	} else {
-		config.HashDB = &hashdb.Config{} // disable caching
+		config.DBOverride = hashdb.Config{}.BackendConstructor // disable caching
 	}
-	db := triedb.NewDatabase(diskdb, config)
-	accTrie, _ := trie.NewStateTrie(trie.StateTrieID(types.EmptyRootHash), db)
+	triedb := triedb.NewDatabase(diskdb, config)
+	accTrie, _ := trie.NewStateTrie(trie.StateTrieID(types.EmptyRootHash), triedb)
 	return &testHelper{
 		diskdb:  diskdb,
-		triedb:  db,
+		triedb:  triedb,
 		accTrie: accTrie,
 		nodes:   trienode.NewMergedNodeSet(),
-		states:  triedb.NewStateSet(),
 	}
 }
 
 func (t *testHelper) addTrieAccount(acckey string, acc *types.StateAccount) {
 	val, _ := rlp.EncodeToBytes(acc)
 	t.accTrie.MustUpdate([]byte(acckey), val)
-
-	accHash := hashData([]byte(acckey))
-	t.states.Accounts[accHash] = val
-	t.states.AccountsOrigin[common.BytesToAddress([]byte(acckey))] = nil
 }
 
 func (t *testHelper) addSnapAccount(acckey string, acc *types.StateAccount) {
@@ -210,26 +213,16 @@ func (t *testHelper) addSnapStorage(accKey string, keys []string, vals []string)
 	}
 }
 
-func (t *testHelper) makeStorageTrie(accKey string, keys []string, vals []string, commit bool) common.Hash {
-	owner := hashData([]byte(accKey))
-	addr := common.BytesToAddress([]byte(accKey))
+func (t *testHelper) makeStorageTrie(owner common.Hash, keys []string, vals []string, commit bool) common.Hash {
 	id := trie.StorageTrieID(types.EmptyRootHash, owner, types.EmptyRootHash)
 	stTrie, _ := trie.NewStateTrie(id, t.triedb)
 	for i, k := range keys {
 		stTrie.MustUpdate([]byte(k), []byte(vals[i]))
-		if t.states.Storages[owner] == nil {
-			t.states.Storages[owner] = make(map[common.Hash][]byte)
-		}
-		if t.states.StoragesOrigin[addr] == nil {
-			t.states.StoragesOrigin[addr] = make(map[common.Hash][]byte)
-		}
-		t.states.Storages[owner][hashData([]byte(k))] = []byte(vals[i])
-		t.states.StoragesOrigin[addr][hashData([]byte(k))] = nil
 	}
 	if !commit {
 		return stTrie.Hash()
 	}
-	root, nodes := stTrie.Commit(false)
+	root, nodes, _ := stTrie.Commit(false)
 	if nodes != nil {
 		t.nodes.Merge(nodes)
 	}
@@ -237,18 +230,18 @@ func (t *testHelper) makeStorageTrie(accKey string, keys []string, vals []string
 }
 
 func (t *testHelper) Commit() common.Hash {
-	root, nodes := t.accTrie.Commit(true)
+	root, nodes, _ := t.accTrie.Commit(true)
 	if nodes != nil {
 		t.nodes.Merge(nodes)
 	}
-	t.triedb.Update(root, types.EmptyRootHash, 0, t.nodes, t.states)
+	t.triedb.Update(root, types.EmptyRootHash, 0, t.nodes, nil)
 	t.triedb.Commit(root, false)
 	return root
 }
 
 func (t *testHelper) CommitAndGenerate() (common.Hash, *diskLayer) {
 	root := t.Commit()
-	snap := generateSnapshot(t.diskdb, t.triedb, 16, root)
+	snap := generateSnapshot(t.diskdb, t.triedb, 16, testBlockHash, root, nil)
 	return root, snap
 }
 
@@ -283,23 +276,23 @@ func testGenerateExistentStateWithWrongStorage(t *testing.T, scheme string) {
 	helper.addSnapStorage("acc-1", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"})
 
 	// Account two, non empty root but empty database
-	stRoot := helper.makeStorageTrie("acc-2", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	stRoot := helper.makeStorageTrie(hashData([]byte("acc-2")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 	helper.addAccount("acc-2", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 
 	// Miss slots
 	{
 		// Account three, non empty root but misses slots in the beginning
-		helper.makeStorageTrie("acc-3", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		helper.makeStorageTrie(hashData([]byte("acc-3")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		helper.addSnapStorage("acc-3", []string{"key-2", "key-3"}, []string{"val-2", "val-3"})
 
 		// Account four, non empty root but misses slots in the middle
-		helper.makeStorageTrie("acc-4", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		helper.makeStorageTrie(hashData([]byte("acc-4")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addAccount("acc-4", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		helper.addSnapStorage("acc-4", []string{"key-1", "key-3"}, []string{"val-1", "val-3"})
 
 		// Account five, non empty root but misses slots in the end
-		helper.makeStorageTrie("acc-5", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		helper.makeStorageTrie(hashData([]byte("acc-5")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addAccount("acc-5", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		helper.addSnapStorage("acc-5", []string{"key-1", "key-2"}, []string{"val-1", "val-2"})
 	}
@@ -307,22 +300,22 @@ func testGenerateExistentStateWithWrongStorage(t *testing.T, scheme string) {
 	// Wrong storage slots
 	{
 		// Account six, non empty root but wrong slots in the beginning
-		helper.makeStorageTrie("acc-6", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		helper.makeStorageTrie(hashData([]byte("acc-6")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addAccount("acc-6", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		helper.addSnapStorage("acc-6", []string{"key-1", "key-2", "key-3"}, []string{"badval-1", "val-2", "val-3"})
 
 		// Account seven, non empty root but wrong slots in the middle
-		helper.makeStorageTrie("acc-7", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		helper.makeStorageTrie(hashData([]byte("acc-7")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addAccount("acc-7", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		helper.addSnapStorage("acc-7", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "badval-2", "val-3"})
 
 		// Account eight, non empty root but wrong slots in the end
-		helper.makeStorageTrie("acc-8", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		helper.makeStorageTrie(hashData([]byte("acc-8")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addAccount("acc-8", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		helper.addSnapStorage("acc-8", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "badval-3"})
 
 		// Account 9, non empty root but rotated slots
-		helper.makeStorageTrie("acc-9", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		helper.makeStorageTrie(hashData([]byte("acc-9")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addAccount("acc-9", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		helper.addSnapStorage("acc-9", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-3", "val-2"})
 	}
@@ -330,34 +323,34 @@ func testGenerateExistentStateWithWrongStorage(t *testing.T, scheme string) {
 	// Extra storage slots
 	{
 		// Account 10, non empty root but extra slots in the beginning
-		helper.makeStorageTrie("acc-10", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		helper.makeStorageTrie(hashData([]byte("acc-10")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addAccount("acc-10", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		helper.addSnapStorage("acc-10", []string{"key-0", "key-1", "key-2", "key-3"}, []string{"val-0", "val-1", "val-2", "val-3"})
 
 		// Account 11, non empty root but extra slots in the middle
-		helper.makeStorageTrie("acc-11", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		helper.makeStorageTrie(hashData([]byte("acc-11")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addAccount("acc-11", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		helper.addSnapStorage("acc-11", []string{"key-1", "key-2", "key-2-1", "key-3"}, []string{"val-1", "val-2", "val-2-1", "val-3"})
 
 		// Account 12, non empty root but extra slots in the end
-		helper.makeStorageTrie("acc-12", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		helper.makeStorageTrie(hashData([]byte("acc-12")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addAccount("acc-12", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		helper.addSnapStorage("acc-12", []string{"key-1", "key-2", "key-3", "key-4"}, []string{"val-1", "val-2", "val-3", "val-4"})
 	}
 
 	root, snap := helper.CommitAndGenerate()
-	t.Logf("Root: %#x\n", root) // Root = 0x8746cce9fd9c658b2cfd639878ed6584b7a2b3e73bb40f607fcfa156002429a0
+	t.Logf("Root: %#x\n", root) // Root = 0xdd912272f1befd3e1ca84007817f532b6e8a08f7b273c88b0ea0d6701ad3ad03
 
 	select {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 
-	case <-time.After(3 * time.Second):
+	case <-time.After(250 * time.Millisecond):
 		t.Errorf("Snapshot generation failed")
 	}
 	checkSnapRoot(t, snap, root)
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -375,11 +368,11 @@ func TestGenerateExistentStateWithWrongAccounts(t *testing.T) {
 func testGenerateExistentStateWithWrongAccounts(t *testing.T, scheme string) {
 	helper := newHelper(scheme)
 
-	helper.makeStorageTrie("acc-1", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
-	helper.makeStorageTrie("acc-2", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
-	helper.makeStorageTrie("acc-3", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
-	helper.makeStorageTrie("acc-4", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
-	stRoot := helper.makeStorageTrie("acc-6", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	helper.makeStorageTrie(hashData([]byte("acc-1")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	helper.makeStorageTrie(hashData([]byte("acc-2")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	helper.makeStorageTrie(hashData([]byte("acc-3")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	helper.makeStorageTrie(hashData([]byte("acc-4")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	stRoot := helper.makeStorageTrie(hashData([]byte("acc-6")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 
 	// Trie accounts [acc-1, acc-2, acc-3, acc-4, acc-6]
 	// Extra accounts [acc-0, acc-5, acc-7]
@@ -408,19 +401,19 @@ func testGenerateExistentStateWithWrongAccounts(t *testing.T, scheme string) {
 	}
 
 	root, snap := helper.CommitAndGenerate()
-	t.Logf("Root: %#x\n", root) // Root = 0x825891472281463511e7ebcc7f109e4f9200c20fa384754e11fd605cd98464e8
+	t.Logf("Root: %#x\n", root) // Root = 0xe614035f519c878aea2b5e658a3dd61916ff090354222cfad624403e89d96440
 
 	select {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 
-	case <-time.After(3 * time.Second):
+	case <-time.After(250 * time.Millisecond):
 		t.Errorf("Snapshot generation failed")
 	}
 	checkSnapRoot(t, snap, root)
 
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -438,29 +431,29 @@ func testGenerateCorruptAccountTrie(t *testing.T, scheme string) {
 	// without any storage slots to keep the test smaller.
 	helper := newHelper(scheme)
 
-	helper.addTrieAccount("acc-1", &types.StateAccount{Balance: uint256.NewInt(1), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()}) // 0xc7a30f39aff471c95d8a837497ad0e49b65be475cc0953540f80cfcdbdcd9074
-	helper.addTrieAccount("acc-2", &types.StateAccount{Balance: uint256.NewInt(2), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()}) // 0x65145f923027566669a1ae5ccac66f945b55ff6eaeb17d2ea8e048b7d381f2d7
-	helper.addTrieAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(3), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()}) // 0x19ead688e907b0fab07176120dceec244a72aff2f0aa51e8b827584e378772f4
+	helper.addTrieAccount("acc-1", &types.StateAccount{Balance: uint256.NewInt(1), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()}) // 0x7dd654835190324640832972b7c4c6eaa0c50541e36766d054ed57721f1dc7eb
+	helper.addTrieAccount("acc-2", &types.StateAccount{Balance: uint256.NewInt(2), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()}) // 0xf73118e0254ce091588d66038744a0afae5f65a194de67cff310c683ae43329e
+	helper.addTrieAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(3), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()}) // 0x515d3de35e143cd976ad476398d910aa7bf8a02e8fd7eb9e3baacddbbcbfcb41
 
-	root := helper.Commit() // Root: 0xa04693ea110a31037fb5ee814308a6f1d76bdab0b11676bdf4541d2de55ba978
+	root := helper.Commit() // Root: 0xfa04f652e8bd3938971bf7d71c3c688574af334ca8bc20e64b01ba610ae93cad
 
 	// Delete an account trie node and ensure the generator chokes
 	targetPath := []byte{0xc}
-	targetHash := common.HexToHash("0x65145f923027566669a1ae5ccac66f945b55ff6eaeb17d2ea8e048b7d381f2d7")
+	targetHash := common.HexToHash("0xf73118e0254ce091588d66038744a0afae5f65a194de67cff310c683ae43329e")
 
 	rawdb.DeleteTrieNode(helper.diskdb, common.Hash{}, targetPath, targetHash, scheme)
 
-	snap := generateSnapshot(helper.diskdb, helper.triedb, 16, root)
+	snap := generateSnapshot(helper.diskdb, helper.triedb, 16, testBlockHash, root, nil)
 	select {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 		t.Errorf("Snapshot generated against corrupt account trie")
 
-	case <-time.After(time.Second):
+	case <-time.After(250 * time.Millisecond):
 		// Not generated fast enough, hopefully blocked inside on missing trie node fail
 	}
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -482,11 +475,11 @@ func testGenerateMissingStorageTrie(t *testing.T, scheme string) {
 		acc3   = hashData([]byte("acc-3"))
 		helper = newHelper(scheme)
 	)
-	stRoot := helper.makeStorageTrie("acc-1", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)                         // 0xddefcd9376dd029653ef384bd2f0a126bb755fe84fdcc9e7cf421ba454f2bc67
+	stRoot := helper.makeStorageTrie(hashData([]byte("acc-1")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)       // 0xddefcd9376dd029653ef384bd2f0a126bb755fe84fdcc9e7cf421ba454f2bc67
 	helper.addTrieAccount("acc-1", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})              // 0x9250573b9c18c664139f3b6a7a8081b7d8f8916a8fcc5d94feec6c29f5fd4e9e
 	helper.addTrieAccount("acc-2", &types.StateAccount{Balance: uint256.NewInt(2), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()}) // 0x65145f923027566669a1ae5ccac66f945b55ff6eaeb17d2ea8e048b7d381f2d7
-	stRoot = helper.makeStorageTrie("acc-3", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
-	helper.addTrieAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(3), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()}) // 0x50815097425d000edfc8b3a4a13e175fc2bdcfee8bdfbf2d1ff61041d3c235b2
+	stRoot = helper.makeStorageTrie(hashData([]byte("acc-3")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	helper.addTrieAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(3), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()}) // 0x70da4ebd7602dd313c936b39000ed9ab7f849986a90ea934f0c3ec4cc9840441
 
 	root := helper.Commit()
 
@@ -494,17 +487,17 @@ func testGenerateMissingStorageTrie(t *testing.T, scheme string) {
 	rawdb.DeleteTrieNode(helper.diskdb, acc1, nil, stRoot, scheme)
 	rawdb.DeleteTrieNode(helper.diskdb, acc3, nil, stRoot, scheme)
 
-	snap := generateSnapshot(helper.diskdb, helper.triedb, 16, root)
+	snap := generateSnapshot(helper.diskdb, helper.triedb, 16, testBlockHash, root, nil)
 	select {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 		t.Errorf("Snapshot generated against corrupt storage trie")
 
-	case <-time.After(time.Second):
+	case <-time.After(250 * time.Millisecond):
 		// Not generated fast enough, hopefully blocked inside on missing trie node fail
 	}
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -522,11 +515,11 @@ func testGenerateCorruptStorageTrie(t *testing.T, scheme string) {
 	// two of which also has the same 3-slot storage trie attached.
 	helper := newHelper(scheme)
 
-	stRoot := helper.makeStorageTrie("acc-1", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)                         // 0xddefcd9376dd029653ef384bd2f0a126bb755fe84fdcc9e7cf421ba454f2bc67
+	stRoot := helper.makeStorageTrie(hashData([]byte("acc-1")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)       // 0xddefcd9376dd029653ef384bd2f0a126bb755fe84fdcc9e7cf421ba454f2bc67
 	helper.addTrieAccount("acc-1", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})              // 0x9250573b9c18c664139f3b6a7a8081b7d8f8916a8fcc5d94feec6c29f5fd4e9e
 	helper.addTrieAccount("acc-2", &types.StateAccount{Balance: uint256.NewInt(2), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()}) // 0x65145f923027566669a1ae5ccac66f945b55ff6eaeb17d2ea8e048b7d381f2d7
-	stRoot = helper.makeStorageTrie("acc-3", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
-	helper.addTrieAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(3), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()}) // 0x50815097425d000edfc8b3a4a13e175fc2bdcfee8bdfbf2d1ff61041d3c235b2
+	stRoot = helper.makeStorageTrie(hashData([]byte("acc-3")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	helper.addTrieAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(3), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()}) // 0x70da4ebd7602dd313c936b39000ed9ab7f849986a90ea934f0c3ec4cc9840441
 
 	root := helper.Commit()
 
@@ -536,17 +529,17 @@ func testGenerateCorruptStorageTrie(t *testing.T, scheme string) {
 	rawdb.DeleteTrieNode(helper.diskdb, hashData([]byte("acc-1")), targetPath, targetHash, scheme)
 	rawdb.DeleteTrieNode(helper.diskdb, hashData([]byte("acc-3")), targetPath, targetHash, scheme)
 
-	snap := generateSnapshot(helper.diskdb, helper.triedb, 16, root)
+	snap := generateSnapshot(helper.diskdb, helper.triedb, 16, testBlockHash, root, nil)
 	select {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 		t.Errorf("Snapshot generated against corrupt storage trie")
 
-	case <-time.After(time.Second):
+	case <-time.After(250 * time.Millisecond):
 		// Not generated fast enough, hopefully blocked inside on missing trie node fail
 	}
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -561,7 +554,7 @@ func testGenerateWithExtraAccounts(t *testing.T, scheme string) {
 	helper := newHelper(scheme)
 	{
 		// Account one in the trie
-		stRoot := helper.makeStorageTrie("acc-1",
+		stRoot := helper.makeStorageTrie(hashData([]byte("acc-1")),
 			[]string{"key-1", "key-2", "key-3", "key-4", "key-5"},
 			[]string{"val-1", "val-2", "val-3", "val-4", "val-5"},
 			true,
@@ -581,7 +574,7 @@ func testGenerateWithExtraAccounts(t *testing.T, scheme string) {
 	}
 	{
 		// Account two exists only in the snapshot
-		stRoot := helper.makeStorageTrie("acc-2",
+		stRoot := helper.makeStorageTrie(hashData([]byte("acc-2")),
 			[]string{"key-1", "key-2", "key-3", "key-4", "key-5"},
 			[]string{"val-1", "val-2", "val-3", "val-4", "val-5"},
 			true,
@@ -600,18 +593,18 @@ func testGenerateWithExtraAccounts(t *testing.T, scheme string) {
 	if data := rawdb.ReadStorageSnapshot(helper.diskdb, hashData([]byte("acc-2")), hashData([]byte("b-key-1"))); data == nil {
 		t.Fatalf("expected snap storage to exist")
 	}
-	snap := generateSnapshot(helper.diskdb, helper.triedb, 16, root)
+	snap := generateSnapshot(helper.diskdb, helper.triedb, 16, testBlockHash, root, nil)
 	select {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 
-	case <-time.After(3 * time.Second):
+	case <-time.After(250 * time.Millisecond):
 		t.Errorf("Snapshot generation failed")
 	}
 	checkSnapRoot(t, snap, root)
 
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 	// If we now inspect the snap db, there should exist no extraneous storage items
@@ -621,10 +614,7 @@ func testGenerateWithExtraAccounts(t *testing.T, scheme string) {
 }
 
 func enableLogging() {
-	// Enable trace-level logging
-	handler := log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)
-	glogHandler := log.NewGlogHandler(handler)
-	glogHandler.Verbosity(log.LevelTrace)
+	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
 }
 
 // Tests that snapshot generation when an extra account with storage exists in the snap state.
@@ -640,14 +630,14 @@ func testGenerateWithManyExtraAccounts(t *testing.T, scheme string) {
 	helper := newHelper(scheme)
 	{
 		// Account one in the trie
-		stRoot := helper.makeStorageTrie("acc-1",
+		stRoot := helper.makeStorageTrie(hashData([]byte("acc-1")),
 			[]string{"key-1", "key-2", "key-3"},
 			[]string{"val-1", "val-2", "val-3"},
 			true,
 		)
 		acc := &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()}
 		val, _ := rlp.EncodeToBytes(acc)
-		helper.accTrie.MustUpdate([]byte("acc-1"), val) // 0x9250573b9c18c664139f3b6a7a8081b7d8f8916a8fcc5d94feec6c29f5fd4e9e
+		helper.accTrie.MustUpdate([]byte("acc-1"), val) // 0x547b07c3a71669c00eda14077d85c7fd14575b92d459572540b25b9a11914dcb
 
 		// Identical in the snap
 		key := hashData([]byte("acc-1"))
@@ -661,7 +651,7 @@ func testGenerateWithManyExtraAccounts(t *testing.T, scheme string) {
 		for i := 0; i < 1000; i++ {
 			acc := &types.StateAccount{Balance: uint256.NewInt(uint64(i)), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()}
 			val, _ := rlp.EncodeToBytes(acc)
-			key := hashData(fmt.Appendf(nil, "acc-%d", i))
+			key := hashData([]byte(fmt.Sprintf("acc-%d", i)))
 			rawdb.WriteAccountSnapshot(helper.diskdb, key, val)
 		}
 	}
@@ -670,12 +660,12 @@ func testGenerateWithManyExtraAccounts(t *testing.T, scheme string) {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 
-	case <-time.After(3 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Errorf("Snapshot generation failed")
 	}
 	checkSnapRoot(t, snap, root)
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -695,7 +685,6 @@ func TestGenerateWithExtraBeforeAndAfter(t *testing.T) {
 }
 
 func testGenerateWithExtraBeforeAndAfter(t *testing.T, scheme string) {
-	accountCheckRange = 3
 	if false {
 		enableLogging()
 	}
@@ -719,12 +708,12 @@ func testGenerateWithExtraBeforeAndAfter(t *testing.T, scheme string) {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 
-	case <-time.After(3 * time.Second):
+	case <-time.After(250 * time.Millisecond):
 		t.Errorf("Snapshot generation failed")
 	}
 	checkSnapRoot(t, snap, root)
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -737,7 +726,6 @@ func TestGenerateWithMalformedSnapdata(t *testing.T) {
 }
 
 func testGenerateWithMalformedSnapdata(t *testing.T, scheme string) {
-	accountCheckRange = 3
 	if false {
 		enableLogging()
 	}
@@ -759,12 +747,12 @@ func testGenerateWithMalformedSnapdata(t *testing.T, scheme string) {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 
-	case <-time.After(3 * time.Second):
+	case <-time.After(250 * time.Millisecond):
 		t.Errorf("Snapshot generation failed")
 	}
 	checkSnapRoot(t, snap, root)
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 	// If we now inspect the snap db, there should exist no extraneous storage items
@@ -780,28 +768,26 @@ func TestGenerateFromEmptySnap(t *testing.T) {
 
 func testGenerateFromEmptySnap(t *testing.T, scheme string) {
 	//enableLogging()
-	accountCheckRange = 10
-	storageCheckRange = 20
 	helper := newHelper(scheme)
 	// Add 1K accounts to the trie
 	for i := 0; i < 400; i++ {
-		stRoot := helper.makeStorageTrie(fmt.Sprintf("acc-%d", i), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+		stRoot := helper.makeStorageTrie(hashData([]byte(fmt.Sprintf("acc-%d", i))), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 		helper.addTrieAccount(fmt.Sprintf("acc-%d", i),
 			&types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 	}
 	root, snap := helper.CommitAndGenerate()
-	t.Logf("Root: %#x\n", root) // Root: 0x6f7af6d2e1a1bf2b84a3beb3f8b64388465fbc1e274ca5d5d3fc787ca78f59e4
+	t.Logf("Root: %#x\n", root) // Root: 0x2609234ce43f5e471202c87e017ffb4dfecdb3163cfcbaa55de04baa59cad42d
 
 	select {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 
-	case <-time.After(3 * time.Second):
+	case <-time.After(1 * time.Second):
 		t.Errorf("Snapshot generation failed")
 	}
 	checkSnapRoot(t, snap, root)
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -819,7 +805,6 @@ func TestGenerateWithIncompleteStorage(t *testing.T) {
 }
 
 func testGenerateWithIncompleteStorage(t *testing.T, scheme string) {
-	storageCheckRange = 4
 	helper := newHelper(scheme)
 	stKeys := []string{"1", "2", "3", "4", "5", "6", "7", "8"}
 	stVals := []string{"v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8"}
@@ -828,7 +813,7 @@ func testGenerateWithIncompleteStorage(t *testing.T, scheme string) {
 	// on the sensitive spots at the boundaries
 	for i := 0; i < 8; i++ {
 		accKey := fmt.Sprintf("acc-%d", i)
-		stRoot := helper.makeStorageTrie(accKey, stKeys, stVals, true)
+		stRoot := helper.makeStorageTrie(hashData([]byte(accKey)), stKeys, stVals, true)
 		helper.addAccount(accKey, &types.StateAccount{Balance: uint256.NewInt(uint64(i)), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 		var moddedKeys []string
 		var moddedVals []string
@@ -841,18 +826,18 @@ func testGenerateWithIncompleteStorage(t *testing.T, scheme string) {
 		helper.addSnapStorage(accKey, moddedKeys, moddedVals)
 	}
 	root, snap := helper.CommitAndGenerate()
-	t.Logf("Root: %#x\n", root) // Root: 0xca73f6f05ba4ca3024ef340ef3dfca8fdabc1b677ff13f5a9571fd49c16e67ff
+	t.Logf("Root: %#x\n", root) // Root: 0x90cb912ad55795de8c08a41bfadb79109d4067fb2004e7bc17c942a3e551904d
 
 	select {
 	case <-snap.genPending:
 		// Snapshot generation succeeded
 
-	case <-time.After(3 * time.Second):
+	case <-time.After(250 * time.Millisecond):
 		t.Errorf("Snapshot generation failed")
 	}
 	checkSnapRoot(t, snap, root)
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -925,11 +910,11 @@ func TestGenerateCompleteSnapshotWithDanglingStorage(t *testing.T) {
 func testGenerateCompleteSnapshotWithDanglingStorage(t *testing.T, scheme string) {
 	var helper = newHelper(scheme)
 
-	stRoot := helper.makeStorageTrie("acc-1", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	stRoot := helper.makeStorageTrie(hashData([]byte("acc-1")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 	helper.addAccount("acc-1", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 	helper.addAccount("acc-2", &types.StateAccount{Balance: uint256.NewInt(1), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()})
 
-	helper.makeStorageTrie("acc-3", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	helper.makeStorageTrie(hashData([]byte("acc-3")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 	helper.addAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 
 	helper.addSnapStorage("acc-1", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"})
@@ -948,7 +933,7 @@ func testGenerateCompleteSnapshotWithDanglingStorage(t *testing.T, scheme string
 	checkSnapRoot(t, snap, root)
 
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }
@@ -965,11 +950,11 @@ func TestGenerateBrokenSnapshotWithDanglingStorage(t *testing.T) {
 func testGenerateBrokenSnapshotWithDanglingStorage(t *testing.T, scheme string) {
 	var helper = newHelper(scheme)
 
-	stRoot := helper.makeStorageTrie("acc-1", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	stRoot := helper.makeStorageTrie(hashData([]byte("acc-1")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 	helper.addTrieAccount("acc-1", &types.StateAccount{Balance: uint256.NewInt(1), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 	helper.addTrieAccount("acc-2", &types.StateAccount{Balance: uint256.NewInt(2), Root: types.EmptyRootHash, CodeHash: types.EmptyCodeHash.Bytes()})
 
-	helper.makeStorageTrie("acc-3", []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
+	helper.makeStorageTrie(hashData([]byte("acc-3")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 	helper.addTrieAccount("acc-3", &types.StateAccount{Balance: uint256.NewInt(3), Root: stRoot, CodeHash: types.EmptyCodeHash.Bytes()})
 
 	populateDangling(helper.diskdb)
@@ -985,7 +970,7 @@ func testGenerateBrokenSnapshotWithDanglingStorage(t *testing.T, scheme string) 
 	checkSnapRoot(t, snap, root)
 
 	// Signal abortion to the generator and wait for it to tear down
-	stop := make(chan *generatorStats)
+	stop := make(chan struct{})
 	snap.genAbort <- stop
 	<-stop
 }

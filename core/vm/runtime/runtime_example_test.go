@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -19,8 +30,8 @@ package runtime_test
 import (
 	"fmt"
 
+	"github.com/luxfi/coreth/core/vm/runtime"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/vm/runtime"
 )
 
 func ExampleExecute() {

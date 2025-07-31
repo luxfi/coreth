@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2019 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -19,8 +30,9 @@ package snapshot
 import (
 	"bytes"
 	"sync"
+	"time"
 
-	"github.com/VictoriaMetrics/fastcache"
+	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
@@ -33,14 +45,21 @@ import (
 type diskLayer struct {
 	diskdb ethdb.KeyValueStore // Key-value store containing the base snapshot
 	triedb *triedb.Database    // Trie node cache for reconstruction purposes
-	cache  *fastcache.Cache    // Cache to avoid hitting the disk for direct access
+	cache  *utils.MeteredCache // Cache to avoid hitting the disk for direct access
 
-	root  common.Hash // Root hash of the base snapshot
-	stale bool        // Signals that the layer became stale (state progressed)
+	blockHash common.Hash // Block hash of the base snapshot
+	root      common.Hash // Root hash of the base snapshot
+	stale     bool        // Signals that the layer became stale (state progressed)
 
-	genMarker  []byte                    // Marker for the state that's indexed during initial layer generation
-	genPending chan struct{}             // Notification channel when generation is done (test synchronicity)
-	genAbort   chan chan *generatorStats // Notification channel to abort generating the snapshot in this layer
+	genMarker  []byte             // Marker for the state that's indexed during initial layer generation
+	genPending chan struct{}      // Notification channel when generation is done (test synchronicity)
+	genAbort   chan chan struct{} // Notification channel to abort generating the snapshot in this layer
+
+	genStats *generatorStats // Stats for snapshot generation (generation aborted/finished if non-nil)
+
+	created      time.Time // Time at which disk layer was created
+	logged       time.Time // Time at which last logged generation progress
+	abortStarted time.Time // Time as which disk layer started to be aborted
 
 	lock sync.RWMutex
 }
@@ -60,6 +79,11 @@ func (dl *diskLayer) Root() common.Hash {
 	return dl.root
 }
 
+// BlockHash returns the block hash for which this snapshot was made
+func (dl *diskLayer) BlockHash() common.Hash {
+	return dl.blockHash
+}
+
 // Parent always returns nil as there's no layer below the disk.
 func (dl *diskLayer) Parent() snapshot {
 	return nil
@@ -72,14 +96,6 @@ func (dl *diskLayer) Stale() bool {
 	defer dl.lock.RUnlock()
 
 	return dl.stale
-}
-
-// markStale sets the stale flag as true.
-func (dl *diskLayer) markStale() {
-	dl.lock.Lock()
-	defer dl.lock.Unlock()
-
-	dl.stale = true
 }
 
 // Account directly retrieves the account associated with a particular hash in
@@ -180,21 +196,6 @@ func (dl *diskLayer) Storage(accountHash, storageHash common.Hash) ([]byte, erro
 // Update creates a new layer on top of the existing snapshot diff tree with
 // the specified data items. Note, the maps are retained by the method to avoid
 // copying everything.
-func (dl *diskLayer) Update(blockHash common.Hash, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte) *diffLayer {
-	return newDiffLayer(dl, blockHash, accounts, storage)
-}
-
-// stopGeneration aborts the state snapshot generation if it is currently running.
-func (dl *diskLayer) stopGeneration() {
-	dl.lock.RLock()
-	generating := dl.genMarker != nil
-	dl.lock.RUnlock()
-	if !generating {
-		return
-	}
-	if dl.genAbort != nil {
-		abort := make(chan *generatorStats)
-		dl.genAbort <- abort
-		<-abort
-	}
+func (dl *diskLayer) Update(blockHash, blockRoot common.Hash, destructs map[common.Hash]struct{}, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte) *diffLayer {
+	return newDiffLayer(dl, blockHash, blockRoot, destructs, accounts, storage)
 }

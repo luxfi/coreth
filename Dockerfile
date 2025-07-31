@@ -1,33 +1,38 @@
-# Support setting various labels on the final image
-ARG COMMIT=""
-ARG VERSION=""
-ARG BUILDNUM=""
+# ============= Compilation Stage ================
+FROM golang:1.23.6-bullseye AS builder
 
-# Build Geth in a stock Go builder container
-FROM golang:1.24-alpine AS builder
+ARG LUX_VERSION
 
-RUN apk add --no-cache gcc musl-dev linux-headers git
+RUN mkdir -p $GOPATH/src/github.com/luxfi
+WORKDIR $GOPATH/src/github.com/luxfi
 
-# Get dependencies - will also be cached if we won't change go.mod/go.sum
-COPY go.mod /go-ethereum/
-COPY go.sum /go-ethereum/
-RUN cd /go-ethereum && go mod download
+RUN git clone -b $LUX_VERSION --single-branch https://github.com/luxfi/node.git
 
-ADD . /go-ethereum
-RUN cd /go-ethereum && go run build/ci.go install -static ./cmd/geth
+# Copy coreth repo into desired location
+COPY . coreth
 
-# Pull Geth into a second stage deploy alpine container
-FROM alpine:latest
+# Set the workdir to Luxd and update coreth dependency to local version
+WORKDIR $GOPATH/src/github.com/luxfi/node
+# Run go mod download here to improve caching of Luxd specific depednencies
+RUN go mod download
+# Replace the coreth dependency
+RUN go mod edit -replace github.com/luxfi/coreth=../coreth
+RUN go mod download && go mod tidy -compat=1.23
 
-RUN apk add --no-cache ca-certificates
-COPY --from=builder /go-ethereum/build/bin/geth /usr/local/bin/
+# Build the Luxd binary with local version of coreth.
+RUN ./scripts/build_lux.sh
+# Create the plugins directory in the standard location so the build directory will be recognized
+# as valid.
+RUN mkdir build/plugins
 
-EXPOSE 8545 8546 30303 30303/udp
-ENTRYPOINT ["geth"]
+# ============= Cleanup Stage ================
+FROM debian:11-slim AS execution
 
-# Add some metadata labels to help programmatic image consumption
-ARG COMMIT=""
-ARG VERSION=""
-ARG BUILDNUM=""
+# Maintain compatibility with previous images
+RUN mkdir -p /luxd/build
+WORKDIR /luxd/build
 
-LABEL commit="$COMMIT" version="$VERSION" buildnum="$BUILDNUM"
+# Copy the executables into the container
+COPY --from=builder /go/src/github.com/luxfi/node/build .
+
+CMD [ "./luxd" ]

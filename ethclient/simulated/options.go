@@ -1,3 +1,6 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
 // Copyright 2024 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -17,10 +20,8 @@
 package simulated
 
 import (
-	"math/big"
-
-	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/node"
+	"github.com/luxfi/coreth/eth/ethconfig"
+	"github.com/luxfi/coreth/node"
 )
 
 // WithBlockGasLimit configures the simulated backend to target a specific gas limit
@@ -28,7 +29,6 @@ import (
 func WithBlockGasLimit(gaslimit uint64) func(nodeConf *node.Config, ethConf *ethconfig.Config) {
 	return func(nodeConf *node.Config, ethConf *ethconfig.Config) {
 		ethConf.Genesis.GasLimit = gaslimit
-		ethConf.Miner.GasCeil = gaslimit
 	}
 }
 
@@ -37,19 +37,5 @@ func WithBlockGasLimit(gaslimit uint64) func(nodeConf *node.Config, ethConf *eth
 func WithCallGasLimit(gaslimit uint64) func(nodeConf *node.Config, ethConf *ethconfig.Config) {
 	return func(nodeConf *node.Config, ethConf *ethconfig.Config) {
 		ethConf.RPCGasCap = gaslimit
-	}
-}
-
-// WithMinerMinTip configures the simulated backend to require a specific minimum
-// gas tip for a transaction to be included.
-//
-// 0 is not possible as a live Geth node would reject that due to DoS protection,
-// so the simulated backend will replicate that behavior for consistency.
-func WithMinerMinTip(tip *big.Int) func(nodeConf *node.Config, ethConf *ethconfig.Config) {
-	if tip == nil || tip.Sign() <= 0 {
-		panic("invalid miner minimum tip")
-	}
-	return func(nodeConf *node.Config, ethConf *ethconfig.Config) {
-		ethConf.Miner.GasPrice = tip
 	}
 }

@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2019 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -23,49 +34,21 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
+	ethsnapshot "github.com/luxfi/geth/core/state/snapshot"
 	"github.com/luxfi/geth/ethdb"
 )
 
 // Iterator is an iterator to step over all the accounts or the specific
 // storage in a snapshot which may or may not be composed of multiple layers.
-type Iterator interface {
-	// Next steps the iterator forward one element, returning false if exhausted,
-	// or an error if iteration failed for some reason (e.g. root being iterated
-	// becomes stale and garbage collected).
-	Next() bool
-
-	// Error returns any failure that occurred during iteration, which might have
-	// caused a premature iteration exit (e.g. snapshot stack becoming stale).
-	Error() error
-
-	// Hash returns the hash of the account or storage slot the iterator is
-	// currently at.
-	Hash() common.Hash
-
-	// Release releases associated resources. Release should always succeed and
-	// can be called multiple times without causing error.
-	Release()
-}
+type Iterator = ethsnapshot.Iterator
 
 // AccountIterator is an iterator to step over all the accounts in a snapshot,
 // which may or may not be composed of multiple layers.
-type AccountIterator interface {
-	Iterator
-
-	// Account returns the RLP encoded slim account the iterator is currently at.
-	// An error will be returned if the iterator becomes invalid
-	Account() []byte
-}
+type AccountIterator = ethsnapshot.AccountIterator
 
 // StorageIterator is an iterator to step over the specific storage in a snapshot,
 // which may or may not be composed of multiple layers.
-type StorageIterator interface {
-	Iterator
-
-	// Slot returns the storage slot the iterator is currently at. An error will
-	// be returned if the iterator becomes invalid
-	Slot() []byte
-}
+type StorageIterator = ethsnapshot.StorageIterator
 
 // diffAccountIterator is an account iterator that steps over the accounts (both
 // live and deleted) contained within a single diff layer. Higher order iterators
@@ -115,7 +98,6 @@ func (it *diffAccountIterator) Next() bool {
 	}
 	// Iterator seems to be still alive, retrieve and cache the live hash
 	it.curHash = it.keys[0]
-
 	// key cached, shift the iterator and notify the user of success
 	it.keys = it.keys[1:]
 	return true
@@ -136,7 +118,7 @@ func (it *diffAccountIterator) Hash() common.Hash {
 // This method may _fail_, if the underlying layer has been flattened between
 // the call to Next and Account. That type of error will set it.Err.
 // This method assumes that flattening does not delete elements from
-// the accountData mapping (writing nil into it is fine though), and will panic
+// the accountdata mapping (writing nil into it is fine though), and will panic
 // if elements have been deleted.
 //
 // Note the returned account is not a copy, please don't modify it.
@@ -144,6 +126,10 @@ func (it *diffAccountIterator) Account() []byte {
 	it.layer.lock.RLock()
 	blob, ok := it.layer.accountData[it.curHash]
 	if !ok {
+		if _, ok := it.layer.destructSet[it.curHash]; ok {
+			it.layer.lock.RUnlock()
+			return nil
+		}
 		panic(fmt.Sprintf("iterator referenced non-existent account: %x", it.curHash))
 	}
 	it.layer.lock.RUnlock()
@@ -244,11 +230,11 @@ type diffStorageIterator struct {
 // "destructed" returned. If it's true then it means the whole storage is
 // destructed in this layer(maybe recreated too), don't bother deeper layer
 // for storage retrieval.
-func (dl *diffLayer) StorageIterator(account common.Hash, seek common.Hash) StorageIterator {
+func (dl *diffLayer) StorageIterator(account common.Hash, seek common.Hash) (StorageIterator, bool) {
 	// Create the storage for this account even it's marked
 	// as destructed. The iterator is for the new one which
 	// just has the same address as the deleted one.
-	hashes := dl.StorageList(account)
+	hashes, destructed := dl.StorageList(account)
 	index := sort.Search(len(hashes), func(i int) bool {
 		return bytes.Compare(seek[:], hashes[i][:]) <= 0
 	})
@@ -257,7 +243,7 @@ func (dl *diffLayer) StorageIterator(account common.Hash, seek common.Hash) Stor
 		layer:   dl,
 		account: account,
 		keys:    hashes[index:],
-	}
+	}, destructed
 }
 
 // Next steps the iterator forward one element, returning false if exhausted.
@@ -336,13 +322,19 @@ type diskStorageIterator struct {
 // If the whole storage is destructed, then all entries in the disk
 // layer are deleted already. So the "destructed" flag returned here
 // is always false.
-func (dl *diskLayer) StorageIterator(account common.Hash, seek common.Hash) StorageIterator {
+func (dl *diskLayer) StorageIterator(account common.Hash, seek common.Hash) (StorageIterator, bool) {
 	pos := common.TrimRightZeroes(seek[:])
+
+	// create prefix to be rawdb.SnapshotStoragePrefix + account[:]
+	prefix := make([]byte, len(rawdb.SnapshotStoragePrefix)+common.HashLength)
+	copy(prefix, rawdb.SnapshotStoragePrefix)
+	copy(prefix[len(rawdb.SnapshotStoragePrefix):], account[:])
+
 	return &diskStorageIterator{
 		layer:   dl,
 		account: account,
-		it:      dl.diskdb.NewIterator(append(rawdb.SnapshotStoragePrefix, account.Bytes()...), pos),
-	}
+		it:      dl.diskdb.NewIterator(prefix, pos),
+	}, false
 }
 
 // Next steps the iterator forward one element, returning false if exhausted.

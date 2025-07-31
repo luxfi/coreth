@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -18,17 +29,15 @@ package rpc
 
 import (
 	"context"
-	"errors"
 	"io"
-	"net"
 	"sync"
 	"sync/atomic"
+	"time"
 
-	"github.com/luxfi/log"
+	"github.com/luxfi/geth/log"
 )
 
 const MetadataApi = "rpc"
-const EngineApi = "engine"
 
 // CodecOption specifies which type of messages a codec supports.
 //
@@ -45,8 +54,9 @@ const (
 
 // Server is an RPC server.
 type Server struct {
-	services serviceRegistry
-	idgen    func() ID
+	services        serviceRegistry
+	idgen           func() ID
+	maximumDuration time.Duration
 
 	mutex              sync.Mutex
 	codecs             map[ServerCodec]struct{}
@@ -57,11 +67,16 @@ type Server struct {
 }
 
 // NewServer creates a new server instance with no registered handlers.
-func NewServer() *Server {
+//
+// If [maximumDuration] > 0, the deadline of incoming requests is
+// [maximumDuration] in the future. Otherwise, no deadline is assigned to
+// incoming requests.
+func NewServer(maximumDuration time.Duration) *Server {
 	server := &Server{
-		idgen:         randomIDGenerator(),
-		codecs:        make(map[ServerCodec]struct{}),
-		httpBodyLimit: defaultBodyLimit,
+		idgen:           randomIDGenerator(),
+		codecs:          make(map[ServerCodec]struct{}),
+		maximumDuration: maximumDuration,
+		httpBodyLimit:   defaultBodyLimit,
 	}
 	server.run.Store(true)
 	// Register the default service providing meta information about the RPC service such
@@ -90,7 +105,7 @@ func (s *Server) SetHTTPBodyLimit(limit int) {
 }
 
 // RegisterName creates a service for the given receiver type under the given name. When no
-// methods on the given receiver match the criteria to be either an RPC method or a
+// methods on the given receiver match the criteria to be either a RPC method or a
 // subscription an error is returned. Otherwise a new service is created and added to the
 // service collection this server provides to clients.
 func (s *Server) RegisterName(name string, receiver interface{}) error {
@@ -102,7 +117,7 @@ func (s *Server) RegisterName(name string, receiver interface{}) error {
 // server is stopped. In either case the codec is closed.
 //
 // Note that codec options are no longer supported.
-func (s *Server) ServeCodec(codec ServerCodec, options CodecOption) {
+func (s *Server) ServeCodec(codec ServerCodec, options CodecOption, apiMaxDuration, refillRate, maxStored time.Duration) {
 	defer codec.close()
 
 	if !s.trackCodec(codec) {
@@ -115,7 +130,7 @@ func (s *Server) ServeCodec(codec ServerCodec, options CodecOption) {
 		batchItemLimit:     s.batchItemLimit,
 		batchResponseLimit: s.batchResponseLimit,
 	}
-	c := initClient(codec, &s.services, cfg)
+	c := initClient(codec, &s.services, cfg, apiMaxDuration, refillRate, maxStored)
 	<-codec.closed()
 	c.Close()
 }
@@ -148,13 +163,14 @@ func (s *Server) serveSingleRequest(ctx context.Context, codec ServerCodec) {
 	}
 
 	h := newHandler(ctx, codec, s.idgen, &s.services, s.batchItemLimit, s.batchResponseLimit)
+	h.deadlineContext = s.maximumDuration
 	h.allowSubscribe = false
 	defer h.close(io.EOF, nil)
 
 	reqs, batch, err := codec.readBatch()
 	if err != nil {
-		if msg := messageForReadError(err); msg != "" {
-			resp := errorMessage(&invalidMessageError{msg})
+		if err != io.EOF {
+			resp := errorMessage(&invalidMessageError{"parse error"})
 			codec.writeJSON(ctx, resp, true)
 		}
 		return
@@ -164,20 +180,6 @@ func (s *Server) serveSingleRequest(ctx context.Context, codec ServerCodec) {
 	} else {
 		h.handleMsg(reqs[0])
 	}
-}
-
-func messageForReadError(err error) string {
-	var netErr net.Error
-	if errors.As(err, &netErr) {
-		if netErr.Timeout() {
-			return "read timeout"
-		} else {
-			return "read error"
-		}
-	} else if err != io.EOF {
-		return "parse error"
-	}
-	return ""
 }
 
 // Stop stops reading new requests, waits for stopPendingRequestTimeout to allow pending

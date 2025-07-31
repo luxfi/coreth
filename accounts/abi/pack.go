@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2016 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -37,16 +48,7 @@ func packBytesSlice(bytes []byte, l int) []byte {
 // t.
 func packElement(t Type, reflectValue reflect.Value) ([]byte, error) {
 	switch t.T {
-	case UintTy:
-		// make sure to not pack a negative value into a uint type.
-		if reflectValue.Kind() == reflect.Ptr {
-			val := new(big.Int).Set(reflectValue.Interface().(*big.Int))
-			if val.Sign() == -1 {
-				return nil, errInvalidSign
-			}
-		}
-		return packNum(reflectValue), nil
-	case IntTy:
+	case IntTy, UintTy:
 		return packNum(reflectValue), nil
 	case StringTy:
 		return packBytesSlice([]byte(reflectValue.String()), reflectValue.Len()), nil

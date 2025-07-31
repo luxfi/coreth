@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -17,8 +28,6 @@
 package core
 
 import (
-	"sync/atomic"
-
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
@@ -31,16 +40,9 @@ type Validator interface {
 	// ValidateBody validates the given block's content.
 	ValidateBody(block *types.Block) error
 
-	// ValidateState validates the given statedb and optionally the process result.
-	ValidateState(block *types.Block, state *state.StateDB, res *ProcessResult, stateless bool) error
-}
-
-// Prefetcher is an interface for pre-caching transaction signatures and state.
-type Prefetcher interface {
-	// Prefetch processes the state changes according to the Ethereum rules by running
-	// the transaction messages using the statedb, but any changes are discarded. The
-	// only goal is to pre-cache transaction signatures and state trie nodes.
-	Prefetch(block *types.Block, statedb *state.StateDB, cfg vm.Config, interrupt *atomic.Bool)
+	// ValidateState validates the given statedb and optionally the receipts and
+	// gas used.
+	ValidateState(block *types.Block, state *state.StateDB, receipts types.Receipts, usedGas uint64) error
 }
 
 // Processor is an interface for processing blocks using a given initial state.
@@ -48,13 +50,5 @@ type Processor interface {
 	// Process processes the state changes according to the Ethereum rules by running
 	// the transaction messages using the statedb and applying any rewards to both
 	// the processor (coinbase) and any included uncles.
-	Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (*ProcessResult, error)
-}
-
-// ProcessResult contains the values computed by Process.
-type ProcessResult struct {
-	Receipts types.Receipts
-	Requests [][]byte
-	Logs     []*types.Log
-	GasUsed  uint64
+	Process(block *types.Block, parent *types.Header, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*types.Log, uint64, error)
 }

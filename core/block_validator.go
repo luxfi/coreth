@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -20,10 +31,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/geth/consensus"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/trie"
 )
 
@@ -34,12 +46,14 @@ import (
 type BlockValidator struct {
 	config *params.ChainConfig // Chain configuration options
 	bc     *BlockChain         // Canonical block chain
+	engine consensus.Engine    // Consensus engine used for validating
 }
 
 // NewBlockValidator returns a new block validator which is safe for re-use
-func NewBlockValidator(config *params.ChainConfig, blockchain *BlockChain) *BlockValidator {
+func NewBlockValidator(config *params.ChainConfig, blockchain *BlockChain, engine consensus.Engine) *BlockValidator {
 	validator := &BlockValidator{
 		config: config,
+		engine: engine,
 		bc:     blockchain,
 	}
 	return validator
@@ -49,19 +63,15 @@ func NewBlockValidator(config *params.ChainConfig, blockchain *BlockChain) *Bloc
 // header's transaction and uncle roots. The headers are assumed to be already
 // validated at this point.
 func (v *BlockValidator) ValidateBody(block *types.Block) error {
-	// check EIP 7934 RLP-encoded block size cap
-	if v.config.IsOsaka(block.Number(), block.Time()) && block.Size() > params.MaxBlockSize {
-		return ErrBlockOversized
-	}
 	// Check whether the block is already imported.
 	if v.bc.HasBlockAndState(block.Hash(), block.NumberU64()) {
 		return ErrKnownBlock
 	}
 
-	// Header validity is known at this point. Here we verify that uncles, transactions
-	// and withdrawals given in the block body match the header.
+	// Header validity is known at this point. Here we verify that uncle and transactions
+	// given in the block body match the header.
 	header := block.Header()
-	if err := v.bc.engine.VerifyUncles(v.bc, block); err != nil {
+	if err := v.engine.VerifyUncles(v.bc, block); err != nil {
 		return err
 	}
 	if hash := types.CalcUncleHash(block.Uncles()); hash != header.UncleHash {
@@ -69,20 +79,6 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 	}
 	if hash := types.DeriveSha(block.Transactions(), trie.NewStackTrie(nil)); hash != header.TxHash {
 		return fmt.Errorf("transaction root hash mismatch (header value %x, calculated %x)", header.TxHash, hash)
-	}
-
-	// Withdrawals are present after the Shanghai fork.
-	if header.WithdrawalsHash != nil {
-		// Withdrawals list must be present in body after Shanghai.
-		if block.Withdrawals() == nil {
-			return errors.New("missing withdrawals in block body")
-		}
-		if hash := types.DeriveSha(block.Withdrawals(), trie.NewStackTrie(nil)); hash != *header.WithdrawalsHash {
-			return fmt.Errorf("withdrawals root hash mismatch (header value %x, calculated %x)", *header.WithdrawalsHash, hash)
-		}
-	} else if block.Withdrawals() != nil {
-		// Withdrawals are not allowed prior to Shanghai fork
-		return errors.New("withdrawals present in block body")
 	}
 
 	// Blob transactions may be present after the Cancun fork.
@@ -97,7 +93,7 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 		}
 
 		// The individual checks for blob validity (version-check + not empty)
-		// happens in state transition.
+		// happens in StateTransition.
 	}
 
 	// Check blob gas usage.
@@ -123,42 +119,21 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 
 // ValidateState validates the various changes that happen after a state transition,
 // such as amount of used gas, the receipt roots and the state root itself.
-func (v *BlockValidator) ValidateState(block *types.Block, statedb *state.StateDB, res *ProcessResult, stateless bool) error {
-	if res == nil {
-		return errors.New("nil ProcessResult value")
-	}
+func (v *BlockValidator) ValidateState(block *types.Block, statedb *state.StateDB, receipts types.Receipts, usedGas uint64) error {
 	header := block.Header()
-	if block.GasUsed() != res.GasUsed {
-		return fmt.Errorf("invalid gas used (remote: %d local: %d)", block.GasUsed(), res.GasUsed)
+	if block.GasUsed() != usedGas {
+		return fmt.Errorf("invalid gas used (remote: %d local: %d)", block.GasUsed(), usedGas)
 	}
 	// Validate the received block's bloom with the one derived from the generated receipts.
 	// For valid blocks this should always validate to true.
-	//
-	// Receipts must go through MakeReceipt to calculate the receipt's bloom
-	// already. Merge the receipt's bloom together instead of recalculating
-	// everything.
-	rbloom := types.MergeBloom(res.Receipts)
+	rbloom := types.CreateBloom(receipts)
 	if rbloom != header.Bloom {
 		return fmt.Errorf("invalid bloom (remote: %x  local: %x)", header.Bloom, rbloom)
 	}
-	// In stateless mode, return early because the receipt and state root are not
-	// provided through the witness, rather the cross validator needs to return it.
-	if stateless {
-		return nil
-	}
-	// The receipt Trie's root (R = (Tr [[H1, R1], ... [Hn, Rn]]))
-	receiptSha := types.DeriveSha(res.Receipts, trie.NewStackTrie(nil))
+	// Tre receipt Trie's root (R = (Tr [[H1, R1], ... [Hn, Rn]]))
+	receiptSha := types.DeriveSha(receipts, trie.NewStackTrie(nil))
 	if receiptSha != header.ReceiptHash {
 		return fmt.Errorf("invalid receipt root hash (remote: %x local: %x)", header.ReceiptHash, receiptSha)
-	}
-	// Validate the parsed requests match the expected header value.
-	if header.RequestsHash != nil {
-		reqhash := types.CalcRequestsHash(res.Requests)
-		if reqhash != *header.RequestsHash {
-			return fmt.Errorf("invalid requests hash (remote: %x local: %x)", *header.RequestsHash, reqhash)
-		}
-	} else if res.Requests != nil {
-		return errors.New("block has requests before prague fork")
 	}
 	// Validate the state root against the received state root and throw
 	// an error if they don't match.
@@ -169,26 +144,37 @@ func (v *BlockValidator) ValidateState(block *types.Block, statedb *state.StateD
 }
 
 // CalcGasLimit computes the gas limit of the next block after parent. It aims
-// to keep the baseline gas close to the provided target, and increase it towards
-// the target if the baseline gas is lower.
-func CalcGasLimit(parentGasLimit, desiredLimit uint64) uint64 {
-	delta := parentGasLimit/params.GasLimitBoundDivisor - 1
-	limit := parentGasLimit
-	if desiredLimit < params.MinGasLimit {
-		desiredLimit = params.MinGasLimit
+// to keep the baseline gas above the provided floor, and increase it towards the
+// ceil if the blocks are full. If the ceil is exceeded, it will always decrease
+// the gas allowance.
+func CalcGasLimit(parentGasUsed, parentGasLimit, gasFloor, gasCeil uint64) uint64 {
+	// contrib = (parentGasUsed * 3 / 2) / 1024
+	contrib := (parentGasUsed + parentGasUsed/2) / ap0.GasLimitBoundDivisor
+
+	// decay = parentGasLimit / 1024 -1
+	decay := parentGasLimit/ap0.GasLimitBoundDivisor - 1
+
+	/*
+		strategy: gasLimit of block-to-mine is set based on parent's
+		gasUsed value.  if parentGasUsed > parentGasLimit * (2/3) then we
+		increase it, otherwise lower it (or leave it unchanged if it's right
+		at that usage) the amount increased/decreased depends on how far away
+		from parentGasLimit * (2/3) parentGasUsed is.
+	*/
+	limit := parentGasLimit - decay + contrib
+	if limit < ap0.MinGasLimit {
+		limit = ap0.MinGasLimit
 	}
 	// If we're outside our allowed gas range, we try to hone towards them
-	if limit < desiredLimit {
-		limit = parentGasLimit + delta
-		if limit > desiredLimit {
-			limit = desiredLimit
+	if limit < gasFloor {
+		limit = parentGasLimit + decay
+		if limit > gasFloor {
+			limit = gasFloor
 		}
-		return limit
-	}
-	if limit > desiredLimit {
-		limit = parentGasLimit - delta
-		if limit < desiredLimit {
-			limit = desiredLimit
+	} else if limit > gasCeil {
+		limit = parentGasLimit - decay
+		if limit < gasCeil {
+			limit = gasCeil
 		}
 	}
 	return limit

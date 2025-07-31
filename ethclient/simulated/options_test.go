@@ -1,3 +1,6 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
 // Copyright 2024 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -22,10 +25,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luxfi/geth"
-	"github.com/luxfi/geth/core"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	ethereum "github.com/luxfi/geth"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/params"
 )
 
 // Tests that the simulator starts with the initial gas limit in the genesis block,
@@ -44,13 +48,13 @@ func TestWithBlockGasLimitOption(t *testing.T) {
 		t.Errorf("genesis gas limit mismatch: have %v, want %v", genesis.GasLimit(), 12_345_678)
 	}
 	// Produce a number of blocks and verify the locked in gas target
-	sim.Commit()
+	sim.Commit(false)
 	head, err := client.BlockByNumber(context.Background(), big.NewInt(1))
 	if err != nil {
 		t.Fatalf("failed to retrieve head block: %v", err)
 	}
-	if head.GasLimit() != 12_345_678 {
-		t.Errorf("head gas limit mismatch: have %v, want %v", head.GasLimit(), 12_345_678)
+	if head.GasLimit() != acp176.MinMaxCapacity {
+		t.Errorf("head gas limit mismatch: have %v, want %v", head.GasLimit(), acp176.MinMaxCapacity)
 	}
 }
 

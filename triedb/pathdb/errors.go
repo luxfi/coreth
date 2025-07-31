@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2023 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -12,11 +23,17 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>
 
 package pathdb
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/common/hexutil"
+)
 
 var (
 	// errDatabaseReadOnly is returned if the database is opened in read only mode
@@ -28,24 +45,29 @@ var (
 	errDatabaseWaitSync = errors.New("waiting for sync")
 
 	// errSnapshotStale is returned from data accessors if the underlying layer
-	// had been invalidated due to the chain progressing forward far enough
+	// layer had been invalidated due to the chain progressing forward far enough
 	// to not maintain the layer's original state.
 	errSnapshotStale = errors.New("layer stale")
 
+	// nolint: unused
 	// errUnexpectedHistory is returned if an unmatched state history is applied
 	// to the database for state rollback.
 	errUnexpectedHistory = errors.New("unexpected state history")
 
+	// nolint: unused
 	// errStateUnrecoverable is returned if state is required to be reverted to
 	// a destination without associated state history available.
 	errStateUnrecoverable = errors.New("state is unrecoverable")
 
-	// errNotCoveredYet is returned from data accessors if the underlying snapshot
-	// is being generated currently and the requested data item is not yet in the
-	// range of accounts covered.
-	errNotCoveredYet = errors.New("not covered yet")
-
-	// errNotConstructed is returned if the callers want to iterate the snapshot
-	// while the generation is not finished yet.
-	errNotConstructed = errors.New("snapshot is not constructed")
+	// errUnexpectedNode is returned if the requested node with specified path is
+	// not hash matched with expectation.
+	errUnexpectedNode = errors.New("unexpected node")
 )
+
+func newUnexpectedNodeError(loc string, expHash common.Hash, gotHash common.Hash, owner common.Hash, path []byte, blob []byte) error {
+	blobHex := "nil"
+	if len(blob) > 0 {
+		blobHex = hexutil.Encode(blob)
+	}
+	return fmt.Errorf("%w, loc: %s, node: (%x %v), %x!=%x, blob: %s", errUnexpectedNode, loc, owner, path, expHash, gotHash, blobHex)
+}

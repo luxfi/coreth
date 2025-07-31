@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2024 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -17,12 +28,10 @@
 package ethapi
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/vm"
 )
 
@@ -34,7 +43,7 @@ type revertError struct {
 }
 
 // ErrorCode returns the JSON error code for a revert.
-// See: https://ethereum.org/en/developers/docs/apis/json-rpc/#error-codes
+// See: https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
 func (e *revertError) ErrorCode() int {
 	return 3
 }
@@ -71,100 +80,10 @@ func (e *TxIndexingError) Error() string {
 }
 
 // ErrorCode returns the JSON error code for a revert.
-// See: https://ethereum.org/en/developers/docs/apis/json-rpc/#error-codes
+// See: https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
 func (e *TxIndexingError) ErrorCode() int {
 	return -32000 // to be decided
 }
 
 // ErrorData returns the hex encoded revert reason.
 func (e *TxIndexingError) ErrorData() interface{} { return "transaction indexing is in progress" }
-
-type callError struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-	Data    string `json:"data,omitempty"`
-}
-
-type invalidTxError struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-}
-
-func (e *invalidTxError) Error() string  { return e.Message }
-func (e *invalidTxError) ErrorCode() int { return e.Code }
-
-const (
-	errCodeNonceTooHigh            = -38011
-	errCodeNonceTooLow             = -38010
-	errCodeIntrinsicGas            = -38013
-	errCodeInsufficientFunds       = -38014
-	errCodeBlockGasLimitReached    = -38015
-	errCodeBlockNumberInvalid      = -38020
-	errCodeBlockTimestampInvalid   = -38021
-	errCodeSenderIsNotEOA          = -38024
-	errCodeMaxInitCodeSizeExceeded = -38025
-	errCodeClientLimitExceeded     = -38026
-	errCodeInternalError           = -32603
-	errCodeInvalidParams           = -32602
-	errCodeReverted                = -32000
-	errCodeVMError                 = -32015
-)
-
-func txValidationError(err error) *invalidTxError {
-	if err == nil {
-		return nil
-	}
-	switch {
-	case errors.Is(err, core.ErrNonceTooHigh):
-		return &invalidTxError{Message: err.Error(), Code: errCodeNonceTooHigh}
-	case errors.Is(err, core.ErrNonceTooLow):
-		return &invalidTxError{Message: err.Error(), Code: errCodeNonceTooLow}
-	case errors.Is(err, core.ErrSenderNoEOA):
-		return &invalidTxError{Message: err.Error(), Code: errCodeSenderIsNotEOA}
-	case errors.Is(err, core.ErrFeeCapVeryHigh):
-		return &invalidTxError{Message: err.Error(), Code: errCodeInvalidParams}
-	case errors.Is(err, core.ErrTipVeryHigh):
-		return &invalidTxError{Message: err.Error(), Code: errCodeInvalidParams}
-	case errors.Is(err, core.ErrTipAboveFeeCap):
-		return &invalidTxError{Message: err.Error(), Code: errCodeInvalidParams}
-	case errors.Is(err, core.ErrFeeCapTooLow):
-		return &invalidTxError{Message: err.Error(), Code: errCodeInvalidParams}
-	case errors.Is(err, core.ErrInsufficientFunds):
-		return &invalidTxError{Message: err.Error(), Code: errCodeInsufficientFunds}
-	case errors.Is(err, core.ErrIntrinsicGas):
-		return &invalidTxError{Message: err.Error(), Code: errCodeIntrinsicGas}
-	case errors.Is(err, core.ErrInsufficientFundsForTransfer):
-		return &invalidTxError{Message: err.Error(), Code: errCodeInsufficientFunds}
-	case errors.Is(err, core.ErrMaxInitCodeSizeExceeded):
-		return &invalidTxError{Message: err.Error(), Code: errCodeMaxInitCodeSizeExceeded}
-	}
-	return &invalidTxError{
-		Message: err.Error(),
-		Code:    errCodeInternalError,
-	}
-}
-
-type invalidParamsError struct{ message string }
-
-func (e *invalidParamsError) Error() string  { return e.message }
-func (e *invalidParamsError) ErrorCode() int { return errCodeInvalidParams }
-
-type clientLimitExceededError struct{ message string }
-
-func (e *clientLimitExceededError) Error() string  { return e.message }
-func (e *clientLimitExceededError) ErrorCode() int { return errCodeClientLimitExceeded }
-
-type invalidBlockNumberError struct{ message string }
-
-func (e *invalidBlockNumberError) Error() string  { return e.message }
-func (e *invalidBlockNumberError) ErrorCode() int { return errCodeBlockNumberInvalid }
-
-type invalidBlockTimestampError struct{ message string }
-
-func (e *invalidBlockTimestampError) Error() string  { return e.message }
-func (e *invalidBlockTimestampError) ErrorCode() int { return errCodeBlockTimestampInvalid }
-
-type blockGasLimitReachedError struct{ message string }
-
-func (e *blockGasLimitReachedError) Error() string  { return e.message }
-func (e *blockGasLimitReachedError) ErrorCode() int { return errCodeBlockGasLimitReached }

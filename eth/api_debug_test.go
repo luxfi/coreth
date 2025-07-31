@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2017 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -18,72 +29,24 @@ package eth
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"fmt"
-	"math/big"
 	"reflect"
-	"slices"
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus/ethash"
-	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/triedb"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/holiman/uint256"
-	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 )
 
 var dumper = spew.ConfigState{Indent: "    "}
-
-type Account struct {
-	key  *ecdsa.PrivateKey
-	addr common.Address
-}
-
-func newAccounts(n int) (accounts []Account) {
-	for i := 0; i < n; i++ {
-		key, _ := crypto.GenerateKey()
-		addr := crypto.PubkeyToAddress(key.PublicKey)
-		accounts = append(accounts, Account{key: key, addr: addr})
-	}
-	slices.SortFunc(accounts, func(a, b Account) int { return a.addr.Cmp(b.addr) })
-	return accounts
-}
-
-// newTestBlockChain creates a new test blockchain. OBS: After test is done, teardown must be
-// invoked in order to release associated resources.
-func newTestBlockChain(t *testing.T, n int, gspec *core.Genesis, generator func(i int, b *core.BlockGen)) *core.BlockChain {
-	engine := ethash.NewFaker()
-	// Generate blocks for testing
-	_, blocks, _ := core.GenerateChainWithGenesis(gspec, engine, n, generator)
-
-	// Import the canonical chain
-	options := &core.BlockChainConfig{
-		TrieCleanLimit: 256,
-		TrieDirtyLimit: 256,
-		TrieTimeLimit:  5 * time.Minute,
-		SnapshotLimit:  0,
-		Preimages:      true,
-		ArchiveMode:    true, // Archive mode
-	}
-	chain, err := core.NewBlockChain(rawdb.NewMemoryDatabase(), gspec, engine, options)
-	if err != nil {
-		t.Fatalf("failed to create tester chain: %v", err)
-	}
-	if n, err := chain.InsertChain(blocks); err != nil {
-		t.Fatalf("block %d: failed to insert into chain: %v", n, err)
-	}
-	return chain
-}
 
 func accountRangeTest(t *testing.T, trie *state.Trie, statedb *state.StateDB, start common.Hash, requestedNum int, expectedNum int) state.Dump {
 	result := statedb.RawDump(&state.DumpConfig{
@@ -112,9 +75,8 @@ func TestAccountRange(t *testing.T) {
 	t.Parallel()
 
 	var (
-		mdb     = rawdb.NewMemoryDatabase()
-		statedb = state.NewDatabase(triedb.NewDatabase(mdb, &triedb.Config{Preimages: true}), nil)
-		sdb, _  = state.New(types.EmptyRootHash, statedb)
+		statedb = extstate.NewDatabaseWithConfig(rawdb.NewMemoryDatabase(), &triedb.Config{Preimages: true})
+		sdb, _  = state.New(types.EmptyRootHash, statedb, nil)
 		addrs   = [AccountRangeMaxResults * 2]common.Address{}
 		m       = map[common.Address]bool{}
 	)
@@ -123,15 +85,15 @@ func TestAccountRange(t *testing.T) {
 		hash := common.HexToHash(fmt.Sprintf("%x", i))
 		addr := common.BytesToAddress(crypto.Keccak256Hash(hash.Bytes()).Bytes())
 		addrs[i] = addr
-		sdb.SetBalance(addrs[i], uint256.NewInt(1), tracing.BalanceChangeUnspecified)
+		sdb.SetBalance(addrs[i], uint256.NewInt(1))
 		if _, ok := m[addr]; ok {
 			t.Fatalf("bad")
 		} else {
 			m[addr] = true
 		}
 	}
-	root, _ := sdb.Commit(0, true, false)
-	sdb, _ = state.New(root, statedb)
+	root, _ := sdb.Commit(0, true)
+	sdb, _ = state.New(root, statedb, nil)
 
 	trie, err := statedb.OpenTrie(root)
 	if err != nil {
@@ -184,12 +146,12 @@ func TestEmptyAccountRange(t *testing.T) {
 	t.Parallel()
 
 	var (
-		statedb = state.NewDatabaseForTesting()
-		st, _   = state.New(types.EmptyRootHash, statedb)
+		statedb = state.NewDatabase(rawdb.NewMemoryDatabase())
+		st, _   = state.New(types.EmptyRootHash, statedb, nil)
 	)
 	// Commit(although nothing to flush) and re-init the statedb
-	st.Commit(0, true, false)
-	st, _ = state.New(types.EmptyRootHash, statedb)
+	st.Commit(0, true)
+	st, _ = state.New(types.EmptyRootHash, statedb, nil)
 
 	results := st.RawDump(&state.DumpConfig{
 		SkipCode:          true,
@@ -210,29 +172,32 @@ func TestStorageRangeAt(t *testing.T) {
 
 	// Create a state where account 0x010000... has a few storage entries.
 	var (
-		mdb    = rawdb.NewMemoryDatabase()
-		tdb    = triedb.NewDatabase(mdb, &triedb.Config{Preimages: true})
-		db     = state.NewDatabase(tdb, nil)
-		sdb, _ = state.New(types.EmptyRootHash, db)
-		addr   = common.Address{0x01}
-		keys   = []common.Hash{ // hashes of Keys of storage
-			common.HexToHash("340dd630ad21bf010b4e676dbfa9ba9a02175262d1fa356232cfde6cb5b47ef2"),
-			common.HexToHash("426fcb404ab2d5d8e61a3d918108006bbb0a9be65e92235bb10eefbdb6dcd053"),
-			common.HexToHash("48078cfed56339ea54962e72c37c7f588fc4f8e5bc173827ba75cb10a63a96a5"),
-			common.HexToHash("5723d2c3a83af9b735e3b7f21531e5623d183a9095a56604ead41f3582fdfb75"),
-		}
-		storage = storageMap{
-			keys[0]: {Key: &common.Hash{0x02}, Value: common.Hash{0x01}},
-			keys[1]: {Key: &common.Hash{0x04}, Value: common.Hash{0x02}},
-			keys[2]: {Key: &common.Hash{0x01}, Value: common.Hash{0x03}},
-			keys[3]: {Key: &common.Hash{0x03}, Value: common.Hash{0x04}},
+		db          = extstate.NewDatabaseWithConfig(rawdb.NewMemoryDatabase(), &triedb.Config{Preimages: true})
+		sdb, _      = state.New(types.EmptyRootHash, db, nil)
+		addr        = common.Address{0x01}
+		keys        = []common.Hash{}
+		storage     = storageMap{}
+		storageList = []storageEntry{
+			{Key: &common.Hash{0x00, 0x02}, Value: common.Hash{0x01}},
+			{Key: &common.Hash{0x00, 0x04}, Value: common.Hash{0x02}},
+			{Key: &common.Hash{0x00, 0x01}, Value: common.Hash{0x03}},
+			{Key: &common.Hash{0x00, 0x03}, Value: common.Hash{0x04}},
 		}
 	)
+	// Note: This test is modified compared to upstream since coreth normalizes
+	// state keys before storing them. This means the original values cannot be
+	// used, and the keys array and storage map must be re-calculated.
+	for _, entry := range storageList {
+		k := crypto.Keccak256Hash(entry.Key.Bytes())
+		keys = append(keys, k)
+		storage[k] = entry
+	}
+	slices.SortFunc(keys, common.Hash.Cmp)
 	for _, entry := range storage {
 		sdb.SetState(addr, *entry.Key, entry.Value)
 	}
-	root, _ := sdb.Commit(0, false, false)
-	sdb, _ = state.New(root, db)
+	root, _ := sdb.Commit(0, false)
+	sdb, _ = state.New(root, db, nil)
 
 	// Check a few combinations of limit and start/end.
 	tests := []struct {
@@ -271,67 +236,4 @@ func TestStorageRangeAt(t *testing.T) {
 				test.start, test.limit, dumper.Sdump(result), dumper.Sdump(&test.want))
 		}
 	}
-}
-
-func TestGetModifiedAccounts(t *testing.T) {
-	t.Parallel()
-
-	// Initialize test accounts
-	accounts := newAccounts(4)
-	genesis := &core.Genesis{
-		Config: params.TestChainConfig,
-		Alloc: types.GenesisAlloc{
-			accounts[0].addr: {Balance: big.NewInt(params.Ether)},
-			accounts[1].addr: {Balance: big.NewInt(params.Ether)},
-			accounts[2].addr: {Balance: big.NewInt(params.Ether)},
-			accounts[3].addr: {Balance: big.NewInt(params.Ether)},
-		},
-	}
-	genBlocks := 1
-	signer := types.HomesteadSigner{}
-	blockChain := newTestBlockChain(t, genBlocks, genesis, func(_ int, b *core.BlockGen) {
-		// Transfer from account[0] to account[1]
-		//    value: 1000 wei
-		//    fee:   0 wei
-		for _, account := range accounts[:3] {
-			tx, _ := types.SignTx(types.NewTx(&types.LegacyTx{
-				Nonce:    0,
-				To:       &accounts[3].addr,
-				Value:    big.NewInt(1000),
-				Gas:      params.TxGas,
-				GasPrice: b.BaseFee(),
-				Data:     nil}),
-				signer, account.key)
-			b.AddTx(tx)
-		}
-	})
-	defer blockChain.Stop()
-
-	// Create a debug API instance.
-	api := NewDebugAPI(&Ethereum{blockchain: blockChain})
-
-	// Test GetModifiedAccountsByNumber
-	t.Run("GetModifiedAccountsByNumber", func(t *testing.T) {
-		addrs, err := api.GetModifiedAccountsByNumber(uint64(genBlocks), nil)
-		assert.NoError(t, err)
-		assert.Len(t, addrs, len(accounts)+1) // +1 for the coinbase
-		for _, account := range accounts {
-			if !slices.Contains(addrs, account.addr) {
-				t.Fatalf("account %s not found in modified accounts", account.addr.Hex())
-			}
-		}
-	})
-
-	// Test GetModifiedAccountsByHash
-	t.Run("GetModifiedAccountsByHash", func(t *testing.T) {
-		header := blockChain.GetHeaderByNumber(uint64(genBlocks))
-		addrs, err := api.GetModifiedAccountsByHash(header.Hash(), nil)
-		assert.NoError(t, err)
-		assert.Len(t, addrs, len(accounts)+1) // +1 for the coinbase
-		for _, account := range accounts {
-			if !slices.Contains(addrs, account.addr) {
-				t.Fatalf("account %s not found in modified accounts", account.addr.Hex())
-			}
-		}
-	})
 }

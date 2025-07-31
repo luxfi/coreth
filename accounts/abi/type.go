@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2015 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -64,9 +75,6 @@ type Type struct {
 var (
 	// typeRegex parses the abi sub types
 	typeRegex = regexp.MustCompile("([a-zA-Z]+)(([0-9]+)(x([0-9]+))?)?")
-
-	// sliceSizeRegex grab the slice size
-	sliceSizeRegex = regexp.MustCompile("[0-9]+")
 )
 
 // NewType creates a new reflection type of abi type given in t.
@@ -94,7 +102,8 @@ func NewType(t string, internalType string, components []ArgumentMarshaling) (ty
 		// grab the last cell and create a type from there
 		sliced := t[i:]
 		// grab the slice size with regexp
-		intz := sliceSizeRegex.FindAllString(sliced, -1)
+		re := regexp.MustCompile("[0-9]+")
+		intz := re.FindAllString(sliced, -1)
 
 		if len(intz) == 0 {
 			// is a slice
@@ -181,6 +190,7 @@ func NewType(t string, internalType string, components []ArgumentMarshaling) (ty
 				return Type{}, errors.New("abi: purely anonymous or underscored field is not supported")
 			}
 			fieldName := ResolveNameConflict(name, func(s string) bool { return used[s] })
+
 			used[fieldName] = true
 			if !isValidFieldName(fieldName) {
 				return Type{}, fmt.Errorf("field %d has invalid name", idx)
@@ -219,12 +229,7 @@ func NewType(t string, internalType string, components []ArgumentMarshaling) (ty
 		typ.T = FunctionTy
 		typ.Size = 24
 	default:
-		if strings.HasPrefix(internalType, "contract ") {
-			typ.Size = 20
-			typ.T = AddressTy
-		} else {
-			return Type{}, fmt.Errorf("unsupported arg type: %s", t)
-		}
+		return Type{}, fmt.Errorf("unsupported arg type: %s", t)
 	}
 
 	return

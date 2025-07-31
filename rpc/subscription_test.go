@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2016 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -30,11 +41,12 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
+
+	// Side effect: registration of geth extras.
+	_ "github.com/luxfi/coreth/plugin/evm/customtypes"
 )
 
 func TestNewID(t *testing.T) {
-	t.Parallel()
-
 	hexchars := "0123456789ABCDEFabcdef"
 	for i := 0; i < 100; i++ {
 		id := string(NewID())
@@ -56,15 +68,13 @@ func TestNewID(t *testing.T) {
 }
 
 func TestSubscriptions(t *testing.T) {
-	t.Parallel()
-
 	var (
-		namespaces        = []string{"eth"}
+		namespaces        = []string{"eth", "bzz"}
 		service           = &notificationTestService{}
 		subCount          = len(namespaces)
 		notificationCount = 3
 
-		server                 = NewServer()
+		server                 = NewServer(0)
 		clientConn, serverConn = net.Pipe()
 		out                    = json.NewEncoder(clientConn)
 		in                     = json.NewDecoder(clientConn)
@@ -79,7 +89,7 @@ func TestSubscriptions(t *testing.T) {
 			t.Fatalf("unable to register test service %v", err)
 		}
 	}
-	go server.ServeCodec(NewCodec(serverConn), 0)
+	go server.ServeCodec(NewCodec(serverConn), 0, 0, 0, 0)
 	defer server.Stop()
 
 	// wait for message and write them to the given channels
@@ -136,8 +146,6 @@ func TestSubscriptions(t *testing.T) {
 
 // This test checks that unsubscribing works.
 func TestServerUnsubscribe(t *testing.T) {
-	t.Parallel()
-
 	p1, p2 := net.Pipe()
 	defer p2.Close()
 
@@ -145,7 +153,7 @@ func TestServerUnsubscribe(t *testing.T) {
 	server := newTestServer()
 	service := &notificationTestService{unsubscribed: make(chan string, 1)}
 	server.RegisterName("nftest2", service)
-	go server.ServeCodec(NewCodec(p1), 0)
+	go server.ServeCodec(NewCodec(p1), 0, 0, 0, 0)
 
 	// Subscribe.
 	p2.SetDeadline(time.Now().Add(10 * time.Second))
@@ -241,10 +249,14 @@ func (c *mockConn) writeJSON(ctx context.Context, msg interface{}, isError bool)
 	return c.enc.Encode(msg)
 }
 
-// closed returns a channel which is closed when the connection is closed.
+func (c *mockConn) writeJSONSkipDeadline(ctx context.Context, msg interface{}, isError bool, skip bool) error {
+	return c.enc.Encode(msg)
+}
+
+// Closed returns a channel which is closed when the connection is closed.
 func (c *mockConn) closed() <-chan interface{} { return nil }
 
-// remoteAddr returns the peer address of the connection.
+// RemoteAddr returns the peer address of the connection.
 func (c *mockConn) remoteAddr() string { return "" }
 
 // BenchmarkNotify benchmarks the performance of notifying a subscription.
@@ -266,8 +278,6 @@ func BenchmarkNotify(b *testing.B) {
 }
 
 func TestNotify(t *testing.T) {
-	t.Parallel()
-
 	out := new(bytes.Buffer)
 	id := ID("test")
 	notifier := &Notifier{
@@ -275,9 +285,13 @@ func TestNotify(t *testing.T) {
 		sub:       &Subscription{ID: id},
 		activated: true,
 	}
-	notifier.Notify(id, "hello")
+	msg := &types.Header{
+		ParentHash: common.HexToHash("0x01"),
+		Number:     big.NewInt(100),
+	}
+	notifier.Notify(id, msg)
 	have := strings.TrimSpace(out.String())
-	want := `{"jsonrpc":"2.0","method":"_subscription","params":{"subscription":"test","result":"hello"}}`
+	want := `{"jsonrpc":"2.0","method":"_subscription","params":{"subscription":"test","result":{"parentHash":"0x0000000000000000000000000000000000000000000000000000000000000001","sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000000","miner":"0x0000000000000000000000000000000000000000","stateRoot":"0x0000000000000000000000000000000000000000000000000000000000000000","transactionsRoot":"0x0000000000000000000000000000000000000000000000000000000000000000","receiptsRoot":"0x0000000000000000000000000000000000000000000000000000000000000000","logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","difficulty":null,"number":"0x64","gasLimit":"0x0","gasUsed":"0x0","timestamp":"0x0","extraData":"0x","mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000","nonce":"0x0000000000000000","extDataHash":"0x0000000000000000000000000000000000000000000000000000000000000000","baseFeePerGas":null,"extDataGasUsed":null,"blockGasCost":null,"blobGasUsed":null,"excessBlobGas":null,"parentBeaconBlockRoot":null,"hash":"0x9a9ca1b5790a674785245afedcee9fc1a90d3514c6faa1cbd26f696136d6fd12"}}}`
 	if have != want {
 		t.Errorf("have:\n%v\nwant:\n%v\n", have, want)
 	}

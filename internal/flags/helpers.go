@@ -1,3 +1,14 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+//
+// This file is a derived work, based on the go-ethereum library whose original
+// notices appear below.
+//
+// It is distributed under a license compatible with the licensing terms of the
+// original code from which it is derived.
+//
+// Much love to the original authors for their work.
+// **********
 // Copyright 2020 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
@@ -20,11 +31,10 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"sort"
 	"strings"
 
-	"github.com/luxfi/geth/internal/version"
-	"github.com/luxfi/log"
+	"github.com/luxfi/coreth/internal/version"
+	"github.com/luxfi/coreth/params"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"
 )
@@ -38,14 +48,23 @@ func NewApp(usage string) *cli.App {
 	git, _ := version.VCS()
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
-	app.Version = version.WithCommit(git.Commit, git.Date)
+	app.Version = params.VersionWithCommit(git.Commit, git.Date)
 	app.Usage = usage
-	app.Copyright = "Copyright 2013-2025 The go-ethereum Authors"
+	app.Copyright = "Copyright 2013-2024 The go-ethereum Authors"
 	app.Before = func(ctx *cli.Context) error {
 		MigrateGlobalFlags(ctx)
 		return nil
 	}
 	return app
+}
+
+// Merge merges the given flag slices.
+func Merge(groups ...[]cli.Flag) []cli.Flag {
+	var ret []cli.Flag
+	for _, group := range groups {
+		ret = append(ret, group...)
+	}
+	return ret
 }
 
 var migrationApplied = map[*cli.Command]struct{}{}
@@ -213,127 +232,4 @@ func wordWrap(s string, width int) string {
 	}
 
 	return output.String()
-}
-
-// AutoEnvVars extends all the specific CLI flags with automatically generated
-// env vars by capitalizing the flag, replacing . with _ and prefixing it with
-// the specified string.
-//
-// Note, the prefix should *not* contain the separator underscore, that will be
-// added automatically.
-func AutoEnvVars(flags []cli.Flag, prefix string) {
-	for _, flag := range flags {
-		envvar := strings.ToUpper(prefix + "_" + strings.ReplaceAll(strings.ReplaceAll(flag.Names()[0], ".", "_"), "-", "_"))
-
-		switch flag := flag.(type) {
-		case *cli.StringFlag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-
-		case *cli.StringSliceFlag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-
-		case *cli.BoolFlag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-
-		case *cli.IntFlag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-
-		case *cli.Int64Flag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-
-		case *cli.Uint64Flag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-
-		case *cli.Float64Flag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-
-		case *cli.DurationFlag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-
-		case *cli.PathFlag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-
-		case *BigFlag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-
-		case *DirectoryFlag:
-			flag.EnvVars = append(flag.EnvVars, envvar)
-		}
-	}
-}
-
-// CheckEnvVars iterates over all the environment variables and checks if any of
-// them look like a CLI flag but is not consumed. This can be used to detect old
-// or mistyped names.
-func CheckEnvVars(ctx *cli.Context, flags []cli.Flag, prefix string) {
-	known := make(map[string]string)
-	for _, flag := range flags {
-		docflag, ok := flag.(cli.DocGenerationFlag)
-		if !ok {
-			continue
-		}
-		for _, envvar := range docflag.GetEnvVars() {
-			known[envvar] = flag.Names()[0]
-		}
-	}
-	keyvals := os.Environ()
-	sort.Strings(keyvals)
-
-	for _, keyval := range keyvals {
-		key := strings.Split(keyval, "=")[0]
-		if !strings.HasPrefix(key, prefix) {
-			continue
-		}
-		if flag, ok := known[key]; ok {
-			if ctx.Count(flag) > 0 {
-				log.Info("Config environment variable found", "envvar", key, "shadowedby", "--"+flag)
-			} else {
-				log.Info("Config environment variable found", "envvar", key)
-			}
-		} else {
-			log.Warn("Unknown config environment variable", "envvar", key)
-		}
-	}
-}
-
-// CheckExclusive verifies that only a single instance of the provided flags was
-// set by the user. Each flag might optionally be followed by a string type to
-// specialize it further.
-func CheckExclusive(ctx *cli.Context, args ...any) {
-	set := make([]string, 0, 1)
-	for i := 0; i < len(args); i++ {
-		// Make sure the next argument is a flag and skip if not set
-		flag, ok := args[i].(cli.Flag)
-		if !ok {
-			panic(fmt.Sprintf("invalid argument, not cli.Flag type: %T", args[i]))
-		}
-		// Check if next arg extends current and expand its name if so
-		name := flag.Names()[0]
-
-		if i+1 < len(args) {
-			switch option := args[i+1].(type) {
-			case string:
-				// Extended flag check, make sure value set doesn't conflict with passed in option
-				if ctx.String(flag.Names()[0]) == option {
-					name += "=" + option
-					set = append(set, "--"+name)
-				}
-				// shift arguments and continue
-				i++
-				continue
-
-			case cli.Flag:
-			default:
-				panic(fmt.Sprintf("invalid argument, not cli.Flag or string extension: %T", args[i+1]))
-			}
-		}
-		// Mark the flag if it's set
-		if ctx.IsSet(flag.Names()[0]) {
-			set = append(set, "--"+name)
-		}
-	}
-	if len(set) > 1 {
-		fmt.Fprintf(os.Stderr, "Flags %v can't be used at the same time", strings.Join(set, ", "))
-		os.Exit(1)
-	}
 }
