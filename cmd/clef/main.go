@@ -493,7 +493,10 @@ func initialize(c *cli.Context) error {
 		output = colorable.NewColorable(logOutput)
 	}
 	verbosity := log.FromLegacyLevel(c.Int(logLevelFlag.Name))
-	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(output, verbosity, usecolor)))
+	// Configure logging with luxfi/log
+	handler := log.NewTerminalHandlerWithLevel(output, verbosity, usecolor)
+	glogHandler := log.NewGlogHandler(handler)
+	glogHandler.Verbosity(verbosity)
 
 	return nil
 }

@@ -29,7 +29,6 @@ import (
 	"github.com/luxfi/geth/common/compiler"
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -235,7 +234,7 @@ func generate(c *cli.Context) error {
 }
 
 func main() {
-	log.SetDefault(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelInfo, true))
+	// Initialize logging with INFO level to stderr
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)

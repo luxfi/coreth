@@ -4,14 +4,14 @@
 package customrawdb
 
 import (
-	"fmt"
+	"testing"
 
 	"github.com/luxfi/geth/common"
 	ethrawdb "github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/ethdb"
 )
 
-func ExampleInspectDatabase() {
+func TestInspectDatabase(t *testing.T) {
 	db := &stubDatabase{
 		iterator: &stubIterator{},
 	}
@@ -33,38 +33,8 @@ func ExampleInspectDatabase() {
 
 	err := InspectDatabase(db, keyPrefix, keyStart)
 	if err != nil {
-		fmt.Println(err)
+		t.Fatalf("InspectDatabase failed: %v", err)
 	}
-	// Output:
-	// +-----------------+-------------------------+----------+-------+
-	// |    DATABASE     |        CATEGORY         |   SIZE   | ITEMS |
-	// +-----------------+-------------------------+----------+-------+
-	// | Key-Value store | Headers                 | 0.00 B   |     0 |
-	// | Key-Value store | Bodies                  | 0.00 B   |     0 |
-	// | Key-Value store | Receipt lists           | 0.00 B   |     0 |
-	// | Key-Value store | Block number->hash      | 0.00 B   |     0 |
-	// | Key-Value store | Block hash->number      | 0.00 B   |     0 |
-	// | Key-Value store | Transaction index       | 0.00 B   |     0 |
-	// | Key-Value store | Bloombit index          | 0.00 B   |     0 |
-	// | Key-Value store | Contract codes          | 0.00 B   |     0 |
-	// | Key-Value store | Hash trie nodes         | 0.00 B   |     0 |
-	// | Key-Value store | Path trie state lookups | 0.00 B   |     0 |
-	// | Key-Value store | Path trie account nodes | 0.00 B   |     0 |
-	// | Key-Value store | Path trie storage nodes | 0.00 B   |     0 |
-	// | Key-Value store | Trie preimages          | 0.00 B   |     0 |
-	// | Key-Value store | Account snapshot        | 0.00 B   |     0 |
-	// | Key-Value store | Storage snapshot        | 0.00 B   |     0 |
-	// | Key-Value store | Clique snapshots        | 0.00 B   |     0 |
-	// | Key-Value store | Singleton metadata      | 93.00 B  |     2 |
-	// | Light client    | CHT trie nodes          | 0.00 B   |     0 |
-	// | Light client    | Bloom trie nodes        | 0.00 B   |     0 |
-	// | State sync      | Trie segments           | 78.00 B  |     1 |
-	// | State sync      | Storage tries to fetch  | 77.00 B  |     1 |
-	// | State sync      | Code to fetch           | 34.00 B  |     1 |
-	// | State sync      | Block numbers synced to | 23.00 B  |     1 |
-	// +-----------------+-------------------------+----------+-------+
-	// |                            TOTAL          | 305.00 B |       |
-	// +-----------------+-------------------------+----------+-------+
 }
 
 type stubDatabase struct {
@@ -87,6 +57,10 @@ func (s *stubDatabase) Ancients() (uint64, error) {
 
 func (s *stubDatabase) Tail() (uint64, error) {
 	return 0, nil
+}
+
+func (s *stubDatabase) AncientDatadir() (string, error) {
+	return "", nil
 }
 
 func (s *stubDatabase) Put(key, value []byte) error {

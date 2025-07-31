@@ -24,6 +24,23 @@ import (
 	"testing"
 )
 
+// stripLogOutput removes log lines from the output and returns only the actual output/error messages
+func stripLogOutput(text string) string {
+	lines := strings.Split(text, "\n")
+	var result []string
+	for _, line := range lines {
+		// Skip log lines that contain timestamps and log metadata
+		if strings.Contains(line, "\tWARN\t") || strings.Contains(line, "\tINFO\t") || 
+		   strings.Contains(line, "\tERROR\t") || strings.Contains(line, "\tDEBUG\t") {
+			continue
+		}
+		if line != "" {
+			result = append(result, line)
+		}
+	}
+	return strings.Join(result, "\n")
+}
+
 // TestImportRaw tests clef --importraw
 func TestImportRaw(t *testing.T) {
 	t.Parallel()
@@ -47,7 +64,7 @@ func TestImportRaw(t *testing.T) {
 		// Run clef importraw
 		clef := runClef(t, "--suppress-bootwarn", "--lightkdf", "importraw", keyPath)
 		clef.input("myverylongpassword1").input("myverylongpassword2").WaitExit()
-		if have, want := clef.StderrText(), "Passwords do not match\n"; have != want {
+		if have, want := stripLogOutput(clef.StderrText()), "Passwords do not match"; have != want {
 			t.Errorf("have %q, want %q", have, want)
 		}
 	})
@@ -57,8 +74,8 @@ func TestImportRaw(t *testing.T) {
 		// Run clef importraw
 		clef := runClef(t, "--suppress-bootwarn", "--lightkdf", "importraw", keyPath)
 		clef.input("shorty").input("shorty").WaitExit()
-		if have, want := clef.StderrText(),
-			"password requirements not met: password too short (<10 characters)\n"; have != want {
+		if have, want := stripLogOutput(clef.StderrText()),
+			"password requirements not met: password too short (<10 characters)"; have != want {
 			t.Errorf("have %q, want %q", have, want)
 		}
 	})

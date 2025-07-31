@@ -49,6 +49,31 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+// stripLogOutput removes log lines from the output
+func stripLogOutput(text string) string {
+	// Preserve original ending
+	hadTrailingNewline := strings.HasSuffix(text, "\n")
+	
+	lines := strings.Split(text, "\n")
+	var result []string
+	for _, line := range lines {
+		// Skip log lines from luxfi/log package
+		if strings.Contains(line, "\tWARN\t") || strings.Contains(line, "\tINFO\t") || 
+		   strings.Contains(line, "\tERROR\t") || strings.Contains(line, "\tDEBUG\t") {
+			continue
+		}
+		result = append(result, line)
+	}
+	
+	output := strings.Join(result, "\n")
+	// The split always adds an empty element at the end if text ended with \n
+	// So we need to check the original to preserve the trailing newline correctly
+	if hadTrailingNewline && !strings.HasSuffix(output, "\n") {
+		output += "\n"
+	}
+	return output
+}
+
 type testT8n struct {
 	*cmdtest.TestCmd
 }
@@ -664,6 +689,8 @@ func TestEvmRun(t *testing.T) {
 			if err != nil {
 				t.Fatalf("test %d: could not read expected output: %v", i, err)
 			}
+			// Strip log output from stderr
+			have = stripLogOutput(have)
 			if have != string(want) {
 				t.Fatalf("test %d, output wrong\nhave %q\nwant %q\n", i, have, string(want))
 			}
@@ -715,6 +742,8 @@ func TestEvmRunRegEx(t *testing.T) {
 			if err != nil {
 				t.Fatalf("test %d: could not read expected output: %v", i, err)
 			}
+			// Strip log output from stderr
+			have = stripLogOutput(have)
 			re, err := regexp.Compile(string(want))
 			if err != nil {
 				t.Fatalf("test %d: could not compile regular expression: %v", i, err)

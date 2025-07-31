@@ -18,10 +18,8 @@ package downloader
 
 import (
 	"fmt"
-	"log/slog"
 	"math/big"
 	"math/rand"
-	"os"
 	"sync"
 	"testing"
 	"time"
@@ -30,7 +28,6 @@ import (
 	"github.com/luxfi/geth/consensus/ethash"
 	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/trie"
 )
@@ -273,7 +270,8 @@ func XTestDelivery(t *testing.T) {
 	world.chain = blo
 	world.progress(10)
 	if false {
-		log.SetDefault(log.NewLogger(slog.NewTextHandler(os.Stdout, nil)))
+		// Enable debug logging if needed
+		// TODO: Configure luxfi/log for text output to stdout
 	}
 	q := newQueue(10, 10)
 	var wg sync.WaitGroup
