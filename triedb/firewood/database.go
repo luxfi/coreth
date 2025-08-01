@@ -22,7 +22,7 @@ import (
 	"github.com/luxfi/geth/triedb"
 	"github.com/luxfi/geth/triedb/database"
 
-	ffi "github.com/luxfi/firewood-go-ethhash/ffi"
+	ffi "github.com/luxfi/database-go-ethhash/ffi"
 )
 
 var (

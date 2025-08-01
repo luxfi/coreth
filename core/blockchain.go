@@ -70,7 +70,7 @@ import (
 	// Force geth metrics of the same name to be registered first.
 	_ "github.com/luxfi/geth/core"
 
-	ffi "github.com/luxfi/firewood-go-ethhash/ffi"
+	ffi "github.com/luxfi/database-go-ethhash/ffi"
 )
 
 // ====== If resolving merge conflicts ======
