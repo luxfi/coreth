@@ -70,7 +70,7 @@ import (
 	// Force geth metrics of the same name to be registered first.
 	_ "github.com/luxfi/geth/core"
 
-	ffi "github.com/luxfi/database-go-ethhash/ffi"
+	// ffi "github.com/luxfi/database-go-ethhash/ffi"
 )
 
 // ====== If resolving merge conflicts ======
@@ -224,19 +224,19 @@ func (c *CacheConfig) triedbConfig() *triedb.Config {
 			DirtyCacheSize: c.TrieDirtyLimit * 1024 * 1024,
 		}.BackendConstructor
 	}
-	if c.StateScheme == customrawdb.DatabaseScheme {
-		// ChainDataDir may not be set during some tests, where this path won't be called.
-		if c.ChainDataDir == "" {
-			log.Crit("Chain data directory must be specified for Database")
-		}
-		config.DBOverride = database.Config{
-			FilePath:             filepath.Join(c.ChainDataDir, databaseFileName),
-			CleanCacheSize:       c.TrieCleanLimit * 1024 * 1024,
-			FreeListCacheEntries: database.Defaults.FreeListCacheEntries,
-			Revisions:            uint(c.StateHistory), // must be at least 2
-			ReadCacheStrategy:    ffi.CacheAllReads,
-		}.BackendConstructor
-	}
+	// if c.StateScheme == customrawdb.DatabaseScheme {
+	// 	// ChainDataDir may not be set during some tests, where this path won't be called.
+	// 	if c.ChainDataDir == "" {
+	// 		log.Crit("Chain data directory must be specified for Database")
+	// 	}
+	// 	config.DBOverride = database.Config{
+	// 		FilePath:             filepath.Join(c.ChainDataDir, databaseFileName),
+	// 		CleanCacheSize:       c.TrieCleanLimit * 1024 * 1024,
+	// 		FreeListCacheEntries: database.Defaults.FreeListCacheEntries,
+	// 		Revisions:            uint(c.StateHistory), // must be at least 2
+	// 		ReadCacheStrategy:    ffi.CacheAllReads,
+	// 	}.BackendConstructor
+	// }
 	return config
 }
 
