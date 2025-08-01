@@ -6,7 +6,7 @@ package extstate
 import (
 	"fmt"
 
-	"github.com/luxfi/coreth/triedb/database"
+	"github.com/luxfi/geth/triedb/database"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/state"
 )

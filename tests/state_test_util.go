@@ -34,7 +34,7 @@ import (
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
-	"github.com/luxfi/coreth/triedb/database"
+	"github.com/luxfi/geth/triedb/database"
 	"github.com/luxfi/coreth/triedb/hashdb"
 	"github.com/luxfi/coreth/triedb/pathdb"
 	"github.com/luxfi/geth/common"
