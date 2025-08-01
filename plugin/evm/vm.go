@@ -25,7 +25,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/extension"
 	"github.com/luxfi/coreth/plugin/evm/gossip"
 	"github.com/luxfi/coreth/plugin/evm/vmerrors"
-	"github.com/luxfi/database-go-ethhash/ffi"
+	"github.com/luxfi/firewood-go-ethhash/ffi"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/luxfi/coreth/consensus/dummy"
