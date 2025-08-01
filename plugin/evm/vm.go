@@ -25,7 +25,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/extension"
 	"github.com/luxfi/coreth/plugin/evm/gossip"
 	"github.com/luxfi/coreth/plugin/evm/vmerrors"
-	"github.com/luxfi/database-go-ethhash/ffi"
+	// "github.com/luxfi/database-go-ethhash/ffi"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/luxfi/coreth/consensus/dummy"
@@ -535,14 +535,14 @@ func (vm *VM) initializeMetrics() error {
 		return err
 	}
 
-	if vm.config.MetricsExpensiveEnabled && vm.config.StateScheme == customrawdb.DatabaseScheme {
-		if err := ffi.StartMetrics(); err != nil {
-			return fmt.Errorf("failed to start database metrics collection: %w", err)
-		}
-		if err := vm.ctx.Metrics.Register("database", ffi.Gatherer{}); err != nil {
-			return fmt.Errorf("failed to register database metrics: %w", err)
-		}
-	}
+	// if vm.config.MetricsExpensiveEnabled && vm.config.StateScheme == customrawdb.DatabaseScheme {
+	// 	if err := ffi.StartMetrics(); err != nil {
+	// 		return fmt.Errorf("failed to start database metrics collection: %w", err)
+	// 	}
+	// 	if err := vm.ctx.Metrics.Register("database", ffi.Gatherer{}); err != nil {
+	// 		return fmt.Errorf("failed to register database metrics: %w", err)
+	// 	}
+	// }
 	return vm.ctx.Metrics.Register(sdkMetricsPrefix, vm.sdkMetrics)
 }
 
