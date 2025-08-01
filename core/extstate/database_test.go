@@ -10,7 +10,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/luxfi/coreth/triedb/database"
+	"github.com/luxfi/geth/triedb/database"
 	"github.com/luxfi/coreth/triedb/hashdb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"

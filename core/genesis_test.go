@@ -42,7 +42,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/coreth/precompile/contracts/warp"
-	"github.com/luxfi/coreth/triedb/database"
+	"github.com/luxfi/geth/triedb/database"
 	"github.com/luxfi/coreth/triedb/pathdb"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"

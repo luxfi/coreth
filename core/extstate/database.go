@@ -4,7 +4,7 @@
 package extstate
 
 import (
-	"github.com/luxfi/coreth/triedb/database"
+	"github.com/luxfi/geth/triedb/database"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/triedb"

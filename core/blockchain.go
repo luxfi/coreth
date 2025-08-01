@@ -51,7 +51,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
-	"github.com/luxfi/coreth/triedb/database"
+	"github.com/luxfi/geth/triedb/database"
 	"github.com/luxfi/coreth/triedb/hashdb"
 	"github.com/luxfi/coreth/triedb/pathdb"
 	"github.com/luxfi/geth/common"
