@@ -42,6 +42,10 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
 
+replace github.com/luxfi/geth v1.16.2 => github.com/luxfi/geth v1.16.1-lux
+
+replace github.com/luxfi/node => ../node
+
 require (
 	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
