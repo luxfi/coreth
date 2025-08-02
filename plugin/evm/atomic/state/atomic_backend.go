@@ -17,7 +17,7 @@ import (
 	"github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 const (

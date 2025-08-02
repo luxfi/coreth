@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 
 	ethcommon "github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/luxfi/node/ids"

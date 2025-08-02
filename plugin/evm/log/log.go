@@ -11,11 +11,13 @@ import (
 	"runtime"
 	"strings"
 
-	ethlog "github.com/luxfi/geth/log"
+	luxlog "github.com/luxfi/log"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type Logger struct {
-	ethlog.Logger
+	luxlog.Logger
 
 	logLevel *slog.LevelVar
 }
@@ -25,43 +27,74 @@ type Logger struct {
 func InitLogger(alias string, level string, jsonFormat bool, writer io.Writer) (Logger, error) {
 	logLevel := &slog.LevelVar{}
 
-	// Create handler options
-	opts := &slog.HandlerOptions{
-		Level: logLevel,
-		AddSource: true,
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			if a.Key == slog.SourceKey {
-				src := a.Value.Any().(*slog.Source)
-				chainStr := fmt.Sprintf("<%s Chain> ", alias)
-				return slog.String("source", fmt.Sprintf("%s%s:%d", chainStr, trimPrefixes(src.File), src.Line))
-			}
-			return a
-		},
-	}
-	
-	var handler slog.Handler
-	if jsonFormat {
-		handler = slog.NewJSONHandler(writer, opts)
-	} else {
-		handler = slog.NewTextHandler(writer, opts)
+	// Convert log level to zap level
+	var zapLevel zapcore.Level
+	switch strings.ToLower(level) {
+	case "debug":
+		zapLevel = zapcore.DebugLevel
+		logLevel.Set(slog.LevelDebug)
+	case "info":
+		zapLevel = zapcore.InfoLevel
+		logLevel.Set(slog.LevelInfo)
+	case "warn":
+		zapLevel = zapcore.WarnLevel
+		logLevel.Set(slog.LevelWarn)
+	case "error":
+		zapLevel = zapcore.ErrorLevel
+		logLevel.Set(slog.LevelError)
+	default:
+		return Logger{}, fmt.Errorf("unknown log level: %s", level)
 	}
 
-	// Create handler
+	// Create zap encoder config
+	encoderConfig := zapcore.EncoderConfig{
+		TimeKey:        "time",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "source",
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeCaller: func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+			chainStr := fmt.Sprintf("<%s Chain> ", alias)
+			enc.AppendString(fmt.Sprintf("%s%s:%d", chainStr, trimPrefixes(caller.File), caller.Line))
+		},
+	}
+
+	// Create encoder
+	var encoder zapcore.Encoder
+	if jsonFormat {
+		encoder = zapcore.NewJSONEncoder(encoderConfig)
+	} else {
+		encoder = zapcore.NewConsoleEncoder(encoderConfig)
+	}
+
+	// Create core
+	core := zapcore.NewCore(encoder, zapcore.AddSync(writer), zapLevel)
+	
+	// Create zap logger
+	zapLogger := zap.New(core, zap.AddCaller())
+	
+	// Create luxfi logger
+	luxLogger := luxlog.NewZapLogger(zapLogger)
+
 	c := Logger{
-		Logger:   ethlog.NewLogger(handler),
+		Logger:   luxLogger,
 		logLevel: logLevel,
 	}
 
-	if err := c.SetLogLevel(level); err != nil {
-		return Logger{}, err
-	}
-	ethlog.SetDefault(c.Logger)
+	// Set as global logger
+	luxlog.SetGlobalLogger(luxLogger)
+	
 	return c, nil
 }
 
 // SetLogLevel sets the log level of initialized log handler.
 func (l *Logger) SetLogLevel(level string) error {
-	// Set log level
+	// Set log level for slog
 	var slogLevel slog.Level
 	switch strings.ToLower(level) {
 	case "debug":
@@ -76,6 +109,9 @@ func (l *Logger) SetLogLevel(level string) error {
 		return fmt.Errorf("unknown log level: %s", level)
 	}
 	l.logLevel.Set(slogLevel)
+	
+	// Note: luxfi/log doesn't expose a SetLevel method on individual loggers
+	// The level is controlled at creation time via the zap configuration
 	return nil
 }
 

@@ -16,7 +16,7 @@ import (
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 const (

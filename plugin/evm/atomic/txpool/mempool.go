@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/node/network/p2p/gossip"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/config"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

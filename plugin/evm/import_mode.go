@@ -8,7 +8,7 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // CheckImportMode checks if we should run in import mode

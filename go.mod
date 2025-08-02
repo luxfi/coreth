@@ -19,6 +19,7 @@ require (
 	github.com/luxfi/crypto v1.1.1
 	github.com/luxfi/geth v1.16.7
 	github.com/luxfi/go-bip39 v1.1.0
+	github.com/luxfi/log v0.1.1
 	github.com/luxfi/metrics v1.1.1
 	github.com/luxfi/node v1.13.13
 	github.com/mattn/go-colorable v0.1.14

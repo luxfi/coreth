@@ -54,7 +54,7 @@ import (
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/eth/tracers/logger"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
 	"github.com/davecgh/go-spew/spew"
