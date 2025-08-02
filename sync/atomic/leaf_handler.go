@@ -13,7 +13,7 @@ import (
 	"github.com/luxfi/coreth/sync/handlers"
 	"github.com/luxfi/coreth/sync/handlers/stats"
 
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 	"github.com/luxfi/geth/triedb"
 )
 

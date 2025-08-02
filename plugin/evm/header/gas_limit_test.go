@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
@@ -36,7 +36,7 @@ func TestGasLimit(t *testing.T) {
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
-			wantErr: acp176.ErrStateInsufficientLength,
+			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
 			name:     "fortuna_initial_max_capacity",
@@ -44,7 +44,7 @@ func TestGasLimit(t *testing.T) {
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
-			want: acp176.MinMaxCapacity,
+			want: lp176.MinMaxCapacity,
 		},
 		{
 			name:     "cortina",
@@ -118,7 +118,7 @@ func TestVerifyGasUsed(t *testing.T) {
 				Number: big.NewInt(1),
 			},
 			header: &types.Header{},
-			want:   acp176.ErrStateInsufficientLength,
+			want:   lp176.ErrStateInsufficientLength,
 		},
 		{
 			name:     "fortuna_invalid_usage",
@@ -129,9 +129,9 @@ func TestVerifyGasUsed(t *testing.T) {
 			header: &types.Header{
 				Time: 1,
 				// The maximum allowed gas used is:
-				// (header.Time - parent.Time) * [acp176.MinMaxPerSecond]
-				// which is equal to [acp176.MinMaxPerSecond].
-				GasUsed: acp176.MinMaxPerSecond + 1,
+				// (header.Time - parent.Time) * [lp176.MinMaxPerSecond]
+				// which is equal to [lp176.MinMaxPerSecond].
+				GasUsed: lp176.MinMaxPerSecond + 1,
 			},
 			want: errInvalidGasUsed,
 		},
@@ -143,7 +143,7 @@ func TestVerifyGasUsed(t *testing.T) {
 			},
 			header: &types.Header{
 				Time:    1,
-				GasUsed: acp176.MinMaxPerSecond,
+				GasUsed: lp176.MinMaxPerSecond,
 			},
 			want: nil,
 		},
@@ -190,7 +190,7 @@ func TestVerifyGasLimit(t *testing.T) {
 				Number: big.NewInt(1),
 			},
 			header: &types.Header{},
-			want:   acp176.ErrStateInsufficientLength,
+			want:   lp176.ErrStateInsufficientLength,
 		},
 		{
 			name:     "fortuna_invalid",
@@ -199,7 +199,7 @@ func TestVerifyGasLimit(t *testing.T) {
 				Number: big.NewInt(0),
 			},
 			header: &types.Header{
-				GasLimit: acp176.MinMaxCapacity + 1,
+				GasLimit: lp176.MinMaxCapacity + 1,
 			},
 			want: errInvalidGasLimit,
 		},
@@ -210,7 +210,7 @@ func TestVerifyGasLimit(t *testing.T) {
 				Number: big.NewInt(0),
 			},
 			header: &types.Header{
-				GasLimit: acp176.MinMaxCapacity,
+				GasLimit: lp176.MinMaxCapacity,
 			},
 		},
 		{
@@ -318,7 +318,7 @@ func TestGasCapacity(t *testing.T) {
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
-			wantErr: acp176.ErrStateInsufficientLength,
+			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
 			name:     "fortuna_after_1s",
@@ -327,7 +327,7 @@ func TestGasCapacity(t *testing.T) {
 				Number: big.NewInt(0),
 			},
 			timestamp: 1,
-			want:      acp176.MinMaxPerSecond,
+			want:      lp176.MinMaxPerSecond,
 		},
 	}
 	for _, test := range tests {
@@ -366,7 +366,7 @@ func TestRemainingAtomicGasCapacity(t *testing.T) {
 				Number: big.NewInt(1),
 			},
 			header:  &types.Header{},
-			wantErr: acp176.ErrStateInsufficientLength,
+			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
 			name:     "fortuna_negative_capacity",
@@ -389,7 +389,7 @@ func TestRemainingAtomicGasCapacity(t *testing.T) {
 				Time:    1,
 				GasUsed: 1,
 			},
-			want: acp176.MinMaxPerSecond - 1,
+			want: lp176.MinMaxPerSecond - 1,
 		},
 	}
 	for _, test := range tests {

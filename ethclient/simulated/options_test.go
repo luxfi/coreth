@@ -27,7 +27,7 @@ import (
 
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	ethereum "github.com/luxfi/geth"
 	"github.com/luxfi/geth/core/types"
 )
@@ -53,8 +53,8 @@ func TestWithBlockGasLimitOption(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to retrieve head block: %v", err)
 	}
-	if head.GasLimit() != acp176.MinMaxCapacity {
-		t.Errorf("head gas limit mismatch: have %v, want %v", head.GasLimit(), acp176.MinMaxCapacity)
+	if head.GasLimit() != lp176.MinMaxCapacity {
+		t.Errorf("head gas limit mismatch: have %v, want %v", head.GasLimit(), lp176.MinMaxCapacity)
 	}
 }
 

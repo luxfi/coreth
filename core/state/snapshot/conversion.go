@@ -383,5 +383,5 @@ func stackTrieGenerate(db ethdb.KeyValueWriter, scheme string, owner common.Hash
 	for leaf := range in {
 		t.Update(leaf.key[:], leaf.value)
 	}
-	out <- t.Commit()
+	out <- t.Hash()
 }

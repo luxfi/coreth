@@ -40,7 +40,7 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/cortina"
@@ -49,7 +49,7 @@ import (
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/trie"
 	"github.com/holiman/uint256"
 	"golang.org/x/crypto/sha3"
@@ -157,7 +157,7 @@ func TestStateProcessorErrors(t *testing.T) {
 			{ // ErrGasLimitReached
 				txs: []*types.Transaction{
 					// This test was modified to account for ACP-176 gas limits
-					makeTx(key1, 0, common.Address{}, big.NewInt(0), acp176.MinMaxCapacity+1, big.NewInt(acp176.MinGasPrice), nil),
+					makeTx(key1, 0, common.Address{}, big.NewInt(0), lp176.MinMaxCapacity+1, big.NewInt(lp176.MinGasPrice), nil),
 				},
 				want: "could not apply tx 0 [0xb709565c056a68a4b4dc7714ae901a0f03663bb98f9fa58a10b88ec614362caf]: gas limit reached",
 			},
@@ -186,7 +186,7 @@ func TestStateProcessorErrors(t *testing.T) {
 			{ // ErrGasLimitReached
 				txs: []*types.Transaction{
 					// This test was modified to account for ACP-176 gas limits
-					makeTx(key1, 0, common.Address{}, big.NewInt(0), params.TxGas*953, big.NewInt(acp176.MinGasPrice), nil),
+					makeTx(key1, 0, common.Address{}, big.NewInt(0), params.TxGas*953, big.NewInt(lp176.MinGasPrice), nil),
 				},
 				want: "could not apply tx 0 [0xcd46718c1af6fd074deb6b036d34c1cb499517bf90d93df74dcfaba25fdf34af]: gas limit reached",
 			},

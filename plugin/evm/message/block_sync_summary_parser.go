@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 )
 
 type BlockSyncSummaryParser struct{}

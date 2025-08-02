@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"github.com/luxfi/node/database/versiondb"
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	syncclient "github.com/luxfi/coreth/sync/client"
 	"github.com/luxfi/geth/core/types"

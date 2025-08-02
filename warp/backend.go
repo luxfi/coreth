@@ -13,7 +13,7 @@ import (
 	"github.com/luxfi/node/database"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/network/p2p/acp118"
-	"github.com/luxfi/node/snow/consensus/snowman"
+	"github.com/luxfi/node/quasar/consensus/quasarman"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
 	"github.com/luxfi/geth/log"
@@ -27,7 +27,7 @@ var (
 )
 
 type BlockClient interface {
-	GetAcceptedBlock(ctx context.Context, blockID ids.ID) (snowman.Block, error)
+	GetAcceptedBlock(ctx context.Context, blockID ids.ID) (quasarman.Block, error)
 }
 
 // Backend tracks signature-eligible warp messages and provides an interface to fetch them.

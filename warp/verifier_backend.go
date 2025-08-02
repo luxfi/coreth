@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/snow/engine/common"
+	"github.com/luxfi/node/quasar/engine/common"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
 )

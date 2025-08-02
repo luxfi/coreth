@@ -4,7 +4,7 @@
 package txpool
 
 import (
-	metricspkg "github.com/luxfi/geth/metrics"
+	metricspkg "github.com/luxfi/metrics"
 )
 
 type metrics struct {

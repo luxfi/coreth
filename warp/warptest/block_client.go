@@ -8,19 +8,19 @@ import (
 	"context"
 	"slices"
 
+	"github.com/luxfi/ids"
+	"github.com/luxfi/node/consensus/choices"
 	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/consensus/snowman"
-	"github.com/luxfi/node/snow/consensus/snowman/snowmantest"
-	"github.com/luxfi/node/snow/snowtest"
+	"github.com/luxfi/node/quasar/consensus/quasarman"
+	"github.com/luxfi/node/quasar/consensus/quasarman/quasarmantest"
 )
 
 // EmptyBlockClient returns an error if a block is requested
 var EmptyBlockClient BlockClient = MakeBlockClient()
 
-type BlockClient func(ctx context.Context, blockID ids.ID) (snowman.Block, error)
+type BlockClient func(ctx context.Context, blockID ids.ID) (quasarman.Block, error)
 
-func (f BlockClient) GetAcceptedBlock(ctx context.Context, blockID ids.ID) (snowman.Block, error) {
+func (f BlockClient) GetAcceptedBlock(ctx context.Context, blockID ids.ID) (quasarman.Block, error) {
 	return f(ctx, blockID)
 }
 
@@ -28,16 +28,17 @@ func (f BlockClient) GetAcceptedBlock(ctx context.Context, blockID ids.ID) (snow
 // If a block is requested that isn't part of the provided blocks, an error is
 // returned.
 func MakeBlockClient(blkIDs ...ids.ID) BlockClient {
-	return func(_ context.Context, blkID ids.ID) (snowman.Block, error) {
+	return func(_ context.Context, blkID ids.ID) (quasarman.Block, error) {
 		if !slices.Contains(blkIDs, blkID) {
 			return nil, database.ErrNotFound
 		}
 
-		return &snowmantest.Block{
-			Decidable: snowtest.Decidable{
+		return &quasarmantest.Block{
+			TestDecidable: choices.TestDecidable{
 				IDV:    blkID,
-				Status: snowtest.Accepted,
+				StatusV: choices.Accepted,
 			},
+			IDV: blkID,
 		}, nil
 	}
 }

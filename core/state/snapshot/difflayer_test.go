@@ -35,7 +35,7 @@ import (
 
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/ethdb/memorydb"
 )
 

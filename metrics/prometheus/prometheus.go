@@ -11,7 +11,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 
 	dto "github.com/prometheus/client_model/go"
 )
@@ -74,7 +74,7 @@ func metricFamily(registry Registry, name string) (mf *dto.MetricFamily, err err
 		metrics.NilResettingTimer, metrics.NilSample, metrics.NilTimer:
 		return nil, fmt.Errorf("%w: %q metric is nil", errMetricSkip, name)
 
-	case metrics.Counter:
+	case *metrics.Counter:
 		return &dto.MetricFamily{
 			Name: &name,
 			Type: dto.MetricType_COUNTER.Enum(),
@@ -84,7 +84,7 @@ func metricFamily(registry Registry, name string) (mf *dto.MetricFamily, err err
 				},
 			}},
 		}, nil
-	case metrics.CounterFloat64:
+	case *metrics.CounterFloat64:
 		return &dto.MetricFamily{
 			Name: &name,
 			Type: dto.MetricType_COUNTER.Enum(),
@@ -94,7 +94,7 @@ func metricFamily(registry Registry, name string) (mf *dto.MetricFamily, err err
 				},
 			}},
 		}, nil
-	case metrics.Gauge:
+	case *metrics.Gauge:
 		return &dto.MetricFamily{
 			Name: &name,
 			Type: dto.MetricType_GAUGE.Enum(),
@@ -104,7 +104,7 @@ func metricFamily(registry Registry, name string) (mf *dto.MetricFamily, err err
 				},
 			}},
 		}, nil
-	case metrics.GaugeFloat64:
+	case *metrics.GaugeFloat64:
 		return &dto.MetricFamily{
 			Name: &name,
 			Type: dto.MetricType_GAUGE.Enum(),
@@ -138,7 +138,7 @@ func metricFamily(registry Registry, name string) (mf *dto.MetricFamily, err err
 				},
 			}},
 		}, nil
-	case metrics.Meter:
+	case *metrics.Meter:
 		return &dto.MetricFamily{
 			Name: &name,
 			Type: dto.MetricType_GAUGE.Enum(),
@@ -148,7 +148,7 @@ func metricFamily(registry Registry, name string) (mf *dto.MetricFamily, err err
 				},
 			}},
 		}, nil
-	case metrics.Timer:
+	case *metrics.Timer:
 		snapshot := m.Snapshot()
 
 		quantiles := []float64{.5, .75, .95, .99, .999, .9999}
@@ -172,7 +172,7 @@ func metricFamily(registry Registry, name string) (mf *dto.MetricFamily, err err
 				},
 			}},
 		}, nil
-	case metrics.ResettingTimer:
+	case *metrics.ResettingTimer:
 		snapshot := m.Snapshot()
 		count := snapshot.Count()
 		if count == 0 {
@@ -200,7 +200,7 @@ func metricFamily(registry Registry, name string) (mf *dto.MetricFamily, err err
 				},
 			}},
 		}, nil
-	case metrics.GaugeInfo:
+	case *metrics.GaugeInfo:
 		// TODO(qdm12) handle this somehow maybe with dto.MetricType_UNTYPED
 		return nil, fmt.Errorf("%w: %q is a %T", errMetricSkip, name, metric)
 	default:

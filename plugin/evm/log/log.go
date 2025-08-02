@@ -7,12 +7,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"runtime"
 	"strings"
 
-	"github.com/luxfi/coreth/log"
 	ethlog "github.com/luxfi/geth/log"
-	"golang.org/x/exp/slog"
 )
 
 type Logger struct {
@@ -26,23 +25,25 @@ type Logger struct {
 func InitLogger(alias string, level string, jsonFormat bool, writer io.Writer) (Logger, error) {
 	logLevel := &slog.LevelVar{}
 
+	// Create handler options
+	opts := &slog.HandlerOptions{
+		Level: logLevel,
+		AddSource: true,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.SourceKey {
+				src := a.Value.Any().(*slog.Source)
+				chainStr := fmt.Sprintf("<%s Chain> ", alias)
+				return slog.String("source", fmt.Sprintf("%s%s:%d", chainStr, trimPrefixes(src.File), src.Line))
+			}
+			return a
+		},
+	}
+	
 	var handler slog.Handler
 	if jsonFormat {
-		chainStr := fmt.Sprintf("%s Chain", alias)
-		handler = log.JSONHandlerWithLevel(writer, logLevel)
-		handler = &addContext{Handler: handler, logger: chainStr}
+		handler = slog.NewJSONHandler(writer, opts)
 	} else {
-		useColor := false
-		chainStr := fmt.Sprintf("<%s Chain> ", alias)
-		termHandler := log.NewTerminalHandlerWithLevel(writer, logLevel, useColor)
-		termHandler.Prefix = func(r slog.Record) string {
-			file, line := getSource(r)
-			if file != "" {
-				return fmt.Sprintf("%s%s:%d ", chainStr, file, line)
-			}
-			return chainStr
-		}
-		handler = termHandler
+		handler = slog.NewTextHandler(writer, opts)
 	}
 
 	// Create handler
@@ -61,11 +62,20 @@ func InitLogger(alias string, level string, jsonFormat bool, writer io.Writer) (
 // SetLogLevel sets the log level of initialized log handler.
 func (l *Logger) SetLogLevel(level string) error {
 	// Set log level
-	logLevel, err := log.LvlFromString(level)
-	if err != nil {
-		return err
+	var slogLevel slog.Level
+	switch strings.ToLower(level) {
+	case "debug":
+		slogLevel = slog.LevelDebug
+	case "info":
+		slogLevel = slog.LevelInfo
+	case "warn":
+		slogLevel = slog.LevelWarn
+	case "error":
+		slogLevel = slog.LevelError
+	default:
+		return fmt.Errorf("unknown log level: %s", level)
 	}
-	l.logLevel.Set(logLevel)
+	l.logLevel.Set(slogLevel)
 	return nil
 }
 

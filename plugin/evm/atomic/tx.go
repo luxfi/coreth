@@ -15,12 +15,13 @@ import (
 
 	"github.com/luxfi/coreth/params/extras"
 
+	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/network/p2p/gossip"
-	"github.com/luxfi/node/snow"
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/hashing"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/utils/wrappers"
@@ -158,7 +159,7 @@ type UnsignedAtomicTx interface {
 	// InputUTXOs returns the UTXOs this tx consumes
 	InputUTXOs() set.Set[ids.ID]
 	// Verify attempts to verify that the transaction is well formed
-	Verify(ctx *snow.Context, rules extras.Rules) error
+	Verify(ctx *quasar.Context, rules extras.Rules) error
 	// Visit calls the corresponding method for the underlying transaction type
 	// implementing [Visitor].
 	// This is used in semantic verification of the tx.
@@ -168,7 +169,7 @@ type UnsignedAtomicTx interface {
 	// The set of atomic requests must be returned in a consistent order.
 	AtomicOps() (ids.ID, *atomic.Requests, error)
 
-	EVMStateTransfer(ctx *snow.Context, state StateDB) error
+	EVMStateTransfer(ctx *quasar.Context, state StateDB) error
 }
 
 // Tx is a signed transaction
@@ -258,8 +259,11 @@ func (tx *Tx) BlockFeeContribution(fixedFee bool, luxAssetID ids.ID, baseFee *bi
 	return blockFeeContribution, new(big.Int).SetUint64(gasUsed), nil
 }
 
-func (tx *Tx) GossipID() ids.ID {
-	return tx.ID()
+func (tx *Tx) GossipID() luxfiids.ID {
+	nodeID := tx.ID()
+	var luxfiID luxfiids.ID
+	copy(luxfiID[:], nodeID[:])
+	return luxfiID
 }
 
 // innerSortInputsAndSigners implements sort.Interface for EVMInput

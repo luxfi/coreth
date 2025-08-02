@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"slices"
 
-	"github.com/luxfi/node/snow"
+	"github.com/luxfi/node/quasar"
 	"github.com/luxfi/coreth/nativeasset"
 	"github.com/luxfi/coreth/params/extras"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
@@ -18,29 +18,28 @@ import (
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/geth"
-	"github.com/luxfi/geth/geth/legacy"
 	ethparams "github.com/luxfi/geth/params"
 )
 
 type RulesExtra extras.Rules
 
 func GetRulesExtra(r Rules) *extras.Rules {
-	rules := payloads.Rules.GetPointer(&r)
-	return (*extras.Rules)(rules)
-}
-
-func (r RulesExtra) CanCreateContract(ac *geth.AddressContext, gas uint64, state geth.StateReader) (uint64, error) {
-	return gas, nil
-}
-
-func (r RulesExtra) CanExecuteTransaction(_ common.Address, _ *common.Address, _ geth.StateReader) error {
+	// Temporarily return nil until we implement proper rules handling
 	return nil
 }
 
+// Temporarily commented out geth hooks
+// func (r RulesExtra) CanCreateContract(ac *geth.AddressContext, gas uint64, state geth.StateReader) (uint64, error) {
+// 	return gas, nil
+// }
+
+// func (r RulesExtra) CanExecuteTransaction(_ common.Address, _ *common.Address, _ geth.StateReader) error {
+// 	return nil
+// }
+
 // MinimumGasConsumption is a no-op.
 func (r RulesExtra) MinimumGasConsumption(x uint64) uint64 {
-	return (ethparams.NOOPHooks{}).MinimumGasConsumption(x)
+	return x // Simply return the input for now
 }
 
 var PrecompiledContractsApricotPhase2 = map[common.Address]contract.StatefulPrecompiledContract{
@@ -89,7 +88,7 @@ func (r RulesExtra) ActivePrecompiles(existing []common.Address) []common.Addres
 // precompileOverrideBuiltin specifies precompiles that were activated prior to the
 // dynamic precompile activation registry.
 // These were only active historically and are not active in the current network.
-func (r RulesExtra) precompileOverrideBuiltin(addr common.Address) (geth.PrecompiledContract, bool) {
+func (r RulesExtra) precompileOverrideBuiltin(addr common.Address) (vm.PrecompiledContract, bool) {
 	var precompiles map[common.Address]contract.StatefulPrecompiledContract
 	switch {
 	case r.IsBanff:
@@ -110,7 +109,7 @@ func (r RulesExtra) precompileOverrideBuiltin(addr common.Address) (geth.Precomp
 	return makePrecompile(precompile), true
 }
 
-func makePrecompile(contract contract.StatefulPrecompiledContract) geth.PrecompiledContract {
+func makePrecompile(contract contract.StatefulPrecompiledContract) vm.PrecompiledContract {
 	run := func(env vm.PrecompileEnvironment, input []byte, suppliedGas uint64) ([]byte, uint64, error) {
 		header, err := env.BlockHeader()
 		if err != nil {
@@ -134,10 +133,11 @@ func makePrecompile(contract contract.StatefulPrecompiledContract) geth.Precompi
 		}
 		return contract.Run(accessibleState, env.Addresses().Caller, env.Addresses().Self, input, suppliedGas, env.ReadOnly())
 	}
-	return vm.NewStatefulPrecompile(legacy.PrecompiledStatefulContract(run).Upgrade())
+	// Temporarily return nil until we implement proper precompile wrapping
+	return nil
 }
 
-func (r RulesExtra) PrecompileOverride(addr common.Address) (geth.PrecompiledContract, bool) {
+func (r RulesExtra) PrecompileOverride(addr common.Address) (vm.PrecompiledContract, bool) {
 	if p, ok := r.precompileOverrideBuiltin(addr); ok {
 		return p, true
 	}
@@ -160,13 +160,8 @@ type accessibleState struct {
 func (a accessibleState) GetStateDB() contract.StateDB {
 	// TODO the contracts should be refactored to call `env.ReadOnlyState`
 	// or `env.StateDB` based on the env.ReadOnly() flag
-	var state geth.StateReader
-	if a.env.ReadOnly() {
-		state = a.env.ReadOnlyState()
-	} else {
-		state = a.env.StateDB()
-	}
-	return state.(contract.StateDB)
+	// For now, return nil until we implement proper state handling
+	return nil
 }
 
 func (a accessibleState) GetBlockContext() contract.BlockContext {
@@ -177,8 +172,8 @@ func (a accessibleState) GetChainConfig() precompileconfig.ChainConfig {
 	return GetExtra(a.env.ChainConfig())
 }
 
-func (a accessibleState) GetSnowContext() *snow.Context {
-	return GetExtra(a.env.ChainConfig()).SnowCtx
+func (a accessibleState) GetConsensusContext() *quasar.Context {
+	return GetExtra(a.env.ChainConfig()).ConsensusCtx
 }
 
 func (a accessibleState) GetPrecompileEnv() vm.PrecompileEnvironment {

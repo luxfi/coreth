@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 
 	"github.com/luxfi/coreth/core"
 	synccommon "github.com/luxfi/coreth/sync"

@@ -50,7 +50,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
 	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 	"github.com/luxfi/geth/rlp"
 	"github.com/holiman/billy"
 	"github.com/holiman/uint256"
@@ -142,7 +142,7 @@ func newBlobTxMeta(id uint64, size uint32, tx *types.Transaction) *blobTxMeta {
 
 // BlobPool is the transaction pool dedicated to EIP-4844 blob transactions.
 //
-// Blob transactions are special snowflakes that are designed for a very specific
+// Blob transactions are special quasarflakes that are designed for a very specific
 // purpose (rollups) and are expected to adhere to that specific use case. These
 // behavioural expectations allow us to design a transaction pool that is more robust
 // (i.e. resending issues) and more resilient to DoS attacks (e.g. replace-flush

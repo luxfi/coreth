@@ -7,14 +7,14 @@
 - Added maximum number of addresses (1000) to be queried in a single filter.
 - Moves atomic operations from plugin/evm to plugin/evm/atomic and wraps the plugin/evm/VM in `atomicvm` to separate the atomic operations from the EVM execution.
 - Demoted unnecessary error log in `core/txpool/legacypool.go` to warning, displaying unexpected but valid behavior.
-- Removed the `snowman-api-enabled` flag and the corresponding API implementation.
+- Removed the `quasarman-api-enabled` flag and the corresponding API implementation.
 - Enable expermiental `state-scheme` flag to specify Database as a state database.
 - Added prometheus metrics for Database if it is enabled and expensive metrics are being used.
 - Disable incompatible APIs for Database.
 
 ## [v0.15.1](https://github.com/luxfi/coreth/releases/tag/v0.15.1)
 
-- Major refactor to use [`libevm`](https://github.com/luxfi/libevm) for EVM execution, database access, types & chain configuration. This improves maintainability and enables keeping up with upstream changes more easily.
+- Major refactor to use [`geth`](https://github.com/luxfi/geth) for EVM execution, database access, types & chain configuration. This improves maintainability and enables keeping up with upstream changes more easily.
 - Add metrics for ACP-176
 - Removed the `"price-options-max-base-fee"` config flag
 - Moved extra types returned in `ethclient` package to a new package `plugin/evm/customethclient` which supports the same functionality as `ethclient` but with the new types registered in header and block.
@@ -37,7 +37,7 @@
   - On `pruning` nodes: queries for proofs past the tip buffer (32 blocks) will be rejected. This is in support of moving to a path based storage scheme, which does not support historical state proofs.
 - Remove API eth_getAssetBalance that was used to query ANT balances (deprecated since v0.10.0)
 - Remove legacy gossip handler and metrics (deprecated since v0.10.0)
-- Refactored trie_prefetcher.go to be structurally similar to [upstream](https://github.com/ethereum/go-ethereum/tree/v1.13.14).
+- Refactored trie_prefetcher.go to be structurally similar to [upstream](https://github.com/luxfi/geth/tree/v1.13.14).
 
 ## [v0.14.0](https://github.com/luxfi/coreth/releases/tag/v0.14.0)
 
@@ -182,7 +182,7 @@
 ## [v0.12.0](https://github.com/luxfi/coreth/releases/tag/v0.12.0)
 
 - Increase C-Chain block gas limit to 15M in Cortina
-- Add Mainnet and Fuji Cortina Activation timestamps
+- Add Mainnet and Testnet Cortina Activation timestamps
 
 ## [v0.11.9](https://github.com/luxfi/coreth/releases/tag/v0.11.9)
 
@@ -252,7 +252,7 @@
 
 - Update Chain Config compatibility check to compare against last accepted block timestamp
 - Bump go-ethereum dependency to v1.10.25
-- Add Banff activation times for Mainnet and Fuji for October 18 4pm UTC and October 3 2pm UTC respectively
+- Add Banff activation times for Mainnet and Testnet for October 18 4pm UTC and October 3 2pm UTC respectively
 - Banff cleanup
 
 ## [v0.10.0](https://github.com/luxfi/coreth/releases/tag/v0.10.0)

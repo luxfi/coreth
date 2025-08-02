@@ -50,7 +50,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/customlogs"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/geth/triedb/database"
 	"github.com/luxfi/coreth/triedb/hashdb"
 	"github.com/luxfi/coreth/triedb/pathdb"
@@ -62,9 +62,9 @@ import (
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/geth/stateconf"
+	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 	"github.com/luxfi/geth/triedb"
 
 	// Force geth metrics of the same name to be registered first.
@@ -1117,7 +1117,7 @@ func (bc *BlockChain) Accept(block *types.Block) error {
 	chainConfig := bc.Config()
 	extraConfig := params.GetExtra(chainConfig)
 	if extraConfig.IsFortuna(block.Time()) {
-		s, err := acp176.ParseState(block.Extra())
+		s, err := lp176.ParseState(block.Extra())
 		if err != nil {
 			log.Warn("Failed to update fee metrics", "err", err)
 			return nil

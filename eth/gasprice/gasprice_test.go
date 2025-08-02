@@ -37,7 +37,7 @@ import (
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
 	"github.com/luxfi/coreth/rpc"
@@ -46,7 +46,7 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/event"
 	"github.com/stretchr/testify/require"
 )
@@ -404,7 +404,7 @@ func TestSuggestTipCapIncludesExtraDataGas(t *testing.T) {
 	applyGasPriceTest(t, suggestTipCapTest{
 		chainConfig:     params.TestChainConfig,
 		numBlocks:       1000,
-		extDataGasUsage: big.NewInt(acp176.MinMaxPerSecond - int64(params.TxGas)),
+		extDataGasUsage: big.NewInt(lp176.MinMaxPerSecond - int64(params.TxGas)),
 		// The tip on the transaction is very large to pay the block gas cost.
 		genBlock: testGenBlock(t, 100_000, 1),
 		// The actual tip doesn't matter, we just want to ensure that the tip is

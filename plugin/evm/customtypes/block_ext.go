@@ -9,7 +9,6 @@ import (
 
 	"github.com/luxfi/geth/common"
 	ethtypes "github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/rlp"
 )
 
 // SetBlockExtra sets the [BlockBodyExtra] `extra` in the [Block] `b`.
@@ -45,6 +44,8 @@ func (b *BlockBodyExtra) Copy() *BlockBodyExtra {
 // - (-) [ethtypes.Body] `Withdrawals` field
 // - (+) [BlockBodyExtra] `Version` field
 // - (+) [BlockBodyExtra] `ExtData` field
+// TODO: Temporarily disabled - needs geth support
+/*
 func (b *BlockBodyExtra) BodyRLPFieldsForEncoding(body *ethtypes.Body) *rlp.Fields {
 	return &rlp.Fields{
 		Required: []any{
@@ -55,7 +56,10 @@ func (b *BlockBodyExtra) BodyRLPFieldsForEncoding(body *ethtypes.Body) *rlp.Fiel
 		},
 	}
 }
+*/
 
+// TODO: Temporarily disabled - needs geth support
+/*
 // BodyRLPFieldPointersForDecoding returns the fields that should be decoded to
 // for the [Body] and [BlockBodyExtra].
 func (b *BlockBodyExtra) BodyRLPFieldPointersForDecoding(body *ethtypes.Body) *rlp.Fields {
@@ -100,6 +104,7 @@ func (b *BlockBodyExtra) BlockRLPFieldPointersForDecoding(block *ethtypes.BlockR
 		},
 	}
 }
+*/
 
 func BlockExtData(b *ethtypes.Block) []byte {
 	if data := extras.Block.Get(b).ExtData; data != nil {
@@ -132,7 +137,7 @@ func CalcExtDataHash(extdata []byte) common.Hash {
 	if len(extdata) == 0 {
 		return EmptyExtDataHash
 	}
-	return ethtypes.RLPHash(extdata)
+	return rlpHash(extdata)
 }
 
 func NewBlockWithExtData(
@@ -143,7 +148,11 @@ func NewBlockWithExtData(
 		headerExtra := GetHeaderExtra(header)
 		headerExtra.ExtDataHash = CalcExtDataHash(extdata)
 	}
-	block := ethtypes.NewBlock(header, txs, uncles, receipts, hasher)
+	body := &ethtypes.Body{
+		Transactions: txs,
+		Uncles:       uncles,
+	}
+	block := ethtypes.NewBlock(header, body, receipts, hasher)
 	extdataCopy := make([]byte, len(extdata))
 	copy(extdataCopy, extdata)
 	extra := &BlockBodyExtra{

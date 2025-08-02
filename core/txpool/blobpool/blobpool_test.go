@@ -50,7 +50,7 @@ import (
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/crypto/kzg4844"
 	"github.com/luxfi/geth/ethdb/memorydb"
 	"github.com/luxfi/geth/log"

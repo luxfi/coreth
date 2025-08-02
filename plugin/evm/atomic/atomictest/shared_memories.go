@@ -10,7 +10,7 @@ import (
 	"github.com/luxfi/node/database"
 	"github.com/luxfi/node/database/memdb"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/snowtest"
+	"github.com/luxfi/node/quasar/quasartest"
 	"github.com/stretchr/testify/require"
 )
 
@@ -84,5 +84,5 @@ func NewSharedMemories(atomicMemory *atomic.Memory, thisChainID, peerChainID ids
 
 func TestSharedMemory() atomic.SharedMemory {
 	m := atomic.NewMemory(memdb.New())
-	return m.NewSharedMemory(snowtest.CChainID)
+	return m.NewSharedMemory(quasartest.CChainID)
 }

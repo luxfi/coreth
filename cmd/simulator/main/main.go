@@ -43,8 +43,8 @@ func main() {
 		fmt.Printf("couldn't parse log level: %s\n", err)
 		os.Exit(1)
 	}
-	gethLogger := gethlog.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, logLevel, true))
-	gethlog.SetDefault(gethLogger)
+	gethLogger := glog.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, logLevel, true))
+	glog.SetDefault(gethLogger)
 
 	config, err := config.BuildConfig(v)
 	if err != nil {

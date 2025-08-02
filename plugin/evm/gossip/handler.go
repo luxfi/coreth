@@ -7,17 +7,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/geth/log"
+	"github.com/luxfi/node/consensus/engine/core"
 	"github.com/luxfi/node/network/p2p"
 	"github.com/luxfi/node/network/p2p/gossip"
-	"github.com/luxfi/node/snow/engine/common"
-	"github.com/luxfi/node/utils/logging"
 )
 
 var _ p2p.Handler = (*txGossipHandler)(nil)
 
 func NewTxGossipHandler[T gossip.Gossipable](
-	log logging.Logger,
+	log log.Logger,
 	marshaller gossip.Marshaller[T],
 	mempool gossip.Set[T],
 	metrics gossip.Metrics,
@@ -62,6 +62,11 @@ func (t *txGossipHandler) AppGossip(ctx context.Context, nodeID ids.NodeID, goss
 	t.appGossipHandler.AppGossip(ctx, nodeID, gossipBytes)
 }
 
-func (t *txGossipHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *common.AppError) {
+func (t *txGossipHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *core.AppError) {
 	return t.appRequestHandler.AppRequest(ctx, nodeID, deadline, requestBytes)
+}
+
+func (t *txGossipHandler) CrossChainAppRequest(ctx context.Context, chainID ids.ID, deadline time.Time, requestBytes []byte) ([]byte, error) {
+	// We don't handle cross-chain requests in the gossip handler
+	return nil, nil
 }

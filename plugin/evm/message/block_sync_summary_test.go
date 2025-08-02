@@ -8,7 +8,7 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 	"github.com/luxfi/geth/common"
 	"github.com/stretchr/testify/require"
 )

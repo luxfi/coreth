@@ -48,7 +48,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
 	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 	"github.com/holiman/uint256"
 
 	// Force geth metrics of the same name to be registered first.

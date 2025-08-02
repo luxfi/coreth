@@ -10,7 +10,7 @@ import (
 	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
@@ -339,7 +339,7 @@ func TestBaseFee(t *testing.T) {
 			parent: &types.Header{
 				Number: big.NewInt(1),
 				Time:   1,
-				Extra:  (&acp176.State{}).Bytes(),
+				Extra:  (&lp176.State{}).Bytes(),
 			},
 			timestamp: 0,
 			wantErr:   errInvalidTimestamp,
@@ -353,7 +353,7 @@ func TestBaseFee(t *testing.T) {
 				Number: big.NewInt(1),
 			},
 			timestamp: 1,
-			want:      big.NewInt(acp176.MinGasPrice),
+			want:      big.NewInt(lp176.MinGasPrice),
 		},
 		{
 			name:     "fortuna_genesis_block",
@@ -361,25 +361,25 @@ func TestBaseFee(t *testing.T) {
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
-			want: big.NewInt(acp176.MinGasPrice),
+			want: big.NewInt(lp176.MinGasPrice),
 		},
 		{
 			name:     "fortuna_invalid_fee_state",
 			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
-				Extra:  make([]byte, acp176.StateSize-1),
+				Extra:  make([]byte, lp176.StateSize-1),
 			},
-			wantErr: acp176.ErrStateInsufficientLength,
+			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
 			name:     "fortuna_current",
 			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
-				Extra: (&acp176.State{
+				Extra: (&lp176.State{
 					Gas: gas.State{
-						Excess: 2_704_386_192, // 1_500_000 * ln(nLUX) * [acp176.TargetToPriceUpdateConversion]
+						Excess: 2_704_386_192, // 1_500_000 * ln(nLUX) * [lp176.TargetToPriceUpdateConversion]
 					},
 					TargetExcess: 13_605_152, // 2^25 * ln(1.5)
 				}).Bytes(),
@@ -391,15 +391,15 @@ func TestBaseFee(t *testing.T) {
 			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
-				Extra: (&acp176.State{
+				Extra: (&lp176.State{
 					Gas: gas.State{
-						Excess: 2_704_386_192, // 1_500_000 * ln(nLUX) * [acp176.TargetToPriceUpdateConversion]
+						Excess: 2_704_386_192, // 1_500_000 * ln(nLUX) * [lp176.TargetToPriceUpdateConversion]
 					},
 					TargetExcess: 13_605_152, // 2^25 * ln(1.5)
 				}).Bytes(),
 			},
 			timestamp: 1,
-			want:      big.NewInt(988_571_555), // e^((2_704_386_192 - 1_500_000) / 1_500_000 / [acp176.TargetToPriceUpdateConversion])
+			want:      big.NewInt(988_571_555), // e^((2_704_386_192 - 1_500_000) / 1_500_000 / [lp176.TargetToPriceUpdateConversion])
 		},
 	}
 	for _, test := range tests {

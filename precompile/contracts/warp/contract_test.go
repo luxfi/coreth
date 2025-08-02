@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/snowtest"
+	"github.com/luxfi/node/quasar/quasartest"
 	agoUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/set"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
@@ -25,8 +25,8 @@ import (
 func TestGetBlockchainID(t *testing.T) {
 	callerAddr := common.HexToAddress("0x0123")
 
-	defaultSnowCtx := snowtest.Context(t, snowtest.CChainID)
-	blockchainID := defaultSnowCtx.ChainID
+	defaultConsensusCtx := quasartest.Context(t, quasartest.CChainID)
+	blockchainID := defaultConsensusCtx.ChainID
 
 	tests := map[string]precompiletest.PrecompileTest{
 		"getBlockchainID success": {
@@ -83,8 +83,8 @@ func TestGetBlockchainID(t *testing.T) {
 func TestSendWarpMessage(t *testing.T) {
 	callerAddr := common.HexToAddress("0x0123")
 
-	defaultSnowCtx := snowtest.Context(t, snowtest.CChainID)
-	blockchainID := defaultSnowCtx.ChainID
+	defaultConsensusCtx := quasartest.Context(t, quasartest.CChainID)
+	blockchainID := defaultConsensusCtx.ChainID
 	sendWarpMessagePayload := agoUtils.RandomBytes(100)
 
 	sendWarpMessageInput, err := PackSendWarpMessage(sendWarpMessagePayload)
@@ -95,7 +95,7 @@ func TestSendWarpMessage(t *testing.T) {
 	)
 	require.NoError(t, err)
 	unsignedWarpMessage, err := luxWarp.NewUnsignedMessage(
-		defaultSnowCtx.NetworkID,
+		defaultConsensusCtx.NetworkID,
 		blockchainID,
 		sendWarpMessageAddressedPayload.Bytes(),
 	)

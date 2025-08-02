@@ -16,12 +16,12 @@ import (
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/ids"
-	commonEng "github.com/luxfi/node/snow/engine/common"
-	"github.com/luxfi/node/snow/snowtest"
+	commonEng "github.com/luxfi/node/quasar/engine/common"
+	"github.com/luxfi/node/quasar/quasartest"
 	"github.com/luxfi/node/upgrade/upgradetest"
 	luxutils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/secp256k1fx"
@@ -168,7 +168,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount / 2,
-					AssetID: snowtest.LUXAssetID,
+					AssetID: quasartest.LUXAssetID,
 					Nonce:   0,
 				},
 			},
@@ -185,7 +185,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: snowtest.LUXAssetID,
+					AssetID: quasartest.LUXAssetID,
 					Nonce:   0,
 				},
 			},
@@ -202,7 +202,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount + 1,
-					AssetID: snowtest.LUXAssetID,
+					AssetID: quasartest.LUXAssetID,
 					Nonce:   0,
 				},
 			},
@@ -276,7 +276,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: snowtest.LUXAssetID,
+					AssetID: quasartest.LUXAssetID,
 					Nonce:   0,
 				},
 			},
@@ -299,7 +299,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: snowtest.LUXAssetID,
+					AssetID: quasartest.LUXAssetID,
 					Nonce:   1,
 				},
 			},
@@ -322,7 +322,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: snowtest.LUXAssetID,
+					AssetID: quasartest.LUXAssetID,
 					Nonce:   1,
 				},
 			},
@@ -1104,25 +1104,25 @@ func TestExportTxVerify(t *testing.T) {
 	var exportAmount uint64 = 10000000
 	exportTx := &atomic.UnsignedExportTx{
 		NetworkID:        constants.UnitTestID,
-		BlockchainID:     snowtest.CChainID,
-		DestinationChain: snowtest.XChainID,
+		BlockchainID:     quasartest.CChainID,
+		DestinationChain: quasartest.XChainID,
 		Ins: []atomic.EVMInput{
 			{
 				Address: testEthAddrs[0],
 				Amount:  exportAmount,
-				AssetID: snowtest.LUXAssetID,
+				AssetID: quasartest.LUXAssetID,
 				Nonce:   0,
 			},
 			{
 				Address: testEthAddrs[2],
 				Amount:  exportAmount,
-				AssetID: snowtest.LUXAssetID,
+				AssetID: quasartest.LUXAssetID,
 				Nonce:   0,
 			},
 		},
 		ExportedOutputs: []*lux.TransferableOutput{
 			{
-				Asset: lux.Asset{ID: snowtest.LUXAssetID},
+				Asset: lux.Asset{ID: quasartest.LUXAssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: exportAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1133,7 +1133,7 @@ func TestExportTxVerify(t *testing.T) {
 				},
 			},
 			{
-				Asset: lux.Asset{ID: snowtest.LUXAssetID},
+				Asset: lux.Asset{ID: quasartest.LUXAssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: exportAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1153,7 +1153,7 @@ func TestExportTxVerify(t *testing.T) {
 	emptySigners := make([][]*secp256k1.PrivateKey, 2)
 	atomic.SortEVMInputsAndSigners(exportTx.Ins, emptySigners)
 
-	ctx := snowtest.Context(t, snowtest.CChainID)
+	ctx := quasartest.Context(t, quasartest.CChainID)
 
 	tests := map[string]atomicTxVerifyTest{
 		"nil tx": {
@@ -1276,7 +1276,7 @@ func TestExportTxVerify(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  0,
-						AssetID: snowtest.LUXAssetID,
+						AssetID: quasartest.LUXAssetID,
 						Nonce:   0,
 					},
 				}

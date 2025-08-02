@@ -5,6 +5,7 @@ package evm
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -42,13 +43,13 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/config"
 	corethlog "github.com/luxfi/coreth/plugin/evm/log"
 	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	vmsync "github.com/luxfi/coreth/sync/vm"
 	"github.com/luxfi/coreth/triedb/hashdb"
 
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 	ethparams "github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/triedb"
 
@@ -73,10 +74,10 @@ import (
 	"github.com/luxfi/node/database/versiondb"
 	"github.com/luxfi/node/ids"
 	luxdssip "github.com/luxfi/node/network/p2p/gossip"
-	"github.com/luxfi/node/snow"
-	"github.com/luxfi/node/snow/consensus/snowman"
-	commonEng "github.com/luxfi/node/snow/engine/common"
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/node/quasar/consensus/quasarman"
+	commonEng "github.com/luxfi/node/quasar/engine/common"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 	luxUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/perms"
 	"github.com/luxfi/node/utils/profiler"
@@ -134,7 +135,7 @@ const (
 var (
 	// Set last accepted key to be longer than the keys used to store accepted block IDs.
 	lastAcceptedKey = []byte("last_accepted_key")
-	acceptedPrefix  = []byte("snowman_accepted")
+	acceptedPrefix  = []byte("quasarman_accepted")
 	metadataPrefix  = []byte("metadata")
 	warpPrefix      = []byte("warp")
 	ethDBPrefix     = []byte("ethdb")
@@ -179,10 +180,10 @@ func init() {
 	originalStderr = os.Stderr
 }
 
-// VM implements the snowman.ChainVM interface
+// VM implements the quasarman.ChainVM interface
 type VM struct {
-	ctx *snow.Context
-	// [cancel] may be nil until [snow.NormalOp] starts
+	ctx *quasar.Context
+	// [cancel] may be nil until [quasar.NormalOp] starts
 	cancel context.CancelFunc
 	// *chain.State helps to implement the VM interface by wrapping blocks
 	// with an efficient caching layer.
@@ -248,7 +249,7 @@ type VM struct {
 
 	stateSyncDone chan struct{}
 
-	logger corethlog.Logger
+	logger corlog.Logger
 	// State sync server and client
 	vmsync.Server
 	vmsync.Client
@@ -267,10 +268,10 @@ type VM struct {
 	rpcHandlers []interface{ Stop() }
 }
 
-// Initialize implements the snowman.ChainVM interface
+// Initialize implements the quasarman.ChainVM interface
 func (vm *VM) Initialize(
 	_ context.Context,
-	chainCtx *snow.Context,
+	chainCtx *quasar.Context,
 	db database.Database,
 	genesisBytes []byte,
 	_ []byte,
@@ -313,13 +314,13 @@ func (vm *VM) Initialize(
 		writer = originalStderr
 	}
 
-	corethLogger, err := corethlog.InitLogger(vm.chainAlias, vm.config.LogLevel, vm.config.LogJSONFormat, writer)
+	corethLogger, err := corlog.InitLogger(vm.chainAlias, vm.config.LogLevel, vm.config.LogJSONFormat, writer)
 	if err != nil {
 		return fmt.Errorf("%w: %w ", errInitializingLogger, err)
 	}
 	vm.logger = corethLogger
 
-	log.Info("Initializing Coreth VM", "Version", Version, "geth version", ethparams.LibEVMVersion, "Config", vm.config)
+	log.Info("Initializing Coreth VM", "Version", Version, "geth version", ethparams.GethVersion, "Config", vm.config)
 
 	if deprecateMsg != "" {
 		log.Warn("Deprecation Warning", "msg", deprecateMsg)
@@ -341,6 +342,14 @@ func (vm *VM) Initialize(
 	if vm.config.InspectDatabase {
 		if err := vm.inspectDatabases(); err != nil {
 			return err
+		}
+	}
+
+	// Handle chain data import if configured
+	if vm.config.ImportChainData != "" {
+		log.Info("Importing chain data", "path", vm.config.ImportChainData)
+		if err := vm.importChainData(vm.config.ImportChainData); err != nil {
+			return fmt.Errorf("failed to import chain data: %w", err)
 		}
 	}
 
@@ -497,7 +506,7 @@ func (vm *VM) Initialize(
 	return vm.initializeStateSync(lastAcceptedHeight)
 }
 
-func parseGenesis(ctx *snow.Context, bytes []byte) (*core.Genesis, error) {
+func parseGenesis(ctx *quasar.Context, bytes []byte) (*core.Genesis, error) {
 	g := new(core.Genesis)
 	if err := json.Unmarshal(bytes, g); err != nil {
 		return nil, fmt.Errorf("parsing genesis: %w", err)
@@ -506,7 +515,7 @@ func parseGenesis(ctx *snow.Context, bytes []byte) (*core.Genesis, error) {
 	// Populate the Lux config extras.
 	configExtra := params.GetExtra(g.Config)
 	configExtra.LuxContext = extras.LuxContext{
-		SnowCtx: ctx,
+		ConsensusCtx: ctx,
 	}
 	configExtra.NetworkUpgrades = extras.GetNetworkUpgrades(ctx.NetworkUpgrades)
 
@@ -563,7 +572,7 @@ func (vm *VM) initializeChain(lastAcceptedHash common.Hash) error {
 	var desiredTargetExcess *gas.Gas
 	if vm.config.GasTarget != nil {
 		desiredTargetExcess = new(gas.Gas)
-		*desiredTargetExcess = acp176.DesiredTargetExcess(*vm.config.GasTarget)
+		*desiredTargetExcess = lp176.DesiredTargetExcess(*vm.config.GasTarget)
 	}
 
 	vm.eth, err = eth.New(
@@ -592,7 +601,7 @@ func (vm *VM) initializeChain(lastAcceptedHash common.Hash) error {
 	// Set the gas parameters for the tx pool to the minimum gas price for the
 	// latest upgrade.
 	vm.txPool.SetGasTip(big.NewInt(0))
-	vm.txPool.SetMinFee(big.NewInt(acp176.MinGasPrice))
+	vm.txPool.SetMinFee(big.NewInt(lp176.MinGasPrice))
 
 	vm.eth.Start()
 	return vm.initChainState(vm.blockChain.LastAcceptedBlock())
@@ -734,17 +743,17 @@ func (vm *VM) initChainState(lastAcceptedBlock *types.Block) error {
 	return vm.ctx.Metrics.Register(chainStateMetricsPrefix, chainStateRegisterer)
 }
 
-func (vm *VM) SetState(_ context.Context, state snow.State) error {
+func (vm *VM) SetState(_ context.Context, state quasar.State) error {
 	switch state {
-	case snow.StateSyncing:
+	case quasar.StateSyncing:
 		vm.bootstrapped.Set(false)
 		return nil
-	case snow.Bootstrapping:
+	case quasar.Bootstrapping:
 		return vm.onBootstrapStarted()
-	case snow.NormalOp:
+	case quasar.NormalOp:
 		return vm.onNormalOperationsStarted()
 	default:
-		return snow.ErrUnknownState
+		return quasar.ErrUnknownState
 	}
 }
 
@@ -903,7 +912,7 @@ func (vm *VM) WaitForEvent(ctx context.Context) (commonEng.Message, error) {
 	return builder.waitForEvent(ctx)
 }
 
-// Shutdown implements the snowman.ChainVM interface
+// Shutdown implements the quasarman.ChainVM interface
 func (vm *VM) Shutdown(context.Context) error {
 	if vm.ctx == nil {
 		return nil
@@ -926,18 +935,18 @@ func (vm *VM) Shutdown(context.Context) error {
 }
 
 // buildBlock builds a block to be wrapped by ChainState
-func (vm *VM) buildBlock(ctx context.Context) (snowman.Block, error) {
+func (vm *VM) buildBlock(ctx context.Context) (quasarman.Block, error) {
 	return vm.buildBlockWithContext(ctx, nil)
 }
 
-func (vm *VM) buildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (snowman.Block, error) {
+func (vm *VM) buildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (quasarman.Block, error) {
 	if proposerVMBlockCtx != nil {
 		log.Debug("Building block with context", "pChainBlockHeight", proposerVMBlockCtx.PChainHeight)
 	} else {
 		log.Debug("Building block without context")
 	}
 	predicateCtx := &precompileconfig.PredicateContext{
-		SnowCtx:            vm.ctx,
+		ConsensusCtx:            vm.ctx,
 		ProposerVMBlockCtx: proposerVMBlockCtx,
 	}
 
@@ -975,7 +984,7 @@ func (vm *VM) buildBlockWithContext(ctx context.Context, proposerVMBlockCtx *blo
 }
 
 // parseBlock parses [b] into a block to be wrapped by ChainState.
-func (vm *VM) parseBlock(_ context.Context, b []byte) (snowman.Block, error) {
+func (vm *VM) parseBlock(_ context.Context, b []byte) (quasarman.Block, error) {
 	ethBlock := new(types.Block)
 	if err := rlp.DecodeBytes(b, ethBlock); err != nil {
 		return nil, err
@@ -1005,7 +1014,7 @@ func (vm *VM) ParseEthBlock(b []byte) (*types.Block, error) {
 
 // getBlock attempts to retrieve block [id] from the VM to be wrapped
 // by ChainState.
-func (vm *VM) getBlock(_ context.Context, id ids.ID) (snowman.Block, error) {
+func (vm *VM) getBlock(_ context.Context, id ids.ID) (quasarman.Block, error) {
 	ethBlock := vm.blockChain.GetBlockByHash(common.Hash(id))
 	// If [ethBlock] is nil, return [database.ErrNotFound] here
 	// so that the miss is considered cacheable.
@@ -1018,7 +1027,7 @@ func (vm *VM) getBlock(_ context.Context, id ids.ID) (snowman.Block, error) {
 
 // GetAcceptedBlock attempts to retrieve block [blkID] from the VM. This method
 // only returns accepted blocks.
-func (vm *VM) GetAcceptedBlock(ctx context.Context, blkID ids.ID) (snowman.Block, error) {
+func (vm *VM) GetAcceptedBlock(ctx context.Context, blkID ids.ID) (quasarman.Block, error) {
 	blk, err := vm.GetBlock(ctx, blkID)
 	if err != nil {
 		return nil, err
@@ -1247,6 +1256,102 @@ func (vm *VM) stateSyncEnabled(lastAcceptedHeight uint64) bool {
 
 	// enable state sync by default if the chain is empty.
 	return lastAcceptedHeight == 0
+}
+
+// importChainData imports blockchain data from a specified path
+func (vm *VM) importChainData(dataPath string) error {
+	// Open the source database
+	sourceDB, err := rawdb.Open(rawdb.OpenOptions{
+		Type:              "pebble",
+		Directory:         dataPath,
+		AncientsDirectory: "",
+		Namespace:         "",
+		Cache:             0,
+		Handles:           0,
+		ReadOnly:          true,
+		Ephemeral:         false,
+		DisableFreezer:    true,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to open source database: %w", err)
+	}
+	defer sourceDB.Close()
+
+	// Find the last block in the source database
+	var lastBlockNumber uint64
+	var lastBlockHash common.Hash
+	
+	// Iterate through the source database to find the highest block
+	it := sourceDB.NewIterator([]byte("h"), nil)
+	defer it.Release()
+	
+	for it.Next() {
+		// Block header keys are prefixed with 'h' followed by block number (8 bytes) and hash (32 bytes)
+		key := it.Key()
+		if len(key) == 41 && key[0] == 'h' {
+			blockNumber := binary.BigEndian.Uint64(key[1:9])
+			if blockNumber > lastBlockNumber {
+				lastBlockNumber = blockNumber
+				copy(lastBlockHash[:], key[9:41])
+			}
+		}
+	}
+	
+	if lastBlockNumber == 0 {
+		log.Warn("No blocks found in import database")
+		return nil
+	}
+	
+	log.Info("Found last block in import database", "number", lastBlockNumber, "hash", lastBlockHash)
+	
+	// Get the block header to verify
+	headerData := rawdb.ReadHeaderRLP(sourceDB, lastBlockHash, lastBlockNumber)
+	if len(headerData) == 0 {
+		return fmt.Errorf("could not read header for block %d", lastBlockNumber)
+	}
+	
+	// Copy all data from source to destination
+	log.Info("Copying blockchain data...")
+	
+	batch := vm.chaindb.NewBatch()
+	count := 0
+	
+	// Use a new iterator to copy all data
+	copyIt := sourceDB.NewIterator(nil, nil)
+	defer copyIt.Release()
+	
+	for copyIt.Next() {
+		if err := batch.Put(copyIt.Key(), copyIt.Value()); err != nil {
+			return fmt.Errorf("failed to write key: %w", err)
+		}
+		
+		count++
+		if count%10000 == 0 {
+			if err := batch.Write(); err != nil {
+				return fmt.Errorf("failed to write batch: %w", err)
+			}
+			batch.Reset()
+			log.Info("Import progress", "keys", count)
+		}
+	}
+	
+	// Write final batch
+	if err := batch.Write(); err != nil {
+		return fmt.Errorf("failed to write final batch: %w", err)
+	}
+	
+	// Set the last accepted block
+	if err := vm.acceptedBlockDB.Put(lastAcceptedKey, lastBlockHash[:]); err != nil {
+		return fmt.Errorf("failed to set last accepted: %w", err)
+	}
+	
+	log.Info("Chain data import complete", 
+		"totalKeys", count,
+		"lastBlock", lastBlockNumber,
+		"lastHash", lastBlockHash,
+	)
+	
+	return nil
 }
 
 func (vm *VM) PutLastAcceptedID(ID ids.ID) error {

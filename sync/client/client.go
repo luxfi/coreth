@@ -21,7 +21,7 @@ import (
 	"github.com/luxfi/node/version"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/log"
 
 	"github.com/luxfi/coreth/plugin/evm/message"

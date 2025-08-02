@@ -13,8 +13,8 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/utils/crypto/bls"
-	"github.com/luxfi/node/utils/crypto/bls/signer/localsigner"
+	"github.com/luxfi/crypto/bls"
+	"github.com/luxfi/crypto/bls/signer/localsigner"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 )
 

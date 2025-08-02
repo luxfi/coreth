@@ -7,7 +7,7 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic/state"
 
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 
 	"github.com/luxfi/coreth/sync"
 

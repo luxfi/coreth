@@ -18,11 +18,11 @@ import (
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/snowtest"
+	"github.com/luxfi/node/quasar/quasartest"
 	"github.com/luxfi/node/upgrade/upgradetest"
 	luxutils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/secp256k1fx"
@@ -72,7 +72,7 @@ func createImportTxOptions(t *testing.T, vm *atomicvm.VM, sharedMemory *luxatomi
 }
 
 func TestImportTxVerify(t *testing.T) {
-	ctx := snowtest.Context(t, snowtest.CChainID)
+	ctx := quasartest.Context(t, quasartest.CChainID)
 
 	var importAmount uint64 = 10000000
 	txID := ids.GenerateTestID()
@@ -322,7 +322,7 @@ func TestImportTxVerify(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  0,
-						AssetID: snowtest.LUXAssetID,
+						AssetID: quasartest.LUXAssetID,
 					},
 				}
 				return &tx

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/stretchr/testify/require"
@@ -67,21 +67,21 @@ func TestSuggestPriceOptions(t *testing.T) {
 		},
 		{
 			name:             "minimum_values",
-			estimateBaseFee:  big.NewInt(acp176.MinGasPrice),
+			estimateBaseFee:  big.NewInt(lp176.MinGasPrice),
 			suggestGasTipCap: bigMinGasTip,
 			cfg:              testCfg,
 			want: &PriceOptions{
 				Slow: newPrice(
 					minGasTip,
-					2*acp176.MinGasPrice+minGasTip,
+					2*lp176.MinGasPrice+minGasTip,
 				),
 				Normal: newPrice(
 					minGasTip,
-					2*acp176.MinGasPrice+minGasTip,
+					2*lp176.MinGasPrice+minGasTip,
 				),
 				Fast: newPrice(
 					minGasTip,
-					2*acp176.MinGasPrice+(fastFeeNumerator*minGasTip/feeDenominator),
+					2*lp176.MinGasPrice+(fastFeeNumerator*minGasTip/feeDenominator),
 				),
 			},
 		},

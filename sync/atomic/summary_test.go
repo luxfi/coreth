@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/geth/common"
 	"github.com/stretchr/testify/require"

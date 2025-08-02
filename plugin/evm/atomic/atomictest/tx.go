@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/codec/linearcodec"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow"
+	"github.com/luxfi/node/quasar"
 	"github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/utils/wrappers"
@@ -58,7 +58,7 @@ type TestUnsignedTx struct {
 func (t *TestUnsignedTx) GasUsed(fixedFee bool) (uint64, error) { return t.GasUsedV, nil }
 
 // Verify implements the UnsignedAtomicTx interface
-func (t *TestUnsignedTx) Verify(ctx *snow.Context, rules extras.Rules) error { return t.VerifyV }
+func (t *TestUnsignedTx) Verify(ctx *quasar.Context, rules extras.Rules) error { return t.VerifyV }
 
 // AtomicOps implements the UnsignedAtomicTx interface
 func (t *TestUnsignedTx) AtomicOps() (ids.ID, *luxatomic.Requests, error) {
@@ -89,7 +89,7 @@ func (t *TestUnsignedTx) Visit(v atomic.Visitor) error {
 }
 
 // EVMStateTransfer implements the UnsignedAtomicTx interface
-func (t *TestUnsignedTx) EVMStateTransfer(ctx *snow.Context, state atomic.StateDB) error {
+func (t *TestUnsignedTx) EVMStateTransfer(ctx *quasar.Context, state atomic.StateDB) error {
 	return t.EVMStateTransferV
 }
 

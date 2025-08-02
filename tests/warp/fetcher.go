@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/utils/crypto/bls"
+	"github.com/luxfi/crypto/bls"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
 	warpBackend "github.com/luxfi/coreth/warp"

@@ -6,7 +6,7 @@ package stats
 import (
 	"time"
 
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 )
 
 // RequestHandlerStats provides the interface for metrics for app requests.
@@ -16,8 +16,8 @@ type RequestHandlerStats interface {
 }
 
 type requestHandlerStats struct {
-	timeUntilDeadline metrics.Timer
-	droppedRequests   metrics.Counter
+	timeUntilDeadline *metrics.Timer
+	droppedRequests   *metrics.Counter
 }
 
 func (h *requestHandlerStats) IncDeadlineDroppedRequest() {

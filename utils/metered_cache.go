@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/VictoriaMetrics/fastcache"
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 )
 
 // MeteredCache wraps *fastcache.Cache and periodically pulls stats from it.
@@ -18,13 +18,13 @@ type MeteredCache struct {
 	namespace string
 
 	// stats to be surfaced
-	entriesCount metrics.Gauge
-	bytesSize    metrics.Gauge
-	collisions   metrics.Gauge
-	gets         metrics.Gauge
-	sets         metrics.Gauge
-	misses       metrics.Gauge
-	statsTime    metrics.Gauge
+	entriesCount *metrics.Gauge
+	bytesSize    *metrics.Gauge
+	collisions   *metrics.Gauge
+	gets         *metrics.Gauge
+	sets         *metrics.Gauge
+	misses       *metrics.Gauge
+	statsTime    *metrics.Gauge
 
 	// count all operations to decide when to update stats
 	ops             uint64

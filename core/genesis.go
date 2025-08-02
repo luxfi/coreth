@@ -45,7 +45,7 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/geth/stateconf"
+	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/log"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/triedb"

@@ -3,7 +3,7 @@
 
 package warp
 
-import "github.com/luxfi/geth/metrics"
+import "github.com/luxfi/metrics"
 
 type verifierStats struct {
 	messageParseFail metrics.Counter

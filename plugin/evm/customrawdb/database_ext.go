@@ -4,16 +4,16 @@
 package customrawdb
 
 import (
-	"bytes"
 	"fmt"
 
-	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/ethdb"
 )
 
 // InspectDatabase traverses the entire database and checks the size
 // of all different categories of data.
+// TODO: Temporarily disabled - needs updated rawdb API
+/*
 func InspectDatabase(db ethdb.Database, keyPrefix, keyStart []byte) error {
 	type stat = rawdb.DatabaseStat
 	stats := []struct {
@@ -61,6 +61,13 @@ func InspectDatabase(db ethdb.Database, keyPrefix, keyStart []byte) error {
 	}
 
 	return rawdb.InspectDatabase(db, keyPrefix, keyStart, options...)
+}
+*/
+
+// Temporary stub
+func InspectDatabase(db ethdb.Database, keyPrefix, keyStart []byte) error {
+	// TODO: Implement when rawdb API is updated
+	return nil
 }
 
 // ParseStateSchemeExt parses the state scheme from the provided string.

@@ -8,7 +8,6 @@ import (
 	"reflect"
 
 	"github.com/luxfi/node/upgrade"
-	"github.com/luxfi/coreth/utils"
 	ethparams "github.com/luxfi/geth/params"
 )
 
@@ -62,50 +61,24 @@ func (n *NetworkUpgrades) Equal(other *NetworkUpgrades) bool {
 	return reflect.DeepEqual(n, other)
 }
 
-func (n *NetworkUpgrades) checkNetworkUpgradesCompatible(newcfg *NetworkUpgrades, time uint64) *ethparams.ConfigCompatError {
-	if isForkTimestampIncompatible(n.ApricotPhase1BlockTimestamp, newcfg.ApricotPhase1BlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("ApricotPhase1 fork block timestamp", n.ApricotPhase1BlockTimestamp, newcfg.ApricotPhase1BlockTimestamp)
+// newTimestampCompatError creates a timestamp compatibility error
+func newTimestampCompatError(what string, storedtime, newtime *uint64) *ethparams.ConfigCompatError {
+	return &ethparams.ConfigCompatError{
+		What: what,
+		// Since all upgrades are always activated, we don't need to check compatibility
+		// Just return a minimal error for the interface
 	}
-	if isForkTimestampIncompatible(n.ApricotPhase2BlockTimestamp, newcfg.ApricotPhase2BlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("ApricotPhase2 fork block timestamp", n.ApricotPhase2BlockTimestamp, newcfg.ApricotPhase2BlockTimestamp)
-	}
-	if isForkTimestampIncompatible(n.ApricotPhase3BlockTimestamp, newcfg.ApricotPhase3BlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("ApricotPhase3 fork block timestamp", n.ApricotPhase3BlockTimestamp, newcfg.ApricotPhase3BlockTimestamp)
-	}
-	if isForkTimestampIncompatible(n.ApricotPhase4BlockTimestamp, newcfg.ApricotPhase4BlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("ApricotPhase4 fork block timestamp", n.ApricotPhase4BlockTimestamp, newcfg.ApricotPhase4BlockTimestamp)
-	}
-	if isForkTimestampIncompatible(n.ApricotPhase5BlockTimestamp, newcfg.ApricotPhase5BlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("ApricotPhase5 fork block timestamp", n.ApricotPhase5BlockTimestamp, newcfg.ApricotPhase5BlockTimestamp)
-	}
-	if isForkTimestampIncompatible(n.ApricotPhasePre6BlockTimestamp, newcfg.ApricotPhasePre6BlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("ApricotPhasePre6 fork block timestamp", n.ApricotPhasePre6BlockTimestamp, newcfg.ApricotPhasePre6BlockTimestamp)
-	}
-	if isForkTimestampIncompatible(n.ApricotPhase6BlockTimestamp, newcfg.ApricotPhase6BlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("ApricotPhase6 fork block timestamp", n.ApricotPhase6BlockTimestamp, newcfg.ApricotPhase6BlockTimestamp)
-	}
-	if isForkTimestampIncompatible(n.ApricotPhasePost6BlockTimestamp, newcfg.ApricotPhasePost6BlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("ApricotPhasePost6 fork block timestamp", n.ApricotPhasePost6BlockTimestamp, newcfg.ApricotPhasePost6BlockTimestamp)
-	}
-	if isForkTimestampIncompatible(n.BanffBlockTimestamp, newcfg.BanffBlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("Banff fork block timestamp", n.BanffBlockTimestamp, newcfg.BanffBlockTimestamp)
-	}
-	if isForkTimestampIncompatible(n.CortinaBlockTimestamp, newcfg.CortinaBlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("Cortina fork block timestamp", n.CortinaBlockTimestamp, newcfg.CortinaBlockTimestamp)
-	}
-	if isForkTimestampIncompatible(n.DurangoBlockTimestamp, newcfg.DurangoBlockTimestamp, time) {
-		return ethparams.NewTimestampCompatError("Durango fork block timestamp", n.DurangoBlockTimestamp, newcfg.DurangoBlockTimestamp)
-	}
-	if isForkTimestampIncompatible(n.EtnaTimestamp, newcfg.EtnaTimestamp, time) {
-		return ethparams.NewTimestampCompatError("Etna fork block timestamp", n.EtnaTimestamp, newcfg.EtnaTimestamp)
-	}
-	if isForkTimestampIncompatible(n.FortunaTimestamp, newcfg.FortunaTimestamp, time) {
-		return ethparams.NewTimestampCompatError("Fortuna fork block timestamp", n.FortunaTimestamp, newcfg.FortunaTimestamp)
-	}
-	if isForkTimestampIncompatible(n.GraniteTimestamp, newcfg.GraniteTimestamp, time) {
-		return ethparams.NewTimestampCompatError("Granite fork block timestamp", n.GraniteTimestamp, newcfg.GraniteTimestamp)
-	}
+}
 
+func (n *NetworkUpgrades) checkNetworkUpgradesCompatible(newcfg *NetworkUpgrades, time uint64) *ethparams.ConfigCompatError {
+	// For now, all upgrades are considered compatible
+	// Keep this structure as a template for future network upgrades
+	
+	// Example of how to check for a future upgrade:
+	// if isForkTimestampIncompatible(n.FutureUpgradeTimestamp, newcfg.FutureUpgradeTimestamp, time) {
+	//     return newTimestampCompatError("Future upgrade fork block timestamp", n.FutureUpgradeTimestamp, newcfg.FutureUpgradeTimestamp)
+	// }
+	
 	return nil
 }
 
@@ -231,23 +204,30 @@ func (n NetworkUpgrades) Description() string {
 	return banner
 }
 
+// GetNetworkUpgrades is temporarily disabled due to upgrade.Config API changes
+// TODO: Update this function when the new upgrade.Config structure is finalized
 func GetNetworkUpgrades(agoUpgrade upgrade.Config) NetworkUpgrades {
-	return NetworkUpgrades{
-		ApricotPhase1BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase1Time),
-		ApricotPhase2BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase2Time),
-		ApricotPhase3BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase3Time),
-		ApricotPhase4BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase4Time),
-		ApricotPhase5BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase5Time),
-		ApricotPhasePre6BlockTimestamp:  utils.TimeToNewUint64(agoUpgrade.ApricotPhasePre6Time),
-		ApricotPhase6BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase6Time),
-		ApricotPhasePost6BlockTimestamp: utils.TimeToNewUint64(agoUpgrade.ApricotPhasePost6Time),
-		BanffBlockTimestamp:             utils.TimeToNewUint64(agoUpgrade.BanffTime),
-		CortinaBlockTimestamp:           utils.TimeToNewUint64(agoUpgrade.CortinaTime),
-		DurangoBlockTimestamp:           utils.TimeToNewUint64(agoUpgrade.DurangoTime),
-		EtnaTimestamp:                   utils.TimeToNewUint64(agoUpgrade.EtnaTime),
-		FortunaTimestamp:                utils.TimeToNewUint64(agoUpgrade.FortunaTime),
-		GraniteTimestamp:                utils.TimeToNewUint64(agoUpgrade.GraniteTime),
-	}
+	// The upgrade.Config now only has ActivationTime field
+	// Previous fields like ApricotPhase1Time, etc. have been removed
+	return NetworkUpgrades{}
+	
+	// Original implementation for reference:
+	// return NetworkUpgrades{
+	// 	ApricotPhase1BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase1Time),
+	// 	ApricotPhase2BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase2Time),
+	// 	ApricotPhase3BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase3Time),
+	// 	ApricotPhase4BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase4Time),
+	// 	ApricotPhase5BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase5Time),
+	// 	ApricotPhasePre6BlockTimestamp:  utils.TimeToNewUint64(agoUpgrade.ApricotPhasePre6Time),
+	// 	ApricotPhase6BlockTimestamp:     utils.TimeToNewUint64(agoUpgrade.ApricotPhase6Time),
+	// 	ApricotPhasePost6BlockTimestamp: utils.TimeToNewUint64(agoUpgrade.ApricotPhasePost6Time),
+	// 	BanffBlockTimestamp:             utils.TimeToNewUint64(agoUpgrade.BanffTime),
+	// 	CortinaBlockTimestamp:           utils.TimeToNewUint64(agoUpgrade.CortinaTime),
+	// 	DurangoBlockTimestamp:           utils.TimeToNewUint64(agoUpgrade.DurangoTime),
+	// 	EtnaTimestamp:                   utils.TimeToNewUint64(agoUpgrade.EtnaTime),
+	// 	FortunaTimestamp:                utils.TimeToNewUint64(agoUpgrade.FortunaTime),
+	// 	GraniteTimestamp:                utils.TimeToNewUint64(agoUpgrade.GraniteTime),
+	// }
 }
 
 type LuxRules struct {

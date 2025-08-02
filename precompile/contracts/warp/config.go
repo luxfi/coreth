@@ -4,12 +4,13 @@
 package warp
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/node/vms/platformvm/warp"
-	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/node/consensus/validators"
+	"github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/predicate"
 	warpValidators "github.com/luxfi/coreth/warp/validators"
@@ -161,14 +162,17 @@ func (c *Config) PredicateGas(predicateBytes []byte) (uint64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("%w: %s", errInvalidWarpMsg, err)
 	}
-	_, err = payload.Parse(warpMessage.Payload)
+	_, err = payload.ParsePayload(warpMessage.UnsignedMessage.Payload)
 	if err != nil {
 		return 0, fmt.Errorf("%w: %s", errInvalidWarpMsgPayload, err)
 	}
 
-	numSigners, err := warpMessage.Signature.NumSigners()
-	if err != nil {
-		return 0, fmt.Errorf("%w: %s", errCannotGetNumSigners, err)
+	// Get number of signers from the signature
+	numSigners := 0
+	if bitSetSig, ok := warpMessage.Signature.(*warp.BitSetSignature); ok {
+		numSigners = bitSetSig.Signers.Len()
+	} else {
+		return 0, fmt.Errorf("%w: unknown signature type", errCannotGetNumSigners)
 	}
 	signerGas, overflow := math.SafeMul(uint64(numSigners), GasCostPerWarpSigner)
 	if overflow {
@@ -202,29 +206,28 @@ func (c *Config) VerifyPredicate(predicateContext *precompileconfig.PredicateCon
 
 	log.Debug("verifying warp message", "warpMsg", warpMsg, "quorumNum", quorumNumerator, "quorumDenom", WarpQuorumDenominator)
 
-	// Wrap validators.State on the chain snow context to special case the Primary Network
+	// Wrap validators.State on the chain quasar context to special case the Primary Network
+	var sourceChainID ids.ID
+	copy(sourceChainID[:], warpMsg.UnsignedMessage.SourceChainID)
+	
+	// Type assert ValidatorState to validators.State
+	validatorState, ok := predicateContext.ConsensusCtx.ValidatorState.(validators.State)
+	if !ok {
+		return fmt.Errorf("invalid validator state type")
+	}
+	
 	state := warpValidators.NewState(
-		predicateContext.SnowCtx.ValidatorState,
-		predicateContext.SnowCtx.SubnetID,
-		warpMsg.SourceChainID,
+		validatorState,
+		predicateContext.ConsensusCtx.SubnetID,
+		sourceChainID,
 		c.RequirePrimaryNetworkSigners,
 	)
 
-	validatorSet, err := warp.GetCanonicalValidatorSetFromChainID(
-		context.Background(),
-		state,
-		predicateContext.ProposerVMBlockCtx.PChainHeight,
-		warpMsg.UnsignedMessage.SourceChainID,
-	)
-	if err != nil {
-		log.Debug("failed to retrieve canonical validator set", "msgID", warpMsg.ID(), "err", err)
-		return fmt.Errorf("%w: %w", errCannotRetrieveValidatorSet, err)
-	}
-
-	err = warpMsg.Signature.Verify(
-		&warpMsg.UnsignedMessage,
-		predicateContext.SnowCtx.NetworkID,
-		validatorSet,
+	// Verify the message signature
+	err = warp.VerifyMessage(
+		warpMsg,
+		predicateContext.ConsensusCtx.NetworkID,
+		state.AsWarpValidatorState(),
 		quorumNumerator,
 		WarpQuorumDenominator,
 	)

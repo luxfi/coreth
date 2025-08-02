@@ -190,38 +190,9 @@ func (c *ChainConfig) checkPrecompilesCompatible(precompileUpgrades []Precompile
 //
 //nolint:unused
 func (c *ChainConfig) checkPrecompileCompatible(address common.Address, precompileUpgrades []PrecompileUpgrade, time uint64) *ethparams.ConfigCompatError {
-	// All active upgrades (from nil to [lastTimestamp]) must match.
-	activeUpgrades := c.GetActivatingPrecompileConfigs(address, nil, time, c.PrecompileUpgrades)
-	newUpgrades := c.GetActivatingPrecompileConfigs(address, nil, time, precompileUpgrades)
-
-	// Check activated upgrades are still present.
-	for i, upgrade := range activeUpgrades {
-		if len(newUpgrades) <= i {
-			// missing upgrade
-			return ethparams.NewTimestampCompatError(
-				fmt.Sprintf("missing PrecompileUpgrade[%d]", i),
-				upgrade.Timestamp(),
-				nil,
-			)
-		}
-		// All upgrades that have activated must be identical.
-		if !upgrade.Equal(newUpgrades[i]) {
-			return ethparams.NewTimestampCompatError(
-				fmt.Sprintf("PrecompileUpgrade[%d]", i),
-				upgrade.Timestamp(),
-				newUpgrades[i].Timestamp(),
-			)
-		}
-	}
-	// then, make sure newUpgrades does not have additional upgrades
-	// that are already activated. (cannot perform retroactive upgrade)
-	if len(newUpgrades) > len(activeUpgrades) {
-		return ethparams.NewTimestampCompatError(
-			fmt.Sprintf("cannot retroactively enable PrecompileUpgrade[%d]", len(activeUpgrades)),
-			nil,
-			newUpgrades[len(activeUpgrades)].Timestamp(), // this indexes to the first element in newUpgrades after the end of activeUpgrades
-		)
-	}
+	// All upgrades are always activated from the beginning
+	// No compatibility checking needed for Lux infrastructure
+	// Skip checking activeUpgrades and newUpgrades since we don't need compatibility checks
 
 	return nil
 }

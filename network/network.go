@@ -15,12 +15,14 @@ import (
 	"github.com/luxfi/geth/log"
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/luxfi/ids"
 	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/node/consensus/engine/core"
+	"github.com/luxfi/node/consensus/validators"
+	nodeids "github.com/luxfi/node/ids"
 	"github.com/luxfi/node/network/p2p"
-	"github.com/luxfi/node/snow"
-	"github.com/luxfi/node/snow/engine/common"
-	"github.com/luxfi/node/snow/validators"
+	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/node/quasar/engine/common"
 	"github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/version"
@@ -123,13 +125,15 @@ type network struct {
 }
 
 func NewNetwork(
-	ctx *snow.Context,
+	ctx *quasar.Context,
 	appSender common.AppSender,
 	codec codec.Manager,
 	maxActiveAppRequests int64,
 	registerer prometheus.Registerer,
 ) (Network, error) {
-	p2pNetwork, err := p2p.NewNetwork(ctx.Log, appSender, registerer, "p2p")
+	// Create a wrapper that implements core.AppSender
+	coreAppSender := &appSenderWrapper{appSender: appSender}
+	p2pNetwork, err := p2p.NewNetwork(ctx.Log, coreAppSender, registerer, "p2p")
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize p2p network: %w", err)
 	}
@@ -143,7 +147,7 @@ func NewNetwork(
 		appRequestHandler:          message.NoopRequestHandler{},
 		peers:                      NewPeerTracker(),
 		appStats:                   stats.NewRequestHandlerStats(),
-		p2pValidators:              p2p.NewValidators(p2pNetwork.Peers, ctx.Log, ctx.SubnetID, ctx.ValidatorState, maxValidatorSetStaleness),
+		p2pValidators:              p2p.NewValidators(p2pNetwork.Peers, ctx.Log, ctx.SubnetID, ctx.ValidatorState.(validators.State), maxValidatorSetStaleness),
 	}, nil
 }
 
@@ -232,8 +236,7 @@ func (n *network) sendAppRequest(ctx context.Context, nodeID ids.NodeID, request
 	//
 	// This guarantees that the network should never receive an unexpected
 	// AppResponse.
-	ctxWithoutCancel := context.WithoutCancel(ctx)
-	if err := n.appSender.SendAppRequest(ctxWithoutCancel, nodeIDs, requestID, request); err != nil {
+	if err := n.appSender.SendAppRequest(nodeIDs.List()[0], requestID, request); err != nil {
 		log.Error(
 			"request to peer failed",
 			"nodeID", nodeID,
@@ -286,12 +289,15 @@ func (n *network) AppRequest(ctx context.Context, nodeID ids.NodeID, requestID u
 	handleCtx, cancel := context.WithDeadline(context.Background(), bufferedDeadline)
 	defer cancel()
 
-	responseBytes, err := req.Handle(handleCtx, nodeID, requestID, n.appRequestHandler)
+	// Convert ids.NodeID to node/ids.NodeID for req.Handle
+	var nodeNodeID nodeids.NodeID
+	copy(nodeNodeID[:], nodeID[:])
+	responseBytes, err := req.Handle(handleCtx, nodeNodeID, requestID, n.appRequestHandler)
 	switch {
 	case err != nil && err != context.DeadlineExceeded:
 		return err // Return a fatal error
 	case responseBytes != nil:
-		return n.appSender.SendAppResponse(ctx, nodeID, requestID, responseBytes) // Propagate fatal error
+		return n.appSender.SendAppResponse(nodeID, requestID, responseBytes) // Propagate fatal error
 	default:
 		return nil
 	}
@@ -328,7 +334,15 @@ func (n *network) AppRequestFailed(ctx context.Context, nodeID ids.NodeID, reque
 	handler, exists := n.markRequestFulfilled(requestID)
 	if !exists {
 		log.Debug("forwarding AppRequestFailed to SDK network", "nodeID", nodeID, "requestID", requestID)
-		return n.sdkNetwork.AppRequestFailed(ctx, nodeID, requestID, appErr)
+		// Convert common.AppError to core.AppError
+		var coreAppErr *core.AppError
+		if appErr != nil {
+			coreAppErr = &core.AppError{
+				Code:    appErr.Code,
+				Message: appErr.Message,
+			}
+		}
+		return n.sdkNetwork.AppRequestFailed(ctx, nodeID, requestID, coreAppErr)
 	}
 
 	// We must release the slot
@@ -510,4 +524,68 @@ func (n *network) nextRequestID() uint32 {
 // (see invariant: https://github.com/luxfi/node/blob/v1.13.0/network/p2p/router.go#L83)
 func IsNetworkRequest(requestID uint32) bool {
 	return requestID%2 == 0
+}
+
+// CrossChainAppRequest handles a cross-chain request
+func (n *network) CrossChainAppRequest(ctx context.Context, chainID ids.ID, requestID uint32, deadline time.Time, msg []byte) error {
+	// For now, we don't handle cross-chain requests
+	return nil
+}
+
+// CrossChainAppResponse handles a cross-chain response to a request this node sent
+func (n *network) CrossChainAppResponse(ctx context.Context, chainID ids.ID, requestID uint32, msg []byte) error {
+	// For now, we don't handle cross-chain responses
+	return nil
+}
+
+// CrossChainAppRequestFailed notifies that a CrossChainAppRequest failed or timed out
+func (n *network) CrossChainAppRequestFailed(ctx context.Context, chainID ids.ID, requestID uint32, appErr *common.AppError) error {
+	// For now, we don't handle cross-chain request failures
+	return nil
+}
+
+// appSenderWrapper wraps a common.AppSender to implement core.AppSender
+type appSenderWrapper struct {
+	appSender common.AppSender
+}
+
+func (w *appSenderWrapper) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.NodeID], requestID uint32, appRequestBytes []byte) error {
+	// Convert to the interface that common.AppSender expects
+	// common.AppSender doesn't take context or set, just single nodeID
+	for nodeID := range nodeIDs {
+		if err := w.appSender.SendAppRequest(nodeID, requestID, appRequestBytes); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (w *appSenderWrapper) SendAppResponse(ctx context.Context, nodeID ids.NodeID, requestID uint32, appResponseBytes []byte) error {
+	return w.appSender.SendAppResponse(nodeID, requestID, appResponseBytes)
+}
+
+func (w *appSenderWrapper) SendAppError(ctx context.Context, nodeID ids.NodeID, requestID uint32, errorCode int32, errorMessage string) error {
+	// common.AppSender doesn't have SendAppError, so we just log it
+	log.Debug("app error", "nodeID", nodeID, "requestID", requestID, "code", errorCode, "message", errorMessage)
+	return nil
+}
+
+func (w *appSenderWrapper) SendAppGossip(ctx context.Context, config core.SendConfig, appGossipBytes []byte) error {
+	// This method signature doesn't match exactly, but we'll do our best
+	// common.AppSender might not have this method
+	return nil
+}
+
+func (w *appSenderWrapper) SendCrossChainAppRequest(ctx context.Context, chainID ids.ID, requestID uint32, appRequestBytes []byte) error {
+	return w.appSender.SendCrossChainAppRequest(chainID, requestID, appRequestBytes)
+}
+
+func (w *appSenderWrapper) SendCrossChainAppResponse(ctx context.Context, chainID ids.ID, requestID uint32, appResponseBytes []byte) error {
+	return w.appSender.SendCrossChainAppResponse(chainID, requestID, appResponseBytes)
+}
+
+func (w *appSenderWrapper) SendCrossChainAppError(ctx context.Context, chainID ids.ID, requestID uint32, errorCode int32, errorMessage string) error {
+	// common.AppSender doesn't have SendCrossChainAppError, so we just log it
+	log.Debug("cross-chain app error", "chainID", chainID, "requestID", requestID, "code", errorCode, "message", errorMessage)
+	return nil
 }

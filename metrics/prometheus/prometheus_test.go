@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/luxfi/coreth/metrics/metricstest"
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 )
 
 func TestGatherer_Gather(t *testing.T) {
@@ -25,7 +25,7 @@ func TestGatherer_Gather(t *testing.T) {
 		require.NoError(t, registry.Register(name, collector))
 	}
 
-	counter := metrics.NewCounter()
+	counter := metrics.NewCounter().(*metrics.StandardCounter)
 	counter.Inc(12345)
 	register(t, "test/counter", counter)
 

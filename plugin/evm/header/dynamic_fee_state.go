@@ -9,7 +9,7 @@ import (
 	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 )
@@ -20,25 +20,25 @@ func feeStateBeforeBlock(
 	config *extras.ChainConfig,
 	parent *types.Header,
 	timestamp uint64,
-) (acp176.State, error) {
+) (lp176.State, error) {
 	if timestamp < parent.Time {
-		return acp176.State{}, fmt.Errorf("%w: timestamp %d prior to parent timestamp %d",
+		return lp176.State{}, fmt.Errorf("%w: timestamp %d prior to parent timestamp %d",
 			errInvalidTimestamp,
 			timestamp,
 			parent.Time,
 		)
 	}
 
-	var state acp176.State
+	var state lp176.State
 	if config.IsFortuna(parent.Time) && parent.Number.Cmp(common.Big0) != 0 {
 		// If the parent block was running with ACP-176, we start with the
 		// resulting fee state from the parent block. It is assumed that the
 		// parent has been verified, so the claimed fee state equals the actual
 		// fee state.
 		var err error
-		state, err = acp176.ParseState(parent.Extra)
+		state, err = lp176.ParseState(parent.Extra)
 		if err != nil {
-			return acp176.State{}, fmt.Errorf("parsing parent fee state: %w", err)
+			return lp176.State{}, fmt.Errorf("parsing parent fee state: %w", err)
 		}
 	}
 
@@ -53,17 +53,17 @@ func feeStateAfterBlock(
 	parent *types.Header,
 	header *types.Header,
 	desiredTargetExcess *gas.Gas,
-) (acp176.State, error) {
+) (lp176.State, error) {
 	// Calculate the gas state after the parent block
 	state, err := feeStateBeforeBlock(config, parent, header.Time)
 	if err != nil {
-		return acp176.State{}, fmt.Errorf("calculating initial fee state: %w", err)
+		return lp176.State{}, fmt.Errorf("calculating initial fee state: %w", err)
 	}
 
 	// Consume the gas used by the block
 	extDataGasUsed := customtypes.GetHeaderExtra(header).ExtDataGasUsed
 	if err := state.ConsumeGas(header.GasUsed, extDataGasUsed); err != nil {
-		return acp176.State{}, fmt.Errorf("advancing the fee state: %w", err)
+		return lp176.State{}, fmt.Errorf("advancing the fee state: %w", err)
 	}
 
 	// If the desired target excess is specified, move the target excess as much

@@ -20,12 +20,12 @@ import (
 	"github.com/luxfi/node/network/p2p"
 	"github.com/luxfi/node/network/p2p/gossip"
 	"github.com/luxfi/node/proto/pb/sdk"
-	"github.com/luxfi/node/snow"
-	"github.com/luxfi/node/snow/engine/enginetest"
-	"github.com/luxfi/node/snow/snowtest"
-	"github.com/luxfi/node/snow/validators"
+	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/node/quasar/engine/enginetest"
+	"github.com/luxfi/node/quasar/quasartest"
+	"github.com/luxfi/node/quasar/validators"
 	agoUtils "github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/logging"
 	"github.com/luxfi/node/utils/set"
 	"github.com/prometheus/client_golang/prometheus"
@@ -45,9 +45,9 @@ import (
 func TestEthTxGossip(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
+	quasarCtx := quasartest.Context(t, quasartest.CChainID)
 	validatorState := utils.NewTestValidatorState()
-	snowCtx.ValidatorState = validatorState
+	quasarCtx.ValidatorState = validatorState
 
 	pk, err := secp256k1.NewPrivateKey()
 	require.NoError(err)
@@ -64,7 +64,7 @@ func TestEthTxGossip(t *testing.T) {
 
 	require.NoError(vm.Initialize(
 		ctx,
-		snowCtx,
+		quasarCtx,
 		memdb.New(),
 		genesisBytes,
 		nil,
@@ -72,7 +72,7 @@ func TestEthTxGossip(t *testing.T) {
 		nil,
 		responseSender,
 	))
-	require.NoError(vm.SetState(ctx, snow.NormalOp))
+	require.NoError(vm.SetState(ctx, quasar.NormalOp))
 
 	defer func() {
 		require.NoError(vm.Shutdown(ctx))
@@ -132,7 +132,7 @@ func TestEthTxGossip(t *testing.T) {
 	}
 	require.NoError(client.AppRequest(ctx, set.Of(vm.Ctx.NodeID), requestBytes, onResponse))
 	require.NoError(vm.AppRequest(ctx, requestingNodeID, 1, time.Time{}, <-peerSender.SentAppRequest))
-	require.NoError(network.AppResponse(ctx, snowCtx.NodeID, 1, <-responseSender.SentAppResponse))
+	require.NoError(network.AppResponse(ctx, quasarCtx.NodeID, 1, <-responseSender.SentAppResponse))
 	wg.Wait()
 
 	// Issue a tx to the VM
@@ -165,19 +165,19 @@ func TestEthTxGossip(t *testing.T) {
 	}
 	require.NoError(client.AppRequest(ctx, set.Of(vm.Ctx.NodeID), requestBytes, onResponse))
 	require.NoError(vm.AppRequest(ctx, requestingNodeID, 3, time.Time{}, <-peerSender.SentAppRequest))
-	require.NoError(network.AppResponse(ctx, snowCtx.NodeID, 3, <-responseSender.SentAppResponse))
+	require.NoError(network.AppResponse(ctx, quasarCtx.NodeID, 3, <-responseSender.SentAppResponse))
 	wg.Wait()
 }
 
 func TestAtomicTxGossip(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
-	snowCtx.LUXAssetID = ids.GenerateTestID()
+	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx.LUXAssetID = ids.GenerateTestID()
 	validatorState := utils.NewTestValidatorState()
-	snowCtx.ValidatorState = validatorState
+	quasarCtx.ValidatorState = validatorState
 	memory := luxatomic.NewMemory(memdb.New())
-	snowCtx.SharedMemory = memory.NewSharedMemory(snowCtx.ChainID)
+	quasarCtx.SharedMemory = memory.NewSharedMemory(quasarCtx.ChainID)
 
 	pk, err := secp256k1.NewPrivateKey()
 	require.NoError(err)
@@ -194,7 +194,7 @@ func TestAtomicTxGossip(t *testing.T) {
 
 	require.NoError(vm.Initialize(
 		ctx,
-		snowCtx,
+		quasarCtx,
 		memdb.New(),
 		genesisBytes,
 		nil,
@@ -202,7 +202,7 @@ func TestAtomicTxGossip(t *testing.T) {
 		nil,
 		responseSender,
 	))
-	require.NoError(vm.SetState(ctx, snow.NormalOp))
+	require.NoError(vm.SetState(ctx, quasar.NormalOp))
 
 	defer func() {
 		require.NoError(vm.Shutdown(ctx))
@@ -261,16 +261,16 @@ func TestAtomicTxGossip(t *testing.T) {
 	}
 	require.NoError(client.AppRequest(ctx, set.Of(vm.Ctx.NodeID), requestBytes, onResponse))
 	require.NoError(vm.AppRequest(ctx, requestingNodeID, 1, time.Time{}, <-peerSender.SentAppRequest))
-	require.NoError(network.AppResponse(ctx, snowCtx.NodeID, 1, <-responseSender.SentAppResponse))
+	require.NoError(network.AppResponse(ctx, quasarCtx.NodeID, 1, <-responseSender.SentAppResponse))
 	wg.Wait()
 
 	// Issue a tx to the VM
 	utxo, err := addUTXO(
 		memory,
-		snowCtx,
+		quasarCtx,
 		ids.GenerateTestID(),
 		0,
-		snowCtx.LUXAssetID,
+		quasarCtx.LUXAssetID,
 		100_000_000_000,
 		pk.Address(),
 	)
@@ -301,7 +301,7 @@ func TestAtomicTxGossip(t *testing.T) {
 	}
 	require.NoError(client.AppRequest(ctx, set.Of(vm.Ctx.NodeID), requestBytes, onResponse))
 	require.NoError(vm.AppRequest(ctx, requestingNodeID, 3, time.Time{}, <-peerSender.SentAppRequest))
-	require.NoError(network.AppResponse(ctx, snowCtx.NodeID, 3, <-responseSender.SentAppResponse))
+	require.NoError(network.AppResponse(ctx, quasarCtx.NodeID, 3, <-responseSender.SentAppResponse))
 	wg.Wait()
 }
 
@@ -309,7 +309,7 @@ func TestAtomicTxGossip(t *testing.T) {
 func TestEthTxPushGossipOutbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
+	quasarCtx := quasartest.Context(t, quasartest.CChainID)
 	sender := &enginetest.SenderStub{
 		SentAppGossip: make(chan []byte, 1),
 	}
@@ -326,7 +326,7 @@ func TestEthTxPushGossipOutbound(t *testing.T) {
 
 	require.NoError(vm.Initialize(
 		ctx,
-		snowCtx,
+		quasarCtx,
 		memdb.New(),
 		genesisBytes,
 		nil,
@@ -334,7 +334,7 @@ func TestEthTxPushGossipOutbound(t *testing.T) {
 		nil,
 		sender,
 	))
-	require.NoError(vm.SetState(ctx, snow.NormalOp))
+	require.NoError(vm.SetState(ctx, quasar.NormalOp))
 
 	defer func() {
 		require.NoError(vm.Shutdown(ctx))
@@ -367,7 +367,7 @@ func TestEthTxPushGossipOutbound(t *testing.T) {
 func TestEthTxPushGossipInbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
+	quasarCtx := quasartest.Context(t, quasartest.CChainID)
 
 	sender := &enginetest.Sender{}
 	innerVM := &VM{}
@@ -382,7 +382,7 @@ func TestEthTxPushGossipInbound(t *testing.T) {
 
 	require.NoError(vm.Initialize(
 		ctx,
-		snowCtx,
+		quasarCtx,
 		memdb.New(),
 		genesisBytes,
 		nil,
@@ -390,7 +390,7 @@ func TestEthTxPushGossipInbound(t *testing.T) {
 		nil,
 		sender,
 	))
-	require.NoError(vm.SetState(ctx, snow.NormalOp))
+	require.NoError(vm.SetState(ctx, quasar.NormalOp))
 
 	defer func() {
 		require.NoError(vm.Shutdown(ctx))
@@ -424,12 +424,12 @@ func TestEthTxPushGossipInbound(t *testing.T) {
 func TestAtomicTxPushGossipOutbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
-	snowCtx.LUXAssetID = ids.GenerateTestID()
+	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx.LUXAssetID = ids.GenerateTestID()
 	validatorState := utils.NewTestValidatorState()
-	snowCtx.ValidatorState = validatorState
+	quasarCtx.ValidatorState = validatorState
 	memory := luxatomic.NewMemory(memdb.New())
-	snowCtx.SharedMemory = memory.NewSharedMemory(snowCtx.ChainID)
+	quasarCtx.SharedMemory = memory.NewSharedMemory(quasarCtx.ChainID)
 
 	pk, err := secp256k1.NewPrivateKey()
 	require.NoError(err)
@@ -446,7 +446,7 @@ func TestAtomicTxPushGossipOutbound(t *testing.T) {
 
 	require.NoError(vm.Initialize(
 		ctx,
-		snowCtx,
+		quasarCtx,
 		memdb.New(),
 		genesisBytes,
 		nil,
@@ -454,7 +454,7 @@ func TestAtomicTxPushGossipOutbound(t *testing.T) {
 		nil,
 		sender,
 	))
-	require.NoError(vm.SetState(ctx, snow.NormalOp))
+	require.NoError(vm.SetState(ctx, quasar.NormalOp))
 
 	defer func() {
 		require.NoError(vm.Shutdown(ctx))
@@ -463,10 +463,10 @@ func TestAtomicTxPushGossipOutbound(t *testing.T) {
 	// Issue a tx to the VM
 	utxo, err := addUTXO(
 		memory,
-		snowCtx,
+		quasarCtx,
 		ids.GenerateTestID(),
 		0,
-		snowCtx.LUXAssetID,
+		quasarCtx.LUXAssetID,
 		100_000_000_000,
 		pk.Address(),
 	)
@@ -493,12 +493,12 @@ func TestAtomicTxPushGossipOutbound(t *testing.T) {
 func TestAtomicTxPushGossipInbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
-	snowCtx.LUXAssetID = ids.GenerateTestID()
+	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx.LUXAssetID = ids.GenerateTestID()
 	validatorState := utils.NewTestValidatorState()
-	snowCtx.ValidatorState = validatorState
+	quasarCtx.ValidatorState = validatorState
 	memory := luxatomic.NewMemory(memdb.New())
-	snowCtx.SharedMemory = memory.NewSharedMemory(snowCtx.ChainID)
+	quasarCtx.SharedMemory = memory.NewSharedMemory(quasarCtx.ChainID)
 
 	pk, err := secp256k1.NewPrivateKey()
 	require.NoError(err)
@@ -513,7 +513,7 @@ func TestAtomicTxPushGossipInbound(t *testing.T) {
 
 	require.NoError(vm.Initialize(
 		ctx,
-		snowCtx,
+		quasarCtx,
 		memdb.New(),
 		genesisBytes,
 		nil,
@@ -521,7 +521,7 @@ func TestAtomicTxPushGossipInbound(t *testing.T) {
 		nil,
 		sender,
 	))
-	require.NoError(vm.SetState(ctx, snow.NormalOp))
+	require.NoError(vm.SetState(ctx, quasar.NormalOp))
 
 	defer func() {
 		require.NoError(vm.Shutdown(ctx))
@@ -530,10 +530,10 @@ func TestAtomicTxPushGossipInbound(t *testing.T) {
 	// issue a tx to the vm
 	utxo, err := addUTXO(
 		memory,
-		snowCtx,
+		quasarCtx,
 		ids.GenerateTestID(),
 		0,
-		snowCtx.LUXAssetID,
+		quasarCtx.LUXAssetID,
 		100_000_000_000,
 		pk.Address(),
 	)

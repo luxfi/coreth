@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/precompile/precompileconfig"

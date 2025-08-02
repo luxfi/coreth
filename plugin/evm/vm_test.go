@@ -28,13 +28,13 @@ import (
 	"github.com/luxfi/node/database/memdb"
 	"github.com/luxfi/node/database/prefixdb"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow"
-	commonEng "github.com/luxfi/node/snow/engine/common"
-	"github.com/luxfi/node/snow/engine/enginetest"
-	"github.com/luxfi/node/snow/snowtest"
+	"github.com/luxfi/node/quasar"
+	commonEng "github.com/luxfi/node/quasar/engine/common"
+	"github.com/luxfi/node/quasar/engine/enginetest"
+	"github.com/luxfi/node/quasar/quasartest"
 	"github.com/luxfi/node/upgrade"
 	"github.com/luxfi/node/upgrade/upgradetest"
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/hashing"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/utils/units"
@@ -53,7 +53,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/extension"
 	"github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
@@ -192,7 +192,7 @@ type testVM struct {
 }
 
 func newVM(t *testing.T, config testVMConfig) *testVM {
-	ctx := snowtest.Context(t, snowtest.CChainID)
+	ctx := quasartest.Context(t, quasartest.CChainID)
 	fork := upgradetest.Latest
 	if config.fork != nil {
 		fork = *config.fork
@@ -234,8 +234,8 @@ func newVM(t *testing.T, config testVMConfig) *testVM {
 	), "error initializing vm")
 
 	if !config.isSyncing {
-		require.NoError(t, atomicVM.SetState(context.Background(), snow.Bootstrapping))
-		require.NoError(t, atomicVM.SetState(context.Background(), snow.NormalOp))
+		require.NoError(t, atomicVM.SetState(context.Background(), quasar.Bootstrapping))
+		require.NoError(t, atomicVM.SetState(context.Background(), quasar.NormalOp))
 	}
 
 	for addr, luxAmount := range config.utxos {
@@ -281,12 +281,12 @@ func (vm *testVM) WaitForEvent(ctx context.Context) commonEng.Message {
 func setupGenesis(
 	t *testing.T,
 	fork upgradetest.Fork,
-) (*snow.Context,
+) (*quasar.Context,
 	*prefixdb.Database,
 	[]byte,
 	*luxatomic.Memory,
 ) {
-	ctx := snowtest.Context(t, snowtest.CChainID)
+	ctx := quasartest.Context(t, quasartest.CChainID)
 	ctx.NetworkUpgrades = upgradetest.GetConfig(fork)
 
 	baseDB := memdb.New()
@@ -304,7 +304,7 @@ func setupGenesis(
 	return ctx, prefixedDB, []byte(genesisJSON), atomicMemory
 }
 
-func addUTXO(sharedMemory *luxatomic.Memory, ctx *snow.Context, txID ids.ID, index uint32, assetID ids.ID, amount uint64, addr ids.ShortID) (*lux.UTXO, error) {
+func addUTXO(sharedMemory *luxatomic.Memory, ctx *quasar.Context, txID ids.ID, index uint32, assetID ids.ID, amount uint64, addr ids.ShortID) (*lux.UTXO, error) {
 	utxo := &lux.UTXO{
 		UTXOID: lux.UTXOID{
 			TxID:        txID,
@@ -773,7 +773,7 @@ func testBuildEthTxBlock(t *testing.T, scheme string) {
 	}
 
 	restartedVM := atomicvm.WrapVM(&VM{})
-	newCTX := snowtest.Context(t, snowtest.CChainID)
+	newCTX := quasartest.Context(t, quasartest.CChainID)
 	newCTX.NetworkUpgrades = upgradetest.GetConfig(fork)
 	newCTX.ChainDataDir = tvm.vm.ctx.ChainDataDir
 	if err := restartedVM.Initialize(
@@ -3920,7 +3920,7 @@ func TestSkipChainConfigCheckCompatible(t *testing.T) {
 	reinitVM := atomicvm.WrapVM(&VM{})
 	// use the block's timestamp instead of 0 since rewind to genesis
 	// is hardcoded to be allowed in core/genesis.go.
-	newCTX := snowtest.Context(t, tvm.vm.ctx.ChainID)
+	newCTX := quasartest.Context(t, tvm.vm.ctx.ChainID)
 	upgradetest.SetTimesTo(&newCTX.NetworkUpgrades, upgradetest.Latest, upgrade.UnscheduledActivationTime)
 	upgradetest.SetTimesTo(&newCTX.NetworkUpgrades, fork+1, blk.Timestamp())
 	upgradetest.SetTimesTo(&newCTX.NetworkUpgrades, fork, upgrade.InitiallyActiveTime)
@@ -4137,7 +4137,7 @@ func TestBuildBlockWithInsufficientCapacity(t *testing.T) {
 		tx := types.NewContractCreation(
 			i,
 			big.NewInt(0),
-			acp176.MinMaxCapacity,
+			lp176.MinMaxCapacity,
 			big.NewInt(ap0.MinGasPrice),
 			[]byte{0xfe}, // invalid opcode consumes all gas
 		)
@@ -4167,7 +4167,7 @@ func TestBuildBlockWithInsufficientCapacity(t *testing.T) {
 	require.ErrorIs(err, miner.ErrInsufficientGasCapacityToBuild)
 
 	// Wait to fill block capacity and retry block builiding
-	tvm.vm.clock.Set(tvm.vm.clock.Time().Add(acp176.TimeToFillCapacity * time.Second))
+	tvm.vm.clock.Set(tvm.vm.clock.Time().Add(lp176.TimeToFillCapacity * time.Second))
 
 	require.Equal(commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
 	blk3, err := tvm.vm.BuildBlock(ctx)
@@ -4223,13 +4223,13 @@ func TestBuildBlockLargeTxStarvation(t *testing.T) {
 	)
 
 	// Refill capacity after distributing funds with import transactions
-	tvm.vm.clock.Set(tvm.vm.clock.Time().Add(acp176.TimeToFillCapacity * time.Second))
+	tvm.vm.clock.Set(tvm.vm.clock.Time().Add(lp176.TimeToFillCapacity * time.Second))
 	maxSizeTxs := make([]*types.Transaction, 2)
 	for i := uint64(0); i < 2; i++ {
 		tx := types.NewContractCreation(
 			i,
 			big.NewInt(0),
-			acp176.MinMaxCapacity,
+			lp176.MinMaxCapacity,
 			highGasPrice,
 			[]byte{0xfe}, // invalid opcode consumes all gas
 		)
@@ -4267,7 +4267,7 @@ func TestBuildBlockLargeTxStarvation(t *testing.T) {
 	require.ErrorIs(err, miner.ErrInsufficientGasCapacityToBuild)
 
 	// Wait to fill block capacity and retry block building
-	tvm.vm.clock.Set(tvm.vm.clock.Time().Add(acp176.TimeToFillCapacity * time.Second))
+	tvm.vm.clock.Set(tvm.vm.clock.Time().Add(lp176.TimeToFillCapacity * time.Second))
 	require.Equal(commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
 	blk4, err := tvm.vm.BuildBlock(ctx)
 	require.NoError(err)

@@ -14,7 +14,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/log"
 	ethparams "github.com/luxfi/geth/params"
 )

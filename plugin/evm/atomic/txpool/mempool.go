@@ -54,7 +54,7 @@ func NewMempool(
 }
 
 // Add attempts to add tx to the mempool as a Remote transaction. It is assumed
-// the snow context lock is not held.
+// the quasar context lock is not held.
 func (m *Mempool) Add(tx *atomic.Tx) error {
 	m.ctx.Lock.RLock()
 	defer m.ctx.Lock.RUnlock()

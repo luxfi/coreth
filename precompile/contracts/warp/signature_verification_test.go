@@ -9,10 +9,10 @@ import (
 	"testing"
 
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/validators"
-	"github.com/luxfi/node/snow/validators/validatorsmock"
+	"github.com/luxfi/node/quasar/validators"
+	"github.com/luxfi/node/quasar/validators/validatorsmock"
 	"github.com/luxfi/node/utils/constants"
-	"github.com/luxfi/node/utils/crypto/bls"
+	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/node/utils/set"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/stretchr/testify/require"

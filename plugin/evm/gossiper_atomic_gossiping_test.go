@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 
-	commonEng "github.com/luxfi/node/snow/engine/common"
+	commonEng "github.com/luxfi/node/quasar/engine/common"
 )
 
 // show that a txID discovered from gossip is requested to the same node only if
