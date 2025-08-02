@@ -11,8 +11,8 @@ import (
 	"github.com/holiman/uint256"
 	"go.uber.org/zap"
 
-	"github.com/luxfi/node/snow"
-	commonEng "github.com/luxfi/node/snow/engine/common"
+	"github.com/luxfi/node/quasar"
+	commonEng "github.com/luxfi/node/quasar/engine/common"
 	"github.com/luxfi/node/utils/lock"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
@@ -27,7 +27,7 @@ const (
 )
 
 type blockBuilder struct {
-	ctx *snow.Context
+	ctx *quasar.Context
 
 	txPool       *txpool.TxPool
 	extraMempool extension.BuilderMempool

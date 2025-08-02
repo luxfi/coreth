@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/node/utils/timer"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 )
 
 const (

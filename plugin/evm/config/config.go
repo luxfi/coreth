@@ -247,6 +247,9 @@ type Config struct {
 
 	// Database Scheme
 	StateScheme string `json:"state-scheme"`
+
+	// ImportChainData specifies the path to a database containing existing blockchain data to import
+	ImportChainData string `json:"import-chain-data"`
 }
 
 // TxPoolConfig contains the transaction pool config to be passed

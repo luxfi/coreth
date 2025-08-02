@@ -10,10 +10,10 @@ import (
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/coreth/plugin/evm/message"
 
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 )
 
 var _ message.Syncable = (*Summary)(nil)

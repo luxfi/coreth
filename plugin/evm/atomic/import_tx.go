@@ -17,9 +17,9 @@ import (
 
 	"github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow"
+	"github.com/luxfi/node/quasar"
 	"github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/math"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/vms/components/lux"
@@ -70,7 +70,7 @@ func (utx *UnsignedImportTx) InputUTXOs() set.Set[ids.ID] {
 
 // Verify this transaction is well-formed
 func (utx *UnsignedImportTx) Verify(
-	ctx *snow.Context,
+	ctx *quasar.Context,
 	rules extras.Rules,
 ) error {
 	switch {
@@ -200,7 +200,7 @@ func (utx *UnsignedImportTx) AtomicOps() (ids.ID, *atomic.Requests, error) {
 
 // NewImportTx returns a new ImportTx
 func NewImportTx(
-	ctx *snow.Context,
+	ctx *quasar.Context,
 	rules extras.Rules,
 	time uint64,
 	chainID ids.ID, // chain to import from
@@ -332,7 +332,7 @@ func NewImportTx(
 
 // EVMStateTransfer performs the state transfer to increase the balances of
 // accounts accordingly with the imported EVMOutputs
-func (utx *UnsignedImportTx) EVMStateTransfer(ctx *snow.Context, state StateDB) error {
+func (utx *UnsignedImportTx) EVMStateTransfer(ctx *quasar.Context, state StateDB) error {
 	for _, to := range utx.Outs {
 		if to.AssetID == ctx.LUXAssetID {
 			log.Debug("import_tx", "src", utx.SourceChain, "addr", to.Address, "amount", to.Amount, "assetID", "LUX")

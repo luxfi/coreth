@@ -7,7 +7,7 @@ package contract
 import (
 	"math/big"
 
-	"github.com/luxfi/node/snow"
+	"github.com/luxfi/node/quasar"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/geth/common"
 	ethtypes "github.com/luxfi/geth/core/types"
@@ -53,7 +53,7 @@ type StateDB interface {
 type AccessibleState interface {
 	GetStateDB() StateDB
 	GetBlockContext() BlockContext
-	GetSnowContext() *snow.Context
+	GetConsensusContext() *quasar.Context
 	GetChainConfig() precompileconfig.ChainConfig
 	GetPrecompileEnv() vm.PrecompileEnvironment
 }

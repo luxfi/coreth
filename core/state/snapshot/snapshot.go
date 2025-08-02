@@ -42,7 +42,7 @@ import (
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/geth/stateconf"
 	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 	"github.com/luxfi/geth/triedb"
 )
 

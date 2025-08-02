@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/node/snow/snowtest"
+	"github.com/luxfi/node/quasar/quasartest"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/coreth/precompile/modules"
@@ -105,12 +105,12 @@ func (test PrecompileTest) setup(t testing.TB, module modules.Module, state *tes
 		blockContext.EXPECT().Number().Return(big.NewInt(0)).AnyTimes()
 		blockContext.EXPECT().Timestamp().Return(uint64(time.Now().Unix())).AnyTimes()
 	}
-	snowContext := snowtest.Context(t, snowtest.CChainID)
+	quasarContext := quasartest.Context(t, quasartest.CChainID)
 
 	accessibleState := contract.NewMockAccessibleState(ctrl)
 	accessibleState.EXPECT().GetStateDB().Return(state).AnyTimes()
 	accessibleState.EXPECT().GetBlockContext().Return(blockContext).AnyTimes()
-	accessibleState.EXPECT().GetSnowContext().Return(snowContext).AnyTimes()
+	accessibleState.EXPECT().GetConsensusContext().Return(quasarContext).AnyTimes()
 	accessibleState.EXPECT().GetChainConfig().Return(chainConfig).AnyTimes()
 
 	if test.Config != nil {

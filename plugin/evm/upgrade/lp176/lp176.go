@@ -1,9 +1,9 @@
 // Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
-// ACP176 implements the fee logic specified here:
-// https://github.com/lux-foundation/ACPs/blob/main/ACPs/176-dynamic-evm-gas-limit-and-price-discovery-updates/README.md
-package acp176
+// LP176 implements the fee logic specified here:
+// https://github.com/lux-foundation/LPs/blob/main/LPs/176-dynamic-evm-gas-limit-and-price-discovery-updates/README.md
+package lp176
 
 import (
 	"encoding/binary"
@@ -212,9 +212,9 @@ func scaleExcess(
 // mulWithUpperBound multiplies two numbers and returns the result. If the
 // result overflows, it returns [math.MaxUint64].
 func mulWithUpperBound(a, b gas.Gas) gas.Gas {
-	product, err := safemath.Mul(a, b)
+	product, err := safemath.Mul64(uint64(a), uint64(b))
 	if err != nil {
 		return math.MaxUint64
 	}
-	return product
+	return gas.Gas(product)
 }

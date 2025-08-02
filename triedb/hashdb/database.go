@@ -41,12 +41,10 @@ import (
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/geth/stateconf"
 	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 	"github.com/luxfi/geth/rlp"
-	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/trie/triestate"
-	"github.com/luxfi/geth/triedb"
 	"github.com/luxfi/geth/triedb/database"
 
 	// Force geth metrics of the same name to be registered first.
@@ -116,9 +114,7 @@ type Config struct {
 	ReferenceRootAtomicallyOnUpdate bool   // Whether to reference the root node on update
 }
 
-func (c Config) BackendConstructor(diskdb ethdb.Database) triedb.DBOverride {
-	return New(diskdb, &c, trie.MerkleResolver{})
-}
+// BackendConstructor is not needed for coreth's hashdb implementation
 
 // Defaults is the default setting for database if it's not specified.
 // Notably, clean cache is disabled explicitly,

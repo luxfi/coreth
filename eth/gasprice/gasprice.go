@@ -36,7 +36,7 @@ import (
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/lru"
@@ -64,8 +64,8 @@ const (
 
 var (
 	DefaultMaxPrice           = big.NewInt(150 * params.GWei)
-	DefaultMinPrice           = big.NewInt(acp176.MinGasPrice)
-	DefaultMinGasUsed         = big.NewInt(acp176.MinTargetPerSecond)
+	DefaultMinPrice           = big.NewInt(lp176.MinGasPrice)
+	DefaultMinGasUsed         = big.NewInt(lp176.MinTargetPerSecond)
 	DefaultMaxLookbackSeconds = uint64(80)
 )
 

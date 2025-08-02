@@ -10,7 +10,7 @@ import (
 
 	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/coreth/params/extras"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/geth/core/types"
@@ -65,7 +65,7 @@ func VerifyExtraPrefix(
 ) error {
 	switch {
 	case config.IsFortuna(header.Time):
-		remoteState, err := acp176.ParseState(header.Extra)
+		remoteState, err := lp176.ParseState(header.Extra)
 		if err != nil {
 			return fmt.Errorf("parsing remote fee state: %w", err)
 		}
@@ -117,11 +117,11 @@ func VerifyExtra(rules extras.LuxRules, extra []byte) error {
 	extraLen := len(extra)
 	switch {
 	case rules.IsFortuna:
-		if extraLen < acp176.StateSize {
+		if extraLen < lp176.StateSize {
 			return fmt.Errorf(
 				"%w: expected >= %d but got %d",
 				errInvalidExtraLength,
-				acp176.StateSize,
+				lp176.StateSize,
 				extraLen,
 			)
 		}
@@ -169,7 +169,7 @@ func VerifyExtra(rules extras.LuxRules, extra []byte) error {
 func PredicateBytesFromExtra(rules extras.LuxRules, extra []byte) []byte {
 	offset := ap3.WindowSize
 	if rules.IsFortuna {
-		offset = acp176.StateSize
+		offset = lp176.StateSize
 	}
 
 	// Prior to Durango, the VM enforces the extra data is smaller than or equal
@@ -187,7 +187,7 @@ func PredicateBytesFromExtra(rules extras.LuxRules, extra []byte) []byte {
 func SetPredicateBytesInExtra(rules extras.LuxRules, extra []byte, predicateBytes []byte) []byte {
 	offset := ap3.WindowSize
 	if rules.IsFortuna {
-		offset = acp176.StateSize
+		offset = lp176.StateSize
 	}
 
 	if len(extra) < offset {

@@ -6,7 +6,6 @@ require (
 	github.com/VictoriaMetrics/fastcache v1.12.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/deckarep/golang-set/v2 v2.6.0
-	github.com/ethereum/go-ethereum v1.16.1
 	github.com/fjl/gencodec v0.1.1
 	github.com/go-cmd/cmd v1.4.3
 	github.com/google/go-cmp v0.7.0
@@ -18,9 +17,10 @@ require (
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.3.2
 	github.com/luxfi/crypto v1.1.1
-	github.com/luxfi/geth v1.16.6
+	github.com/luxfi/geth v1.16.7
 	github.com/luxfi/go-bip39 v1.1.0
-	github.com/luxfi/node v1.13.14
+	github.com/luxfi/metrics v1.1.1
+	github.com/luxfi/node v1.13.13
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.23.4
@@ -74,7 +74,7 @@ require (
 	github.com/ethereum/c-kzg-4844/v2 v2.1.1 // indirect
 	github.com/ethereum/go-verkle v0.2.2 // indirect
 	github.com/ferranbt/fastssz v0.1.4 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/garslo/gogen v0.0.0-20170306192744-1d203ffc1f61 // indirect
 	github.com/gballet/go-libpcsclite v0.0.0-20191108122812-4678299bea08 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
@@ -103,7 +103,6 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/luxfi/database v1.1.4 // indirect
-	github.com/luxfi/metrics v1.1.1 // indirect
 	github.com/luxfi/trace v0.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
@@ -159,7 +158,7 @@ require (
 	golang.org/x/text v0.27.0 // indirect
 	gonum.org/v1/gonum v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250721164621-a45f3dfb1074 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250721164621-a45f3dfb1074 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0 // indirect
 	google.golang.org/grpc v1.74.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -168,7 +167,6 @@ require (
 
 require (
 	github.com/luxfi/ids v1.0.2
-	github.com/luxfi/log v0.1.1
 	github.com/luxfi/warp v0.1.0
 )
 

@@ -5,7 +5,7 @@ package factory
 
 import (
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 	"github.com/luxfi/node/utils/logging"
 	"github.com/luxfi/node/vms"
 	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"

@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"
 
-	commonEng "github.com/luxfi/node/snow/engine/common"
+	commonEng "github.com/luxfi/node/quasar/engine/common"
 
 	"github.com/stretchr/testify/require"
 
@@ -24,7 +24,7 @@ import (
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow"
+	"github.com/luxfi/node/quasar"
 	"github.com/luxfi/node/upgrade/upgradetest"
 )
 
@@ -66,7 +66,7 @@ func TestCalculateDynamicFee(t *testing.T) {
 }
 
 type atomicTxVerifyTest struct {
-	ctx         *snow.Context
+	ctx         *quasar.Context
 	generate    func(t *testing.T) atomic.UnsignedAtomicTx
 	rules       extras.Rules
 	expectedErr string
@@ -154,7 +154,7 @@ func executeTxTest(t *testing.T, test atomicTxTest) {
 
 	if test.bootstrapping {
 		// If this test simulates processing txs during bootstrapping (where some verification is skipped),
-		// initialize the block building goroutines normally initialized in SetState(snow.NormalOps).
+		// initialize the block building goroutines normally initialized in SetState(quasar.NormalOps).
 		// This ensures that the VM can build a block correctly during the test.
 		if err := tvm.vm.initBlockBuilding(); err != nil {
 			t.Fatal(err)

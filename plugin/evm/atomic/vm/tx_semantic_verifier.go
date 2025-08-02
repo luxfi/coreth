@@ -10,8 +10,8 @@ import (
 	"math/big"
 
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow"
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/platformvm/fx"
@@ -39,7 +39,7 @@ type BlockFetcher interface {
 }
 
 type VerifierBackend struct {
-	Ctx          *snow.Context
+	Ctx          *quasar.Context
 	Fx           fx.Fx
 	Rules        extras.Rules
 	Bootstrapped bool

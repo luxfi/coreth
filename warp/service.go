@@ -10,7 +10,7 @@ import (
 
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/network/p2p/acp118"
-	"github.com/luxfi/node/snow"
+	"github.com/luxfi/node/quasar"
 	"github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
 	warpprecompile "github.com/luxfi/coreth/precompile/contracts/warp"
@@ -21,15 +21,15 @@ import (
 
 var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")
 
-// API introduces snowman specific functionality to the evm
+// API introduces quasarman specific functionality to the evm
 type API struct {
-	chainContext                 *snow.Context
+	chainContext                 *quasar.Context
 	backend                      Backend
 	signatureAggregator          *acp118.SignatureAggregator
 	requirePrimaryNetworkSigners func() bool
 }
 
-func NewAPI(chainCtx *snow.Context, backend Backend, signatureAggregator *acp118.SignatureAggregator, requirePrimaryNetworkSigners func() bool) *API {
+func NewAPI(chainCtx *quasar.Context, backend Backend, signatureAggregator *acp118.SignatureAggregator, requirePrimaryNetworkSigners func() bool) *API {
 	return &API{
 		backend:                      backend,
 		chainContext:                 chainCtx,

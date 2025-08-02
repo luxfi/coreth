@@ -13,7 +13,7 @@ import (
 	big "math/big"
 	reflect "reflect"
 
-	snow "github.com/luxfi/node/snow"
+	quasar "github.com/luxfi/node/quasar"
 	precompileconfig "github.com/luxfi/coreth/precompile/precompileconfig"
 	common "github.com/luxfi/geth/common"
 	types "github.com/luxfi/geth/core/types"
@@ -346,18 +346,18 @@ func (mr *MockAccessibleStateMockRecorder) GetPrecompileEnv() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrecompileEnv", reflect.TypeOf((*MockAccessibleState)(nil).GetPrecompileEnv))
 }
 
-// GetSnowContext mocks base method.
-func (m *MockAccessibleState) GetSnowContext() *snow.Context {
+// GetConsensusContext mocks base method.
+func (m *MockAccessibleState) GetConsensusContext() *quasar.Context {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSnowContext")
-	ret0, _ := ret[0].(*snow.Context)
+	ret := m.ctrl.Call(m, "GetConsensusContext")
+	ret0, _ := ret[0].(*quasar.Context)
 	return ret0
 }
 
-// GetSnowContext indicates an expected call of GetSnowContext.
-func (mr *MockAccessibleStateMockRecorder) GetSnowContext() *gomock.Call {
+// GetConsensusContext indicates an expected call of GetConsensusContext.
+func (mr *MockAccessibleStateMockRecorder) GetConsensusContext() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSnowContext", reflect.TypeOf((*MockAccessibleState)(nil).GetSnowContext))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConsensusContext", reflect.TypeOf((*MockAccessibleState)(nil).GetConsensusContext))
 }
 
 // GetStateDB mocks base method.

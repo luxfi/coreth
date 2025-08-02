@@ -10,7 +10,7 @@ import (
 	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
@@ -285,9 +285,9 @@ func TestExtraPrefix(t *testing.T) {
 					ExtDataGasUsed: big.NewInt(5),
 				},
 			),
-			want: (&acp176.State{
+			want: (&lp176.State{
 				Gas: gas.State{
-					Capacity: acp176.MinMaxPerSecond - 6,
+					Capacity: lp176.MinMaxPerSecond - 6,
 					Excess:   6,
 				},
 				TargetExcess: 0,
@@ -309,9 +309,9 @@ func TestExtraPrefix(t *testing.T) {
 				},
 			),
 			desiredTargetExcess: (*gas.Gas)(utils.NewUint64(3)),
-			want: (&acp176.State{
+			want: (&lp176.State{
 				Gas: gas.State{
-					Capacity: acp176.MinMaxPerSecond - 3,
+					Capacity: lp176.MinMaxPerSecond - 3,
 					Excess:   3,
 				},
 				TargetExcess: 3,
@@ -324,14 +324,14 @@ func TestExtraPrefix(t *testing.T) {
 				Number: big.NewInt(1),
 			},
 			header:  &types.Header{},
-			wantErr: acp176.ErrStateInsufficientLength,
+			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
 			name:     "fortuna_invalid_gas_used",
 			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
-				Extra:  (&acp176.State{}).Bytes(),
+				Extra:  (&lp176.State{}).Bytes(),
 			},
 			header: &types.Header{
 				GasUsed: 1,
@@ -343,12 +343,12 @@ func TestExtraPrefix(t *testing.T) {
 			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
-				Extra: (&acp176.State{
+				Extra: (&lp176.State{
 					Gas: gas.State{
-						Capacity: 10_019_550, // [acp176.MinMaxCapacity] * e^(2*[acp176.MaxTargetExcessDiff] / [acp176.TargetConversion])
+						Capacity: 10_019_550, // [lp176.MinMaxCapacity] * e^(2*[lp176.MaxTargetExcessDiff] / [lp176.TargetConversion])
 						Excess:   2_000_000_000 - 3,
 					},
-					TargetExcess: 2 * acp176.MaxTargetExcessDiff,
+					TargetExcess: 2 * lp176.MaxTargetExcessDiff,
 				}).Bytes(),
 			},
 			header: customtypes.WithHeaderExtra(
@@ -360,12 +360,12 @@ func TestExtraPrefix(t *testing.T) {
 				},
 			),
 			desiredTargetExcess: (*gas.Gas)(utils.NewUint64(0)),
-			want: (&acp176.State{
+			want: (&lp176.State{
 				Gas: gas.State{
-					Capacity: 10_009_770,    // [acp176.MinMaxCapacity] * e^([acp176.MaxTargetExcessDiff] / [acp176.TargetConversion])
+					Capacity: 10_009_770,    // [lp176.MinMaxCapacity] * e^([lp176.MaxTargetExcessDiff] / [lp176.TargetConversion])
 					Excess:   1_998_047_816, // 2M * NewTarget / OldTarget
 				},
-				TargetExcess: acp176.MaxTargetExcessDiff,
+				TargetExcess: lp176.MaxTargetExcessDiff,
 			}).Bytes(),
 		},
 	}
@@ -430,7 +430,7 @@ func TestVerifyExtraPrefix(t *testing.T) {
 			name:     "fortuna_invalid_header",
 			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
 			header:   &types.Header{},
-			wantErr:  acp176.ErrStateInsufficientLength,
+			wantErr:  lp176.ErrStateInsufficientLength,
 		},
 		{
 			name:     "fortuna_invalid_gas_consumed",
@@ -440,7 +440,7 @@ func TestVerifyExtraPrefix(t *testing.T) {
 			},
 			header: &types.Header{
 				GasUsed: 1,
-				Extra:   (&acp176.State{}).Bytes(),
+				Extra:   (&lp176.State{}).Bytes(),
 			},
 			wantErr: gas.ErrInsufficientCapacity,
 		},
@@ -453,12 +453,12 @@ func TestVerifyExtraPrefix(t *testing.T) {
 			header: &types.Header{
 				Time:    1,
 				GasUsed: 1,
-				Extra: (&acp176.State{
+				Extra: (&lp176.State{
 					Gas: gas.State{
-						Capacity: acp176.MinMaxPerSecond - 1,
+						Capacity: lp176.MinMaxPerSecond - 1,
 						Excess:   1,
 					},
-					TargetExcess: acp176.MaxTargetExcessDiff + 1, // Too much of a diff
+					TargetExcess: lp176.MaxTargetExcessDiff + 1, // Too much of a diff
 				}).Bytes(),
 			},
 			wantErr: errIncorrectFeeState,
@@ -472,12 +472,12 @@ func TestVerifyExtraPrefix(t *testing.T) {
 			header: &types.Header{
 				Time:    1,
 				GasUsed: 1,
-				Extra: (&acp176.State{
+				Extra: (&lp176.State{
 					Gas: gas.State{
-						Capacity: acp176.MinMaxPerSecond - 1,
+						Capacity: lp176.MinMaxPerSecond - 1,
 						Excess:   1,
 					},
-					TargetExcess: acp176.MaxTargetExcessDiff,
+					TargetExcess: lp176.MaxTargetExcessDiff,
 				}).Bytes(),
 			},
 			wantErr: nil,
@@ -582,7 +582,7 @@ func TestVerifyExtra(t *testing.T) {
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
-			extra:    make([]byte, acp176.StateSize),
+			extra:    make([]byte, lp176.StateSize),
 			expected: nil,
 		},
 		{
@@ -590,7 +590,7 @@ func TestVerifyExtra(t *testing.T) {
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
-			extra:    make([]byte, acp176.StateSize+1),
+			extra:    make([]byte, lp176.StateSize+1),
 			expected: nil,
 		},
 		{
@@ -598,7 +598,7 @@ func TestVerifyExtra(t *testing.T) {
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
-			extra:    make([]byte, acp176.StateSize-1),
+			extra:    make([]byte, lp176.StateSize-1),
 			expected: errInvalidExtraLength,
 		},
 	}
@@ -652,7 +652,7 @@ func TestPredicateBytesFromExtra(t *testing.T) {
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
-			extra:    make([]byte, acp176.StateSize-1),
+			extra:    make([]byte, lp176.StateSize-1),
 			expected: nil,
 		},
 		{
@@ -660,7 +660,7 @@ func TestPredicateBytesFromExtra(t *testing.T) {
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
-			extra:    make([]byte, acp176.StateSize),
+			extra:    make([]byte, lp176.StateSize),
 			expected: nil,
 		},
 		{
@@ -669,7 +669,7 @@ func TestPredicateBytesFromExtra(t *testing.T) {
 				IsFortuna: true,
 			},
 			extra: []byte{
-				acp176.StateSize: 5,
+				lp176.StateSize: 5,
 			},
 			expected: []byte{5},
 		},
@@ -699,7 +699,7 @@ func TestSetPredicateBytesInExtra(t *testing.T) {
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
-			want: make([]byte, acp176.StateSize),
+			want: make([]byte, lp176.StateSize),
 		},
 		{
 			name:      "extra_too_short",
@@ -719,7 +719,7 @@ func TestSetPredicateBytesInExtra(t *testing.T) {
 			predicate: []byte{2},
 			want: []byte{
 				0:                1,
-				acp176.StateSize: 2,
+				lp176.StateSize: 2,
 			},
 		},
 		{
@@ -738,11 +738,11 @@ func TestSetPredicateBytesInExtra(t *testing.T) {
 				IsFortuna: true,
 			},
 			extra: []byte{
-				acp176.StateSize: 1,
+				lp176.StateSize: 1,
 			},
 			predicate: []byte{2},
 			want: []byte{
-				acp176.StateSize: 2,
+				lp176.StateSize: 2,
 			},
 		},
 	}
@@ -775,7 +775,7 @@ func TestPredicateBytesExtra(t *testing.T) {
 			},
 			extra:                  nil,
 			predicate:              nil,
-			wantExtraWithPredicate: make([]byte, acp176.StateSize),
+			wantExtraWithPredicate: make([]byte, lp176.StateSize),
 		},
 		{
 			name: "extra_too_short",
@@ -796,12 +796,12 @@ func TestPredicateBytesExtra(t *testing.T) {
 			},
 			extra: []byte{
 				0:                    1,
-				acp176.StateSize - 1: 0,
+				lp176.StateSize - 1: 0,
 			},
 			predicate: []byte{2},
 			wantExtraWithPredicate: []byte{
 				0:                1,
-				acp176.StateSize: 2,
+				lp176.StateSize: 2,
 			},
 		},
 	}

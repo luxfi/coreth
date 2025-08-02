@@ -11,11 +11,11 @@ import (
 	"github.com/luxfi/node/database/versiondb"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/network/p2p"
-	"github.com/luxfi/node/snow/consensus/snowman"
-	luxcommon "github.com/luxfi/node/snow/engine/common"
+	"github.com/luxfi/node/quasar/consensus/quasarman"
+	luxcommon "github.com/luxfi/node/quasar/engine/common"
 	"github.com/luxfi/node/utils/timer/mockable"
 
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/luxfi/coreth/consensus/dummy"
@@ -78,7 +78,7 @@ type InnerVM interface {
 
 // ExtendedBlock is a block that can be used by the extension
 type ExtendedBlock interface {
-	snowman.Block
+	quasarman.Block
 	GetEthBlock() *types.Block
 	GetBlockExtension() BlockExtension
 }

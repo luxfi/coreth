@@ -46,7 +46,7 @@ import (
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/params"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/acp176"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/cortina"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/predicate"
@@ -285,7 +285,7 @@ func (w *worker) createCurrentEnvironment(predicateContext *precompileconfig.Pre
 		// This avoids waiting past the point where the gas capacity bucket is already full. If we waited
 		// until the MaxCapacity, then waiting beyond that point would "overflow" the bucket. Since we do
 		// not allow the bucket to overflow, this would waste potential gas capacity.
-		capacityPerSecond := header.GasLimit / acp176.TimeToFillCapacity
+		capacityPerSecond := header.GasLimit / lp176.TimeToFillCapacity
 		minimumBuildableCapacity := header.GasLimit - capacityPerSecond
 
 		// Since the GasLimit is configurable, only wait up to the GasLimit as of the Cortina upgrade.

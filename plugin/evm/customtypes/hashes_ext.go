@@ -3,7 +3,18 @@
 
 package customtypes
 
-import ethtypes "github.com/luxfi/geth/core/types"
+import (
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/rlp"
+)
 
 // EmptyExtDataHash is the known hash of empty extdata bytes.
-var EmptyExtDataHash = ethtypes.RLPHash([]byte(nil))
+var EmptyExtDataHash = rlpHash([]byte(nil))
+
+func rlpHash(x interface{}) (h common.Hash) {
+	hw := crypto.NewKeccakState()
+	rlp.Encode(hw, x)
+	hw.Read(h[:])
+	return h
+}

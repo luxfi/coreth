@@ -23,13 +23,13 @@ import (
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/network/p2p"
 	luxdssip "github.com/luxfi/node/network/p2p/gossip"
-	"github.com/luxfi/node/snow"
-	"github.com/luxfi/node/snow/consensus/snowman"
-	luxcommon "github.com/luxfi/node/snow/engine/common"
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/node/quasar/consensus/quasarman"
+	luxcommon "github.com/luxfi/node/quasar/engine/common"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 	luxutils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/logging"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/utils/timer/mockable"
@@ -79,7 +79,7 @@ const (
 
 type VM struct {
 	extension.InnerVM
-	Ctx *snow.Context
+	Ctx *quasar.Context
 
 	// TODO: unexport these fields
 	SecpCache     *secp256k1.RecoverCache
@@ -99,7 +99,7 @@ type VM struct {
 	AtomicTxPushGossiper  *luxdssip.PushGossiper[*atomic.Tx]
 	AtomicTxPullGossiper  luxdssip.Gossiper
 
-	// [cancel] may be nil until [snow.NormalOp] starts
+	// [cancel] may be nil until [quasar.NormalOp] starts
 	cancel     context.CancelFunc
 	shutdownWg sync.WaitGroup
 
@@ -111,10 +111,10 @@ func WrapVM(vm extension.InnerVM) *VM {
 	return &VM{InnerVM: vm}
 }
 
-// Initialize implements the snowman.ChainVM interface
+// Initialize implements the quasarman.ChainVM interface
 func (vm *VM) Initialize(
 	ctx context.Context,
-	chainCtx *snow.Context,
+	chainCtx *quasar.Context,
 	db luxdatabase.Database,
 	genesisBytes []byte,
 	upgradeBytes []byte,
@@ -230,15 +230,15 @@ func (vm *VM) Initialize(
 	return vm.Fx.Initialize(vm)
 }
 
-func (vm *VM) SetState(ctx context.Context, state snow.State) error {
+func (vm *VM) SetState(ctx context.Context, state quasar.State) error {
 	switch state {
-	case snow.StateSyncing:
+	case quasar.StateSyncing:
 		vm.bootstrapped.Set(false)
-	case snow.Bootstrapping:
+	case quasar.Bootstrapping:
 		if err := vm.onBootstrapStarted(); err != nil {
 			return err
 		}
-	case snow.NormalOp:
+	case quasar.NormalOp:
 		if err := vm.onNormalOperationsStarted(); err != nil {
 			return err
 		}
@@ -722,11 +722,11 @@ func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, state
 	return batchContribution, batchGasUsed, nil
 }
 
-func (vm *VM) BuildBlock(ctx context.Context) (snowman.Block, error) {
+func (vm *VM) BuildBlock(ctx context.Context) (quasarman.Block, error) {
 	return vm.BuildBlockWithContext(ctx, nil)
 }
 
-func (vm *VM) BuildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (snowman.Block, error) {
+func (vm *VM) BuildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (quasarman.Block, error) {
 	blk, err := vm.InnerVM.BuildBlockWithContext(ctx, proposerVMBlockCtx)
 
 	// Handle errors and signal the mempool to take appropriate action

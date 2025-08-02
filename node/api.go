@@ -31,7 +31,7 @@ import (
 	"github.com/luxfi/coreth/internal/debug"
 	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 )
 
 // apis returns the collection of built-in RPC APIs.

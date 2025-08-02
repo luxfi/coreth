@@ -15,7 +15,6 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/etna"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/core/types"
 )
 
@@ -85,7 +84,10 @@ func baseFeeFromWindow(config *extras.ChainConfig, parent *types.Header, timesta
 		num.Mul(num, parent.BaseFee)
 		num.Div(num, parentGasTargetBig)
 		num.Div(num, baseFeeChangeDenominator)
-		baseFeeDelta := math.BigMax(num, common.Big1)
+		baseFeeDelta := num
+		if num.Cmp(common.Big1) < 0 {
+			baseFeeDelta = common.Big1
+		}
 
 		baseFee.Add(baseFee, baseFeeDelta)
 	} else {
@@ -94,7 +96,10 @@ func baseFeeFromWindow(config *extras.ChainConfig, parent *types.Header, timesta
 		num.Mul(num, parent.BaseFee)
 		num.Div(num, parentGasTargetBig)
 		num.Div(num, baseFeeChangeDenominator)
-		baseFeeDelta := math.BigMax(num, common.Big1)
+		baseFeeDelta := num
+		if num.Cmp(common.Big1) < 0 {
+			baseFeeDelta = common.Big1
+		}
 
 		if timestamp < parent.Time {
 			// This should never happen as the fee window calculations should

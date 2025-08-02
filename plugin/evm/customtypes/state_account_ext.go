@@ -3,14 +3,4 @@
 
 package customtypes
 
-import (
-	ethtypes "github.com/luxfi/geth/core/types"
-)
-
-type isMultiCoin bool
-
-var IsMultiCoinPayloads = extras.StateAccount
-
-func IsMultiCoin(s ethtypes.StateOrSlimAccount) bool {
-	return bool(IsMultiCoinPayloads.Get(s))
-}
+// Multicoin functionality has been removed

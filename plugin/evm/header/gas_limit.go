@@ -73,7 +73,7 @@ func VerifyGasUsed(
 			)
 		}
 		var err error
-		gasUsed, err = math.Add(gasUsed, extDataGasUsed.Uint64())
+		gasUsed, err = math.Add64(gasUsed, extDataGasUsed.Uint64())
 		if err != nil {
 			return fmt.Errorf("%w while calculating gas used", err)
 		}

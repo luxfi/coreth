@@ -31,12 +31,12 @@ import (
 	"github.com/luxfi/geth/trie"
 
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/consensus/snowman"
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar/consensus/quasarman"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 )
 
 var (
-	_ snowman.Block           = (*wrappedBlock)(nil)
+	_ quasarman.Block           = (*wrappedBlock)(nil)
 	_ block.WithVerifyContext = (*wrappedBlock)(nil)
 	_ extension.ExtendedBlock = (*wrappedBlock)(nil)
 )
@@ -46,7 +46,7 @@ var (
 	ap1MinGasPrice = big.NewInt(ap1.MinGasPrice)
 )
 
-// wrappedBlock implements the snowman.wrappedBlock interface
+// wrappedBlock implements the quasarman.wrappedBlock interface
 type wrappedBlock struct {
 	id        ids.ID
 	ethBlock  *types.Block
@@ -54,7 +54,7 @@ type wrappedBlock struct {
 	vm        *VM
 }
 
-// wrapBlock returns a new Block wrapping the ethBlock type and implementing the snowman.Block interface
+// wrapBlock returns a new Block wrapping the ethBlock type and implementing the quasarman.Block interface
 func wrapBlock(ethBlock *types.Block, vm *VM) (*wrappedBlock, error) {
 	b := &wrappedBlock{
 		id:       ids.ID(ethBlock.Hash()),
@@ -71,10 +71,10 @@ func wrapBlock(ethBlock *types.Block, vm *VM) (*wrappedBlock, error) {
 	return b, nil
 }
 
-// ID implements the snowman.Block interface
+// ID implements the quasarman.Block interface
 func (b *wrappedBlock) ID() ids.ID { return b.id }
 
-// Accept implements the snowman.Block interface
+// Accept implements the quasarman.Block interface
 func (b *wrappedBlock) Accept(context.Context) error {
 	vm := b.vm
 	// Although returning an error from Accept is considered fatal, it is good
@@ -136,7 +136,7 @@ func (b *wrappedBlock) handlePrecompileAccept(rules extras.Rules) error {
 		return fmt.Errorf("failed to fetch receipts for accepted block with non-empty root hash (%s) (Block: %s, Height: %d)", b.ethBlock.ReceiptHash(), b.ethBlock.Hash(), b.ethBlock.NumberU64())
 	}
 	acceptCtx := &precompileconfig.AcceptContext{
-		SnowCtx: b.vm.ctx,
+		ConsensusCtx: b.vm.ctx,
 		Warp:    b.vm.warpBackend,
 	}
 	for _, receipt := range receipts {
@@ -154,7 +154,7 @@ func (b *wrappedBlock) handlePrecompileAccept(rules extras.Rules) error {
 	return nil
 }
 
-// Reject implements the snowman.Block interface
+// Reject implements the quasarman.Block interface
 // If [b] contains an atomic transaction, attempt to re-issue it
 func (b *wrappedBlock) Reject(context.Context) error {
 	blkID := b.ID()
@@ -172,25 +172,25 @@ func (b *wrappedBlock) Reject(context.Context) error {
 	return b.vm.blockChain.Reject(b.ethBlock)
 }
 
-// Parent implements the snowman.Block interface
+// Parent implements the quasarman.Block interface
 func (b *wrappedBlock) Parent() ids.ID {
 	return ids.ID(b.ethBlock.ParentHash())
 }
 
-// Height implements the snowman.Block interface
+// Height implements the quasarman.Block interface
 func (b *wrappedBlock) Height() uint64 {
 	return b.ethBlock.NumberU64()
 }
 
-// Timestamp implements the snowman.Block interface
+// Timestamp implements the quasarman.Block interface
 func (b *wrappedBlock) Timestamp() time.Time {
 	return time.Unix(int64(b.ethBlock.Time()), 0)
 }
 
-// Verify implements the snowman.Block interface
+// Verify implements the quasarman.Block interface
 func (b *wrappedBlock) Verify(context.Context) error {
 	return b.verify(&precompileconfig.PredicateContext{
-		SnowCtx:            b.vm.ctx,
+		ConsensusCtx:            b.vm.ctx,
 		ProposerVMBlockCtx: nil,
 	}, true)
 }
@@ -222,7 +222,7 @@ func (b *wrappedBlock) ShouldVerifyWithContext(context.Context) (bool, error) {
 // VerifyWithContext implements the block.WithVerifyContext interface
 func (b *wrappedBlock) VerifyWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) error {
 	return b.verify(&precompileconfig.PredicateContext{
-		SnowCtx:            b.vm.ctx,
+		ConsensusCtx:            b.vm.ctx,
 		ProposerVMBlockCtx: proposerVMBlockCtx,
 	}, true)
 }
@@ -464,7 +464,7 @@ func (b *wrappedBlock) verifyPredicates(predicateContext *precompileconfig.Predi
 	return nil
 }
 
-// Bytes implements the snowman.Block interface
+// Bytes implements the quasarman.Block interface
 func (b *wrappedBlock) Bytes() []byte {
 	res, err := rlp.EncodeToBytes(b.ethBlock)
 	if err != nil {

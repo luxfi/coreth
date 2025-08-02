@@ -16,10 +16,10 @@ import (
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/utils/set"
 
-	commonEng "github.com/luxfi/node/snow/engine/common"
+	commonEng "github.com/luxfi/node/quasar/engine/common"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 
 	"github.com/stretchr/testify/assert"
 

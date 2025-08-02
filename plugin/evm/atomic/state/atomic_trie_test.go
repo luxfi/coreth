@@ -24,7 +24,7 @@ import (
 	"github.com/luxfi/node/database/prefixdb"
 	"github.com/luxfi/node/database/versiondb"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/snowtest"
+	"github.com/luxfi/node/quasar/quasartest"
 	"github.com/luxfi/node/utils/logging"
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/geth/common"
@@ -462,7 +462,7 @@ func TestApplyToSharedMemory(t *testing.T) {
 
 			// Initialize atomic repository
 			m := luxatomic.NewMemory(db)
-			sharedMemories := atomictest.NewSharedMemories(m, snowtest.CChainID, atomictest.TestBlockchainID)
+			sharedMemories := atomictest.NewSharedMemories(m, quasartest.CChainID, atomictest.TestBlockchainID)
 			backend, err := NewAtomicBackend(sharedMemories.ThisChain, test.bonusBlockHeights, repo, test.lastAcceptedHeight, common.Hash{}, test.commitInterval)
 			assert.NoError(t, err)
 			atomicTrie := backend.AtomicTrie()

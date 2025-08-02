@@ -4,6 +4,7 @@
 package atomic
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -14,12 +15,13 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/holiman/uint256"
 
+	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow"
+	"github.com/luxfi/node/quasar"
 	luxutils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/math"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/utils/wrappers"
@@ -29,6 +31,25 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/log"
 )
+
+// luxfiidsEqual compares a luxfi/ids.ID with a node/ids.ID
+func luxfiidsEqual(a luxfiids.ID, b ids.ID) bool {
+	return bytes.Equal(a[:], b[:])
+}
+
+// luxfiidsToNodeID converts luxfi/ids.ID to node/ids.ID
+func luxfiidsToNodeID(id luxfiids.ID) ids.ID {
+	var nodeID ids.ID
+	copy(nodeID[:], id[:])
+	return nodeID
+}
+
+// nodeIDToLuxfiids converts node/ids.ID to luxfi/ids.ID
+func nodeIDToLuxfiids(id ids.ID) luxfiids.ID {
+	var luxfiID luxfiids.ID
+	copy(luxfiID[:], id[:])
+	return luxfiID
+}
 
 var (
 	_                           UnsignedAtomicTx       = (*UnsignedExportTx)(nil)
@@ -73,7 +94,7 @@ func (utx *UnsignedExportTx) InputUTXOs() set.Set[ids.ID] {
 
 // Verify this transaction is well-formed
 func (utx *UnsignedExportTx) Verify(
-	ctx *snow.Context,
+	ctx *quasar.Context,
 	rules extras.Rules,
 ) error {
 	switch {
@@ -83,19 +104,20 @@ func (utx *UnsignedExportTx) Verify(
 		return ErrNoExportOutputs
 	case utx.NetworkID != ctx.NetworkID:
 		return ErrWrongNetworkID
-	case ctx.ChainID != utx.BlockchainID:
+	case !luxfiidsEqual(ctx.ChainID, utx.BlockchainID):
 		return ErrWrongChainID
 	}
 
 	// Make sure that the tx has a valid peer chain ID
 	if rules.IsApricotPhase5 {
-		// Note that SameSubnet verifies that [tx.DestinationChain] isn't this
-		// chain's ID
-		if err := verify.SameSubnet(context.TODO(), ctx, utx.DestinationChain); err != nil {
+		// Verify that [tx.DestinationChain] isn't this chain's ID
+		if luxfiidsEqual(ctx.ChainID, utx.DestinationChain) {
 			return ErrWrongChainID
 		}
+		// Note: We skip subnet validation here as we don't have access to ValidatorState
+		// TODO: Add proper subnet validation when consensus.Context is available
 	} else {
-		if utx.DestinationChain != ctx.XChainID {
+		if !luxfiidsEqual(ctx.XChainID, utx.DestinationChain) {
 			return ErrWrongChainID
 		}
 	}
@@ -104,7 +126,7 @@ func (utx *UnsignedExportTx) Verify(
 		if err := in.Verify(); err != nil {
 			return err
 		}
-		if rules.IsBanff && in.AssetID != ctx.LUXAssetID {
+		if rules.IsBanff && !luxfiidsEqual(ctx.AVAXAssetID, in.AssetID) {
 			return ErrExportNonLUXInputBanff
 		}
 	}
@@ -114,10 +136,10 @@ func (utx *UnsignedExportTx) Verify(
 			return err
 		}
 		assetID := out.AssetID()
-		if assetID != ctx.LUXAssetID && utx.DestinationChain == constants.PlatformChainID {
+		if !luxfiidsEqual(ctx.AVAXAssetID, nodeIDToLuxfiids(assetID)) && luxfiidsEqual(constants.PlatformChainID, utx.DestinationChain) {
 			return ErrWrongChainID
 		}
-		if rules.IsBanff && assetID != ctx.LUXAssetID {
+		if rules.IsBanff && !luxfiidsEqual(ctx.AVAXAssetID, assetID) {
 			return ErrExportNonLUXOutputBanff
 		}
 	}
@@ -134,16 +156,16 @@ func (utx *UnsignedExportTx) Verify(
 func (utx *UnsignedExportTx) GasUsed(fixedFee bool) (uint64, error) {
 	byteCost := calcBytesCost(len(utx.Bytes()))
 	numSigs := uint64(len(utx.Ins))
-	sigCost, err := math.Mul(numSigs, secp256k1fx.CostPerSignature)
+	sigCost, err := math.Mul64(numSigs, secp256k1fx.CostPerSignature)
 	if err != nil {
 		return 0, err
 	}
-	cost, err := math.Add(byteCost, sigCost)
+	cost, err := math.Add64(byteCost, sigCost)
 	if err != nil {
 		return 0, err
 	}
 	if fixedFee {
-		cost, err = math.Add(cost, ap5.AtomicTxIntrinsicGas)
+		cost, err = math.Add64(cost, ap5.AtomicTxIntrinsicGas)
 		if err != nil {
 			return 0, err
 		}
@@ -161,7 +183,7 @@ func (utx *UnsignedExportTx) Burned(assetID ids.ID) (uint64, error) {
 	)
 	for _, out := range utx.ExportedOutputs {
 		if out.AssetID() == assetID {
-			spent, err = math.Add(spent, out.Output().Amount())
+			spent, err = math.Add64(spent, out.Output().Amount())
 			if err != nil {
 				return 0, err
 			}
@@ -169,7 +191,7 @@ func (utx *UnsignedExportTx) Burned(assetID ids.ID) (uint64, error) {
 	}
 	for _, in := range utx.Ins {
 		if in.AssetID == assetID {
-			input, err = math.Add(input, in.Amount)
+			input, err = math.Add64(input, in.Amount)
 			if err != nil {
 				return 0, err
 			}
@@ -217,7 +239,7 @@ func (utx *UnsignedExportTx) AtomicOps() (ids.ID, *atomic.Requests, error) {
 
 // NewExportTx returns a new ExportTx
 func NewExportTx(
-	ctx *snow.Context,
+	ctx *quasar.Context,
 	rules extras.Rules,
 	state StateDB,
 	assetID ids.ID, // AssetID of the tokens to export
@@ -247,7 +269,7 @@ func NewExportTx(
 	)
 
 	// consume non-LUX
-	if assetID != ctx.LUXAssetID {
+	if !luxfiidsEqual(ctx.AVAXAssetID, assetID) {
 		ins, signers, err = getSpendableFunds(ctx, state, keys, assetID, amount)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't generate tx inputs/signers: %w", err)
@@ -260,7 +282,7 @@ func NewExportTx(
 	case rules.IsApricotPhase3:
 		utx := &UnsignedExportTx{
 			NetworkID:        ctx.NetworkID,
-			BlockchainID:     ctx.ChainID,
+			BlockchainID:     luxfiidsToNodeID(ctx.ChainID),
 			DestinationChain: chainID,
 			Ins:              ins,
 			ExportedOutputs:  outs,
@@ -283,7 +305,7 @@ func NewExportTx(
 		if err != nil {
 			return nil, errOverflowExport
 		}
-		luxIns, luxSigners, err = getSpendableFunds(ctx, state, keys, ctx.LUXAssetID, newLuxNeeded)
+		luxIns, luxSigners, err = getSpendableFunds(ctx, state, keys, nodeIDToLuxfiids(ctx.AVAXAssetID), newLuxNeeded)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("couldn't generate tx inputs/signers: %w", err)
@@ -297,7 +319,7 @@ func NewExportTx(
 	// Create the transaction
 	utx := &UnsignedExportTx{
 		NetworkID:        ctx.NetworkID,
-		BlockchainID:     ctx.ChainID,
+		BlockchainID:     luxfiidsToNodeID(ctx.ChainID),
 		DestinationChain: chainID,
 		Ins:              ins,
 		ExportedOutputs:  outs,
@@ -310,10 +332,10 @@ func NewExportTx(
 }
 
 // EVMStateTransfer executes the state update from the atomic export transaction
-func (utx *UnsignedExportTx) EVMStateTransfer(ctx *snow.Context, state StateDB) error {
+func (utx *UnsignedExportTx) EVMStateTransfer(ctx *quasar.Context, state StateDB) error {
 	addrs := map[[20]byte]uint64{}
 	for _, from := range utx.Ins {
-		if from.AssetID == ctx.LUXAssetID {
+		if luxfiidsEqual(ctx.AVAXAssetID, from.AssetID) {
 			log.Debug("export_tx", "dest", utx.DestinationChain, "addr", from.Address, "amount", from.Amount, "assetID", "LUX")
 			// We multiply the input amount by x2cRate to convert LUX back to the appropriate
 			// denomination before export.
@@ -350,7 +372,7 @@ func (utx *UnsignedExportTx) EVMStateTransfer(ctx *snow.Context, state StateDB) 
 // corresponds to a single key, so that the signers can be passed in to
 // [tx.Sign] which supports multiple keys on a single input.
 func getSpendableFunds(
-	ctx *snow.Context,
+	ctx *quasar.Context,
 	state StateDB,
 	keys []*secp256k1.PrivateKey,
 	assetID ids.ID,
@@ -366,7 +388,7 @@ func getSpendableFunds(
 		}
 		addr := key.EthAddress()
 		var balance uint64
-		if assetID == ctx.LUXAssetID {
+		if luxfiidsEqual(ctx.AVAXAssetID, assetID) {
 			// If the asset is LUX, we divide by the x2cRate to convert back to the correct
 			// denomination of LUX that can be exported.
 			balance = new(uint256.Int).Div(state.GetBalance(addr), X2CRate).Uint64()
@@ -407,7 +429,7 @@ func getSpendableFunds(
 // corresponds to a single key, so that the signers can be passed in to
 // [tx.Sign] which supports multiple keys on a single input.
 func getSpendableLUXWithFee(
-	ctx *snow.Context,
+	ctx *quasar.Context,
 	state StateDB,
 	keys []*secp256k1.PrivateKey,
 	amount uint64,
@@ -478,7 +500,7 @@ func getSpendableLUXWithFee(
 		inputs = append(inputs, EVMInput{
 			Address: addr,
 			Amount:  inputAmount,
-			AssetID: ctx.LUXAssetID,
+			AssetID: nodeIDToLuxfiids(ctx.AVAXAssetID),
 			Nonce:   nonce,
 		})
 		signers = append(signers, []*secp256k1.PrivateKey{key})

@@ -5,10 +5,10 @@ package message
 
 import (
 	"github.com/luxfi/geth/common"
-
-	"github.com/luxfi/node/snow/engine/snowman/block"
 )
 
+// TODO: Temporarily disabled - needs block.StateSummary from node
+/*
 type Syncable interface {
 	block.StateSummary
 	GetBlockHash() common.Hash
@@ -20,3 +20,16 @@ type SyncableParser interface {
 }
 
 type AcceptImplFn func(Syncable) (block.StateSyncMode, error)
+*/
+
+// Temporary stubs
+type Syncable interface {
+	GetBlockHash() common.Hash
+	GetBlockRoot() common.Hash
+}
+
+type SyncableParser interface {
+	Parse(summaryBytes []byte, acceptImpl AcceptImplFn) (Syncable, error)
+}
+
+type AcceptImplFn func(Syncable) (int, error)

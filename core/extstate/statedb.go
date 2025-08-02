@@ -6,13 +6,12 @@ package extstate
 import (
 	"math/big"
 
-	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/plugin/evm/customtypes"
+	corethparams "github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/geth/stateconf"
+	"github.com/luxfi/geth/params"
 	"github.com/holiman/uint256"
 )
 
@@ -49,7 +48,7 @@ func New(vm *state.StateDB) *StateDB {
 }
 
 func (s *StateDB) Prepare(rules params.Rules, sender, coinbase common.Address, dst *common.Address, precompiles []common.Address, list types.AccessList) {
-	rulesExtra := params.GetRulesExtra(rules)
+	rulesExtra := corethparams.GetRulesExtra(rules)
 	s.predicateStorageSlots = predicate.PreparePredicateStorageSlots(rulesExtra, list)
 	s.StateDB.Prepare(rules, sender, coinbase, dst, precompiles, list)
 }
@@ -85,9 +84,7 @@ func (s *StateDB) AddBalanceMultiCoin(addr common.Address, coinID common.Hash, a
 		return
 	}
 
-	if !state.GetExtra(s.StateDB, customtypes.IsMultiCoinPayloads, addr) {
-		state.SetExtra(s.StateDB, customtypes.IsMultiCoinPayloads, addr, true)
-	}
+	// Multicoin functionality has been removed
 
 	newAmount := new(big.Int).Add(s.GetBalanceMultiCoin(addr, coinID), amount)
 	normalizeCoinID(&coinID)
@@ -102,9 +99,7 @@ func (s *StateDB) SubBalanceMultiCoin(addr common.Address, coinID common.Hash, a
 	// Note: It's not needed to set the IsMultiCoin (extras) flag here, as this
 	// call would always be preceded by a call to AddBalanceMultiCoin, which would
 	// set the extra flag. Seems we should remove the redundant code.
-	if !state.GetExtra(s.StateDB, customtypes.IsMultiCoinPayloads, addr) {
-		state.SetExtra(s.StateDB, customtypes.IsMultiCoinPayloads, addr, true)
-	}
+	// Multicoin functionality has been removed
 	newAmount := new(big.Int).Sub(s.GetBalanceMultiCoin(addr, coinID), amount)
 	normalizeCoinID(&coinID)
 	s.SetState(addr, coinID, common.BigToHash(newAmount), stateconf.SkipStateKeyTransformation())

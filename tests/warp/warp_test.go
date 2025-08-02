@@ -18,11 +18,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 
 	"github.com/luxfi/node/api/info"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/validators"
+	"github.com/luxfi/node/quasar/validators"
 	"github.com/luxfi/node/tests/fixture/e2e"
 	"github.com/luxfi/node/tests/fixture/tmpnet"
 	"github.com/luxfi/node/utils/constants"

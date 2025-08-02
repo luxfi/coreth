@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow/snowtest"
+	"github.com/luxfi/node/quasar/quasartest"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/atomictest"
 	"github.com/prometheus/client_golang/prometheus"
@@ -17,7 +17,7 @@ import (
 func TestMempoolAddTx(t *testing.T) {
 	require := require.New(t)
 
-	ctx := snowtest.Context(t, snowtest.CChainID)
+	ctx := quasartest.Context(t, quasartest.CChainID)
 	m, err := NewMempool(
 		NewTxs(ctx, 5_000),
 		prometheus.NewRegistry(),
@@ -46,7 +46,7 @@ func TestMempoolAddTx(t *testing.T) {
 func TestMempoolAdd(t *testing.T) {
 	require := require.New(t)
 
-	ctx := snowtest.Context(t, snowtest.CChainID)
+	ctx := quasartest.Context(t, quasartest.CChainID)
 	m, err := NewMempool(
 		NewTxs(ctx, 5_000),
 		prometheus.NewRegistry(),
@@ -115,7 +115,7 @@ func TestAtomicMempoolIterate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
 
-			ctx := snowtest.Context(t, snowtest.CChainID)
+			ctx := quasartest.Context(t, quasartest.CChainID)
 			m, err := NewMempool(
 				NewTxs(ctx, 10),
 				prometheus.NewRegistry(),
@@ -150,7 +150,7 @@ func TestAtomicMempoolIterate(t *testing.T) {
 func TestMempoolMaxSizeHandling(t *testing.T) {
 	require := require.New(t)
 
-	ctx := snowtest.Context(t, snowtest.CChainID)
+	ctx := quasartest.Context(t, quasartest.CChainID)
 	mempool, err := NewMempool(
 		NewTxs(ctx, 1),
 		prometheus.NewRegistry(),
@@ -178,7 +178,7 @@ func TestMempoolMaxSizeHandling(t *testing.T) {
 func TestMempoolPriorityDrop(t *testing.T) {
 	require := require.New(t)
 
-	ctx := snowtest.Context(t, snowtest.CChainID)
+	ctx := quasartest.Context(t, quasartest.CChainID)
 	mempool, err := NewMempool(
 		NewTxs(ctx, 1),
 		prometheus.NewRegistry(),

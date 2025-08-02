@@ -6,7 +6,7 @@ package atomic
 import (
 	"testing"
 
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/vms/components/verify"
 	"github.com/stretchr/testify/require"
 )

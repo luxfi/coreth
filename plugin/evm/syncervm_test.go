@@ -24,12 +24,12 @@ import (
 	luxdatabase "github.com/luxfi/node/database"
 	"github.com/luxfi/node/database/prefixdb"
 	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/snow"
-	commonEng "github.com/luxfi/node/snow/engine/common"
-	"github.com/luxfi/node/snow/engine/enginetest"
-	"github.com/luxfi/node/snow/engine/snowman/block"
+	"github.com/luxfi/node/quasar"
+	commonEng "github.com/luxfi/node/quasar/engine/common"
+	"github.com/luxfi/node/quasar/engine/enginetest"
+	"github.com/luxfi/node/quasar/engine/quasarman/block"
 	"github.com/luxfi/node/upgrade/upgradetest"
-	"github.com/luxfi/node/utils/crypto/secp256k1"
+	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/set"
 	"github.com/luxfi/node/utils/units"
 
@@ -374,7 +374,7 @@ func createSyncServerAndClientVMs(t *testing.T, test syncTest, numBlocks int) *s
 	t.Cleanup(func() {
 		require.NoError(shutdownOnceSyncerVM.Shutdown(context.Background()))
 	})
-	require.NoError(syncer.vm.SetState(context.Background(), snow.StateSyncing))
+	require.NoError(syncer.vm.SetState(context.Background(), quasar.StateSyncing))
 	enabled, err := syncer.vm.StateSyncEnabled(context.Background())
 	require.NoError(err)
 	require.True(enabled)
@@ -500,7 +500,7 @@ func testSyncerVM(t *testing.T, vmSetup *syncVMSetup, test syncTest) {
 
 	// set [syncerVM] to bootstrapping and verify the last accepted block has been updated correctly
 	// and that we can bootstrap and process some blocks.
-	require.NoError(syncerVM.SetState(context.Background(), snow.Bootstrapping))
+	require.NoError(syncerVM.SetState(context.Background(), quasar.Bootstrapping))
 	require.Equal(serverVM.LastAcceptedBlock().Height(), syncerVM.LastAcceptedBlock().Height(), "block height mismatch between syncer and server")
 	require.Equal(serverVM.LastAcceptedBlock().ID(), syncerVM.LastAcceptedBlock().ID(), "blockID mismatch between syncer and server")
 	require.True(syncerVM.blockChain.HasState(syncerVM.blockChain.LastAcceptedBlock().Root()), "unavailable state for last accepted block")
@@ -555,7 +555,7 @@ func testSyncerVM(t *testing.T, vmSetup *syncVMSetup, test syncTest) {
 	)
 
 	// check we can transition to [NormalOp] state and continue to process blocks.
-	require.NoError(syncerVM.SetState(context.Background(), snow.NormalOp))
+	require.NoError(syncerVM.SetState(context.Background(), quasar.NormalOp))
 	require.True(syncerVM.bootstrapped.Get())
 
 	// check atomic memory was synced properly

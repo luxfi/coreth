@@ -14,8 +14,8 @@ import (
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/network/p2p/acp118"
 	"github.com/luxfi/node/proto/pb/sdk"
-	"github.com/luxfi/node/snow/engine/common"
-	"github.com/luxfi/node/snow/snowtest"
+	"github.com/luxfi/node/quasar/engine/common"
+	"github.com/luxfi/node/quasar/quasartest"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
 	"github.com/luxfi/coreth/metrics/metricstest"
@@ -28,13 +28,13 @@ func TestAddressedCallSignatures(t *testing.T) {
 	metricstest.WithMetrics(t)
 
 	database := memdb.New()
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
+	quasarCtx := quasartest.Context(t, quasartest.CChainID)
 
 	offChainPayload, err := payload.NewAddressedCall([]byte{1, 2, 3}, []byte{1, 2, 3})
 	require.NoError(t, err)
-	offchainMessage, err := luxWarp.NewUnsignedMessage(snowCtx.NetworkID, snowCtx.ChainID, offChainPayload.Bytes())
+	offchainMessage, err := luxWarp.NewUnsignedMessage(quasarCtx.NetworkID, quasarCtx.ChainID, offChainPayload.Bytes())
 	require.NoError(t, err)
-	offchainSignature, err := snowCtx.WarpSigner.Sign(offchainMessage)
+	offchainSignature, err := quasarCtx.WarpSigner.Sign(offchainMessage)
 	require.NoError(t, err)
 
 	tests := map[string]struct {
@@ -46,9 +46,9 @@ func TestAddressedCallSignatures(t *testing.T) {
 			setup: func(backend Backend) (request []byte, expectedResponse []byte) {
 				knownPayload, err := payload.NewAddressedCall([]byte{0, 0, 0}, []byte("test"))
 				require.NoError(t, err)
-				msg, err := luxWarp.NewUnsignedMessage(snowCtx.NetworkID, snowCtx.ChainID, knownPayload.Bytes())
+				msg, err := luxWarp.NewUnsignedMessage(quasarCtx.NetworkID, quasarCtx.ChainID, knownPayload.Bytes())
 				require.NoError(t, err)
-				signature, err := snowCtx.WarpSigner.Sign(msg)
+				signature, err := quasarCtx.WarpSigner.Sign(msg)
 				require.NoError(t, err)
 
 				backend.AddMessage(msg)
@@ -72,7 +72,7 @@ func TestAddressedCallSignatures(t *testing.T) {
 			setup: func(_ Backend) (request []byte, expectedResponse []byte) {
 				unknownPayload, err := payload.NewAddressedCall([]byte{0, 0, 0}, []byte("unknown message"))
 				require.NoError(t, err)
-				unknownMessage, err := luxWarp.NewUnsignedMessage(snowCtx.NetworkID, snowCtx.ChainID, unknownPayload.Bytes())
+				unknownMessage, err := luxWarp.NewUnsignedMessage(quasarCtx.NetworkID, quasarCtx.ChainID, unknownPayload.Bytes())
 				require.NoError(t, err)
 				return unknownMessage.Bytes(), nil
 			},
@@ -98,9 +98,9 @@ func TestAddressedCallSignatures(t *testing.T) {
 				} else {
 					sigCache = &cache.Empty[ids.ID, []byte]{}
 				}
-				warpBackend, err := NewBackend(snowCtx.NetworkID, snowCtx.ChainID, snowCtx.WarpSigner, warptest.EmptyBlockClient, database, sigCache, [][]byte{offchainMessage.Bytes()})
+				warpBackend, err := NewBackend(quasarCtx.NetworkID, quasarCtx.ChainID, quasarCtx.WarpSigner, warptest.EmptyBlockClient, database, sigCache, [][]byte{offchainMessage.Bytes()})
 				require.NoError(t, err)
-				handler := acp118.NewCachedHandler(sigCache, warpBackend, snowCtx.WarpSigner)
+				handler := acp118.NewCachedHandler(sigCache, warpBackend, quasarCtx.WarpSigner)
 
 				requestBytes, expectedResponse := test.setup(warpBackend)
 				protoMsg := &sdk.SignatureRequest{Message: requestBytes}
@@ -141,7 +141,7 @@ func TestBlockSignatures(t *testing.T) {
 	metricstest.WithMetrics(t)
 
 	database := memdb.New()
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
+	quasarCtx := quasartest.Context(t, quasartest.CChainID)
 
 	knownBlkID := ids.GenerateTestID()
 	blockClient := warptest.MakeBlockClient(knownBlkID)
@@ -152,7 +152,7 @@ func TestBlockSignatures(t *testing.T) {
 			panic(err)
 		}
 
-		msg, err := luxWarp.NewUnsignedMessage(snowCtx.NetworkID, snowCtx.ChainID, idPayload.Bytes())
+		msg, err := luxWarp.NewUnsignedMessage(quasarCtx.NetworkID, quasarCtx.ChainID, idPayload.Bytes())
 		if err != nil {
 			panic(err)
 		}
@@ -169,9 +169,9 @@ func TestBlockSignatures(t *testing.T) {
 			setup: func() (request []byte, expectedResponse []byte) {
 				hashPayload, err := payload.NewHash(knownBlkID)
 				require.NoError(t, err)
-				unsignedMessage, err := luxWarp.NewUnsignedMessage(snowCtx.NetworkID, snowCtx.ChainID, hashPayload.Bytes())
+				unsignedMessage, err := luxWarp.NewUnsignedMessage(quasarCtx.NetworkID, quasarCtx.ChainID, hashPayload.Bytes())
 				require.NoError(t, err)
-				signature, err := snowCtx.WarpSigner.Sign(unsignedMessage)
+				signature, err := quasarCtx.WarpSigner.Sign(unsignedMessage)
 				require.NoError(t, err)
 				return toMessageBytes(knownBlkID), signature[:]
 			},
@@ -208,16 +208,16 @@ func TestBlockSignatures(t *testing.T) {
 					sigCache = &cache.Empty[ids.ID, []byte]{}
 				}
 				warpBackend, err := NewBackend(
-					snowCtx.NetworkID,
-					snowCtx.ChainID,
-					snowCtx.WarpSigner,
+					quasarCtx.NetworkID,
+					quasarCtx.ChainID,
+					quasarCtx.WarpSigner,
 					blockClient,
 					database,
 					sigCache,
 					nil,
 				)
 				require.NoError(t, err)
-				handler := acp118.NewCachedHandler(sigCache, warpBackend, snowCtx.WarpSigner)
+				handler := acp118.NewCachedHandler(sigCache, warpBackend, quasarCtx.WarpSigner)
 
 				requestBytes, expectedResponse := test.setup()
 				protoMsg := &sdk.SignatureRequest{Message: requestBytes}

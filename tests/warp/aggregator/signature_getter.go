@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/node/proto/pb/sdk"
-	"github.com/luxfi/node/utils/crypto/bls"
+	"github.com/luxfi/crypto/bls"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"google.golang.org/protobuf/proto"
 )

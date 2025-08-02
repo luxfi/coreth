@@ -13,11 +13,11 @@ import (
 	// may have false negatives.
 	"github.com/stretchr/testify/assert"
 
-	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metrics"
 )
 
 func TestMetricsEnabledByDefault(t *testing.T) {
-	assert.True(t, metrics.Enabled, "geth/metrics.Enabled")
+	assert.True(t, metrics.Enabled(), "geth/metrics.Enabled")
 
 	switch m := metrics.NewCounter().(type) {
 	case metrics.NilCounter:

@@ -55,7 +55,7 @@ func handleWarpMessage(accessibleState contract.AccessibleState, input []byte, s
 	if err != nil {
 		return nil, remainingGas, fmt.Errorf("%w: %s", errInvalidIndexInput, err)
 	}
-	if warpIndexInput > math.MaxInt32 {
+	if warpIndexInput > 2147483647 { // math.MaxInt32
 		return nil, remainingGas, fmt.Errorf("%w: larger than MaxInt32", errInvalidIndexInput)
 	}
 	warpIndex := int(warpIndexInput) // This conversion is safe even if int is 32 bits because we checked above.

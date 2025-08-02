@@ -7,7 +7,7 @@ import (
 
 	"github.com/luxfi/node/ids"
 	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 )
 
 var _ message.SyncableParser = (*summaryParser)(nil)
