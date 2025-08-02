@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/sync/semaphore"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/luxfi/ids"

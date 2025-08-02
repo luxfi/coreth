@@ -35,6 +35,6 @@
 "github.com/luxfi/geth/triedb/hashdb"
 "github.com/luxfi/geth/triedb/pathdb"
 "github.com/luxfi/geth/version"
-"github.com/luxfi/geth/log"
+"github.com/luxfi/log"
 "github.com/luxfi/metrics"
 "github.com/luxfi/crypto"

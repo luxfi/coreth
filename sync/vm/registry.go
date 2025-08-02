@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	synccommon "github.com/luxfi/coreth/sync"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // SyncerTask represents a single syncer with its name for identification.

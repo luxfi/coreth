@@ -16,7 +16,7 @@ import (
 	"github.com/luxfi/node/quasar/consensus/quasarman"
 	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
 	"github.com/luxfi/node/vms/platformvm/warp/payload"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 var (

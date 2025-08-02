@@ -40,7 +40,7 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // Options are the contextual parameters to execute the requested call.

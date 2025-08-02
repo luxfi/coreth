@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/node/quasar"
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 const discardedTxsCacheSize = 50

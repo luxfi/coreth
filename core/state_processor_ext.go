@@ -13,7 +13,7 @@ import (
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/coreth/precompile/modules"
 	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // ApplyPrecompileActivations checks if any of the precompiles specified by the chain config are enabled or disabled by the block

@@ -23,7 +23,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	ethcrypto "github.com/luxfi/crypto"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	ethparams "github.com/luxfi/geth/params"
 	"golang.org/x/sync/errgroup"
 )

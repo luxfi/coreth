@@ -11,7 +11,7 @@ import (
 
 	"github.com/luxfi/coreth/cmd/simulator/metrics"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 type THash interface {

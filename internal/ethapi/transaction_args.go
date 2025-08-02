@@ -44,7 +44,7 @@ import (
 	"github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/crypto/kzg4844"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/holiman/uint256"
 )
 

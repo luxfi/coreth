@@ -53,7 +53,7 @@ import (
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/crypto/kzg4844"
 	"github.com/luxfi/geth/ethdb/memorydb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rlp"
 	"github.com/holiman/billy"
 	"github.com/holiman/uint256"

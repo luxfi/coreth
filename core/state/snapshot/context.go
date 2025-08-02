@@ -35,7 +35,7 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 // generatorStats is a collection of statistics gathered by the snapshot generator

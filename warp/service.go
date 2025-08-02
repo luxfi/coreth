@@ -16,7 +16,7 @@ import (
 	warpprecompile "github.com/luxfi/coreth/precompile/contracts/warp"
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 )
 
 var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")

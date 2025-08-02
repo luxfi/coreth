@@ -38,7 +38,7 @@ import (
 	"runtime"
 
 	"github.com/luxfi/coreth/internal/flags"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"

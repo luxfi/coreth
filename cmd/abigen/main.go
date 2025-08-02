@@ -40,7 +40,7 @@ import (
 	"github.com/luxfi/coreth/internal/flags"
 	"github.com/luxfi/geth/common/compiler"
 	"github.com/luxfi/crypto"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/urfave/cli/v2"
 )
 

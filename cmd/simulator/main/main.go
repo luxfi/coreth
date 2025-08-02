@@ -11,8 +11,7 @@ import (
 
 	"github.com/luxfi/coreth/cmd/simulator/config"
 	"github.com/luxfi/coreth/cmd/simulator/load"
-	"github.com/luxfi/coreth/log"
-	gethlog "github.com/luxfi/geth/log"
+	"github.com/luxfi/log"
 	"github.com/spf13/pflag"
 )
 
