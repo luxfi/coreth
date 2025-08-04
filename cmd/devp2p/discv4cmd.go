@@ -28,7 +28,7 @@ import (
 
 	"github.com/luxfi/geth/cmd/devp2p/internal/v4test"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/log"
 	"github.com/luxfi/geth/p2p/discover"
 	"github.com/luxfi/geth/p2p/enode"

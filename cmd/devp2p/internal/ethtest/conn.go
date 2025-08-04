@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/eth/protocols/eth"
 	"github.com/luxfi/geth/eth/protocols/snap"
 	"github.com/luxfi/geth/p2p"

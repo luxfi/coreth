@@ -35,7 +35,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	jsassets "github.com/luxfi/geth/eth/tracers/js/internal/tracers"
 )
 

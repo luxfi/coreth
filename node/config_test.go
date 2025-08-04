@@ -23,7 +23,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/p2p"
 )
 

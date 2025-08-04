@@ -184,7 +184,7 @@ func fuzzCrossG1MultiExp(data []byte) int {
 	)
 	// n random scalars (max 17)
 	for i := 0; i < 17; i++ {
-		// note that geth/crypto/bls12381 works only with scalars <= 32bytes
+		// note that crypto/bls12381 works only with scalars <= 32bytes
 		s, err := randomScalar(input, fr.Modulus())
 		if err != nil {
 			break
@@ -235,7 +235,7 @@ func fuzzCrossG2MultiExp(data []byte) int {
 	)
 	// n random scalars (max 17)
 	for i := 0; i < 17; i++ {
-		// note that geth/crypto/bls12381 works only with scalars <= 32bytes
+		// note that crypto/bls12381 works only with scalars <= 32bytes
 		s, err := randomScalar(input, fr.Modulus())
 		if err != nil {
 			break

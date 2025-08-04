@@ -29,7 +29,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/prque"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/crypto/kzg4844"
+	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/eth/ethconfig"
 	"github.com/luxfi/geth/log"
 	"github.com/luxfi/geth/metrics"

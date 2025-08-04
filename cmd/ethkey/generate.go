@@ -24,7 +24,7 @@ import (
 
 	"github.com/luxfi/geth/accounts/keystore"
 	"github.com/luxfi/geth/cmd/utils"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 )

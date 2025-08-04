@@ -20,7 +20,7 @@ import (
 	"math/bits"
 	"testing"
 
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 )
 
 func TestJumpDestAnalysis(t *testing.T) {

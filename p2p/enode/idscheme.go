@@ -22,7 +22,7 @@ import (
 	"io"
 
 	"github.com/luxfi/geth/common/math"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/p2p/enr"
 	"github.com/luxfi/geth/rlp"
 	"golang.org/x/crypto/sha3"

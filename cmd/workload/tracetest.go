@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/eth/tracers"
 	"github.com/luxfi/geth/internal/utesting"
 	"github.com/luxfi/geth/log"

@@ -29,8 +29,8 @@ import (
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/crypto/ecies"
+	"github.com/luxfi/crypto"
+	"github.com/luxfi/crypto/ecies"
 	"github.com/luxfi/geth/p2p/pipes"
 	"github.com/luxfi/geth/rlp"
 	"github.com/stretchr/testify/assert"
