@@ -31,7 +31,7 @@ import (
 	"github.com/luxfi/geth/core"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/internal/era"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/trie"

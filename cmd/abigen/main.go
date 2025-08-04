@@ -27,7 +27,7 @@ import (
 	"github.com/luxfi/geth/accounts/abi/abigen"
 	"github.com/luxfi/geth/cmd/utils"
 	"github.com/luxfi/geth/common/compiler"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/internal/flags"
 	"github.com/luxfi/geth/log"
 	"github.com/urfave/cli/v2"

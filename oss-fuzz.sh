@@ -106,7 +106,7 @@ compile_fuzzer github.com/luxfi/geth/core/types \
   FuzzRLP fuzzRlp \
   $repo/core/types/rlp_fuzzer_test.go
 
-compile_fuzzer github.com/luxfi/geth/crypto/blake2b \
+compile_fuzzer github.com/luxfi/crypto/blake2b \
   Fuzz fuzzBlake2b \
   $repo/crypto/blake2b/blake2b_f_fuzz_test.go
 

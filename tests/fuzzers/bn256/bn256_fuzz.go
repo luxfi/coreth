@@ -22,9 +22,9 @@ import (
 	"io"
 	"math/big"
 
-	cloudflare "github.com/luxfi/geth/crypto/bn256/cloudflare"
-	gnark "github.com/luxfi/geth/crypto/bn256/gnark"
-	google "github.com/luxfi/geth/crypto/bn256/google"
+	cloudflare "github.com/luxfi/crypto/bn256/cloudflare"
+	gnark "github.com/luxfi/crypto/bn256/gnark"
+	google "github.com/luxfi/crypto/bn256/google"
 )
 
 func getG1Points(input io.Reader) (*cloudflare.G1, *google.G1, *gnark.G1) {

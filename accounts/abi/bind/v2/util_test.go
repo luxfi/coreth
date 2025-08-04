@@ -26,7 +26,7 @@ import (
 	"github.com/luxfi/geth/accounts/abi/bind/v2"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/ethclient/simulated"
 	"github.com/luxfi/geth/params"
 )

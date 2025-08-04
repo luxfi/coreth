@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common/mclock"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/p2p/discover/v5wire"
 	"github.com/luxfi/geth/p2p/enode"
 	"github.com/luxfi/geth/p2p/enr"

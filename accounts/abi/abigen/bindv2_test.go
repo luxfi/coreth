@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/accounts/abi"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 )
 
 type bindV2Test struct {

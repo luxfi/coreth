@@ -37,7 +37,7 @@ import (
 	"github.com/luxfi/geth/core/forkid"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/eth/protocols/eth"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/rlp"

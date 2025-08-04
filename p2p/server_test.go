@@ -29,7 +29,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/internal/testlog"
 	"github.com/luxfi/geth/log"
 	"github.com/luxfi/geth/p2p/enode"

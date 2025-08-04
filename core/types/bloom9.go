@@ -22,7 +22,7 @@ import (
 	"math/big"
 
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 )
 
 type bytesBacked interface {

@@ -22,7 +22,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/p2p/discover/v4wire"
 	"github.com/luxfi/geth/p2p/enode"
 )

@@ -22,7 +22,7 @@ import (
 	"net"
 
 	"github.com/luxfi/geth/cmd/devp2p/internal/ethtest"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/p2p"
 	"github.com/luxfi/geth/p2p/enode"
 	"github.com/luxfi/geth/p2p/rlpx"

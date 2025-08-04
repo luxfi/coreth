@@ -26,7 +26,7 @@ import (
 	"github.com/luxfi/geth/accounts/abi/abigen"
 	"github.com/luxfi/geth/cmd/utils"
 	"github.com/luxfi/geth/common/compiler"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 )
 
 // Run go generate to recreate the test bindings.

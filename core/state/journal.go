@@ -23,7 +23,7 @@ import (
 	"sort"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/holiman/uint256"
 )
 
