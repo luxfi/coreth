@@ -235,7 +235,7 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 	}
 	return &Key{
 		Id:         id,
-		Address:    crypto.PubkeyToAddress(key.PublicKey),
+		Address:    common.BytesToAddress(crypto.PubkeyToAddress(key.PublicKey).Bytes()),
 		PrivateKey: key,
 	}, nil
 }

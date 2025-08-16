@@ -700,7 +700,7 @@ func SafeDeleteRange(db ethdb.KeyValueStore, start, end []byte, hashScheme bool,
 
 	for it.Next() && bytes.Compare(end, it.Key()) > 0 {
 		// Prevent deletion for trie nodes in hash mode
-		if len(it.Key()) != 32 || crypto.Keccak256Hash(it.Value()) != common.BytesToHash(it.Key()) {
+		if len(it.Key()) != 32 || common.Hash(crypto.Keccak256Hash(it.Value())) != common.BytesToHash(it.Key()) {
 			if err := batch.Delete(it.Key()); err != nil {
 				return err
 			}

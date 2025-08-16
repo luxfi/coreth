@@ -295,7 +295,8 @@ func (r *Receipt) DeriveFields(signer Signer, context DeriveReceiptContext) {
 	if context.Tx.To() == nil {
 		// Deriving the signer is expensive, only do if it's actually needed
 		from, _ := Sender(signer, context.Tx)
-		r.ContractAddress = crypto.CreateAddress(from, context.Tx.Nonce())
+		addr := crypto.CreateAddress(crypto.Address(from), context.Tx.Nonce())
+		r.ContractAddress = common.Address(addr)
 	} else {
 		r.ContractAddress = common.Address{}
 	}
