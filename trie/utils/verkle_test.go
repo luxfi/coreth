@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"testing"
 
-	verkle "github.com/luxfi/crypto/verkle"
+	"github.com/ethereum/go-verkle"
 	"github.com/holiman/uint256"
 )
 
