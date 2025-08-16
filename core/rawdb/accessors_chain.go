@@ -348,7 +348,7 @@ func ReadHeaderRLP(db ethdb.Reader, hash common.Hash, number uint64) rlp.RawValu
 		// comparison is necessary since ancient database only maintains
 		// the canonical data.
 		data, _ = reader.Ancient(ChainFreezerHeaderTable, number)
-		if len(data) > 0 && crypto.Keccak256Hash(data) == hash {
+		if len(data) > 0 && common.Hash(crypto.Keccak256Hash(data)) == hash {
 			return nil
 		}
 		// If not, try reading from leveldb

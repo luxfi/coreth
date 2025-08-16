@@ -321,7 +321,7 @@ func (s *Sync) AddSubTrie(root common.Hash, path []byte, parent common.Hash, par
 // as is.
 func (s *Sync) AddCodeEntry(hash common.Hash, path []byte, parent common.Hash, parentPath []byte) {
 	// Short circuit if the entry is empty or already known
-	if hash == types.EmptyCodeHash {
+	if hash == common.Hash(types.EmptyCodeHash) {
 		return
 	}
 	if s.membatch.hasCode(hash) {
@@ -729,7 +729,7 @@ func (s *Sync) hasNode(owner common.Hash, path []byte, hash common.Hash) (exists
 	} else {
 		blob = rawdb.ReadStorageTrieNode(s.database, owner, path)
 	}
-	exists = hash == crypto.Keccak256Hash(blob)
+	exists = hash == common.Hash(crypto.Keccak256Hash(blob))
 	inconsistent = !exists && len(blob) != 0
 	return exists, inconsistent
 }

@@ -999,7 +999,7 @@ func (s *Session) derive(path accounts.DerivationPath) (accounts.Account, error)
 	if err != nil {
 		return accounts.Account{}, err
 	}
-	return s.Wallet.makeAccount(crypto.PubkeyToAddress(*pub), path), nil
+	return s.Wallet.makeAccount(common.BytesToAddress(crypto.PubkeyToAddress(*pub).Bytes()), path), nil
 }
 
 // keyExport contains information on an exported keypair.
