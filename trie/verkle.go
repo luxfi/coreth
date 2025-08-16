@@ -28,7 +28,7 @@ import (
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/trie/utils"
 	"github.com/luxfi/geth/triedb/database"
-	verkle "github.com/luxfi/crypto/verkle"
+	"github.com/ethereum/go-verkle"
 	"github.com/holiman/uint256"
 )
 

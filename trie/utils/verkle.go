@@ -20,10 +20,10 @@ import (
 	"encoding/binary"
 	"sync"
 
-	"github.com/luxfi/crypto/ipa/bandersnatch/fr"
+	"github.com/crate-crypto/go-ipa/bandersnatch/fr"
 	"github.com/luxfi/geth/common/lru"
 	"github.com/luxfi/geth/metrics"
-	verkle "github.com/luxfi/crypto/verkle"
+	"github.com/ethereum/go-verkle"
 	"github.com/holiman/uint256"
 )
 

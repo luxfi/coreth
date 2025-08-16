@@ -32,7 +32,7 @@ import (
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/triedb"
-	verkle "github.com/luxfi/crypto/verkle"
+	"github.com/ethereum/go-verkle"
 	"github.com/holiman/uint256"
 )
 
