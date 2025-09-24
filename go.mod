@@ -1,6 +1,6 @@
 module github.com/luxfi/geth
 
-go 1.24.5
+go 1.25
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.2.0
