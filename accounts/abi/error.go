@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/crypto"
 )
 
 type Error struct {

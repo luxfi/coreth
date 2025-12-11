@@ -6,7 +6,6 @@ package vm
 
 import (
 	"errors"
-	"math/big"
 
 	"github.com/luxfi/geth/accounts/abi"
 	"github.com/luxfi/geth/common"
@@ -121,7 +120,7 @@ func runMLDSAVerify(input []byte, mode mldsa.Mode) ([]byte, error) {
 	}
 
 	// Verify signature
-	valid := pub.Verify(msg, sig)
+	valid := pub.VerifySignature(msg, sig)
 
 	// Return result as 32 bytes (0x01 for valid, 0x00 for invalid)
 	result := make([]byte, 32)
@@ -192,7 +191,7 @@ func (e *ethMLDSAVerify) Run(input []byte) ([]byte, error) {
 
 	// For ETH-optimized version, we verify against the hash directly
 	// In production, this would use optimized verification with Keccak
-	valid := pub.Verify(messageHash, sig)
+	valid := pub.VerifySignature(messageHash, sig)
 
 	// Return result as 32 bytes
 	result := make([]byte, 32)

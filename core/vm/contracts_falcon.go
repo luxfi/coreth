@@ -6,10 +6,8 @@ package vm
 import (
 	"crypto/sha256"
 	"errors"
-	"math/big"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/params"
 )
 
 const (

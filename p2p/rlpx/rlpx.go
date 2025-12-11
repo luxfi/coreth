@@ -34,7 +34,7 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common/bitutil"
-	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/crypto/ecies"
 	"github.com/luxfi/geth/rlp"
 	"github.com/golang/snappy"

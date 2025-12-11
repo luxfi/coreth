@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/ethdb/memorydb"
 	"github.com/luxfi/geth/log"
@@ -591,9 +591,9 @@ func InspectDatabase(db ethdb.Database, keyPrefix, keyStart []byte) error {
 		total += ancient.size()
 	}
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Database", "Category", "Size", "Items"})
-	table.SetFooter([]string{"", "Total", total.String(), " "})
-	table.AppendBulk(stats)
+	table.Header([]string{"Database", "Category", "Size", "Items"})
+	table.Footer([]string{"", "Total", total.String(), " "})
+	table.Bulk(stats)
 	table.Render()
 
 	if unaccounted.size > 0 {

@@ -31,7 +31,7 @@ import (
 	"github.com/consensys/gnark-crypto/ecc/bls12-381/fr"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/tracing"
-	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/crypto/blake2b"
 	"github.com/luxfi/crypto/bn256"
 	"github.com/luxfi/crypto/kzg4844"
@@ -155,33 +155,12 @@ var PrecompiledContractsPostQuantum = PrecompiledContracts{
 	common.BytesToAddress([]byte{0x08}): &bn256PairingIstanbul{},
 	common.BytesToAddress([]byte{0x09}): &blake2F{},
 	common.BytesToAddress([]byte{0x0a}): &kzgPointEvaluation{},
-	
-	// ML-DSA (FIPS 204) post-quantum signature precompiles
-	common.BytesToAddress([]byte{0x1, 0x10}): &mldsaVerify44{},   // ML-DSA-44 (Level 2)
-	common.BytesToAddress([]byte{0x1, 0x11}): &mldsaVerify65{},   // ML-DSA-65 (Level 3)
-	common.BytesToAddress([]byte{0x1, 0x12}): &mldsaVerify87{},   // ML-DSA-87 (Level 5)
-	common.BytesToAddress([]byte{0x1, 0x13}): &ethMLDSAVerify{},  // ETH-optimized ML-DSA
-	
-	// ML-KEM (FIPS 203) key encapsulation precompiles
-	common.BytesToAddress([]byte{0x1, 0x20}): &mlkemEncapsulate512{},   // ML-KEM-512 (Level 1)
-	common.BytesToAddress([]byte{0x1, 0x21}): &mlkemEncapsulate768{},   // ML-KEM-768 (Level 3)
-	common.BytesToAddress([]byte{0x1, 0x22}): &mlkemEncapsulate1024{},  // ML-KEM-1024 (Level 5)
-	common.BytesToAddress([]byte{0x1, 0x23}): &mlkemDecapsulate512{},   // ML-KEM-512 decap
-	common.BytesToAddress([]byte{0x1, 0x24}): &mlkemDecapsulate768{},   // ML-KEM-768 decap
-	common.BytesToAddress([]byte{0x1, 0x25}): &mlkemDecapsulate1024{},  // ML-KEM-1024 decap
-	common.BytesToAddress([]byte{0x1, 0x26}): &mlkemHybridEncrypt{},    // Hybrid encryption
-	common.BytesToAddress([]byte{0x1, 0x27}): &mlkemHybridDecrypt{},    // Hybrid decryption
-	
-	// SLH-DSA (FIPS 205) hash-based signature precompiles
-	common.BytesToAddress([]byte{0x1, 0x30}): &slhdsaVerify128s{},   // SLH-DSA-128s (small)
-	common.BytesToAddress([]byte{0x1, 0x31}): &slhdsaVerify192s{},   // SLH-DSA-192s (small)
-	common.BytesToAddress([]byte{0x1, 0x32}): &slhdsaVerify256s{},   // SLH-DSA-256s (small)
-	common.BytesToAddress([]byte{0x1, 0x33}): &slhdsaVerify128f{},   // SLH-DSA-128f (fast)
-	common.BytesToAddress([]byte{0x1, 0x34}): &slhdsaVerify192f{},   // SLH-DSA-192f (fast)
-	common.BytesToAddress([]byte{0x1, 0x35}): &slhdsaVerify256f{},   // SLH-DSA-256f (fast)
-	common.BytesToAddress([]byte{0x1, 0x36}): &slhdsaBatchVerify{},   // Batch verification
-	common.BytesToAddress([]byte{0x1, 0x37}): &slhdsaHybridVerify{},  // Hybrid verification
-	
+
+	// TODO: Post-quantum precompiles disabled pending luxfi/crypto API updates
+	// The following precompiles will be re-enabled when luxfi/crypto provides
+	// compatible APIs for ML-DSA, ML-KEM, SLH-DSA, and SHAKE functions.
+	// See: contracts_mldsa.go.disabled, contracts_mlkem.go.disabled, contracts_slhdsa.go.disabled
+
 	// SHAKE (FIPS 202) hash function precompiles
 	common.BytesToAddress([]byte{0x1, 0x40}): &shake128{},           // SHAKE128 variable
 	common.BytesToAddress([]byte{0x1, 0x41}): &shake128_256{},       // SHAKE128-256
@@ -193,29 +172,29 @@ var PrecompiledContractsPostQuantum = PrecompiledContracts{
 	common.BytesToAddress([]byte{0x1, 0x47}): &cshake128{},          // cSHAKE128
 	common.BytesToAddress([]byte{0x1, 0x48}): &cshake256{},          // cSHAKE256
 	
-	// Lamport one-time signature precompiles
-	common.BytesToAddress([]byte{0x1, 0x50}): &lamportVerifySHA256{}, // Lamport SHA256
-	common.BytesToAddress([]byte{0x1, 0x51}): &lamportVerifySHA512{}, // Lamport SHA512
-	common.BytesToAddress([]byte{0x1, 0x52}): &lamportBatchVerify{},  // Lamport batch
-	common.BytesToAddress([]byte{0x1, 0x53}): &lamportMerkleRoot{},   // Merkle root
-	common.BytesToAddress([]byte{0x1, 0x54}): &lamportMerkleVerify{}, // Merkle verify
-	
-	// BLS signature precompiles
-	common.BytesToAddress([]byte{0x1, 0x60}): &blsVerify{},              // BLS verify
-	common.BytesToAddress([]byte{0x1, 0x61}): &blsAggregateVerify{},     // BLS aggregate
-	common.BytesToAddress([]byte{0x1, 0x62}): &blsFastAggregate{},       // BLS fast aggregate
-	common.BytesToAddress([]byte{0x1, 0x63}): &blsThresholdVerify{},     // BLS threshold
-	common.BytesToAddress([]byte{0x1, 0x64}): &blsThresholdCombine{},    // BLS combine
-	common.BytesToAddress([]byte{0x1, 0x65}): &blsPublicKeyAggregate{},  // BLS key aggregate
-	common.BytesToAddress([]byte{0x1, 0x66}): &blsHashToPoint{},         // BLS hash to point
-	
-	// Ringtail post-quantum ring signature precompiles
-	common.BytesToAddress([]byte{0x1, 0x70}): &ringtailVerify{},         // Ringtail verify
-	common.BytesToAddress([]byte{0x1, 0x71}): &ringtailBatchVerify{},    // Ringtail batch
-	common.BytesToAddress([]byte{0x1, 0x72}): &ringtailLinkableVerify{}, // Ringtail linkable
-	common.BytesToAddress([]byte{0x1, 0x73}): &ringtailKeyAggregate{},   // Ringtail key agg
-	common.BytesToAddress([]byte{0x1, 0x74}): &ringtailRingHash{},       // Ringtail ring hash
-	common.BytesToAddress([]byte{0x1, 0x75}): &ringtailThresholdVerify{},// Ringtail threshold
+	// TODO: Lamport one-time signature precompiles - implementations pending
+	// common.BytesToAddress([]byte{0x1, 0x50}): &lamportVerifySHA256{}, // Lamport SHA256
+	// common.BytesToAddress([]byte{0x1, 0x51}): &lamportVerifySHA512{}, // Lamport SHA512
+	// common.BytesToAddress([]byte{0x1, 0x52}): &lamportBatchVerify{},  // Lamport batch
+	// common.BytesToAddress([]byte{0x1, 0x53}): &lamportMerkleRoot{},   // Merkle root
+	// common.BytesToAddress([]byte{0x1, 0x54}): &lamportMerkleVerify{}, // Merkle verify
+
+	// TODO: BLS signature precompiles - implementations pending
+	// common.BytesToAddress([]byte{0x1, 0x60}): &blsVerify{},              // BLS verify
+	// common.BytesToAddress([]byte{0x1, 0x61}): &blsAggregateVerify{},     // BLS aggregate
+	// common.BytesToAddress([]byte{0x1, 0x62}): &blsFastAggregate{},       // BLS fast aggregate
+	// common.BytesToAddress([]byte{0x1, 0x63}): &blsThresholdVerify{},     // BLS threshold
+	// common.BytesToAddress([]byte{0x1, 0x64}): &blsThresholdCombine{},    // BLS combine
+	// common.BytesToAddress([]byte{0x1, 0x65}): &blsPublicKeyAggregate{},  // BLS key aggregate
+	// common.BytesToAddress([]byte{0x1, 0x66}): &blsHashToPoint{},         // BLS hash to point
+
+	// TODO: Ringtail post-quantum ring signature precompiles - implementations pending
+	// common.BytesToAddress([]byte{0x1, 0x70}): &ringtailVerify{},         // Ringtail verify
+	// common.BytesToAddress([]byte{0x1, 0x71}): &ringtailBatchVerify{},    // Ringtail batch
+	// common.BytesToAddress([]byte{0x1, 0x72}): &ringtailLinkableVerify{}, // Ringtail linkable
+	// common.BytesToAddress([]byte{0x1, 0x73}): &ringtailKeyAggregate{},   // Ringtail key agg
+	// common.BytesToAddress([]byte{0x1, 0x74}): &ringtailRingHash{},       // Ringtail ring hash
+	// common.BytesToAddress([]byte{0x1, 0x75}): &ringtailThresholdVerify{},// Ringtail threshold
 }
 
 // PrecompiledContractsOsaka contains the set of pre-compiled Ethereum
@@ -281,17 +260,15 @@ func init() {
 	for k := range PrecompiledContractsOsaka {
 		PrecompiledAddressesOsaka = append(PrecompiledAddressesOsaka, k)
 	}
-	for k := range PrecompiledContractsLux {
-		PrecompiledAddressesLux = append(PrecompiledAddressesLux, k)
-	}
+	// TODO: Add Lux precompiles with post-quantum support when luxfi/crypto API is updated
+	// for k := range PrecompiledContractsLux {
+	// 	PrecompiledAddressesLux = append(PrecompiledAddressesLux, k)
+	// }
 }
 
 func activePrecompiledContracts(rules params.Rules) PrecompiledContracts {
-	// Use Lux precompiles which include post-quantum support
-	// This can be configured via chain rules if needed
-	if true { // TODO: Add proper chain ID or config check for Lux network
-		return PrecompiledContractsLux
-	}
+	// TODO: Enable Lux precompiles with post-quantum support when luxfi/crypto API is updated
+	// For now, use standard Osaka precompiles
 	switch {
 	case rules.IsVerkle:
 		return PrecompiledContractsVerkle
@@ -1357,336 +1334,8 @@ func (c *p256Verify) Run(input []byte) ([]byte, error) {
 	return nil, nil
 }
 
-// ========================================
-// Post-Quantum Cryptography Precompiles
-// ========================================
-
-// ML-DSA (FIPS 204) Precompiles
-type mldsaVerify44 struct{}
-func (c *mldsaVerify44) RequiredGas(input []byte) uint64 { return 5000000 }
-func (c *mldsaVerify44) Run(input []byte) ([]byte, error) {
-	// Placeholder implementation - would call luxfi/crypto/mldsa
-	if len(input) < 100 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type mldsaVerify65 struct{}
-func (c *mldsaVerify65) RequiredGas(input []byte) uint64 { return 7500000 }
-func (c *mldsaVerify65) Run(input []byte) ([]byte, error) {
-	if len(input) < 100 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type mldsaVerify87 struct{}
-func (c *mldsaVerify87) RequiredGas(input []byte) uint64 { return 10000000 }
-func (c *mldsaVerify87) Run(input []byte) ([]byte, error) {
-	if len(input) < 100 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type ethMLDSAVerify struct{}
-func (c *ethMLDSAVerify) RequiredGas(input []byte) uint64 { return 4000000 }
-func (c *ethMLDSAVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 100 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-// ML-KEM (FIPS 203) Precompiles
-type mlkemEncapsulate512 struct{}
-func (c *mlkemEncapsulate512) RequiredGas(input []byte) uint64 { return 2000000 }
-func (c *mlkemEncapsulate512) Run(input []byte) ([]byte, error) {
-	if len(input) < 32 { return nil, nil }
-	// Return placeholder ciphertext and shared secret
-	result := make([]byte, 800)
-	return result, nil
-}
-
-type mlkemEncapsulate768 struct{}
-func (c *mlkemEncapsulate768) RequiredGas(input []byte) uint64 { return 3000000 }
-func (c *mlkemEncapsulate768) Run(input []byte) ([]byte, error) {
-	if len(input) < 32 { return nil, nil }
-	result := make([]byte, 1120)
-	return result, nil
-}
-
-type mlkemEncapsulate1024 struct{}
-func (c *mlkemEncapsulate1024) RequiredGas(input []byte) uint64 { return 4000000 }
-func (c *mlkemEncapsulate1024) Run(input []byte) ([]byte, error) {
-	if len(input) < 32 { return nil, nil }
-	result := make([]byte, 1600)
-	return result, nil
-}
-
-type mlkemDecapsulate512 struct{}
-func (c *mlkemDecapsulate512) RequiredGas(input []byte) uint64 { return 2000000 }
-func (c *mlkemDecapsulate512) Run(input []byte) ([]byte, error) {
-	if len(input) < 768 { return nil, nil }
-	return make([]byte, 32), nil
-}
-
-type mlkemDecapsulate768 struct{}
-func (c *mlkemDecapsulate768) RequiredGas(input []byte) uint64 { return 3000000 }
-func (c *mlkemDecapsulate768) Run(input []byte) ([]byte, error) {
-	if len(input) < 1088 { return nil, nil }
-	return make([]byte, 32), nil
-}
-
-type mlkemDecapsulate1024 struct{}
-func (c *mlkemDecapsulate1024) RequiredGas(input []byte) uint64 { return 4000000 }
-func (c *mlkemDecapsulate1024) Run(input []byte) ([]byte, error) {
-	if len(input) < 1568 { return nil, nil }
-	return make([]byte, 32), nil
-}
-
-type mlkemHybridEncrypt struct{}
-func (c *mlkemHybridEncrypt) RequiredGas(input []byte) uint64 { return 5000000 }
-func (c *mlkemHybridEncrypt) Run(input []byte) ([]byte, error) {
-	if len(input) < 64 { return nil, nil }
-	return make([]byte, 1600), nil
-}
-
-type mlkemHybridDecrypt struct{}
-func (c *mlkemHybridDecrypt) RequiredGas(input []byte) uint64 { return 5000000 }
-func (c *mlkemHybridDecrypt) Run(input []byte) ([]byte, error) {
-	if len(input) < 1600 { return nil, nil }
-	return make([]byte, 32), nil
-}
-
-// SLH-DSA (FIPS 205) Precompiles
-type slhdsaVerify128s struct{}
-func (c *slhdsaVerify128s) RequiredGas(input []byte) uint64 { return 10000000 }
-func (c *slhdsaVerify128s) Run(input []byte) ([]byte, error) {
-	if len(input) < 7856 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type slhdsaVerify192s struct{}
-func (c *slhdsaVerify192s) RequiredGas(input []byte) uint64 { return 15000000 }
-func (c *slhdsaVerify192s) Run(input []byte) ([]byte, error) {
-	if len(input) < 16224 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type slhdsaVerify256s struct{}
-func (c *slhdsaVerify256s) RequiredGas(input []byte) uint64 { return 20000000 }
-func (c *slhdsaVerify256s) Run(input []byte) ([]byte, error) {
-	if len(input) < 29792 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type slhdsaVerify128f struct{}
-func (c *slhdsaVerify128f) RequiredGas(input []byte) uint64 { return 12000000 }
-func (c *slhdsaVerify128f) Run(input []byte) ([]byte, error) {
-	if len(input) < 17088 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type slhdsaVerify192f struct{}
-func (c *slhdsaVerify192f) RequiredGas(input []byte) uint64 { return 18000000 }
-func (c *slhdsaVerify192f) Run(input []byte) ([]byte, error) {
-	if len(input) < 35664 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type slhdsaVerify256f struct{}
-func (c *slhdsaVerify256f) RequiredGas(input []byte) uint64 { return 25000000 }
-func (c *slhdsaVerify256f) Run(input []byte) ([]byte, error) {
-	if len(input) < 49856 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type slhdsaBatchVerify struct{}
-func (c *slhdsaBatchVerify) RequiredGas(input []byte) uint64 { return 30000000 }
-func (c *slhdsaBatchVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 100 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type slhdsaHybridVerify struct{}
-func (c *slhdsaHybridVerify) RequiredGas(input []byte) uint64 { return 35000000 }
-func (c *slhdsaHybridVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 100 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-// SHAKE (FIPS 202) Precompiles
-type shake128 struct{}
-func (c *shake128) RequiredGas(input []byte) uint64 { return 60 + uint64(len(input))*12 }
-func (c *shake128) Run(input []byte) ([]byte, error) {
-	if len(input) < 4 { return nil, nil }
-	outputLen := binary.BigEndian.Uint32(input[:4])
-	if outputLen > 1024 { outputLen = 1024 }
-	return make([]byte, outputLen), nil
-}
-
-type shake128_256 struct{}
-func (c *shake128_256) RequiredGas(input []byte) uint64 { return 100 }
-func (c *shake128_256) Run(input []byte) ([]byte, error) { return make([]byte, 32), nil }
-
-type shake128_512 struct{}
-func (c *shake128_512) RequiredGas(input []byte) uint64 { return 150 }
-func (c *shake128_512) Run(input []byte) ([]byte, error) { return make([]byte, 64), nil }
-
-type shake256 struct{}
-func (c *shake256) RequiredGas(input []byte) uint64 { return 60 + uint64(len(input))*12 }
-func (c *shake256) Run(input []byte) ([]byte, error) {
-	if len(input) < 4 { return nil, nil }
-	outputLen := binary.BigEndian.Uint32(input[:4])
-	if outputLen > 1024 { outputLen = 1024 }
-	return make([]byte, outputLen), nil
-}
-
-type shake256_256 struct{}
-func (c *shake256_256) RequiredGas(input []byte) uint64 { return 100 }
-func (c *shake256_256) Run(input []byte) ([]byte, error) { return make([]byte, 32), nil }
-
-type shake256_512 struct{}
-func (c *shake256_512) RequiredGas(input []byte) uint64 { return 150 }
-func (c *shake256_512) Run(input []byte) ([]byte, error) { return make([]byte, 64), nil }
-
-type shake256_1024 struct{}
-func (c *shake256_1024) RequiredGas(input []byte) uint64 { return 250 }
-func (c *shake256_1024) Run(input []byte) ([]byte, error) { return make([]byte, 128), nil }
-
-type cshake128 struct{}
-func (c *cshake128) RequiredGas(input []byte) uint64 { return 200 + uint64(len(input))*15 }
-func (c *cshake128) Run(input []byte) ([]byte, error) {
-	if len(input) < 4 { return nil, nil }
-	return make([]byte, 32), nil
-}
-
-type cshake256 struct{}
-func (c *cshake256) RequiredGas(input []byte) uint64 { return 250 + uint64(len(input))*15 }
-func (c *cshake256) Run(input []byte) ([]byte, error) {
-	if len(input) < 4 { return nil, nil }
-	return make([]byte, 32), nil
-}
-
-// Lamport Precompiles
-type lamportVerifySHA256 struct{}
-func (c *lamportVerifySHA256) RequiredGas(input []byte) uint64 { return 50000 }
-func (c *lamportVerifySHA256) Run(input []byte) ([]byte, error) {
-	if len(input) < 8224 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type lamportVerifySHA512 struct{}
-func (c *lamportVerifySHA512) RequiredGas(input []byte) uint64 { return 75000 }
-func (c *lamportVerifySHA512) Run(input []byte) ([]byte, error) {
-	if len(input) < 32896 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type lamportBatchVerify struct{}
-func (c *lamportBatchVerify) RequiredGas(input []byte) uint64 { return 200000 }
-func (c *lamportBatchVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 100 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type lamportMerkleRoot struct{}
-func (c *lamportMerkleRoot) RequiredGas(input []byte) uint64 { return 100000 }
-func (c *lamportMerkleRoot) Run(input []byte) ([]byte, error) {
-	if len(input) < 64 { return nil, nil }
-	return make([]byte, 32), nil
-}
-
-type lamportMerkleVerify struct{}
-func (c *lamportMerkleVerify) RequiredGas(input []byte) uint64 { return 150000 }
-func (c *lamportMerkleVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 100 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-// BLS Precompiles
-type blsVerify struct{}
-func (c *blsVerify) RequiredGas(input []byte) uint64 { return 150000 }
-func (c *blsVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 176 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type blsAggregateVerify struct{}
-func (c *blsAggregateVerify) RequiredGas(input []byte) uint64 { return 300000 }
-func (c *blsAggregateVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 200 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type blsFastAggregate struct{}
-func (c *blsFastAggregate) RequiredGas(input []byte) uint64 { return 200000 }
-func (c *blsFastAggregate) Run(input []byte) ([]byte, error) {
-	if len(input) < 200 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type blsThresholdVerify struct{}
-func (c *blsThresholdVerify) RequiredGas(input []byte) uint64 { return 400000 }
-func (c *blsThresholdVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 300 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type blsThresholdCombine struct{}
-func (c *blsThresholdCombine) RequiredGas(input []byte) uint64 { return 250000 }
-func (c *blsThresholdCombine) Run(input []byte) ([]byte, error) {
-	if len(input) < 200 { return nil, nil }
-	return make([]byte, 96), nil
-}
-
-type blsPublicKeyAggregate struct{}
-func (c *blsPublicKeyAggregate) RequiredGas(input []byte) uint64 { return 100000 }
-func (c *blsPublicKeyAggregate) Run(input []byte) ([]byte, error) {
-	if len(input) < 96 { return nil, nil }
-	return make([]byte, 48), nil
-}
-
-type blsHashToPoint struct{}
-func (c *blsHashToPoint) RequiredGas(input []byte) uint64 { return 50000 }
-func (c *blsHashToPoint) Run(input []byte) ([]byte, error) {
-	if len(input) < 32 { return nil, nil }
-	return make([]byte, 96), nil
-}
-
-// Ringtail Precompiles
-type ringtailVerify struct{}
-func (c *ringtailVerify) RequiredGas(input []byte) uint64 { return 500000 }
-func (c *ringtailVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 1000 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type ringtailBatchVerify struct{}
-func (c *ringtailBatchVerify) RequiredGas(input []byte) uint64 { return 1000000 }
-func (c *ringtailBatchVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 2000 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type ringtailLinkableVerify struct{}
-func (c *ringtailLinkableVerify) RequiredGas(input []byte) uint64 { return 600000 }
-func (c *ringtailLinkableVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 1200 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
-
-type ringtailKeyAggregate struct{}
-func (c *ringtailKeyAggregate) RequiredGas(input []byte) uint64 { return 100000 }
-func (c *ringtailKeyAggregate) Run(input []byte) ([]byte, error) {
-	if len(input) < 100 { return nil, nil }
-	return make([]byte, 64), nil
-}
-
-type ringtailRingHash struct{}
-func (c *ringtailRingHash) RequiredGas(input []byte) uint64 { return 50000 }
-func (c *ringtailRingHash) Run(input []byte) ([]byte, error) {
-	if len(input) < 64 { return nil, nil }
-	return make([]byte, 32), nil
-}
-
-type ringtailThresholdVerify struct{}
-func (c *ringtailThresholdVerify) RequiredGas(input []byte) uint64 { return 800000 }
-func (c *ringtailThresholdVerify) Run(input []byte) ([]byte, error) {
-	if len(input) < 1500 { return nil, nil }
-	return common.LeftPadBytes([]byte{1}, 32), nil
-}
+// Post-quantum cryptography precompiles are defined in separate files:
+// - contracts_mldsa.go: ML-DSA (FIPS 204) signature verification
+// - contracts_mlkem.go: ML-KEM (FIPS 203) key encapsulation
+// - contracts_slhdsa.go: SLH-DSA (FIPS 205) signature verification
+// - contracts_shake.go: SHAKE (FIPS 202) extendable output functions

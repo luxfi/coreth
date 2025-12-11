@@ -13,6 +13,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/consensus"
 	"github.com/luxfi/geth/core"
+	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
@@ -21,6 +22,8 @@ import (
 	"github.com/luxfi/geth/log"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/geth/triedb"
 	"github.com/luxfi/ids"
 )
 
@@ -28,30 +31,30 @@ import (
 type UnifiedEVM struct {
 	// Core geth blockchain
 	blockchain *core.BlockChain
-	
+
 	// State database
 	stateDB state.Database
-	
+
 	// Chain configuration
 	chainConfig *params.ChainConfig
-	
+
 	// VM configuration
 	vmConfig vm.Config
-	
+
 	// Database
 	chainDB ethdb.Database
-	
+
 	// Event system
 	scope event.SubscriptionScope
-	
+
 	// Network/Layer configuration
 	networkID     uint64
-	layer         uint8  // 0=C-Chain, 1=L1, 2=L2, 3=L3
-	consensusType uint8  // 0=POA, 1=POS, 2=POW
-	
+	layer         uint8 // 0=C-Chain, 1=L1, 2=L2, 3=L3
+	consensusType uint8 // 0=POA, 1=POS, 2=POW
+
 	// Quantum features enabled
 	quantumEnabled bool
-	
+
 	// Consensus interface (for Lux integration)
 	consensusEngine consensus.Engine
 }
@@ -60,105 +63,100 @@ type UnifiedEVM struct {
 type UnifiedConfig struct {
 	// Chain configuration
 	ChainConfig *params.ChainConfig
-	
+
 	// Genesis block
 	Genesis *core.Genesis
-	
+
 	// Database
 	Database ethdb.Database
-	
+
 	// Network parameters
 	NetworkID     uint64
 	Layer         uint8
 	ConsensusType uint8
-	
+
 	// Features
 	EnableQuantum bool
 	EnableWarp    bool
-	
+
 	// VM configuration
 	VMConfig vm.Config
-	
-	// Cache sizes
-	CacheConfig *core.CacheConfig
+
+	// Blockchain config
+	BlockChainConfig *core.BlockChainConfig
 }
 
 // NewUnifiedEVM creates a unified EVM instance
 func NewUnifiedEVM(config *UnifiedConfig) (*UnifiedEVM, error) {
+	// Create trie database
+	tdb := triedb.NewDatabase(config.Database, nil)
+
 	// Create state database
-	stateDB := state.NewDatabaseWithConfig(config.Database, &core.TriesInMemory)
-	
+	stateDB := state.NewDatabase(tdb, nil)
+
+	// Create consensus engine first
+	consensusEngine := createConsensusEngine(config.ConsensusType, config.ChainConfig, config.NetworkID)
+
+	// Create blockchain config
+	bcConfig := config.BlockChainConfig
+	if bcConfig == nil {
+		bcConfig = core.DefaultConfig()
+	}
+	bcConfig.VmConfig = config.VMConfig
+
 	// Initialize blockchain
 	blockchain, err := core.NewBlockChain(
 		config.Database,
-		config.CacheConfig,
 		config.Genesis,
-		nil, // overrides
-		nil, // engine (will set later)
-		config.VMConfig,
-		nil, // shouldPreserve
+		consensusEngine,
+		bcConfig,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create blockchain: %w", err)
 	}
-	
+
 	// Create unified instance
 	evm := &UnifiedEVM{
 		blockchain:      blockchain,
-		stateDB:        stateDB,
-		chainConfig:    config.ChainConfig,
-		vmConfig:       config.VMConfig,
-		chainDB:        config.Database,
-		networkID:      config.NetworkID,
-		layer:          config.Layer,
-		consensusType:  config.ConsensusType,
-		quantumEnabled: config.EnableQuantum,
+		stateDB:         stateDB,
+		chainConfig:     config.ChainConfig,
+		vmConfig:        config.VMConfig,
+		chainDB:         config.Database,
+		networkID:       config.NetworkID,
+		layer:           config.Layer,
+		consensusType:   config.ConsensusType,
+		quantumEnabled:  config.EnableQuantum,
+		consensusEngine: consensusEngine,
 	}
-	
-	// Set consensus engine based on type
-	evm.consensusEngine = evm.createConsensusEngine()
-	blockchain.SetEngine(evm.consensusEngine)
-	
+
 	return evm, nil
 }
 
 // createConsensusEngine creates appropriate consensus engine
-func (evm *UnifiedEVM) createConsensusEngine() consensus.Engine {
-	switch evm.consensusType {
+func createConsensusEngine(consensusType uint8, config *params.ChainConfig, networkID uint64) consensus.Engine {
+	switch consensusType {
 	case 0: // POA
 		return &POAEngine{
-			config:    evm.chainConfig,
-			networkID: evm.networkID,
+			config:    config,
+			networkID: networkID,
 		}
 	case 1: // POS
 		return &POSEngine{
-			config:    evm.chainConfig,
-			networkID: evm.networkID,
+			config:    config,
+			networkID: networkID,
 		}
 	default: // POW
 		return &POWEngine{
-			config:    evm.chainConfig,
-			networkID: evm.networkID,
+			config:    config,
+			networkID: networkID,
 		}
 	}
 }
 
 // ProcessBlock processes a block through the unified EVM
 func (evm *UnifiedEVM) ProcessBlock(block *types.Block) error {
-	// Convert to unified format if needed
-	unifiedBlock := types.FromLegacyBlock(block)
-	
-	// Upgrade to quantum if enabled
-	if evm.quantumEnabled && !unifiedBlock.Header().IsQuantum() {
-		unifiedBlock.Header().UpgradeToQuantum(
-			evm.networkID,
-			evm.layer,
-			evm.consensusType,
-		)
-	}
-	
 	// Process through blockchain
-	_, err := evm.blockchain.InsertChain(types.Blocks{unifiedBlock.ToLegacyBlock()})
+	_, err := evm.blockchain.InsertChain(types.Blocks{block})
 	return err
 }
 
@@ -169,7 +167,7 @@ func (evm *UnifiedEVM) BuildBlock(parent *types.Block, txs types.Transactions, t
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Create header
 	header := &types.Header{
 		ParentHash: parent.Hash(),
@@ -179,13 +177,13 @@ func (evm *UnifiedEVM) BuildBlock(parent *types.Block, txs types.Transactions, t
 		Coinbase:   evm.getCoinbase(),
 		Difficulty: big.NewInt(1), // For POA
 	}
-	
+
 	// Apply transactions
 	var (
 		receipts types.Receipts
 		gasUsed  uint64
 	)
-	
+
 	for _, tx := range txs {
 		// Create EVM context
 		evmContext := vm.BlockContext{
@@ -201,54 +199,37 @@ func (evm *UnifiedEVM) BuildBlock(parent *types.Block, txs types.Transactions, t
 			GasLimit:    header.GasLimit,
 			BaseFee:     header.BaseFee,
 		}
-		
+
 		// Create EVM instance
-		vmenv := vm.NewEVM(evmContext, vm.TxContext{}, statedb, evm.chainConfig, evm.vmConfig)
-		
+		vmenv := vm.NewEVM(evmContext, statedb, evm.chainConfig, evm.vmConfig)
+
 		// Apply transaction
+		gp := core.GasPool(header.GasLimit - gasUsed)
 		receipt, err := core.ApplyTransaction(
-			evm.chainConfig,
-			evm.blockchain,
-			&header.Coinbase,
-			&gasPool{header.GasLimit - gasUsed},
+			vmenv,
+			&gp,
 			statedb,
 			header,
 			tx,
 			&gasUsed,
-			vmenv,
 		)
 		if err != nil {
 			log.Warn("Failed to apply transaction", "err", err)
 			continue
 		}
-		
+
 		receipts = append(receipts, receipt)
 	}
-	
+
 	// Finalize block
 	header.GasUsed = gasUsed
 	header.Root = statedb.IntermediateRoot(true)
-	header.TxHash = types.DeriveSha(types.Transactions(txs), types.NewTrieHasher())
-	header.ReceiptHash = types.DeriveSha(receipts, types.NewTrieHasher())
+	header.TxHash = types.DeriveSha(types.Transactions(txs), trie.NewStackTrie(nil))
+	header.ReceiptHash = types.DeriveSha(receipts, trie.NewStackTrie(nil))
 	header.UncleHash = types.EmptyUncleHash
-	
-	// Create unified block if quantum enabled
-	if evm.quantumEnabled {
-		unifiedHeader := types.FromLegacyHeader(header)
-		unifiedHeader.UpgradeToQuantum(evm.networkID, evm.layer, evm.consensusType)
-		
-		// Set block gas cost if applicable
-		if evm.layer > 0 { // L1, L2, L3
-			blockGasCost := evm.calculateBlockGasCost(gasUsed)
-			unifiedHeader.SetBlockGasCost(blockGasCost)
-		}
-		
-		unifiedBlock := types.NewUnifiedBlock(unifiedHeader, txs, nil, receipts, nil)
-		return unifiedBlock.ToLegacyBlock(), nil
-	}
-	
+
 	// Create standard block
-	return types.NewBlock(header, txs, nil, receipts, nil), nil
+	return types.NewBlock(header, &types.Body{Transactions: txs}, receipts, trie.NewStackTrie(nil)), nil
 }
 
 // GetBlockByNumber retrieves a block by number
@@ -262,7 +243,7 @@ func (evm *UnifiedEVM) GetBlockByHash(hash common.Hash) *types.Block {
 }
 
 // CurrentBlock returns the current block
-func (evm *UnifiedEVM) CurrentBlock() *types.Block {
+func (evm *UnifiedEVM) CurrentBlock() *types.Header {
 	return evm.blockchain.CurrentBlock()
 }
 
@@ -271,7 +252,7 @@ func (evm *UnifiedEVM) calculateGasLimit(parent *types.Block) uint64 {
 	// Simple gas limit calculation
 	parentGasLimit := parent.GasLimit()
 	desiredLimit := uint64(30000000) // 30M gas
-	
+
 	// Adjust towards desired limit
 	delta := parentGasLimit / 1024
 	if parentGasLimit < desiredLimit {
@@ -314,7 +295,7 @@ func NewLuxAdapter(evm *UnifiedEVM) *LuxAdapter {
 func (a *LuxAdapter) VerifyBlock(blk block.Block) error {
 	// Convert Lux block to Ethereum block
 	ethBlock := a.luxBlockToEth(blk)
-	
+
 	// Verify through unified EVM
 	return a.evm.consensusEngine.VerifyHeader(a.evm.blockchain, ethBlock.Header())
 }
@@ -326,7 +307,7 @@ func (a *LuxAdapter) BuildBlock(parent ids.ID, timestamp time.Time, txs [][]byte
 	if parentBlock == nil {
 		return nil, fmt.Errorf("parent block not found")
 	}
-	
+
 	// Convert transactions
 	ethTxs := make(types.Transactions, 0, len(txs))
 	for _, txBytes := range txs {
@@ -336,13 +317,13 @@ func (a *LuxAdapter) BuildBlock(parent ids.ID, timestamp time.Time, txs [][]byte
 		}
 		ethTxs = append(ethTxs, &tx)
 	}
-	
+
 	// Build block through unified EVM
 	newBlock, err := a.evm.BuildBlock(parentBlock, ethTxs, uint64(timestamp.Unix()))
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert back to Lux block
 	return a.ethBlockToLux(newBlock), nil
 }
@@ -359,28 +340,6 @@ func (a *LuxAdapter) ethBlockToLux(block *types.Block) block.Block {
 	// Implementation depends on Lux block structure
 	// This is a placeholder
 	return nil
-}
-
-// gasPool implements core.GasPool interface
-type gasPool struct {
-	gas uint64
-}
-
-func (g *gasPool) AddGas(amount uint64) *gasPool {
-	g.gas += amount
-	return g
-}
-
-func (g *gasPool) SubGas(amount uint64) error {
-	if g.gas < amount {
-		return core.ErrGasLimitReached
-	}
-	g.gas -= amount
-	return nil
-}
-
-func (g *gasPool) Gas() uint64 {
-	return g.gas
 }
 
 // POAEngine implements Proof of Authority consensus
@@ -401,7 +360,7 @@ func (e *POAEngine) VerifyHeader(chain consensus.ChainHeaderReader, header *type
 func (e *POAEngine) VerifyHeaders(chain consensus.ChainHeaderReader, headers []*types.Header) (chan<- struct{}, <-chan error) {
 	abort := make(chan struct{})
 	results := make(chan error, len(headers))
-	
+
 	go func() {
 		for _, header := range headers {
 			err := e.VerifyHeader(chain, header)
@@ -412,7 +371,7 @@ func (e *POAEngine) VerifyHeaders(chain consensus.ChainHeaderReader, headers []*
 			}
 		}
 	}()
-	
+
 	return abort, results
 }
 
@@ -424,13 +383,13 @@ func (e *POAEngine) Prepare(chain consensus.ChainHeaderReader, header *types.Hea
 	return nil
 }
 
-func (e *POAEngine) Finalize(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, body *types.Body) {
+func (e *POAEngine) Finalize(chain consensus.ChainHeaderReader, header *types.Header, stateDB vm.StateDB, body *types.Body) {
 	// No block rewards in POA
 }
 
-func (e *POAEngine) FinalizeAndAssemble(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, body *types.Body, receipts []*types.Receipt) (*types.Block, error) {
-	e.Finalize(chain, header, state, body)
-	return types.NewBlock(header, body.Transactions, body.Uncles, receipts, body.Withdrawals), nil
+func (e *POAEngine) FinalizeAndAssemble(chain consensus.ChainHeaderReader, header *types.Header, stateDB *state.StateDB, body *types.Body, receipts []*types.Receipt) (*types.Block, error) {
+	e.Finalize(chain, header, stateDB, body)
+	return types.NewBlock(header, body, receipts, trie.NewStackTrie(nil)), nil
 }
 
 func (e *POAEngine) Seal(chain consensus.ChainHeaderReader, block *types.Block, results chan<- *types.Block, stop <-chan struct{}) error {
@@ -461,8 +420,66 @@ type POSEngine struct {
 	networkID uint64
 }
 
-// Implement consensus.Engine interface for POSEngine...
-// (Similar to POAEngine with POS-specific logic)
+func (e *POSEngine) Author(header *types.Header) (common.Address, error) {
+	return header.Coinbase, nil
+}
+
+func (e *POSEngine) VerifyHeader(chain consensus.ChainHeaderReader, header *types.Header) error {
+	return nil
+}
+
+func (e *POSEngine) VerifyHeaders(chain consensus.ChainHeaderReader, headers []*types.Header) (chan<- struct{}, <-chan error) {
+	abort := make(chan struct{})
+	results := make(chan error, len(headers))
+	go func() {
+		for _, header := range headers {
+			err := e.VerifyHeader(chain, header)
+			select {
+			case results <- err:
+			case <-abort:
+				return
+			}
+		}
+	}()
+	return abort, results
+}
+
+func (e *POSEngine) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
+	return nil
+}
+
+func (e *POSEngine) Prepare(chain consensus.ChainHeaderReader, header *types.Header) error {
+	return nil
+}
+
+func (e *POSEngine) Finalize(chain consensus.ChainHeaderReader, header *types.Header, stateDB vm.StateDB, body *types.Body) {
+}
+
+func (e *POSEngine) FinalizeAndAssemble(chain consensus.ChainHeaderReader, header *types.Header, stateDB vm.StateDB, body *types.Body, receipts []*types.Receipt) (*types.Block, error) {
+	e.Finalize(chain, header, stateDB, body)
+	return types.NewBlock(header, body, receipts, trie.NewStackTrie(nil)), nil
+}
+
+func (e *POSEngine) Seal(chain consensus.ChainHeaderReader, block *types.Block, results chan<- *types.Block, stop <-chan struct{}) error {
+	results <- block
+	return nil
+}
+
+func (e *POSEngine) SealHash(header *types.Header) common.Hash {
+	return header.Hash()
+}
+
+func (e *POSEngine) CalcDifficulty(chain consensus.ChainHeaderReader, time uint64, parent *types.Header) *big.Int {
+	return big.NewInt(1)
+}
+
+func (e *POSEngine) APIs(chain consensus.ChainHeaderReader) []rpc.API {
+	return nil
+}
+
+func (e *POSEngine) Close() error {
+	return nil
+}
 
 // POWEngine implements Proof of Work consensus (placeholder)
 type POWEngine struct {
@@ -470,5 +487,69 @@ type POWEngine struct {
 	networkID uint64
 }
 
-// Implement consensus.Engine interface for POWEngine...
-// (Similar to POAEngine with POW-specific logic)
+func (e *POWEngine) Author(header *types.Header) (common.Address, error) {
+	return header.Coinbase, nil
+}
+
+func (e *POWEngine) VerifyHeader(chain consensus.ChainHeaderReader, header *types.Header) error {
+	return nil
+}
+
+func (e *POWEngine) VerifyHeaders(chain consensus.ChainHeaderReader, headers []*types.Header) (chan<- struct{}, <-chan error) {
+	abort := make(chan struct{})
+	results := make(chan error, len(headers))
+	go func() {
+		for _, header := range headers {
+			err := e.VerifyHeader(chain, header)
+			select {
+			case results <- err:
+			case <-abort:
+				return
+			}
+		}
+	}()
+	return abort, results
+}
+
+func (e *POWEngine) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
+	return nil
+}
+
+func (e *POWEngine) Prepare(chain consensus.ChainHeaderReader, header *types.Header) error {
+	return nil
+}
+
+func (e *POWEngine) Finalize(chain consensus.ChainHeaderReader, header *types.Header, stateDB vm.StateDB, body *types.Body) {
+}
+
+func (e *POWEngine) FinalizeAndAssemble(chain consensus.ChainHeaderReader, header *types.Header, stateDB vm.StateDB, body *types.Body, receipts []*types.Receipt) (*types.Block, error) {
+	e.Finalize(chain, header, stateDB, body)
+	return types.NewBlock(header, body, receipts, trie.NewStackTrie(nil)), nil
+}
+
+func (e *POWEngine) Seal(chain consensus.ChainHeaderReader, block *types.Block, results chan<- *types.Block, stop <-chan struct{}) error {
+	results <- block
+	return nil
+}
+
+func (e *POWEngine) SealHash(header *types.Header) common.Hash {
+	return header.Hash()
+}
+
+func (e *POWEngine) CalcDifficulty(chain consensus.ChainHeaderReader, time uint64, parent *types.Header) *big.Int {
+	return big.NewInt(1)
+}
+
+func (e *POWEngine) APIs(chain consensus.ChainHeaderReader) []rpc.API {
+	return nil
+}
+
+func (e *POWEngine) Close() error {
+	return nil
+}
+
+// Ensure unused imports are used
+var (
+	_ = context.Background
+	_ = rawdb.HashScheme
+)

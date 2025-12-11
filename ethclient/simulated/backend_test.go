@@ -28,7 +28,7 @@ import (
 	"github.com/luxfi/geth/accounts/abi/bind"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/params"
 	"github.com/holiman/uint256"
