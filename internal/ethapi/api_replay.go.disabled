@@ -1,0 +1,40 @@
+package ethapi
+
+import (
+	"context"
+
+	"github.com/luxfi/geth/common/hexutil"
+)
+
+type ReplayAPI struct {
+	b Backend
+}
+
+func NewReplayAPI(b Backend) *ReplayAPI {
+	return &ReplayAPI{b}
+}
+
+type ReplayStatus struct {
+	CurrentBlock *hexutil.Big `json:"currentBlock"`
+	HighestBlock *hexutil.Big `json:"highestBlock"`
+	Status       string       `json:"status"`
+}
+
+func (api *ReplayAPI) Replay(ctx context.Context) (*ReplayStatus, error) {
+	currentBlock := api.b.CurrentBlock()
+	if currentBlock == nil {
+		return &ReplayStatus{
+			CurrentBlock: (*hexutil.Big)(hexutil.Big(*hexutil.MustDecodeBig("0x0"))),
+			HighestBlock: (*hexutil.Big)(hexutil.Big(*hexutil.MustDecodeBig("0x0"))),
+			Status:       "initializing",
+		}, nil
+	}
+
+	currentBlockNumber := currentBlock.Number
+
+	return &ReplayStatus{
+		CurrentBlock: (*hexutil.Big)(currentBlockNumber),
+		HighestBlock: (*hexutil.Big)(currentBlockNumber),
+		Status:       "synced",
+	}, nil
+}

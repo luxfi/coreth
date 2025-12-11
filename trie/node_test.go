@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/rlp"
 )
 

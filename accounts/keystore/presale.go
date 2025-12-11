@@ -27,7 +27,7 @@ import (
 
 	"github.com/luxfi/geth/accounts"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/crypto"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/pbkdf2"
 )

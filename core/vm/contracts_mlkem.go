@@ -6,7 +6,6 @@ package vm
 
 import (
 	"errors"
-	"math/big"
 
 	"github.com/luxfi/geth/accounts/abi"
 	"github.com/luxfi/geth/common"
@@ -108,17 +107,17 @@ func runMLKEMEncapsulate(input []byte, mode mlkem.Mode) ([]byte, error) {
 	}
 	
 	// Perform encapsulation (uses randomness from EVM environment)
-	result, err := pub.Encapsulate(nil) // nil uses default entropy source
+	ciphertext, sharedSecret, err := pub.Encapsulate() // uses default entropy source
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Return format: [ciphertext][shared_secret]
 	// This allows the caller to get both values in one call
-	output := make([]byte, 0, len(result.Ciphertext)+len(result.SharedSecret))
-	output = append(output, result.Ciphertext...)
-	output = append(output, result.SharedSecret...)
-	
+	output := make([]byte, 0, len(ciphertext)+len(sharedSecret))
+	output = append(output, ciphertext...)
+	output = append(output, sharedSecret...)
+
 	return output, nil
 }
 
@@ -256,29 +255,29 @@ func (m *mlkemHybridEncrypt) Run(input []byte) ([]byte, error) {
 	}
 	
 	// Perform KEM encapsulation
-	kemResult, err := pub.Encapsulate(nil)
+	ciphertext, sharedSecret, err := pub.Encapsulate()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Use shared secret as AES-256-GCM key
 	// In production, this would use proper symmetric encryption
 	// For now, we'll return a simplified format
-	
+
 	// Output format: [ciphertext_kem][encrypted_data][auth_tag]
-	output := make([]byte, 0, len(kemResult.Ciphertext)+len(plaintext)+16)
-	output = append(output, kemResult.Ciphertext...)
-	
+	output := make([]byte, 0, len(ciphertext)+len(plaintext)+16)
+	output = append(output, ciphertext...)
+
 	// Simplified: XOR with shared secret (in production, use AES-GCM)
 	encrypted := make([]byte, len(plaintext))
 	for i := range plaintext {
-		encrypted[i] = plaintext[i] ^ kemResult.SharedSecret[i%32]
+		encrypted[i] = plaintext[i] ^ sharedSecret[i%32]
 	}
 	output = append(output, encrypted...)
-	
+
 	// Add simplified auth tag (in production, use proper MAC)
 	authTag := make([]byte, 16)
-	copy(authTag, kemResult.SharedSecret[:16])
+	copy(authTag, sharedSecret[:16])
 	output = append(output, authTag...)
 	
 	return output, nil

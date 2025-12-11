@@ -28,7 +28,7 @@ import (
 	"github.com/luxfi/geth/accounts/keystore"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
-	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/crypto"
 )
 
 // UIServerAPI implements methods Clef provides for a UI to query, in the bidirectional communication

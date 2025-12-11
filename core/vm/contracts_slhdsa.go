@@ -75,7 +75,7 @@ func (s *slhdsaVerify128s) RequiredGas(input []byte) uint64 {
 }
 
 func (s *slhdsaVerify128s) Run(input []byte) ([]byte, error) {
-	return runSLHDSAVerify(input, slhdsa.SLHDSA128s)
+	return runSLHDSAVerify(input, slhdsa.SHA2_128s)
 }
 
 // slhdsaVerify192s implements SLH-DSA-SHA2-192s verification
@@ -86,7 +86,7 @@ func (s *slhdsaVerify192s) RequiredGas(input []byte) uint64 {
 }
 
 func (s *slhdsaVerify192s) Run(input []byte) ([]byte, error) {
-	return runSLHDSAVerify(input, slhdsa.SLHDSA192s)
+	return runSLHDSAVerify(input, slhdsa.SHA2_192s)
 }
 
 // slhdsaVerify256s implements SLH-DSA-SHA2-256s verification
@@ -97,7 +97,7 @@ func (s *slhdsaVerify256s) RequiredGas(input []byte) uint64 {
 }
 
 func (s *slhdsaVerify256s) Run(input []byte) ([]byte, error) {
-	return runSLHDSAVerify(input, slhdsa.SLHDSA256s)
+	return runSLHDSAVerify(input, slhdsa.SHA2_256s)
 }
 
 // slhdsaVerify128f implements SLH-DSA-SHA2-128f verification
@@ -108,7 +108,7 @@ func (s *slhdsaVerify128f) RequiredGas(input []byte) uint64 {
 }
 
 func (s *slhdsaVerify128f) Run(input []byte) ([]byte, error) {
-	return runSLHDSAVerify(input, slhdsa.SLHDSA128f)
+	return runSLHDSAVerify(input, slhdsa.SHA2_128f)
 }
 
 // slhdsaVerify192f implements SLH-DSA-SHA2-192f verification
@@ -119,7 +119,7 @@ func (s *slhdsaVerify192f) RequiredGas(input []byte) uint64 {
 }
 
 func (s *slhdsaVerify192f) Run(input []byte) ([]byte, error) {
-	return runSLHDSAVerify(input, slhdsa.SLHDSA192f)
+	return runSLHDSAVerify(input, slhdsa.SHA2_192f)
 }
 
 // slhdsaVerify256f implements SLH-DSA-SHA2-256f verification
@@ -130,7 +130,7 @@ func (s *slhdsaVerify256f) RequiredGas(input []byte) uint64 {
 }
 
 func (s *slhdsaVerify256f) Run(input []byte) ([]byte, error) {
-	return runSLHDSAVerify(input, slhdsa.SLHDSA256f)
+	return runSLHDSAVerify(input, slhdsa.SHA2_256f)
 }
 
 // runSLHDSAVerify performs SLH-DSA signature verification for any parameter set
@@ -178,8 +178,8 @@ func runSLHDSAVerify(input []byte, mode slhdsa.Mode) ([]byte, error) {
 	}
 	
 	// Verify signature (stateless, deterministic)
-	valid := pub.Verify(msg, sig)
-	
+	valid := pub.VerifySignature(msg, sig)
+
 	// Return result as 32 bytes (0x01 for valid, 0x00 for invalid)
 	result := make([]byte, 32)
 	if valid {
@@ -257,21 +257,21 @@ func (s *slhdsaBatchVerify) Run(input []byte) ([]byte, error) {
 	var mode slhdsa.Mode
 	switch modeInt {
 	case 0:
-		mode = slhdsa.SLHDSA128s
+		mode = slhdsa.SHA2_128s
 	case 1:
-		mode = slhdsa.SLHDSA128f
+		mode = slhdsa.SHA2_128f
 	case 2:
-		mode = slhdsa.SLHDSA192s
+		mode = slhdsa.SHA2_192s
 	case 3:
-		mode = slhdsa.SLHDSA192f
+		mode = slhdsa.SHA2_192f
 	case 4:
-		mode = slhdsa.SLHDSA256s
+		mode = slhdsa.SHA2_256s
 	case 5:
-		mode = slhdsa.SLHDSA256f
+		mode = slhdsa.SHA2_256f
 	default:
 		return nil, errors.New("invalid SLH-DSA mode")
 	}
-	
+
 	// Verify each signature
 	allValid := true
 	results := make([]byte, len(sigs))
@@ -286,7 +286,7 @@ func (s *slhdsaBatchVerify) Run(input []byte) ([]byte, error) {
 		}
 		
 		// Verify signature
-		if pub.Verify(msgs[i], sigs[i]) {
+		if pub.VerifySignature(msgs[i], sigs[i]) {
 			results[i] = 0x01
 		} else {
 			results[i] = 0x00
@@ -355,29 +355,29 @@ func (s *slhdsaHybridVerify) Run(input []byte) ([]byte, error) {
 	var mode slhdsa.Mode
 	switch modeInt {
 	case 0:
-		mode = slhdsa.SLHDSA128s
+		mode = slhdsa.SHA2_128s
 	case 1:
-		mode = slhdsa.SLHDSA128f
+		mode = slhdsa.SHA2_128f
 	case 2:
-		mode = slhdsa.SLHDSA192s
+		mode = slhdsa.SHA2_192s
 	case 3:
-		mode = slhdsa.SLHDSA192f
+		mode = slhdsa.SHA2_192f
 	case 4:
-		mode = slhdsa.SLHDSA256s
+		mode = slhdsa.SHA2_256s
 	case 5:
-		mode = slhdsa.SLHDSA256f
+		mode = slhdsa.SHA2_256f
 	default:
 		return nil, errors.New("invalid SLH-DSA mode")
 	}
-	
+
 	// Verify SLH-DSA signature
 	pub, err := slhdsa.PublicKeyFromBytes(slhdsaPubkey, mode)
 	if err != nil {
 		return nil, err
 	}
 	
-	slhdsaValid := pub.Verify(msg, slhdsaSig)
-	
+	slhdsaValid := pub.VerifySignature(msg, slhdsaSig)
+
 	// Both signatures must be valid for hybrid verification
 	hybridValid := ecdsaValid && slhdsaValid
 	

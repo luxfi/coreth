@@ -18,7 +18,7 @@ package types
 
 import (
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/crypto"
 )
 
 var (
