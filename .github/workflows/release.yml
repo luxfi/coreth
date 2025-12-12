@@ -1,0 +1,483 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.16.2)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.tool }} for ${{ matrix.goos }}-${{ matrix.goarch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            tool: geth
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            tool: abigen
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            tool: abidump
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            tool: blsync
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            tool: clef
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            tool: devp2p
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            tool: evm
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            tool: rlpdump
+
+          # Linux arm64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            tool: geth
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            tool: abigen
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            tool: abidump
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            tool: blsync
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            tool: clef
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            tool: devp2p
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            tool: evm
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            tool: rlpdump
+
+          # macOS amd64
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+            tool: geth
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+            tool: abigen
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+            tool: abidump
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+            tool: blsync
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+            tool: clef
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+            tool: devp2p
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+            tool: evm
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+            tool: rlpdump
+
+          # macOS arm64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            tool: geth
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            tool: abigen
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            tool: abidump
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            tool: blsync
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            tool: clef
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            tool: devp2p
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            tool: evm
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            tool: rlpdump
+
+          # Windows amd64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            tool: geth
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            tool: abigen
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            tool: abidump
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            tool: blsync
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            tool: clef
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            tool: devp2p
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            tool: evm
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            tool: rlpdump
+
+          # Windows arm64
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            tool: geth
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            tool: abigen
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            tool: abidump
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            tool: blsync
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            tool: clef
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            tool: devp2p
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            tool: evm
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            tool: rlpdump
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Get version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.tag }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Building version: ${VERSION}"
+
+      - name: Build binary
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TOOL="${{ matrix.tool }}"
+
+          # Set binary name with .exe for Windows
+          BINARY_NAME="${TOOL}"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            BINARY_NAME="${TOOL}.exe"
+          fi
+
+          # Build with version info
+          go build \
+            -ldflags="-s -w -X github.com/luxfi/geth/version.Meta=stable" \
+            -trimpath \
+            -o "build/${BINARY_NAME}" \
+            "./cmd/${TOOL}"
+
+          echo "Built: build/${BINARY_NAME}"
+          ls -lh build/
+
+      - name: Create archive
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TOOL="${{ matrix.tool }}"
+          GOOS="${{ matrix.goos }}"
+          GOARCH="${{ matrix.goarch }}"
+
+          # Create archive name
+          ARCHIVE_NAME="${TOOL}_${VERSION}_${GOOS}_${GOARCH}"
+
+          cd build
+
+          if [ "$GOOS" = "windows" ]; then
+            # Create zip for Windows
+            7z a "${ARCHIVE_NAME}.zip" "${TOOL}.exe"
+            echo "archive=${ARCHIVE_NAME}.zip" >> $GITHUB_OUTPUT
+          else
+            # Create tar.gz for Unix
+            tar czf "${ARCHIVE_NAME}.tar.gz" "${TOOL}"
+            echo "archive=${ARCHIVE_NAME}.tar.gz" >> $GITHUB_OUTPUT
+          fi
+
+          cd ..
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
+
+      - name: Generate checksum
+        shell: bash
+        run: |
+          cd build
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            sha256sum "${ARCHIVE_NAME}.zip" > "${ARCHIVE_NAME}.zip.sha256"
+          else
+            sha256sum "${ARCHIVE_NAME}.tar.gz" > "${ARCHIVE_NAME}.tar.gz.sha256"
+          fi
+          cd ..
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARCHIVE_NAME }}
+          path: build/${{ env.ARCHIVE_NAME }}.*
+          retention-days: 5
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.tag }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Release version: ${VERSION}"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          find artifacts -type f -exec cp {} release/ \;
+          ls -lh release/
+
+      - name: Generate combined SHA256SUMS
+        run: |
+          cd release
+          sha256sum *.tar.gz *.zip 2>/dev/null | sort -k 2 > SHA256SUMS || true
+          cat SHA256SUMS
+          cd ..
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          cat > release_notes.md << 'EOF'
+          # Lux Coreth (Geth) ${{ steps.version.outputs.version }}
+
+          Lux's fork of go-ethereum (geth) - Ethereum execution layer implementation.
+
+          ## What's Included
+
+          This release contains the following tools:
+
+          - **geth**: Main Ethereum CLI client (execution layer)
+          - **abigen**: ABI code generator for Go bindings
+          - **abidump**: ABI parser and validator
+          - **blsync**: Beacon light client syncer
+          - **clef**: Standalone transaction signer
+          - **devp2p**: P2P networking utilities
+          - **evm**: EVM execution environment for testing
+          - **rlpdump**: RLP encoding/decoding utility
+
+          ## Downloads
+
+          All binaries are available for:
+          - Linux (amd64, arm64)
+          - macOS (amd64, arm64)
+          - Windows (amd64, arm64)
+
+          ## Installation
+
+          ### Linux/macOS
+
+          ```bash
+          # Download the archive for your platform
+          wget https://github.com/luxfi/coreth/releases/download/${{ steps.version.outputs.version }}/geth_${{ steps.version.outputs.version }}_linux_amd64.tar.gz
+
+          # Extract
+          tar xzf geth_${{ steps.version.outputs.version }}_linux_amd64.tar.gz
+
+          # Move to PATH
+          sudo mv geth /usr/local/bin/
+
+          # Verify
+          geth version
+          ```
+
+          ### Windows
+
+          ```powershell
+          # Download the .zip file for your architecture
+          # Extract and add to PATH
+          ```
+
+          ## Verification
+
+          All archives include SHA256 checksums. Verify downloads:
+
+          ```bash
+          sha256sum -c geth_${{ steps.version.outputs.version }}_linux_amd64.tar.gz.sha256
+          ```
+
+          Or check against the combined `SHA256SUMS` file.
+
+          ## Usage
+
+          See the [README](https://github.com/luxfi/coreth/blob/master/README.md) for usage instructions.
+
+          ## Build from Source
+
+          ```bash
+          git clone https://github.com/luxfi/coreth.git
+          cd coreth
+          git checkout ${{ steps.version.outputs.version }}
+          make all
+          ```
+
+          ## License
+
+          - Library code (outside `cmd/`): GNU LGPL v3.0
+          - Binaries (inside `cmd/`): GNU GPL v3.0
+          EOF
+
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Lux Coreth ${{ steps.version.outputs.version }}
+          body_path: release_notes.md
+          files: release/*
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## Release Created! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Released Tools" >> $GITHUB_STEP_SUMMARY
+          echo "- geth" >> $GITHUB_STEP_SUMMARY
+          echo "- abigen" >> $GITHUB_STEP_SUMMARY
+          echo "- abidump" >> $GITHUB_STEP_SUMMARY
+          echo "- blsync" >> $GITHUB_STEP_SUMMARY
+          echo "- clef" >> $GITHUB_STEP_SUMMARY
+          echo "- devp2p" >> $GITHUB_STEP_SUMMARY
+          echo "- evm" >> $GITHUB_STEP_SUMMARY
+          echo "- rlpdump" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Platforms" >> $GITHUB_STEP_SUMMARY
+          echo "- Linux (amd64, arm64)" >> $GITHUB_STEP_SUMMARY
+          echo "- macOS (amd64, arm64)" >> $GITHUB_STEP_SUMMARY
+          echo "- Windows (amd64, arm64)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View Release](https://github.com/luxfi/coreth/releases/tag/${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
