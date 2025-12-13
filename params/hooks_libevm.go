@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"slices"
 
-	"github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/nativeasset"
 	"github.com/luxfi/coreth/params/extras"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
@@ -18,7 +18,6 @@ import (
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/vm"
-	ethparams "github.com/luxfi/geth/params"
 )
 
 type RulesExtra extras.Rules
@@ -110,7 +109,7 @@ func (r RulesExtra) precompileOverrideBuiltin(addr common.Address) (vm.Precompil
 }
 
 func makePrecompile(contract contract.StatefulPrecompiledContract) vm.PrecompiledContract {
-	run := func(env vm.PrecompileEnvironment, input []byte, suppliedGas uint64) ([]byte, uint64, error) {
+	_ = func(env vm.PrecompileEnvironment, input []byte, suppliedGas uint64) ([]byte, uint64, error) {
 		header, err := env.BlockHeader()
 		if err != nil {
 			panic(err) // Should never happen

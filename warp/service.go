@@ -10,7 +10,7 @@ import (
 
 	"github.com/luxfi/ids"
 	"github.com/luxfi/p2p/lp118"
-	"github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 	warpprecompile "github.com/luxfi/coreth/precompile/contracts/warp"
@@ -25,11 +25,11 @@ var errNoValidators = errors.New("cannot aggregate signatures from subnet with n
 type API struct {
 	chainContext                 *consensusctx.Context
 	backend                      Backend
-	signatureAggregator          *acp118.SignatureAggregator
+	signatureAggregator          *lp118.SignatureAggregator
 	requirePrimaryNetworkSigners func() bool
 }
 
-func NewAPI(chainCtx *consensusctx.Context, backend Backend, signatureAggregator *acp118.SignatureAggregator, requirePrimaryNetworkSigners func() bool) *API {
+func NewAPI(chainCtx *consensusctx.Context, backend Backend, signatureAggregator *lp118.SignatureAggregator, requirePrimaryNetworkSigners func() bool) *API {
 	return &API{
 		backend:                      backend,
 		chainContext:                 chainCtx,
@@ -80,7 +80,7 @@ func (a *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.ID
 
 // GetBlockAggregateSignature fetches the aggregate signature for the requested [blockID]
 func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, quorumNum uint64, subnetIDStr string) (signedMessageBytes hexutil.Bytes, err error) {
-	blockHashPayload, err := payload.NewHash(blockID)
+	blockHashPayload, err := payload.NewHash(blockID[:])
 	if err != nil {
 		return nil, err
 	}

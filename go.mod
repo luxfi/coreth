@@ -173,22 +173,31 @@ require (
 	github.com/luxfi/database v1.2.10
 	github.com/luxfi/ids v1.2.2
 	github.com/luxfi/math v1.0.0
-	github.com/luxfi/p2p v1.4.4
+	github.com/luxfi/p2p v1.4.5
 	github.com/luxfi/warp v1.16.35
 )
 
 // All local replace directives removed for v1 genesis launch
 
 // Local replace directives for development (DO NOT COMMIT)
+replace github.com/luxfi/geth => ../geth
 
+replace github.com/luxfi/crypto => ../crypto
 
+replace github.com/luxfi/node => ../node
 
+replace github.com/luxfi/consensus => ../consensus
 
+replace github.com/luxfi/ids => ../ids
 
+replace github.com/luxfi/constants => ../constants
 
+replace github.com/luxfi/database => ../database
 
+replace github.com/luxfi/p2p => ../p2p
 
+replace github.com/luxfi/warp => ../warp
 
+replace github.com/luxfi/log => ../log
 
-
-
+replace github.com/luxfi/math => ../math

@@ -5,7 +5,6 @@ package atomic
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"math/big"
@@ -26,7 +25,6 @@ import (
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/node/vms/components/lux"
-	"github.com/luxfi/node/vms/components/verify"
 	"github.com/luxfi/node/vms/secp256k1fx"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/log"

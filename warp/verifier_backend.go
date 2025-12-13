@@ -8,7 +8,8 @@ import (
 	"fmt"
 
 	"github.com/luxfi/database"
-	"github.com/luxfi/consensus/core"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p"
 	luxWarp "github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 )
@@ -19,23 +20,23 @@ const (
 )
 
 // Verify verifies the signature of the message
-// It also implements the acp118.Verifier interface
-func (b *backend) Verify(ctx context.Context, unsignedMessage *luxWarp.UnsignedMessage, _ []byte) *common.AppError {
+// It also implements the lp118.Verifier interface
+func (b *backend) Verify(ctx context.Context, unsignedMessage *luxWarp.UnsignedMessage, _ []byte) *p2p.Error {
 	messageID := unsignedMessage.ID()
 	// Known on-chain messages should be signed
 	if _, err := b.GetMessage(messageID); err == nil {
 		return nil
 	} else if err != database.ErrNotFound {
-		return &common.AppError{
+		return &p2p.Error{
 			Code:    ParseErrCode,
 			Message: fmt.Sprintf("failed to get message %s: %s", messageID, err.Error()),
 		}
 	}
 
-	parsed, err := payload.Parse(unsignedMessage.Payload)
+	parsed, err := payload.ParsePayload(unsignedMessage.Payload)
 	if err != nil {
 		b.stats.IncMessageParseFail()
-		return &common.AppError{
+		return &p2p.Error{
 			Code:    ParseErrCode,
 			Message: "failed to parse payload: " + err.Error(),
 		}
@@ -46,7 +47,7 @@ func (b *backend) Verify(ctx context.Context, unsignedMessage *luxWarp.UnsignedM
 		return b.verifyBlockMessage(ctx, p)
 	default:
 		b.stats.IncMessageParseFail()
-		return &common.AppError{
+		return &p2p.Error{
 			Code:    ParseErrCode,
 			Message: fmt.Sprintf("unknown payload type: %T", p),
 		}
@@ -55,12 +56,19 @@ func (b *backend) Verify(ctx context.Context, unsignedMessage *luxWarp.UnsignedM
 
 // verifyBlockMessage returns nil if blockHashPayload contains the ID
 // of an accepted block indicating it should be signed by the VM.
-func (b *backend) verifyBlockMessage(ctx context.Context, blockHashPayload *payload.Hash) *common.AppError {
-	blockID := blockHashPayload.Hash
-	_, err := b.blockClient.GetAcceptedBlock(ctx, blockID)
+func (b *backend) verifyBlockMessage(ctx context.Context, blockHashPayload *payload.Hash) *p2p.Error {
+	blockID, err := ids.ToID(blockHashPayload.Hash)
 	if err != nil {
 		b.stats.IncBlockValidationFail()
-		return &common.AppError{
+		return &p2p.Error{
+			Code:    ParseErrCode,
+			Message: fmt.Sprintf("failed to parse block ID: %s", err.Error()),
+		}
+	}
+	_, err = b.blockClient.GetAcceptedBlock(ctx, blockID)
+	if err != nil {
+		b.stats.IncBlockValidationFail()
+		return &p2p.Error{
 			Code:    VerifyErrCode,
 			Message: fmt.Sprintf("failed to get block %s: %s", blockID, err.Error()),
 		}
