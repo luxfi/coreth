@@ -37,12 +37,13 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"log/slog"
+
 	"github.com/luxfi/coreth/internal/flags"
 	"github.com/luxfi/log"
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -273,7 +274,7 @@ func Setup(ctx *cli.Context) error {
 	}
 	glogger.Vmodule(vmodule)
 
-	log.SetDefault(log.NewLogger(glogger))
+	log.SetDefault(log.NewLoggerFromHandler(glogger))
 
 	// profiling, tracing
 	runtime.MemProfileRate = memprofilerateFlag.Value

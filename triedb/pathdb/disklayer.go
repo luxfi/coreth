@@ -35,11 +35,9 @@ import (
 	"github.com/VictoriaMetrics/fastcache"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/log"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/trie/triestate"
-	"golang.org/x/crypto/sha3"
 )
 
 // diskLayer is a low level persistent layer built on top of a key-value store.
@@ -149,19 +147,22 @@ func (dl *diskLayer) Node(owner common.Hash, path []byte, hash common.Hash) ([]b
 		cleanMissMeter.Mark(1)
 	}
 	// Try to retrieve the trie node from the disk.
-	var (
-		nBlob []byte
-		nHash common.Hash
-	)
+	var nBlob []byte
 	if owner == (common.Hash{}) {
-		nBlob, nHash = rawdb.ReadAccountTrieNode(dl.db.diskdb, path)
+		nBlob = rawdb.ReadAccountTrieNode(dl.db.diskdb, path)
 	} else {
-		nBlob, nHash = rawdb.ReadStorageTrieNode(dl.db.diskdb, owner, path)
+		nBlob = rawdb.ReadStorageTrieNode(dl.db.diskdb, owner, path)
 	}
-	if nHash != hash {
-		diskFalseMeter.Mark(1)
-		log.Error("Unexpected trie node in disk", "owner", owner, "path", path, "expect", hash, "got", nHash)
-		return nil, newUnexpectedNodeError("disk", hash, nHash, owner, path, nBlob)
+	// Verify the hash if we got data
+	if len(nBlob) > 0 {
+		h := newHasher()
+		defer h.release()
+		nHash := h.hash(nBlob)
+		if nHash != hash {
+			diskFalseMeter.Mark(1)
+			log.Error("Unexpected trie node in disk", "owner", owner, "path", path, "expect", hash, "got", nHash)
+			return nil, newUnexpectedNodeError("disk", hash, nHash, owner, path, nBlob)
+		}
 	}
 	if dl.cleans != nil && len(nBlob) > 0 {
 		dl.cleans.Set(key, nBlob)
@@ -333,10 +334,10 @@ func (dl *diskLayer) resetCache() {
 }
 
 // hasher is used to compute the sha256 hash of the provided data.
-type hasher struct{ sha crypto.KeccakState }
+type hasher struct{ sha common.KeccakState }
 
 var hasherPool = sync.Pool{
-	New: func() interface{} { return &hasher{sha: sha3.NewLegacyKeccak256().(crypto.KeccakState)} },
+	New: func() interface{} { return &hasher{sha: common.NewKeccakState()} },
 }
 
 func newHasher() *hasher {
@@ -344,7 +345,7 @@ func newHasher() *hasher {
 }
 
 func (h *hasher) hash(data []byte) common.Hash {
-	return crypto.HashData(h.sha, data)
+	return common.HashData(h.sha, data)
 }
 
 func (h *hasher) release() {

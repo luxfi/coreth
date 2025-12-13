@@ -37,9 +37,9 @@ type trieSyncStats struct {
 	remainingLeafs map[*trieSegment]uint64
 
 	// metrics
-	totalLeafs     metrics.Counter
-	triesSegmented metrics.Counter
-	leafsRateGauge metrics.Gauge
+	totalLeafs     *metrics.Counter
+	triesSegmented *metrics.Counter
+	leafsRateGauge *metrics.Gauge
 }
 
 func newTrieSyncStats() *trieSyncStats {

@@ -14,12 +14,16 @@ var DefaultChainConfig = map[string]any{
 	"local-txs-enabled": true,
 }
 
-func NewTmpnetNetwork(owner string, nodes []*tmpnet.Node, flags tmpnet.FlagsMap) *tmpnet.Network {
-	defaultFlags := tmpnet.FlagsMap{}
-	defaultFlags.SetDefaults(flags)
-	defaultFlags.SetDefaults(tmpnet.FlagsMap{
-		config.ProposerVMUseCurrentHeightKey: "true",
-	})
+func NewTmpnetNetwork(owner string, nodes []*tmpnet.Node, flags tmpnet.Flags) *tmpnet.Network {
+	defaultFlags := make(tmpnet.Flags)
+	// Copy provided flags
+	for k, v := range flags {
+		defaultFlags[k] = v
+	}
+	// Set default proposer VM flag
+	if _, exists := defaultFlags[config.ProposerVMUseCurrentHeightKey]; !exists {
+		defaultFlags[config.ProposerVMUseCurrentHeightKey] = "true"
+	}
 	return &tmpnet.Network{
 		Owner:        owner,
 		DefaultFlags: defaultFlags,

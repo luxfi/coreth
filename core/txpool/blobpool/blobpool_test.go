@@ -338,7 +338,7 @@ func verifyPoolInternals(t *testing.T, pool *BlobPool) {
 //   - 8. Fully duplicate transactions (matching hash) must be dropped
 //   - 9. Duplicate nonces from the same account must be dropped
 func TestOpenDrops(t *testing.T) {
-	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
+	log.SetDefault(log.NewLoggerFromHandler(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
 
 	// Create a temporary folder for the persistent backend
 	storage, _ := os.MkdirTemp("", "blobpool-")
@@ -661,7 +661,7 @@ func TestOpenDrops(t *testing.T) {
 //   - 2. Eviction thresholds are calculated correctly for the sequences
 //   - 3. Balance usage of an account is totals across all transactions
 func TestOpenIndex(t *testing.T) {
-	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
+	log.SetDefault(log.NewLoggerFromHandler(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
 
 	// Create a temporary folder for the persistent backend
 	storage, _ := os.MkdirTemp("", "blobpool-")
@@ -750,7 +750,7 @@ func TestOpenIndex(t *testing.T) {
 // Tests that after indexing all the loaded transactions from disk, a price heap
 // is correctly constructed based on the head basefee and blobfee.
 func TestOpenHeap(t *testing.T) {
-	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
+	log.SetDefault(log.NewLoggerFromHandler(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
 
 	// Create a temporary folder for the persistent backend
 	storage, _ := os.MkdirTemp("", "blobpool-")
@@ -837,7 +837,7 @@ func TestOpenHeap(t *testing.T) {
 // Tests that after the pool's previous state is loaded back, any transactions
 // over the new storage cap will get dropped.
 func TestOpenCap(t *testing.T) {
-	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
+	log.SetDefault(log.NewLoggerFromHandler(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
 
 	// Create a temporary folder for the persistent backend
 	storage, _ := os.MkdirTemp("", "blobpool-")
@@ -929,7 +929,7 @@ func TestOpenCap(t *testing.T) {
 // specific to the blob pool. It does not do an exhaustive transaction validity
 // check.
 func TestAdd(t *testing.T) {
-	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
+	log.SetDefault(log.NewLoggerFromHandler(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
 
 	// seed is a helper tumpe to seed an initial state db and pool
 	type seed struct {

@@ -28,22 +28,16 @@
 package tests
 
 import (
-	"os"
-	"path/filepath"
-
-	"github.com/luxfi/coreth/core/extstate"
-	"github.com/luxfi/coreth/core/state/snapshot"
-	"github.com/luxfi/coreth/plugin/evm/customrawdb"
-	"github.com/luxfi/geth/triedb/database"
-	"github.com/luxfi/coreth/triedb/hashdb"
-	"github.com/luxfi/coreth/triedb/pathdb"
-	"github.com/luxfi/geth/common"
+	"github.com/holiman/uint256"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/state/snapshot"
+	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/triedb"
-	"github.com/holiman/uint256"
+	"github.com/luxfi/geth/triedb/hashdb"
+	"github.com/luxfi/geth/triedb/pathdb"
 )
 
 // StateTestState groups all the state database objects together for use in tests.
@@ -51,61 +45,45 @@ type StateTestState struct {
 	StateDB   *state.StateDB
 	TrieDB    *triedb.Database
 	Snapshots *snapshot.Tree
-	TempDir   string
 }
 
 // MakePreState creates a state containing the given allocation.
 func MakePreState(db ethdb.Database, accounts types.GenesisAlloc, snapshotter bool, scheme string) StateTestState {
-	// Set database path
-	tempdir, err := os.MkdirTemp("", "coreth-state-test-*")
-	if err != nil {
-		panic("failed to create temporary directory: " + err.Error())
-	}
-
 	tconf := &triedb.Config{Preimages: true}
-	switch scheme {
-	case rawdb.HashScheme:
-		tconf.DBOverride = hashdb.Defaults.BackendConstructor
-	case rawdb.PathScheme:
-		tconf.DBOverride = pathdb.Defaults.BackendConstructor
-	case customrawdb.DatabaseScheme:
-		cfg := database.Defaults
-		cfg.FilePath = filepath.Join(tempdir, "database")
-		tconf.DBOverride = cfg.BackendConstructor
-	default:
-		panic("unknown trie database scheme" + scheme)
+	if scheme == rawdb.HashScheme {
+		tconf.HashDB = hashdb.Defaults
+	} else {
+		tconf.PathDB = pathdb.Defaults
 	}
 
-	triedb := triedb.NewDatabase(db, tconf)
-	sdb := extstate.NewDatabaseWithNodeDB(db, triedb)
-	statedb, _ := state.New(types.EmptyRootHash, sdb, nil)
+	tdb := triedb.NewDatabase(db, tconf)
+	sdb := state.NewDatabase(tdb, nil)
+	statedb, _ := state.New(types.EmptyRootHash, sdb)
 	for addr, a := range accounts {
-		statedb.SetCode(addr, a.Code)
-		statedb.SetNonce(addr, a.Nonce)
-		statedb.SetBalance(addr, uint256.MustFromBig(a.Balance))
+		statedb.SetCode(addr, a.Code, tracing.CodeChangeUnspecified)
+		statedb.SetNonce(addr, a.Nonce, tracing.NonceChangeUnspecified)
+		statedb.SetBalance(addr, uint256.MustFromBig(a.Balance), tracing.BalanceChangeUnspecified)
 		for k, v := range a.Storage {
 			statedb.SetState(addr, k, v)
 		}
 	}
 	// Commit and re-open to start with a clean state.
-	root, err := statedb.Commit(0, false)
-	if err != nil {
-		panic("failed to commit state: " + err.Error())
-	}
+	root, _ := statedb.Commit(0, false, false)
 
 	// If snapshot is requested, initialize the snapshotter and use it in state.
 	var snaps *snapshot.Tree
-	if snapshotter {
+	if snapshotter && scheme == rawdb.HashScheme {
 		snapconfig := snapshot.Config{
 			CacheSize:  1,
+			Recovery:   false,
 			NoBuild:    false,
 			AsyncBuild: false,
-			SkipVerify: true,
 		}
-		snaps, _ = snapshot.New(snapconfig, db, triedb, common.Hash{}, root)
+		snaps, _ = snapshot.New(snapconfig, db, tdb, root)
 	}
-	statedb, _ = state.New(root, sdb, snaps)
-	return StateTestState{statedb, triedb, snaps, tempdir}
+	sdb = state.NewDatabase(tdb, snaps)
+	statedb, _ = state.New(root, sdb)
+	return StateTestState{statedb, tdb, snaps}
 }
 
 // Close should be called when the state is no longer needed, ie. after running the test.
@@ -116,15 +94,8 @@ func (st *StateTestState) Close() {
 	}
 	if st.Snapshots != nil {
 		// Need to call Disable here to quit the snapshot generator goroutine.
-		st.Snapshots.AbortGeneration()
+		st.Snapshots.Disable()
 		st.Snapshots.Release()
 		st.Snapshots = nil
-	}
-
-	if st.TempDir != "" {
-		if err := os.RemoveAll(st.TempDir); err != nil {
-			panic("failed to remove temporary directory: " + err.Error())
-		}
-		st.TempDir = ""
 	}
 }

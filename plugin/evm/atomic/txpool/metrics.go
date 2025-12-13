@@ -17,11 +17,11 @@ type metrics struct {
 }
 
 func newMetrics() *metrics {
-	return &metrics{
-		pendingTxs:   metricspkg.GetOrRegisterGauge("atomic_mempool_pending_txs", nil),
-		currentTxs:   metricspkg.GetOrRegisterGauge("atomic_mempool_current_txs", nil),
-		issuedTxs:    metricspkg.GetOrRegisterGauge("atomic_mempool_issued_txs", nil),
-		addedTxs:     metricspkg.GetOrRegisterCounter("atomic_mempool_added_txs", nil),
-		discardedTxs: metricspkg.GetOrRegisterCounter("atomic_mempool_discarded_txs", nil),
-	}
+	m := &metrics{}
+	m.pendingTxs = metricspkg.GetOrRegisterGauge("atomic_mempool_pending_txs", nil)
+	m.currentTxs = metricspkg.GetOrRegisterGauge("atomic_mempool_current_txs", nil)
+	m.issuedTxs = metricspkg.GetOrRegisterGauge("atomic_mempool_issued_txs", nil)
+	m.addedTxs = metricspkg.GetOrRegisterCounter("atomic_mempool_added_txs", nil)
+	m.discardedTxs = metricspkg.GetOrRegisterCounter("atomic_mempool_discarded_txs", nil)
+	return m
 }

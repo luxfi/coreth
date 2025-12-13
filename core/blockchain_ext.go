@@ -17,10 +17,13 @@ func getOrOverrideAsRegisteredCounter(name string, r metrics.Registry) *metrics.
 		r = metrics.DefaultRegistry
 	}
 
-	if c, ok := r.GetOrRegister(name, metrics.NewCounter).(*metrics.Counter); ok {
-		return c
+	// Try to get existing metric first
+	if existing := r.Get(name); existing != nil {
+		if c, ok := existing.(*metrics.Counter); ok {
+			return c
+		}
+		// `name` was already registered with a different type, unregister it
+		r.Unregister(name)
 	}
-	// `name` must have already been registered to be any other type
-	r.Unregister(name)
 	return metrics.NewRegisteredCounter(name, r)
 }

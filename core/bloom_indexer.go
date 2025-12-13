@@ -33,7 +33,6 @@ import (
 
 	"github.com/luxfi/coreth/core/bloombits"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/common/bitutil"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
@@ -44,6 +43,10 @@ const (
 	// sections. It's useful during chain upgrades to prevent disk overload.
 	bloomThrottling = 100 * time.Millisecond
 )
+
+// bloomBitsIndexPrefix is the prefix for bloom bits index keys.
+// This was removed from geth rawdb, so we define it here.
+var bloomBitsIndexPrefix = []byte("iB")
 
 // BloomIndexer implements a core.ChainIndexer, building up a rotated bloom bits index
 // for the Ethereum header bloom filters, permitting blazing fast filtering.
@@ -62,7 +65,7 @@ func NewBloomIndexer(db ethdb.Database, size, confirms uint64) *ChainIndexer {
 		db:   db,
 		size: size,
 	}
-	table := rawdb.NewTable(db, string(rawdb.BloomBitsIndexPrefix))
+	table := rawdb.NewTable(db, string(bloomBitsIndexPrefix))
 
 	return NewChainIndexer(db, table, backend, size, confirms, bloomThrottling, "bloombits")
 }
@@ -92,9 +95,25 @@ func (b *BloomIndexer) Commit() error {
 		if err != nil {
 			return err
 		}
-		rawdb.WriteBloomBits(batch, uint(i), b.section, b.head, bitutil.CompressBytes(bits))
+		writeBloomBits(batch, uint(i), b.section, b.head, bits)
 	}
 	return batch.Write()
+}
+
+// writeBloomBits stores the bloom bits for a section.
+func writeBloomBits(db ethdb.KeyValueWriter, bit uint, section uint64, head common.Hash, bits []byte) {
+	key := append(bloomBitsIndexPrefix, make([]byte, 10)...)
+	key[2] = byte(bit >> 8)
+	key[3] = byte(bit)
+	key[4] = byte(section >> 56)
+	key[5] = byte(section >> 48)
+	key[6] = byte(section >> 40)
+	key[7] = byte(section >> 32)
+	key[8] = byte(section >> 24)
+	key[9] = byte(section >> 16)
+	key[10] = byte(section >> 8)
+	key[11] = byte(section)
+	db.Put(key, bits)
 }
 
 // Prune returns an empty error since we don't support pruning here.

@@ -102,36 +102,56 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.Uns
 		}
 		subnetID = sid
 	}
-	validatorState := a.chainContext.ValidatorState
+
+	// Get validator state from chain context
+	validatorState, ok := a.chainContext.ValidatorState.(validators.State)
+	if !ok {
+		return nil, errors.New("validator state not available")
+	}
+
 	pChainHeight, err := validatorState.GetCurrentHeight(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	state := warpValidators.NewState(validatorState, a.chainContext.SubnetID, a.chainContext.ChainID, a.requirePrimaryNetworkSigners())
-	validatorSet, err := warp.GetCanonicalValidatorSetFromSubnetID(ctx, state, pChainHeight, subnetID)
+
+	// Get validator set from the wrapped state
+	validatorMap, err := state.GetValidatorSet(ctx, pChainHeight, subnetID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get validator set: %w", err)
 	}
-	if len(validatorSet.Validators) == 0 {
+	if len(validatorMap) == 0 {
 		return nil, fmt.Errorf("%w (SubnetID: %s, Height: %d)", errNoValidators, subnetID, pChainHeight)
+	}
+
+	// Convert to warp.Validator slice
+	warpValidatorList := make([]*warp.Validator, 0, len(validatorMap))
+	var totalWeight uint64
+	for nodeID, v := range validatorMap {
+		warpValidatorList = append(warpValidatorList, &warp.Validator{
+			PublicKeyBytes: v.PublicKey,
+			Weight:         v.Weight,
+			NodeID:         nodeID,
+		})
+		totalWeight += v.Weight
 	}
 
 	log.Debug("Fetching signature",
 		"sourceSubnetID", subnetID,
 		"height", pChainHeight,
-		"numValidators", len(validatorSet.Validators),
-		"totalWeight", validatorSet.TotalWeight,
+		"numValidators", len(warpValidatorList),
+		"totalWeight", totalWeight,
 	)
 	warpMessage := &warp.Message{
-		UnsignedMessage: *unsignedMessage,
+		UnsignedMessage: unsignedMessage,
 		Signature:       &warp.BitSetSignature{},
 	}
 	signedMessage, _, _, err := a.signatureAggregator.AggregateSignatures(
 		ctx,
 		warpMessage,
 		nil,
-		validatorSet.Validators,
+		warpValidatorList,
 		quorumNum,
 		warpprecompile.WarpQuorumDenominator,
 	)

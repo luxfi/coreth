@@ -7,11 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/luxfi/coreth/cmd/simulator/config"
 	"github.com/luxfi/coreth/cmd/simulator/load"
-	"github.com/luxfi/log"
+	"github.com/luxfi/geth/log"
 	"github.com/spf13/pflag"
 )
 
@@ -37,13 +39,13 @@ func main() {
 		os.Exit(0)
 	}
 
-	logLevel, err := log.LvlFromString(v.GetString(config.LogLevelKey))
+	logLevel, err := lvlFromString(v.GetString(config.LogLevelKey))
 	if err != nil {
 		fmt.Printf("couldn't parse log level: %s\n", err)
 		os.Exit(1)
 	}
-	gethLogger := glog.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, logLevel, true))
-	glog.SetDefault(gethLogger)
+	gethLogger := log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, logLevel, true))
+	log.SetDefault(gethLogger)
 
 	config, err := config.BuildConfig(v)
 	if err != nil {
@@ -53,5 +55,25 @@ func main() {
 	if err := load.ExecuteLoader(context.Background(), config); err != nil {
 		fmt.Printf("load execution failed: %s\n", err)
 		os.Exit(1)
+	}
+}
+
+// lvlFromString converts a log level string to slog.Level
+func lvlFromString(s string) (slog.Level, error) {
+	switch strings.ToLower(s) {
+	case "trace", "trce":
+		return log.LevelTrace, nil
+	case "debug", "dbug":
+		return slog.LevelDebug, nil
+	case "info":
+		return slog.LevelInfo, nil
+	case "warn":
+		return slog.LevelWarn, nil
+	case "error", "eror":
+		return slog.LevelError, nil
+	case "crit":
+		return log.LevelCrit, nil
+	default:
+		return slog.LevelDebug, fmt.Errorf("unknown level: %s", s)
 	}
 }

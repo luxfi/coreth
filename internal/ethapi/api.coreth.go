@@ -9,7 +9,6 @@ import (
 	"math/big"
 
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/common/math"
 )
 
 const (
@@ -109,12 +108,12 @@ func calculateFeeSpeeds(
 	fastFeePerc *big.Int,
 ) feeSpeeds {
 	// Cap the fee to keep slow and normal options reasonable during fee spikes.
-	cappedFee := math.BigMin(estimate, maxFee)
+	cappedFee := bigMin(estimate, maxFee)
 
 	slowFee := new(big.Int).Set(cappedFee)
 	slowFee.Mul(slowFee, slowFeePerc)
 	slowFee.Div(slowFee, bigFeeDenominator)
-	slowFee = math.BigMax(slowFee, minFee)
+	slowFee = bigMax(slowFee, minFee)
 
 	normalFee := cappedFee
 
@@ -126,4 +125,20 @@ func calculateFeeSpeeds(
 		normal: normalFee,
 		fast:   fastFee,
 	}
+}
+
+// bigMin returns the smaller of x or y.
+func bigMin(x, y *big.Int) *big.Int {
+	if x.Cmp(y) < 0 {
+		return x
+	}
+	return y
+}
+
+// bigMax returns the larger of x or y.
+func bigMax(x, y *big.Int) *big.Int {
+	if x.Cmp(y) > 0 {
+		return x
+	}
+	return y
 }

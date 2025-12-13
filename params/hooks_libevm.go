@@ -11,7 +11,6 @@ import (
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/nativeasset"
 	"github.com/luxfi/coreth/params/extras"
-	customheader "github.com/luxfi/coreth/plugin/evm/header"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/coreth/precompile/modules"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
@@ -109,30 +108,13 @@ func (r RulesExtra) precompileOverrideBuiltin(addr common.Address) (vm.Precompil
 }
 
 func makePrecompile(contract contract.StatefulPrecompiledContract) vm.PrecompiledContract {
-	_ = func(env vm.PrecompileEnvironment, input []byte, suppliedGas uint64) ([]byte, uint64, error) {
-		header, err := env.BlockHeader()
-		if err != nil {
-			panic(err) // Should never happen
-		}
-		var predicateResults *predicate.Results
-		rules := GetRulesExtra(env.Rules()).LuxRules
-		if predicateResultsBytes := customheader.PredicateBytesFromExtra(rules, header.Extra); len(predicateResultsBytes) > 0 {
-			predicateResults, err = predicate.ParseResults(predicateResultsBytes)
-			if err != nil {
-				panic(err) // Should never happen, as results are already validated in block validation
-			}
-		}
-		accessibleState := accessibleState{
-			env: env,
-			blockContext: &precompileBlockContext{
-				number:           env.BlockNumber(),
-				time:             env.BlockTime(),
-				predicateResults: predicateResults,
-			},
-		}
-		return contract.Run(accessibleState, env.Addresses().Caller, env.Addresses().Self, input, suppliedGas, env.ReadOnly())
-	}
-	// Temporarily return nil until we implement proper precompile wrapping
+	// TODO: Implement proper precompile wrapping for libevm
+	// The run function would be:
+	// run := func(env vm.PrecompileEnvironment, input []byte, suppliedGas uint64) ([]byte, uint64, error) {
+	//     ... get header, predicateResults, accessibleState ...
+	//     return contract.Run(accessibleState, env.Addresses().Caller, env.Addresses().Self, input, suppliedGas, env.ReadOnly())
+	// }
+	_ = contract // silence unused variable warning
 	return nil
 }
 

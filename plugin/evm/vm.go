@@ -45,7 +45,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	vmsync "github.com/luxfi/coreth/sync/vm"
-	"github.com/luxfi/coreth/triedb/hashdb"
+	"github.com/luxfi/geth/triedb/hashdb"
 
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
@@ -620,16 +620,16 @@ func (vm *VM) initializeStateSync(lastAcceptedHeight uint64) error {
 		evmTrieDB = triedb.NewDatabase(
 			vm.chaindb,
 			&triedb.Config{
-				DBOverride: hashdb.Config{
+				HashDB: &hashdb.Config{
 					CleanCacheSize: vm.config.StateSyncServerTrieCache * units.MiB,
-				}.BackendConstructor,
+				},
 			},
 		)
 	}
 	leafHandlers := make(LeafHandlers)
 	leafMetricsNames := make(map[message.NodeType]string)
 	// register default leaf request handler for state trie
-	syncStats := handlerstats.GetOrRegisterHandlerStats(metrics.Enabled)
+	syncStats := handlerstats.GetOrRegisterHandlerStats(metrics.Enabled())
 	stateLeafRequestConfig := &extension.LeafRequestConfig{
 		LeafType:   message.StateTrieNode,
 		MetricName: "sync_state_trie_leaves",

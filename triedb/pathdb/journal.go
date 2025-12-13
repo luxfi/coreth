@@ -37,7 +37,6 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie/trienode"
@@ -126,8 +125,8 @@ func (db *Database) loadJournal(diskRoot common.Hash) (layer, error) {
 // loadLayers loads a pre-existing state layer backed by a key-value store.
 func (db *Database) loadLayers() layer {
 	// Retrieve the root node of persistent state.
-	_, root := rawdb.ReadAccountTrieNode(db.diskdb, nil)
-	root = types.TrieRootHash(root)
+	rootBlob := rawdb.ReadAccountTrieNode(db.diskdb, nil)
+	root := types.TrieRootHash(rootBlob)
 
 	// Load the layers by resolving the journal
 	head, err := db.loadJournal(root)
@@ -173,7 +172,7 @@ func (db *Database) loadDiskLayer(r *rlp.Stream) (layer, error) {
 		subset := make(map[string]*trienode.Node)
 		for _, n := range entry.Nodes {
 			if len(n.Blob) > 0 {
-				subset[string(n.Path)] = trienode.New(crypto.Keccak256Hash(n.Blob), n.Blob)
+				subset[string(n.Path)] = trienode.New(common.Keccak256Hash(n.Blob), n.Blob)
 			} else {
 				subset[string(n.Path)] = trienode.NewDeleted()
 			}
@@ -211,7 +210,7 @@ func (db *Database) loadDiffLayer(parent layer, r *rlp.Stream) (layer, error) {
 		subset := make(map[string]*trienode.Node)
 		for _, n := range entry.Nodes {
 			if len(n.Blob) > 0 {
-				subset[string(n.Path)] = trienode.New(crypto.Keccak256Hash(n.Blob), n.Blob)
+				subset[string(n.Path)] = trienode.New(common.Keccak256Hash(n.Blob), n.Blob)
 			} else {
 				subset[string(n.Path)] = trienode.NewDeleted()
 			}
@@ -376,8 +375,8 @@ func (db *Database) Journal(root common.Hash) error {
 	}
 	// The stored state in disk might be empty, convert the
 	// root to emptyRoot in this case.
-	_, diskroot := rawdb.ReadAccountTrieNode(db.diskdb, nil)
-	diskroot = types.TrieRootHash(diskroot)
+	diskrootBlob := rawdb.ReadAccountTrieNode(db.diskdb, nil)
+	diskroot := types.TrieRootHash(diskrootBlob)
 
 	// Secondly write out the state root in disk, ensure all layers
 	// on top are continuous with disk.

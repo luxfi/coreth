@@ -38,9 +38,9 @@ import (
 	"github.com/luxfi/coreth/accounts/abi/bind"
 	"github.com/luxfi/coreth/cmd/utils"
 	"github.com/luxfi/coreth/internal/flags"
-	"github.com/luxfi/geth/common/compiler"
 	"github.com/luxfi/crypto"
-	"github.com/luxfi/log"
+	"github.com/luxfi/geth/common/compiler"
+	"github.com/luxfi/geth/log"
 	"github.com/urfave/cli/v2"
 )
 

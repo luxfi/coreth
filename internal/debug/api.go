@@ -46,9 +46,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/log"
+	"log/slog"
+
 	"github.com/hashicorp/go-bexpr"
-	"golang.org/x/exp/slog"
+	"github.com/luxfi/log"
 )
 
 // Handler is the global debugging handler.

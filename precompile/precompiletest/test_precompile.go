@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/consensus/engine/chain/chaintest"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/coreth/precompile/modules"
@@ -16,6 +16,10 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/tracing"
+	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/ids"
+	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -105,7 +109,12 @@ func (test PrecompileTest) setup(t testing.TB, module modules.Module, state *tes
 		blockContext.EXPECT().Number().Return(big.NewInt(0)).AnyTimes()
 		blockContext.EXPECT().Timestamp().Return(uint64(time.Now().Unix())).AnyTimes()
 	}
-	quasarContext := consensustest.Context(t, consensustest.CChainID)
+	quasarContext := &consensusctx.Context{
+		NetworkID: 1,
+		QuantumID: 1,
+		NetID:     ids.Empty,
+		ChainID:   ids.GenerateTestID(),
+	}
 
 	accessibleState := contract.NewMockAccessibleState(ctrl)
 	accessibleState.EXPECT().GetStateDB().Return(state).AnyTimes()
@@ -152,7 +161,8 @@ type testStateDB struct {
 
 func newTestStateDB(t testing.TB, predicateStorageSlots map[common.Address][][]byte) *testStateDB {
 	db := rawdb.NewMemoryDatabase()
-	statedb, err := state.New(common.Hash{}, state.NewDatabase(db), nil)
+	tdb := triedb.NewDatabase(db, nil)
+	statedb, err := state.New(common.Hash{}, state.NewDatabase(tdb, nil))
 	require.NoError(t, err)
 	return &testStateDB{
 		StateDB:               extstate.New(statedb),
@@ -166,4 +176,34 @@ func (s *testStateDB) GetPredicateStorageSlots(address common.Address, index int
 		return nil, false
 	}
 	return predicates[index], true
+}
+
+// AddBalance wraps the underlying StateDB.AddBalance to match the contract.StateDB interface
+func (s *testStateDB) AddBalance(addr common.Address, amount *uint256.Int, reason tracing.BalanceChangeReason) uint256.Int {
+	return s.StateDB.AddBalance(addr, amount, reason)
+}
+
+// SubBalance wraps the underlying StateDB.SubBalance to match the contract.StateDB interface
+func (s *testStateDB) SubBalance(addr common.Address, amount *uint256.Int, reason tracing.BalanceChangeReason) uint256.Int {
+	return s.StateDB.SubBalance(addr, amount, reason)
+}
+
+// GetState wraps the underlying StateDB.GetState to match the contract.StateDB interface
+func (s *testStateDB) GetState(addr common.Address, hash common.Hash) common.Hash {
+	return s.StateDB.GetState(addr, hash)
+}
+
+// SetState wraps the underlying StateDB.SetState to match the contract.StateDB interface
+func (s *testStateDB) SetState(addr common.Address, key, value common.Hash) common.Hash {
+	return s.StateDB.SetState(addr, key, value)
+}
+
+// SetNonce wraps the underlying StateDB.SetNonce to match the contract.StateDB interface
+func (s *testStateDB) SetNonce(addr common.Address, nonce uint64, reason tracing.NonceChangeReason) {
+	s.StateDB.SetNonce(addr, nonce, reason)
+}
+
+// TxHash returns the current transaction hash (stub for testing)
+func (s *testStateDB) TxHash() common.Hash {
+	return common.Hash{}
 }

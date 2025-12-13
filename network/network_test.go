@@ -15,7 +15,8 @@ import (
 	"github.com/luxfi/p2p"
 	"github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/enginetest"
-	"github.com/luxfi/consensus/engine/chain/chaintest"
+	consensustest "github.com/luxfi/consensus/test/helpers"
+	consensusversion "github.com/luxfi/consensus/version"
 	"github.com/luxfi/math/set"
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -27,15 +28,20 @@ import (
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/codec/linearcodec"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/node/version"
 )
 
 const (
 	codecVersion uint16 = 0
 )
 
+const (
+	// Client name for version strings
+	versionClient = "luxd"
+)
+
 var (
-	defaultPeerVersion = &version.Application{
+	defaultPeerVersion = &consensusversion.Application{
+		Name:  versionClient,
 		Major: 1,
 		Minor: 0,
 		Patch: 0,
@@ -50,7 +56,7 @@ var (
 	_ message.RequestHandler = (*HelloGreetingRequestHandler)(nil)
 	_ message.RequestHandler = (*testRequestHandler)(nil)
 
-	_ common.AppSender = (*testAppSender)(nil)
+	_ core.AppSender = (*testAppSender)(nil)
 
 	_ p2p.Handler = (*testSDKHandler)(nil)
 )
@@ -334,7 +340,7 @@ func TestSyncedAppRequestAnyOnCtxCancellation(t *testing.T) {
 		net.Connected(
 			context.Background(),
 			ids.GenerateTestNodeID(),
-			version.CurrentApp,
+			consensusversion.Current(),
 		),
 	)
 
@@ -415,8 +421,8 @@ func TestRequestMinVersion(t *testing.T) {
 		net.Connected(
 			context.Background(),
 			nodeID,
-			&version.Application{
-				Name:  version.Client,
+			&consensusversion.Application{
+				Name:  versionClient,
 				Major: 1,
 				Minor: 7,
 				Patch: 1,
@@ -427,8 +433,8 @@ func TestRequestMinVersion(t *testing.T) {
 	// ensure version does not match
 	responseBytes, _, err := net.SendSyncedAppRequestAny(
 		context.Background(),
-		&version.Application{
-			Name:  version.Client,
+		&consensusversion.Application{
+			Name:  versionClient,
 			Major: 2,
 			Minor: 0,
 			Patch: 0,
@@ -603,7 +609,7 @@ func TestNetworkRouting(t *testing.T) {
 	err = network.AppResponse(context.Background(), ids.GenerateTestNodeID(), 1, foobar)
 	require.ErrorIs(err, p2p.ErrUnrequestedResponse)
 
-	err = network.AppRequestFailed(context.Background(), nodeID, 1, common.ErrTimeout)
+	err = network.AppRequestFailed(context.Background(), nodeID, 1, &core.AppError{Code: -1, Message: "timeout"})
 	require.ErrorIs(err, p2p.ErrUnrequestedResponse)
 }
 
@@ -626,7 +632,7 @@ func marshalStruct(codec codec.Manager, obj interface{}) ([]byte, error) {
 type testAppSender struct {
 	sendAppRequestFn  func(context.Context, set.Set[ids.NodeID], uint32, []byte) error
 	sendAppResponseFn func(ids.NodeID, uint32, []byte) error
-	sendAppGossipFn   func(common.SendConfig, []byte) error
+	sendAppGossipFn   func(core.SendConfig, []byte) error
 }
 
 func (t testAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.NodeID], requestID uint32, message []byte) error {
@@ -637,7 +643,7 @@ func (t testAppSender) SendAppResponse(_ context.Context, nodeID ids.NodeID, req
 	return t.sendAppResponseFn(nodeID, requestID, message)
 }
 
-func (t testAppSender) SendAppGossip(_ context.Context, config common.SendConfig, message []byte) error {
+func (t testAppSender) SendAppGossip(_ context.Context, config core.SendConfig, message []byte) error {
 	return t.sendAppGossipFn(config, message)
 }
 
@@ -759,7 +765,7 @@ func (t *testSDKHandler) AppGossip(ctx context.Context, nodeID ids.NodeID, gossi
 	panic("implement me")
 }
 
-func (t *testSDKHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *common.AppError) {
+func (t *testSDKHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *p2p.Error) {
 	t.appRequested = true
 	return nil, nil
 }

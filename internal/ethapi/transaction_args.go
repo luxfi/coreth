@@ -33,6 +33,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
@@ -41,7 +42,6 @@ import (
 	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/log"
@@ -436,7 +436,13 @@ func (args *TransactionArgs) ToMessage(globalGasCap uint64, baseFee *big.Int) (*
 			// Backfill the legacy gasPrice for EVM execution, unless we're all zeroes
 			gasPrice = new(big.Int)
 			if gasFeeCap.BitLen() > 0 || gasTipCap.BitLen() > 0 {
-				gasPrice = math.BigMin(new(big.Int).Add(gasTipCap, baseFee), gasFeeCap)
+				// Use min of (gasTipCap + baseFee) and gasFeeCap
+				sum := new(big.Int).Add(gasTipCap, baseFee)
+				if sum.Cmp(gasFeeCap) < 0 {
+					gasPrice = sum
+				} else {
+					gasPrice = gasFeeCap
+				}
 			}
 		}
 	}

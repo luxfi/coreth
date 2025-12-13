@@ -33,8 +33,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/coreth/triedb/hashdb"
-	"github.com/luxfi/coreth/triedb/pathdb"
+	"github.com/luxfi/geth/triedb/hashdb"
+	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
@@ -177,9 +177,9 @@ func newHelper(scheme string) *testHelper {
 	diskdb := rawdb.NewMemoryDatabase()
 	config := &triedb.Config{}
 	if scheme == rawdb.PathScheme {
-		config.DBOverride = pathdb.Config{}.BackendConstructor // disable caching
+		config.PathDB = &pathdb.Config{} // disable caching
 	} else {
-		config.DBOverride = hashdb.Config{}.BackendConstructor // disable caching
+		config.HashDB = &hashdb.Config{} // disable caching
 	}
 	triedb := triedb.NewDatabase(diskdb, config)
 	accTrie, _ := trie.NewStateTrie(trie.StateTrieID(types.EmptyRootHash), triedb)
@@ -614,7 +614,7 @@ func testGenerateWithExtraAccounts(t *testing.T, scheme string) {
 }
 
 func enableLogging() {
-	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
+	log.SetDefault(log.NewLoggerFromHandler(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelTrace, true)))
 }
 
 // Tests that snapshot generation when an extra account with storage exists in the snap state.

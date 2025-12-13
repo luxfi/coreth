@@ -4,32 +4,21 @@
 package message
 
 import (
+	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/geth/common"
 )
 
-// TODO: Temporarily disabled - needs block.StateSummary from node
-/*
+// Syncable extends block.StateSummary with additional getters for coreth.
 type Syncable interface {
 	block.StateSummary
 	GetBlockHash() common.Hash
 	GetBlockRoot() common.Hash
 }
 
+// SyncableParser parses byte-encoded summaries.
 type SyncableParser interface {
 	Parse(summaryBytes []byte, acceptImpl AcceptImplFn) (Syncable, error)
 }
 
+// AcceptImplFn is the accept implementation callback.
 type AcceptImplFn func(Syncable) (block.StateSyncMode, error)
-*/
-
-// Temporary stubs
-type Syncable interface {
-	GetBlockHash() common.Hash
-	GetBlockRoot() common.Hash
-}
-
-type SyncableParser interface {
-	Parse(summaryBytes []byte, acceptImpl AcceptImplFn) (Syncable, error)
-}
-
-type AcceptImplFn func(Syncable) (int, error)

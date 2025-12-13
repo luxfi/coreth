@@ -37,6 +37,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/params"
@@ -47,9 +48,8 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/metrics"
-	"github.com/holiman/uint256"
+	"github.com/luxfi/log"
 
 	// Force geth metrics of the same name to be registered first.
 	_ "github.com/luxfi/geth/core/txpool/legacypool"
@@ -600,7 +600,7 @@ func (pool *LegacyPool) Pending(filter txpool.PendingFilter) map[common.Address]
 		// If the miner requests tip enforcement, cap the lists now
 		if minTipBig != nil && !pool.locals.contains(addr) {
 			for i, tx := range txs {
-				if tx.EffectiveGasTipIntCmp(minTipBig, baseFeeBig) < 0 {
+				if tx.EffectiveGasTipIntCmp(uint256.MustFromBig(minTipBig), uint256.MustFromBig(baseFeeBig)) < 0 {
 					txs = txs[:i]
 					break
 				}

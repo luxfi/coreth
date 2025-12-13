@@ -43,6 +43,6 @@ func NewLeafHandler() *leafHandler {
 
 // Initialize initializes the atomicLeafHandler with the provided atomicTrieDB, trieKeyLength, and networkCodec
 func (a *leafHandler) Initialize(atomicTrieDB *triedb.Database, trieKeyLength int, networkCodec codec.Manager) {
-	handlerStats := stats.GetOrRegisterHandlerStats(metrics.Enabled)
+	handlerStats := stats.GetOrRegisterHandlerStats(metrics.Enabled())
 	a.LeafRequestHandler = handlers.NewLeafsRequestHandler(atomicTrieDB, trieKeyLength, nil, networkCodec, handlerStats)
 }

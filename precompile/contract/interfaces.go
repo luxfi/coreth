@@ -10,9 +10,9 @@ import (
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/tracing"
 	ethtypes "github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/core/stateconf"
 	"github.com/holiman/uint256"
 )
 
@@ -23,15 +23,17 @@ type StatefulPrecompiledContract interface {
 }
 
 // StateDB is the interface for accessing EVM state
+// This matches geth's vm.StateDB interface for compatibility
 type StateDB interface {
-	GetState(common.Address, common.Hash, ...stateconf.StateDBStateOption) common.Hash
-	SetState(common.Address, common.Hash, common.Hash, ...stateconf.StateDBStateOption)
+	GetState(common.Address, common.Hash) common.Hash
+	SetState(common.Address, common.Hash, common.Hash) common.Hash
 
-	SetNonce(common.Address, uint64)
+	SetNonce(common.Address, uint64, tracing.NonceChangeReason)
 	GetNonce(common.Address) uint64
 
 	GetBalance(common.Address) *uint256.Int
-	AddBalance(common.Address, *uint256.Int)
+	AddBalance(common.Address, *uint256.Int, tracing.BalanceChangeReason) uint256.Int
+	SubBalance(common.Address, *uint256.Int, tracing.BalanceChangeReason) uint256.Int
 	GetBalanceMultiCoin(common.Address, common.Hash) *big.Int
 	AddBalanceMultiCoin(common.Address, common.Hash, *big.Int)
 	SubBalanceMultiCoin(common.Address, common.Hash, *big.Int)

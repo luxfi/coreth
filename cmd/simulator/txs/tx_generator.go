@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	"github.com/luxfi/coreth/ethclient"
+	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	ethcrypto "github.com/luxfi/crypto"
 )
 
 var _ TxSequence[*types.Transaction] = (*txSequence)(nil)
@@ -53,7 +53,7 @@ func GenerateTxSequences(ctx context.Context, generator CreateTx, client *ethcli
 }
 
 func addTxs(ctx context.Context, txSequence *txSequence, generator CreateTx, client *ethclient.Client, key *ecdsa.PrivateKey, numTxs uint64) error {
-	address := crypto.PubkeyToAddress(key.PublicKey)
+	address := common.PubkeyToAddress(key.PublicKey)
 	startingNonce, err := client.NonceAt(ctx, address, nil)
 	if err != nil {
 		return err

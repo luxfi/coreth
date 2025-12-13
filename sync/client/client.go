@@ -17,11 +17,11 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/sync/client/stats"
 
+	"github.com/luxfi/consensus/version"
 	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/version"
 
-	"github.com/luxfi/geth/common"
 	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/common"
 	"github.com/luxfi/log"
 
 	"github.com/luxfi/coreth/plugin/evm/message"
@@ -271,7 +271,7 @@ func parseCode(codec codec.Manager, req message.Request, data []byte) (interface
 			return nil, 0, fmt.Errorf("%w: (hash %s) (size %d)", errMaxCodeSizeExceeded, codeRequest.Hashes[i], len(code))
 		}
 
-		hash := crypto.Keccak256Hash(code)
+		hash := common.BytesToHash(crypto.Keccak256(code))
 		if hash != codeRequest.Hashes[i] {
 			return nil, 0, fmt.Errorf("%w for code at index %d: (got %v) (expected %v)", errHashMismatch, i, hash, codeRequest.Hashes[i])
 		}

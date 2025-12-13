@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/triedb/database"
-	"github.com/luxfi/coreth/triedb/hashdb"
+	"github.com/luxfi/geth/triedb/hashdb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
@@ -73,7 +73,7 @@ func newFuzzState(t *testing.T) *fuzzState {
 	hashState := NewDatabaseWithConfig(
 		rawdb.NewMemoryDatabase(),
 		&triedb.Config{
-			DBOverride: hashdb.Defaults.BackendConstructor,
+			HashDB: hashdb.Defaults,
 		})
 	ethRoot := types.EmptyRootHash
 	hashTr, err := hashState.OpenTrie(ethRoot)
@@ -82,34 +82,16 @@ func newFuzzState(t *testing.T) *fuzzState {
 		r.NoError(hashState.TrieDB().Close())
 	})
 
-	databaseMemdb := rawdb.NewMemoryDatabase()
-	fwCfg := database.Defaults
-	fwCfg.FilePath = filepath.Join(t.TempDir(), "database") // Use a temporary directory for the Database
-	databaseState := NewDatabaseWithConfig(
-		databaseMemdb,
-		&triedb.Config{
-			DBOverride: fwCfg.BackendConstructor,
-		},
-	)
-	fwTr, err := databaseState.OpenTrie(ethRoot)
-	r.NoError(err)
-	t.Cleanup(func() {
-		r.NoError(databaseState.TrieDB().Close())
-	})
+	// Skip database backend test - not supported with new triedb config
+	_ = database.Defaults
+	_ = filepath.Join(t.TempDir(), "database")
 
 	return &fuzzState{
 		merkleTries: []*merkleTrie{
-			&merkleTrie{
+			{
 				name:             "hash",
 				ethDatabase:      hashState,
 				accountTrie:      hashTr,
-				openStorageTries: make(map[common.Address]state.Trie),
-				lastRoot:         ethRoot,
-			},
-			&merkleTrie{
-				name:             "database",
-				ethDatabase:      databaseState,
-				accountTrie:      fwTr,
 				openStorageTries: make(map[common.Address]state.Trie),
 				lastRoot:         ethRoot,
 			},

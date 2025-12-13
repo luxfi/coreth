@@ -43,9 +43,9 @@ import (
 	"github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/params"
 	"github.com/luxfi/log"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/triedb"
@@ -150,7 +150,9 @@ func SetupGenesisBlock(
 	// is initialized with an external ancient store. Commit genesis state
 	// in this case.
 	header := rawdb.ReadHeader(db, stored, 0)
-	if header.Root != types.EmptyRootHash && !triedb.Initialized(header.Root) {
+	// Check if the state is initialized by attempting to get a node reader
+	_, nodeReaderErr := triedb.NodeReader(header.Root)
+	if header.Root != types.EmptyRootHash && nodeReaderErr != nil {
 		// Ensure the stored genesis matches with the given one.
 		hash := genesis.ToBlock().Hash()
 		if hash != stored {
@@ -232,7 +234,7 @@ func (g *Genesis) trieConfig() *triedb.Config {
 
 // TODO: migrate this function to "flush" for more similarity with upstream.
 func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Block {
-	statedb, err := state.New(types.EmptyRootHash, extstate.NewDatabaseWithNodeDB(db, triedb), nil)
+	statedb, err := state.New(types.EmptyRootHash, extstate.NewDatabase(triedb, nil))
 	if err != nil {
 		panic(err)
 	}
@@ -259,9 +261,9 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 	}
 
 	for addr, account := range g.Alloc {
-		statedb.SetBalance(addr, uint256.MustFromBig(account.Balance))
-		statedb.SetCode(addr, account.Code)
-		statedb.SetNonce(addr, account.Nonce)
+		statedb.SetBalance(addr, uint256.MustFromBig(account.Balance), tracing.BalanceIncreaseGenesisBalance)
+		statedb.SetCode(addr, account.Code, tracing.CodeChangeGenesis)
+		statedb.SetNonce(addr, account.Nonce, tracing.NonceChangeGenesis)
 		for key, value := range account.Storage {
 			statedb.SetState(addr, key, value)
 		}
@@ -302,10 +304,9 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 	}
 
 	// Create the genesis block to use the block hash
-	block := types.NewBlock(head, nil, nil, nil, trie.NewStackTrie(nil))
-	triedbOpt := stateconf.WithTrieDBUpdatePayload(common.Hash{}, block.Hash())
+	block := types.NewBlock(head, nil, nil, trie.NewStackTrie(nil))
 
-	if _, err := statedb.Commit(0, false, stateconf.WithTrieDBUpdateOpts(triedbOpt)); err != nil {
+	if _, err := statedb.Commit(0, false, false); err != nil {
 		panic(fmt.Sprintf("unable to commit genesis block to statedb: %v", err))
 	}
 	// Commit newly generated states into disk if it's not empty.
@@ -362,9 +363,9 @@ func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big
 
 // ReadBlockByHash reads the block with the given hash from the database.
 func ReadBlockByHash(db ethdb.Reader, hash common.Hash) *types.Block {
-	blockNumber := rawdb.ReadHeaderNumber(db, hash)
-	if blockNumber == nil {
+	blockNumber, ok := rawdb.ReadHeaderNumber(db, hash)
+	if !ok {
 		return nil
 	}
-	return rawdb.ReadBlock(db, hash, *blockNumber)
+	return rawdb.ReadBlock(db, hash, blockNumber)
 }

@@ -239,7 +239,7 @@ func (c *ChainIndexer) eventLoop(currentHeader *types.Header, events chan ChainH
 				// TODO(karalabe, zsfelfoldi): This seems a bit brittle, can we detect this case explicitly?
 
 				if rawdb.ReadCanonicalHash(c.chainDb, prevHeader.Number.Uint64()) != prevHash {
-					if h := rawdb.FindCommonAncestor(c.chainDb, prevHeader, header); h != nil {
+					if h := findCommonAncestor(c.chainDb, prevHeader, header); h != nil {
 						c.newHead(h.Number.Uint64(), true)
 					}
 				}
@@ -531,4 +531,29 @@ func (c *ChainIndexer) removeSectionHead(section uint64) {
 	binary.BigEndian.PutUint64(data[:], section)
 
 	c.indexDb.Delete(append([]byte("shead"), data[:]...))
+}
+
+// findCommonAncestor returns the common ancestor of two headers.
+// This was removed from geth rawdb, so we implement it locally.
+func findCommonAncestor(db ethdb.Reader, a, b *types.Header) *types.Header {
+	for a.Number.Uint64() > b.Number.Uint64() {
+		a = rawdb.ReadHeader(db, a.ParentHash, a.Number.Uint64()-1)
+		if a == nil {
+			return nil
+		}
+	}
+	for b.Number.Uint64() > a.Number.Uint64() {
+		b = rawdb.ReadHeader(db, b.ParentHash, b.Number.Uint64()-1)
+		if b == nil {
+			return nil
+		}
+	}
+	for a.Hash() != b.Hash() {
+		a = rawdb.ReadHeader(db, a.ParentHash, a.Number.Uint64()-1)
+		b = rawdb.ReadHeader(db, b.ParentHash, b.Number.Uint64()-1)
+		if a == nil || b == nil {
+			return nil
+		}
+	}
+	return a
 }

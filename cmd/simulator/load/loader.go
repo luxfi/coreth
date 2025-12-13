@@ -22,7 +22,6 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	ethcrypto "github.com/luxfi/crypto"
 	"github.com/luxfi/log"
 	ethparams "github.com/luxfi/geth/params"
 	"golang.org/x/sync/errgroup"
@@ -212,7 +211,7 @@ func ExecuteLoader(ctx context.Context, config config.Config) error {
 
 	log.Info("Creating transaction sequences...")
 	txGenerator := func(key *ecdsa.PrivateKey, nonce uint64) (*types.Transaction, error) {
-		addr := crypto.PubkeyToAddress(key.PublicKey)
+		addr := common.PubkeyToAddress(key.PublicKey)
 		return types.SignNewTx(key, signer, &types.DynamicFeeTx{
 			ChainID:   chainID,
 			Nonce:     nonce,
@@ -233,7 +232,7 @@ func ExecuteLoader(ctx context.Context, config config.Config) error {
 
 	workers := make([]txs.Worker[*types.Transaction], 0, len(clients))
 	for i, client := range clients {
-		workers = append(workers, NewSingleAddressTxWorker(ctx, client, crypto.PubkeyToAddress(pks[i].PublicKey)))
+		workers = append(workers, NewSingleAddressTxWorker(ctx, client, common.PubkeyToAddress(pks[i].PublicKey)))
 	}
 	loader := New(workers, txSequences, config.BatchSize, m)
 	err = loader.Execute(ctx)

@@ -30,7 +30,7 @@ func (f *apiFetcher) GetSignature(ctx context.Context, nodeID ids.NodeID, unsign
 		return nil, fmt.Errorf("no warp client for nodeID: %s", nodeID)
 	}
 	var signatureBytes []byte
-	parsedPayload, err := payload.Parse(unsignedWarpMessage.Payload)
+	parsedPayload, err := payload.ParsePayload(unsignedWarpMessage.Payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse unsigned message payload: %w", err)
 	}
@@ -38,7 +38,11 @@ func (f *apiFetcher) GetSignature(ctx context.Context, nodeID ids.NodeID, unsign
 	case *payload.AddressedCall:
 		signatureBytes, err = client.GetMessageSignature(ctx, unsignedWarpMessage.ID())
 	case *payload.Hash:
-		signatureBytes, err = client.GetBlockSignature(ctx, p.Hash)
+		blockID, convErr := ids.ToID(p.Hash)
+		if convErr != nil {
+			return nil, fmt.Errorf("failed to convert hash to ID: %w", convErr)
+		}
+		signatureBytes, err = client.GetBlockSignature(ctx, blockID)
 	}
 	if err != nil {
 		return nil, err

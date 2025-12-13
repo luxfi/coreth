@@ -5,22 +5,21 @@ package extstate
 
 import (
 	"github.com/luxfi/coreth/utils"
-	"github.com/luxfi/geth/core/state"
 )
 
-type workerPool struct {
+// WorkerPool is a bounded worker pool for concurrent operations.
+type WorkerPool struct {
 	*utils.BoundedWorkers
 }
 
-func (wp *workerPool) Done() {
-	// Done is guaranteed to only be called after all work is already complete,
-	// so we call Wait for goroutines to finish before returning.
+// Done waits for all workers to finish.
+func (wp *WorkerPool) Done() {
 	wp.BoundedWorkers.Wait()
 }
 
-func WithConcurrentWorkers(prefetchers int) state.PrefetcherOption {
-	pool := &workerPool{
-		BoundedWorkers: utils.NewBoundedWorkers(prefetchers),
+// NewWorkerPool creates a new worker pool with the specified number of workers.
+func NewWorkerPool(workers int) *WorkerPool {
+	return &WorkerPool{
+		BoundedWorkers: utils.NewBoundedWorkers(workers),
 	}
-	return state.WithWorkerPools(func() state.WorkerPool { return pool })
 }

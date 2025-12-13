@@ -33,7 +33,6 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/trie/triestate"
 	"golang.org/x/exp/slices"
@@ -104,20 +103,21 @@ func (h *testHasher) Commit(collectLeaf bool) (common.Hash, *trienode.NodeSet, e
 		if bytes.Equal(val, h.cleans[hash]) {
 			continue
 		}
+		prev := h.cleans[hash]
 		if len(val) == 0 {
-			set.AddNode(hash.Bytes(), trienode.NewDeleted())
+			set.AddNode(hash.Bytes(), trienode.NewDeletedWithPrev(prev))
 		} else {
-			set.AddNode(hash.Bytes(), trienode.New(crypto.Keccak256Hash(val), val))
+			set.AddNode(hash.Bytes(), trienode.NewNodeWithPrev(common.Keccak256Hash(val), val, prev))
 		}
 	}
 	root, blob := hash(nodes)
 
 	// Include the dirty root node as well.
 	if root != types.EmptyRootHash && root != h.root {
-		set.AddNode(nil, trienode.New(root, blob))
+		set.AddNode(nil, trienode.NewNodeWithPrev(root, blob, nil))
 	}
 	if root == types.EmptyRootHash && h.root != types.EmptyRootHash {
-		set.AddNode(nil, trienode.NewDeleted())
+		set.AddNode(nil, trienode.NewDeletedWithPrev(nil))
 	}
 	return root, set, nil
 }
@@ -141,7 +141,7 @@ func hash(states map[common.Hash][]byte) (common.Hash, []byte) {
 	if len(input) == 0 {
 		return types.EmptyRootHash, nil
 	}
-	return crypto.Keccak256Hash(input), input
+	return common.Keccak256Hash(input), input
 }
 
 type hashLoader struct {

@@ -26,18 +26,18 @@ func newValidator(t testing.TB, weight uint64) (bls.Signer, *luxWarp.Validator) 
 		PublicKey:      pk,
 		PublicKeyBytes: bls.PublicKeyToCompressedBytes(pk),
 		Weight:         weight,
-		NodeIDs:        []ids.NodeID{ids.GenerateTestNodeID()},
+		NodeID:         ids.GenerateTestNodeID(),
 	}
 }
 
 func TestAggregateSignatures(t *testing.T) {
 	errTest := errors.New("test error")
-	unsignedMsg := &luxWarp.UnsignedMessage{
-		NetworkID:     1338,
-		SourceChainID: ids.ID{'y', 'e', 'e', 't'},
-		Payload:       []byte("hello world"),
-	}
-	require.NoError(t, unsignedMsg.Initialize())
+	unsignedMsg, err := luxWarp.NewUnsignedMessage(
+		1338,
+		ids.ID{'y', 'e', 'e', 't'},
+		[]byte("hello world"),
+	)
+	require.NoError(t, err)
 
 	nodeID1, nodeID2, nodeID3 := ids.GenerateTestNodeID(), ids.GenerateTestNodeID(), ids.GenerateTestNodeID()
 	vdrWeight := uint64(10001)
@@ -62,17 +62,17 @@ func TestAggregateSignatures(t *testing.T) {
 	vdrs := []*luxWarp.Validator{
 		{
 			PublicKey: vdr1.PublicKey,
-			NodeIDs:   []ids.NodeID{nodeID1},
+			NodeID:    nodeID1,
 			Weight:    vdr1.Weight,
 		},
 		{
 			PublicKey: vdr2.PublicKey,
-			NodeIDs:   []ids.NodeID{nodeID2},
+			NodeID:    nodeID2,
 			Weight:    vdr2.Weight,
 		},
 		{
 			PublicKey: vdr3.PublicKey,
-			NodeIDs:   []ids.NodeID{nodeID3},
+			NodeID:    nodeID3,
 			Weight:    vdr3.Weight,
 		},
 	}
@@ -362,7 +362,7 @@ func TestAggregateSignatures(t *testing.T) {
 				return
 			}
 
-			require.Equal(unsignedMsg, &res.Message.UnsignedMessage)
+			require.Equal(unsignedMsg, res.Message.UnsignedMessage)
 
 			expectedSigWeight := uint64(0)
 			for _, vdr := range tt.expectedSigners {
@@ -381,8 +381,13 @@ func TestAggregateSignatures(t *testing.T) {
 			require.True(ok)
 			require.Equal(bls.SignatureToBytes(expectedSig), gotBLSSig.Signature[:])
 
-			numSigners, err := res.Message.Signature.NumSigners()
-			require.NoError(err)
+			// Count signers from the bitset
+			numSigners := 0
+			for i := 0; i < gotBLSSig.Signers.BitLen(); i++ {
+				if gotBLSSig.Signers.Contains(i) {
+					numSigners++
+				}
+			}
 			require.Len(tt.expectedSigners, numSigners)
 		})
 	}
