@@ -25,10 +25,10 @@ import (
 	"slices"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/tests"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/internal/flags"
+	"github.com/luxfi/coreth/tests"
 	"github.com/urfave/cli/v2"
 )
 

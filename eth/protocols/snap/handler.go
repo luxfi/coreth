@@ -22,18 +22,18 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/state/snapshot"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/state/snapshot"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/p2p"
 	"github.com/luxfi/geth/p2p/enode"
 	"github.com/luxfi/geth/p2p/enr"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/trie/trienode"
-	"github.com/luxfi/geth/triedb/database"
+	"github.com/luxfi/coreth/triedb/database"
 )
 
 const (

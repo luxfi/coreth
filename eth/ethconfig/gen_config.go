@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/history"
-	"github.com/luxfi/geth/core/txpool/blobpool"
-	"github.com/luxfi/geth/core/txpool/legacypool"
-	"github.com/luxfi/geth/eth/gasprice"
-	"github.com/luxfi/geth/miner"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/history"
+	"github.com/luxfi/coreth/core/txpool/blobpool"
+	"github.com/luxfi/coreth/core/txpool/legacypool"
+	"github.com/luxfi/coreth/eth/gasprice"
+	"github.com/luxfi/coreth/miner"
 )
 
 // MarshalTOML marshals as TOML.

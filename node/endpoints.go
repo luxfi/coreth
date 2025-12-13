@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // StartHTTPEndpoint starts the HTTP RPC endpoint.

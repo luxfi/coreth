@@ -17,8 +17,8 @@
 package eth
 
 import (
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/eth/protocols/snap"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/eth/protocols/snap"
 	"github.com/luxfi/geth/p2p/enode"
 )
 

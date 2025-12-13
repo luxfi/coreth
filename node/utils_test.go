@@ -21,7 +21,7 @@ package node
 
 import (
 	"github.com/luxfi/geth/p2p"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // NoopLifecycle is a trivial implementation of the Service interface.

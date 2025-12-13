@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/stretchr/testify/assert"
 )
 

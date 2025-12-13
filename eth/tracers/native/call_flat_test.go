@@ -22,11 +22,11 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/tracing"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/eth/tracers"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core/tracing"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/eth/tracers"
+	"github.com/luxfi/coreth/params"
 	"github.com/stretchr/testify/require"
 )
 

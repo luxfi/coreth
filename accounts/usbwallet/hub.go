@@ -23,9 +23,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/luxfi/geth/accounts"
+	"github.com/luxfi/coreth/accounts"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 	"github.com/karalabe/hid"
 )
 

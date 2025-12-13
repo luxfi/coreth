@@ -24,15 +24,15 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/eth"
-	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/miner"
-	"github.com/luxfi/geth/node"
+	"github.com/luxfi/coreth/eth"
+	"github.com/luxfi/coreth/eth/ethconfig"
+	"github.com/luxfi/coreth/miner"
+	"github.com/luxfi/coreth/node"
 	"github.com/luxfi/geth/p2p"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 )
 
 func startSimulatedBeaconEthService(t *testing.T, genesis *core.Genesis, period uint64) (*node.Node, *eth.Ethereum, *SimulatedBeacon) {

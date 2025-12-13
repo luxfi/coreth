@@ -25,13 +25,13 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus/ethash"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/consensus/ethash"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/p2p"
 	"github.com/luxfi/geth/p2p/enode"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/rlp"
 	fuzz "github.com/google/gofuzz"
 )

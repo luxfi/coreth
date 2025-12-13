@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/luxfi/geth/accounts/keystore"
-	"github.com/luxfi/geth/cmd/utils"
+	"github.com/luxfi/coreth/accounts/keystore"
+	"github.com/luxfi/coreth/cmd/utils"
 	"github.com/luxfi/geth/crypto"
 	"github.com/urfave/cli/v2"
 )

@@ -20,7 +20,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 )
 
 // senderCacherOnce is used to ensure that the SenderCacher is initialized only once.

@@ -25,19 +25,19 @@ import (
 	"time"
 
 	"github.com/luxfi/geth"
-	"github.com/luxfi/geth/accounts"
+	"github.com/luxfi/coreth/accounts"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/filtermaps"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/filtermaps"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // TestSetFeeDefaults tests the logic for filling in default fee values works as expected.

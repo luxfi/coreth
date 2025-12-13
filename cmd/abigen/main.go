@@ -24,12 +24,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/luxfi/geth/accounts/abi/abigen"
-	"github.com/luxfi/geth/cmd/utils"
+	"github.com/luxfi/coreth/accounts/abi/abigen"
+	"github.com/luxfi/coreth/cmd/utils"
 	"github.com/luxfi/geth/common/compiler"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/internal/flags"
+	"github.com/luxfi/coreth/log"
 	"github.com/urfave/cli/v2"
 )
 

@@ -20,7 +20,7 @@ import (
 	"sync"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/coreth/core/state"
 )
 
 // noncer is a tiny virtual state database to manage the executable nonces of

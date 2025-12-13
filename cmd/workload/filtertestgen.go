@@ -27,8 +27,8 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/internal/flags"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/urfave/cli/v2"
 )
 

@@ -21,8 +21,8 @@ import (
 
 	"github.com/luxfi/geth/beacon/engine"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/miner"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/miner"
 )
 
 // maxTrackedPayloads is the maximum number of prepared payloads the execution

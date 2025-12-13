@@ -21,9 +21,9 @@ import (
 	"sync/atomic"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 )
 
 // TxIndexProgress is the struct describing the progress for transaction indexing.

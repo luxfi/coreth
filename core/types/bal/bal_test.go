@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/internal/testrand"
+	"github.com/luxfi/coreth/internal/testrand"
 	"github.com/luxfi/geth/rlp"
 	"github.com/holiman/uint256"
 )

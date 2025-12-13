@@ -8,10 +8,10 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/luxfi/geth/accounts/abi"
-	"github.com/luxfi/geth/accounts/abi/bind/v2"
+	"github.com/luxfi/coreth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi/bind/v2"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

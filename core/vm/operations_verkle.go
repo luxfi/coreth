@@ -21,7 +21,7 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 )
 
 func gasSStore4762(evm *EVM, contract *Contract, stack *Stack, mem *Memory, memorySize uint64) (uint64, error) {

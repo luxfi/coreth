@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/coreth/core/rawdb"
 )
 
 // TestHistoryIndexerShortenDeadlock tests that a call to shorten does not

@@ -28,7 +28,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi"
 )
 
 // underlyingBindType returns a string representation of the Go type

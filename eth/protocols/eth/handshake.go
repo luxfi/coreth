@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/forkid"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/forkid"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/p2p"
 )

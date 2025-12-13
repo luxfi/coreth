@@ -19,7 +19,7 @@ package internal
 import (
 	"testing"
 
-	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/coreth/core/vm"
 )
 
 func TestMemCopying(t *testing.T) {

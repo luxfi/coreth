@@ -27,9 +27,9 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/p2p"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 )
 
 const (

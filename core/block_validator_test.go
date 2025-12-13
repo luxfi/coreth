@@ -22,14 +22,14 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/consensus/beacon"
-	"github.com/luxfi/geth/consensus/clique"
-	"github.com/luxfi/geth/consensus/ethash"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/consensus/beacon"
+	"github.com/luxfi/coreth/consensus/clique"
+	"github.com/luxfi/coreth/consensus/ethash"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 )
 
 // Tests that simple header verification works, for both good and bad blocks.

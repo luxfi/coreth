@@ -23,7 +23,7 @@ import (
 	"math/big"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/params/forks"
+	"github.com/luxfi/coreth/params/forks"
 )
 
 // Genesis hashes to enforce below configs on.

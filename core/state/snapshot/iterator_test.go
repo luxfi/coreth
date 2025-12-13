@@ -26,7 +26,7 @@ import (
 
 	"github.com/VictoriaMetrics/fastcache"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/coreth/core/rawdb"
 )
 
 // TestAccountIteratorBasics tests some simple single-layer(diff and disk) iteration

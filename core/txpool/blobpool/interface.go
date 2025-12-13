@@ -18,9 +18,9 @@ package blobpool
 
 import (
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
 )
 
 // BlockChain defines the minimal set of methods needed to back a blob pool with

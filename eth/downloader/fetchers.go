@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/eth/protocols/eth"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/eth/protocols/eth"
 )
 
 // fetchHeadersByHash is a blocking version of Peer.RequestHeadersByHash which

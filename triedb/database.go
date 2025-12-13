@@ -20,13 +20,13 @@ import (
 	"errors"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/trie/trienode"
-	"github.com/luxfi/geth/triedb/database"
-	"github.com/luxfi/geth/triedb/hashdb"
-	"github.com/luxfi/geth/triedb/pathdb"
+	"github.com/luxfi/coreth/triedb/database"
+	"github.com/luxfi/coreth/triedb/hashdb"
+	"github.com/luxfi/coreth/triedb/pathdb"
 )
 
 // Config defines all necessary options for database.

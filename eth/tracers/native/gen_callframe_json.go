@@ -8,7 +8,7 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/coreth/core/vm"
 )
 
 var _ = (*callFrameMarshaling)(nil)

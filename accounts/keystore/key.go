@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/luxfi/geth/accounts"
+	"github.com/luxfi/coreth/accounts"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/crypto"
 	"github.com/google/uuid"

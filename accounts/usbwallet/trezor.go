@@ -28,12 +28,12 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/luxfi/geth/accounts"
-	"github.com/luxfi/geth/accounts/usbwallet/trezor"
+	"github.com/luxfi/coreth/accounts"
+	"github.com/luxfi/coreth/accounts/usbwallet/trezor"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/log"
 	"google.golang.org/protobuf/proto"
 )
 

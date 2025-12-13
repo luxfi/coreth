@@ -22,8 +22,8 @@ import (
 	"sort"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/tracing"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core/tracing"
+	"github.com/luxfi/coreth/params"
 	"github.com/holiman/uint256"
 )
 

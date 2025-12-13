@@ -19,7 +19,7 @@ package stateless
 import (
 	"io"
 
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/rlp"
 )
 

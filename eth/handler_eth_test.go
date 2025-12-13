@@ -23,16 +23,16 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus/ethash"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/eth/protocols/eth"
+	"github.com/luxfi/coreth/consensus/ethash"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/eth/ethconfig"
+	"github.com/luxfi/coreth/eth/protocols/eth"
 	"github.com/luxfi/geth/event"
 	"github.com/luxfi/geth/p2p"
 	"github.com/luxfi/geth/p2p/enode"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 )
 
 // testEthHandler is a mock event handler to listen for inbound network requests

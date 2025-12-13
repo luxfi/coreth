@@ -22,11 +22,11 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/luxfi/geth/accounts"
-	"github.com/luxfi/geth/accounts/external"
-	"github.com/luxfi/geth/accounts/keystore"
+	"github.com/luxfi/coreth/accounts"
+	"github.com/luxfi/coreth/accounts/external"
+	"github.com/luxfi/coreth/accounts/keystore"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
 )
 

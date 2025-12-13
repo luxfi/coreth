@@ -20,9 +20,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/eth/protocols/eth"
-	"github.com/luxfi/geth/eth/protocols/snap"
+	"github.com/luxfi/coreth/eth/ethconfig"
+	"github.com/luxfi/coreth/eth/protocols/eth"
+	"github.com/luxfi/coreth/eth/protocols/snap"
 	"github.com/luxfi/geth/p2p"
 	"github.com/luxfi/geth/p2p/enode"
 )

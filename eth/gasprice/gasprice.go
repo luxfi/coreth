@@ -24,13 +24,13 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/lru"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/rpc"
 )
 
 const sampleNumber = 3 // Number of transactions sampled in a block

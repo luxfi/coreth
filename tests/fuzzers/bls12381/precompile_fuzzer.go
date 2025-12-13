@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/coreth/core/vm"
 )
 
 const (

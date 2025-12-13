@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/luxfi/geth/node"
+	"github.com/luxfi/coreth/node"
 )
 
 // SampleLifecycle is a trivial network service that can be attached to a node for

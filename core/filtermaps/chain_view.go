@@ -20,8 +20,8 @@ import (
 	"sync"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/log"
 )
 
 // blockchain represents the underlying blockchain of ChainView.

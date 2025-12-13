@@ -21,8 +21,8 @@ import (
 	"math/big"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/txpool"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/holiman/uint256"
 )
 

@@ -24,7 +24,7 @@ import (
 
 	"github.com/luxfi/geth/p2p"
 	"github.com/luxfi/geth/p2p/nat"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 )
 
 const (

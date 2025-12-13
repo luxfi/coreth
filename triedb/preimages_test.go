@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/triedb/hashdb"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/triedb/hashdb"
 )
 
 // TestDatabasePreimages tests the preimage functionality of the trie database.

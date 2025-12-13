@@ -21,10 +21,10 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/luxfi/geth/core/tracing"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core/tracing"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/params"
 )
 
 var (

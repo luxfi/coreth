@@ -24,9 +24,9 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/internal/testrand"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/internal/testrand"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/holiman/uint256"

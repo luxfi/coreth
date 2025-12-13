@@ -29,8 +29,8 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/luxfi/geth/accounts/abi"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/accounts/abi"
+	"github.com/luxfi/coreth/log"
 )
 
 func isKeyWord(arg string) bool {

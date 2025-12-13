@@ -23,9 +23,9 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
 )
 
 // Tests that the simulator starts with the initial gas limit in the genesis block,

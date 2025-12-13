@@ -23,13 +23,13 @@ import (
 	"sync"
 
 	"github.com/luxfi/geth"
-	"github.com/luxfi/geth/accounts"
+	"github.com/luxfi/coreth/accounts"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/geth/signer/core/apitypes"
 )
 

@@ -19,8 +19,8 @@ package locals
 import (
 	"errors"
 
-	"github.com/luxfi/geth/core/txpool"
-	"github.com/luxfi/geth/core/txpool/legacypool"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/core/txpool/legacypool"
 )
 
 // IsTemporaryReject determines whether the given error indicates a temporary

@@ -23,12 +23,12 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/eth"
-	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/node"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/eth"
+	"github.com/luxfi/coreth/eth/ethconfig"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/node"
+	"github.com/luxfi/coreth/rpc"
 )
 
 type syncReq struct {

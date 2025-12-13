@@ -22,7 +22,7 @@ import (
 	"math"
 	"os"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/rlp"
 )
 

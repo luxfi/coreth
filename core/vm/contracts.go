@@ -30,13 +30,13 @@ import (
 	"github.com/consensys/gnark-crypto/ecc/bls12-381/fp"
 	"github.com/consensys/gnark-crypto/ecc/bls12-381/fr"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/tracing"
+	"github.com/luxfi/coreth/core/tracing"
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/crypto/blake2b"
 	"github.com/luxfi/crypto/bn256"
 	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/crypto/secp256r1"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 	"golang.org/x/crypto/ripemd160"
 )
 

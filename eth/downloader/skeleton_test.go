@@ -26,11 +26,11 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/eth/protocols/eth"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/eth/protocols/eth"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 )
 
 // hookedBackfiller is a tester backfiller with all interface methods mocked and

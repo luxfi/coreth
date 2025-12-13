@@ -19,8 +19,8 @@ package simulated
 import (
 	"math/big"
 
-	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/node"
+	"github.com/luxfi/coreth/eth/ethconfig"
+	"github.com/luxfi/coreth/node"
 )
 
 // WithBlockGasLimit configures the simulated backend to target a specific gas limit

@@ -22,7 +22,7 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/p2p"
 	"github.com/luxfi/geth/rlp"
 )

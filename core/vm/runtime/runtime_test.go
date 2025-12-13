@@ -25,21 +25,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/tracing"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/core/vm/program"
-	"github.com/luxfi/geth/eth/tracers"
-	"github.com/luxfi/geth/eth/tracers/logger"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/tracing"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/core/vm/program"
+	"github.com/luxfi/coreth/eth/tracers"
+	"github.com/luxfi/coreth/eth/tracers/logger"
+	"github.com/luxfi/coreth/params"
 
 	// force-load js tracers to trigger registration
-	_ "github.com/luxfi/geth/eth/tracers/js"
+	_ "github.com/luxfi/coreth/eth/tracers/js"
 )
 
 func TestDefaults(t *testing.T) {

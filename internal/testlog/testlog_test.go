@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 )
 
 type mockT struct {

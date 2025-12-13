@@ -21,12 +21,12 @@ import (
 	"fmt"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/trie/trienode"
-	"github.com/luxfi/geth/triedb/database"
+	"github.com/luxfi/coreth/triedb/database"
 )
 
 // context wraps all fields for executing state diffs.

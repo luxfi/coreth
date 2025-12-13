@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/coreth/core/state"
 	"github.com/urfave/cli/v2"
 )
 

@@ -21,14 +21,14 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/txpool"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/p2p"
 	"github.com/luxfi/geth/p2p/enode"
 	"github.com/luxfi/geth/p2p/enr"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 )
 
 const (

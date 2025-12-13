@@ -25,10 +25,10 @@ import (
 	"path/filepath"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/tracing"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/eth/tracers"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/core/tracing"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/eth/tracers"
+	"github.com/luxfi/coreth/log"
 )
 
 // fileWritingTracer wraps either a tracer or a logger. On tx start,

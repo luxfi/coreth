@@ -24,13 +24,13 @@ import (
 	"math/big"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/internal/ethapi/override"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/internal/ethapi/override"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/params"
 )
 
 // Options are the contextual parameters to execute the requested call.

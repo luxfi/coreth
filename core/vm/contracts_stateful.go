@@ -11,10 +11,10 @@ import (
 
 	"github.com/holiman/uint256"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/tracing"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/precompile/contract"
+	"github.com/luxfi/coreth/core/tracing"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/precompile/contract"
 )
 
 // statefulPrecompileWrapper wraps a StatefulPrecompiledContract to implement PrecompiledContract

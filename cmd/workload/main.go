@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/luxfi/geth/internal/debug"
-	"github.com/luxfi/geth/internal/flags"
+	"github.com/luxfi/coreth/internal/debug"
+	"github.com/luxfi/coreth/internal/flags"
 	"github.com/urfave/cli/v2"
 )
 

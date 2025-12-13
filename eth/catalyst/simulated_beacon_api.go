@@ -20,8 +20,8 @@ import (
 	"context"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
 )
 
 // simulatedBeaconAPI provides a RPC API for SimulatedBeacon.

@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/holiman/uint256"

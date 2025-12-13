@@ -30,7 +30,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 )
 
 var (

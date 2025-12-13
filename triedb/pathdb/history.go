@@ -26,10 +26,10 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 )
 
 // State history records the state changes involved in executing a block. The

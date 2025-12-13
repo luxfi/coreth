@@ -25,7 +25,7 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 )
 
 var (

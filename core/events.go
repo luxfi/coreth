@@ -17,7 +17,7 @@
 package core
 
 import (
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 )
 
 // NewTxsEvent is posted when a batch of transactions enter the transaction pool.

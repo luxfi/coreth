@@ -19,7 +19,7 @@ package rawdb
 import (
 	"testing"
 
-	"github.com/luxfi/geth/core/rawdb/ancienttest"
+	"github.com/luxfi/coreth/core/rawdb/ancienttest"
 	"github.com/luxfi/geth/ethdb"
 )
 

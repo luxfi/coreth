@@ -22,8 +22,8 @@ import (
 	"sync"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/eth/protocols/eth"
-	"github.com/luxfi/geth/eth/protocols/snap"
+	"github.com/luxfi/coreth/eth/protocols/eth"
+	"github.com/luxfi/coreth/eth/protocols/snap"
 	"github.com/luxfi/geth/p2p"
 )
 

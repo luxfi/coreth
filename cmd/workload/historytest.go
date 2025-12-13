@@ -24,7 +24,7 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/internal/utesting"
+	"github.com/luxfi/coreth/internal/utesting"
 )
 
 // historyTest is the content of a history test.

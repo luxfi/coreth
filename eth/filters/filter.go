@@ -25,11 +25,11 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/filtermaps"
-	"github.com/luxfi/geth/core/history"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/core/filtermaps"
+	"github.com/luxfi/coreth/core/history"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // Filter can be used to retrieve and filter logs.

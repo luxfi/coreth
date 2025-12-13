@@ -27,8 +27,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/internal/flags"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/metrics/exp"
 	"github.com/mattn/go-colorable"

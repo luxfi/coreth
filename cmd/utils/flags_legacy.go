@@ -19,8 +19,8 @@ package utils
 import (
 	"fmt"
 
-	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/internal/flags"
+	"github.com/luxfi/coreth/eth/ethconfig"
+	"github.com/luxfi/coreth/internal/flags"
 	"github.com/urfave/cli/v2"
 )
 

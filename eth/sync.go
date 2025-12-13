@@ -18,8 +18,8 @@ package eth
 
 import (
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/txpool"
-	"github.com/luxfi/geth/eth/protocols/eth"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/eth/protocols/eth"
 )
 
 // syncTransactions starts sending all currently pending transactions to the given peer.

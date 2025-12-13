@@ -20,8 +20,8 @@ package ethash
 import (
 	"time"
 
-	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/core/types"
 )
 
 // Ethash is a consensus engine based on proof-of-work implementing the ethash

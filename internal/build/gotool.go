@@ -17,15 +17,11 @@
 package build
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/luxfi/geth/internal/download"
 )
 
 type GoToolchain struct {
@@ -82,53 +78,4 @@ func (g *GoToolchain) goTool(command string, args ...string) *exec.Cmd {
 		tool.Env = append(tool.Env, e)
 	}
 	return tool
-}
-
-// DownloadGo downloads the Go binary distribution and unpacks it into a temporary
-// directory. It returns the GOROOT of the unpacked toolchain.
-func DownloadGo(csdb *download.ChecksumDB) string {
-	version, err := csdb.FindVersion("golang")
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Shortcut: if the Go version that runs this script matches the
-	// requested version exactly, there is no need to download anything.
-	activeGo := strings.TrimPrefix(runtime.Version(), "go")
-	if activeGo == version {
-		log.Printf("-dlgo version matches active Go version %s, skipping download.", activeGo)
-		return runtime.GOROOT()
-	}
-
-	ucache, err := os.UserCacheDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// For Arm architecture, GOARCH includes ISA version.
-	os := runtime.GOOS
-	arch := runtime.GOARCH
-	if arch == "arm" {
-		arch = "armv6l"
-	}
-	file := fmt.Sprintf("go%s.%s-%s", version, os, arch)
-	if os == "windows" {
-		file += ".zip"
-	} else {
-		file += ".tar.gz"
-	}
-	url := "https://golang.org/dl/" + file
-	dst := filepath.Join(ucache, file)
-	if err := csdb.DownloadFile(url, dst); err != nil {
-		log.Fatal(err)
-	}
-
-	godir := filepath.Join(ucache, fmt.Sprintf("geth-go-%s-%s-%s", version, os, arch))
-	if err := ExtractArchive(dst, godir); err != nil {
-		log.Fatal(err)
-	}
-	goroot, err := filepath.Abs(filepath.Join(godir, "go"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return goroot
 }

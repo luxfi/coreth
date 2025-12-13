@@ -29,9 +29,9 @@ import (
 	"time"
 
 	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/luxfi/geth/accounts"
+	"github.com/luxfi/coreth/accounts"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 )
 
 // Minimum amount of time between cache reloads. This limit applies if the platform does

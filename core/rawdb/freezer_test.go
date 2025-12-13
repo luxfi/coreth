@@ -25,7 +25,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/luxfi/geth/core/rawdb/ancienttest"
+	"github.com/luxfi/coreth/core/rawdb/ancienttest"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/rlp"
 	"github.com/stretchr/testify/require"

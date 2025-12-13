@@ -24,7 +24,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 )
 
 const MetadataApi = "rpc"

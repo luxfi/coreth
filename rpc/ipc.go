@@ -20,7 +20,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/p2p/netutil"
 )
 

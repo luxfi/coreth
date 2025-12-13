@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/internal/ethapi/override"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/internal/ethapi/override"
 )
 
 func TestSimulateSanitizeBlockOrder(t *testing.T) {

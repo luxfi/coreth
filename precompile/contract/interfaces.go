@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"github.com/holiman/uint256"
-	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/luxfi/geth/common"
-	ethtypes "github.com/luxfi/geth/core/types"
+	ethtypes "github.com/luxfi/coreth/core/types"
 )
 
 // ErrExecutionReverted is returned when precompile execution is reverted

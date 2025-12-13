@@ -21,7 +21,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 )
 
 // resultStore implements a structure for maintaining fetchResults, tracking their

@@ -18,7 +18,7 @@ package snap
 
 import (
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/p2p"
 )
 

@@ -22,10 +22,10 @@ import (
 	"sync/atomic"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/params"
 	"golang.org/x/sync/errgroup"
 )
 

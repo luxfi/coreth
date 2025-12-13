@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/luxfi/geth/core/tracing"
+	"github.com/luxfi/coreth/core/tracing"
 )
 
 type ctorFunc func(config json.RawMessage) (*tracing.Hooks, error)

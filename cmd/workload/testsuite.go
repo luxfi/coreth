@@ -22,12 +22,12 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/luxfi/geth/core/history"
-	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/internal/utesting"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/core/history"
+	"github.com/luxfi/coreth/internal/flags"
+	"github.com/luxfi/coreth/internal/utesting"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/urfave/cli/v2"
 )
 

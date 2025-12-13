@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/event"
 	"github.com/holiman/uint256"
 )

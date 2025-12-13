@@ -21,8 +21,8 @@ import (
 	"math/big"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/tracing"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core/tracing"
+	"github.com/luxfi/coreth/params"
 )
 
 // Context contains some contextual infos for a transaction execution that is not

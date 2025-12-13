@@ -24,14 +24,14 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/internal/ethapi"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/internal/ethapi"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/rlp"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/geth/trie"
 )
 
