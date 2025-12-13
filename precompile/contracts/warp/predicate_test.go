@@ -6,6 +6,7 @@ package warp
 import (
 	"context"
 	"errors"
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,8 @@ import (
 	"github.com/luxfi/consensus/engine/chain/chaintest"
 	"github.com/luxfi/consensus/validator"
 	"github.com/luxfi/consensus/validator/validatorstest"
+	consensustest "github.com/luxfi/consensus/test/helpers"
+	consensusctx "github.com/luxfi/consensus/context"
 	agoUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/bls"
@@ -61,17 +64,17 @@ func init() {
 	vdrs = map[ids.NodeID]*validators.GetValidatorOutput{
 		testVdrs[0].nodeID: {
 			NodeID:    testVdrs[0].nodeID,
-			PublicKey: testVdrs[0].vdr.PublicKey,
+			PublicKey: testVdrs[0].vdr.PublicKeyBytes,
 			Weight:    testVdrs[0].vdr.Weight,
 		},
 		testVdrs[1].nodeID: {
 			NodeID:    testVdrs[1].nodeID,
-			PublicKey: testVdrs[1].vdr.PublicKey,
+			PublicKey: testVdrs[1].vdr.PublicKeyBytes,
 			Weight:    testVdrs[1].vdr.Weight,
 		},
 		testVdrs[2].nodeID: {
 			NodeID:    testVdrs[2].nodeID,
-			PublicKey: testVdrs[2].vdr.PublicKey,
+			PublicKey: testVdrs[2].vdr.PublicKeyBytes,
 			Weight:    testVdrs[2].vdr.Weight,
 		},
 	}
@@ -107,7 +110,7 @@ type testValidator struct {
 }
 
 func (v *testValidator) Compare(o *testValidator) int {
-	return v.vdr.Compare(o.vdr)
+	return bytes.Compare(v.vdr.PublicKeyBytes, o.vdr.PublicKeyBytes)
 }
 
 func newTestValidator() *testValidator {
@@ -123,9 +126,9 @@ func newTestValidator() *testValidator {
 		sk:     sk,
 		vdr: &luxWarp.Validator{
 			PublicKey:      pk,
-			PublicKeyBytes: pk.Serialize(),
+			PublicKeyBytes: bls.PublicKeyToCompressedBytes(pk),
 			Weight:         3,
-			NodeIDs:        []ids.NodeID{nodeID},
+			NodeID: nodeID,
 		},
 	}
 }
@@ -180,7 +183,7 @@ func createConsensusCtx(tb testing.TB, validatorRanges []validatorRange) *consen
 				Weight: validatorRange.weight,
 			}
 			if validatorRange.publicKey {
-				validatorOutput.PublicKey = testVdrs[i].vdr.PublicKey
+				validatorOutput.PublicKey = testVdrs[i].vdr.PublicKeyBytes
 			}
 			getValidatorsOutput[testVdrs[i].nodeID] = validatorOutput
 		}
@@ -239,7 +242,7 @@ func testWarpMessageFromPrimaryNetwork(t *testing.T, requirePrimaryNetworkSigner
 		validatorOutput := &validators.GetValidatorOutput{
 			NodeID:    testVdrs[i].nodeID,
 			Weight:    20,
-			PublicKey: testVdrs[i].vdr.PublicKey,
+			PublicKey: testVdrs[i].vdr.PublicKeyBytes,
 		}
 		getValidatorsOutput[testVdrs[i].nodeID] = validatorOutput
 		blsSignatures = append(blsSignatures, sig)
@@ -661,7 +664,7 @@ func makeWarpPredicateTests(tb testing.TB) map[string]precompiletest.PredicateTe
 			getValidatorsOutput[testVdrs[i].nodeID] = &validators.GetValidatorOutput{
 				NodeID:    testVdrs[i].nodeID,
 				Weight:    20,
-				PublicKey: testVdrs[i%numSigners].vdr.PublicKey,
+				PublicKey: testVdrs[i%numSigners].vdr.PublicKeyBytes,
 			}
 		}
 
