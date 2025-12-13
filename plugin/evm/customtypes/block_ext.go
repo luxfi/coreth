@@ -113,7 +113,9 @@ func BlockExtData(b *ethtypes.Block) []byte {
 	return nil
 }
 
-func BlockVersion(b *ethtypes.Block) uint32 {
+// GetBlockVersion returns the block version from the block body extra.
+// Named GetBlockVersion to avoid collision with ethtypes.BlockVersion type.
+func GetBlockVersion(b *ethtypes.Block) uint32 {
 	return extras.Block.Get(b).Version
 }
 

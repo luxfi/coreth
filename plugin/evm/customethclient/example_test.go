@@ -29,5 +29,5 @@ func ExampleClient() {
 
 	// Block Body extra data
 	fmt.Printf("Block Extra Data: %x\n", customtypes.BlockExtData(bc))
-	fmt.Printf("Block Version: %d\n", customtypes.BlockVersion(bc))
+	fmt.Printf("Block Version: %d\n", customtypes.GetBlockVersion(bc))
 }

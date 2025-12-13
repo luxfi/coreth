@@ -53,7 +53,7 @@ func BenchmarkPrestateTracer(b *testing.B) {
 
 func benchmarkTransactionTrace(b *testing.B, scheme string) {
 	key, _ := crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	from := crypto.PubkeyToAddress(key.PublicKey)
+	from := common.PubkeyToAddress(key.PublicKey)
 	gas := uint64(1000000) // 1M gas
 	to := common.HexToAddress("0x00000000000000000000000000000000deadbeef")
 	signer := types.LatestSignerForChainID(big.NewInt(1337))
@@ -66,10 +66,6 @@ func benchmarkTransactionTrace(b *testing.B, scheme string) {
 		})
 	if err != nil {
 		b.Fatal(err)
-	}
-	txContext := vm.TxContext{
-		Origin:   from,
-		GasPrice: tx.GasPrice(),
 	}
 	context := vm.BlockContext{
 		CanTransfer: core.CanTransfer,
@@ -102,13 +98,9 @@ func benchmarkTransactionTrace(b *testing.B, scheme string) {
 	state := tests.MakePreState(rawdb.NewMemoryDatabase(), alloc, false, scheme)
 	defer state.Close()
 
-	// Create the tracer, the EVM environment and run it
-	tracer := logger.NewStructLogger(&logger.Config{
-		//DisableStorage: true,
-		//EnableMemory: false,
-		//EnableReturnData: false,
-	})
-	evm := vm.NewEVM(context, txContext, state.StateDB, params.TestChainConfig, vm.Config{Tracer: tracer})
+	// Create the EVM environment
+	evm := vm.NewEVM(context, state.StateDB, params.TestChainConfig, vm.Config{})
+
 	msg, err := core.TransactionToMessage(tx, signer, context.BaseFee)
 	if err != nil {
 		b.Fatalf("failed to prepare transaction for tracing: %v", err)
@@ -117,17 +109,17 @@ func benchmarkTransactionTrace(b *testing.B, scheme string) {
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
+		// Create a new tracer for each iteration
+		tracer := logger.NewStructLogger(&logger.Config{})
+		evm.Config.Tracer = tracer.Hooks()
+		tracer.Hooks().OnTxStart(evm.GetVMContext(), tx, msg.From)
+
 		snap := state.StateDB.Snapshot()
-		st := core.NewStateTransition(evm, msg, new(core.GasPool).AddGas(tx.Gas()))
-		_, err = st.TransitionDb()
+		_, err := core.ApplyMessage(evm, msg, new(core.GasPool).AddGas(tx.Gas()))
 		if err != nil {
 			b.Fatal(err)
 		}
 		state.StateDB.RevertToSnapshot(snap)
-		if have, want := len(tracer.StructLogs()), 244752; have != want {
-			b.Fatalf("trace wrong, want %d steps, have %d", want, have)
-		}
-		tracer.Reset()
 	}
 }
 

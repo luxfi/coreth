@@ -13,6 +13,7 @@ import (
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/math/set"
+	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/platformvm/fx"
 	"github.com/luxfi/node/vms/secp256k1fx"
@@ -130,8 +131,13 @@ func (s *semanticVerifier) ImportTx(utx *atomic.UnsignedImportTx) error {
 		inputID := in.UTXOID.InputID()
 		utxoIDs[i] = inputID[:]
 	}
+	// Type assert SharedMemory
+	sharedMemory, ok := ctx.SharedMemory.(luxatomic.SharedMemory)
+	if !ok {
+		return fmt.Errorf("expected luxatomic.SharedMemory, got %T", ctx.SharedMemory)
+	}
 	// allUTXOBytes is guaranteed to be the same length as utxoIDs
-	allUTXOBytes, err := ctx.SharedMemory.Get(utx.SourceChain, utxoIDs)
+	allUTXOBytes, err := sharedMemory.Get(utx.SourceChain, utxoIDs)
 	if err != nil {
 		return fmt.Errorf("failed to fetch import UTXOs from %s due to: %w", utx.SourceChain, err)
 	}

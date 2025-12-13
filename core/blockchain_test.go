@@ -33,19 +33,19 @@ import (
 	"os"
 	"testing"
 
-	"github.com/luxfi/node/upgrade"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core/state/pruner"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/eth/tracers/logger"
 	"github.com/luxfi/geth/ethdb"
+	"github.com/luxfi/node/upgrade"
 )
 
 var (
@@ -412,8 +412,8 @@ func testRepopulateMissingTriesParallel(t *testing.T, parallelism int) {
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -748,8 +748,8 @@ func testCreateThenDelete(t *testing.T, config *params.ChainConfig) {
 		engine = dummy.NewFaker()
 		// A sender who makes transactions, has some funds
 		key, _      = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-		address     = crypto.PubkeyToAddress(key.PublicKey)
-		destAddress = crypto.CreateAddress(address, 0)
+		address     = common.PubkeyToAddress(key.PublicKey)
+		destAddress = common.CreateAddress(address, 0)
 		funds       = big.NewInt(params.Ether) // Note: additional funds are provided here compared to go-ethereum so test completes.
 	)
 
@@ -822,8 +822,8 @@ func TestDeleteThenCreate(t *testing.T) {
 	var (
 		engine      = dummy.NewFaker()
 		key, _      = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-		address     = crypto.PubkeyToAddress(key.PublicKey)
-		factoryAddr = crypto.CreateAddress(address, 0)
+		address     = common.PubkeyToAddress(key.PublicKey)
+		factoryAddr = common.CreateAddress(address, 0)
 		funds       = big.NewInt(params.Ether) // Note: additional funds are provided here compared to go-ethereum so test completes.
 	)
 	/*
@@ -854,7 +854,7 @@ func TestDeleteThenCreate(t *testing.T) {
 		}
 	*/
 	contractABI := common.Hex2Bytes("6080604052348015600f57600080fd5b5060646000819055506081806100266000396000f3fe608060405260043610601f5760003560e01c80632b68b9c614602a576025565b36602557005b600080fd5b60306032565b005b3373ffffffffffffffffffffffffffffffffffffffff16fffea2646970667358221220ab749f5ed1fcb87bda03a74d476af3f074bba24d57cb5a355e8162062ad9a4e664736f6c63430008070033")
-	contractAddr := crypto.CreateAddress2(factoryAddr, [32]byte{}, crypto.Keccak256(contractABI))
+	contractAddr := common.CreateAddress2(factoryAddr, [32]byte{}, common.Keccak256(contractABI))
 
 	gspec := &Genesis{
 		Config: params.TestChainConfig,
@@ -938,8 +938,8 @@ func TestTransientStorageReset(t *testing.T) {
 	var (
 		engine      = dummy.NewFaker()
 		key, _      = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-		address     = crypto.PubkeyToAddress(key.PublicKey)
-		destAddress = crypto.CreateAddress(address, 0)
+		address     = common.PubkeyToAddress(key.PublicKey)
+		destAddress = common.CreateAddress(address, 0)
 		funds       = big.NewInt(params.Ether) // Note: additional funds are provided here compared to go-ethereum so test completes.
 		vmConfig    = vm.Config{
 			ExtraEips: []int{1153}, // Enable transient storage EIP
@@ -1036,8 +1036,8 @@ func TestEIP3651(t *testing.T) {
 		// A sender who makes transactions, has some funds
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		funds   = new(big.Int).Mul(common.Big1, big.NewInt(params.Ether))
 		gspec   = &Genesis{
 			Config:    params.TestChainConfig,
@@ -1096,7 +1096,7 @@ func TestEIP3651(t *testing.T) {
 
 		b.AddTx(tx)
 	})
-	chain, err := NewBlockChain(rawdb.NewMemoryDatabase(), DefaultCacheConfig, gspec, engine, vm.Config{Tracer: logger.NewMarkdownLogger(&logger.Config{}, os.Stderr)}, common.Hash{}, false)
+	chain, err := NewBlockChain(rawdb.NewMemoryDatabase(), DefaultCacheConfig, gspec, engine, vm.Config{Tracer: logger.NewMarkdownLogger(&logger.Config{}, os.Stderr).Hooks()}, common.Hash{}, false)
 	if err != nil {
 		t.Fatalf("failed to create tester chain: %v", err)
 	}
@@ -1122,7 +1122,8 @@ func TestEIP3651(t *testing.T) {
 	// Note we use block.GasUsed() here as there is only one tx.
 	actual := state.GetBalance(block.Coinbase()).ToBig()
 	tx := block.Transactions()[0]
-	gasPrice := new(big.Int).Add(block.BaseFee(), tx.EffectiveGasTipValue(block.BaseFee()))
+	effectiveTip, _ := tx.EffectiveGasTip(block.BaseFee())
+	gasPrice := new(big.Int).Add(block.BaseFee(), effectiveTip)
 	expected := new(big.Int).SetUint64(block.GasUsed() * gasPrice.Uint64())
 	if actual.Cmp(expected) != 0 {
 		t.Fatalf("miner balance incorrect: expected %d, got %d", expected, actual)

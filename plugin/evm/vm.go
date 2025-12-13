@@ -75,7 +75,8 @@ import (
 	"github.com/luxfi/ids"
 	luxdssip "github.com/luxfi/p2p/gossip"
 	"github.com/luxfi/consensus"
-	"github.com/luxfi/consensus/engine/chain"
+	consensuschain "github.com/luxfi/consensus/engine/chain"
+	consensusctx "github.com/luxfi/consensus/context"
 	commonEng "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/chain/block"
 	luxUtils "github.com/luxfi/node/utils"
@@ -83,7 +84,7 @@ import (
 	"github.com/luxfi/node/utils/profiler"
 	"github.com/luxfi/node/utils/timer/mockable"
 	"github.com/luxfi/node/utils/units"
-	"github.com/luxfi/node/vms/components/chain"
+	nodechain "github.com/luxfi/node/vms/components/chain"
 	"github.com/luxfi/node/vms/components/gas"
 
 	// Force-load tracer engine to trigger registration
@@ -185,9 +186,9 @@ type VM struct {
 	ctx *consensusctx.Context
 	// [cancel] may be nil until [quasar.NormalOp] starts
 	cancel context.CancelFunc
-	// *chain.State helps to implement the VM interface by wrapping blocks
+	// *nodechain.State helps to implement the VM interface by wrapping blocks
 	// with an efficient caching layer.
-	*chain.State
+	*nodechain.State
 
 	config config.Config
 
@@ -249,7 +250,7 @@ type VM struct {
 
 	stateSyncDone chan struct{}
 
-	logger corlog.Logger
+	logger corethlog.Logger
 	// State sync server and client
 	vmsync.Server
 	vmsync.Client
@@ -276,8 +277,8 @@ func (vm *VM) Initialize(
 	genesisBytes []byte,
 	_ []byte,
 	configBytes []byte,
-	_ []*consensuscore.Fx,
-	appSender consensuscore.AppSender,
+	_ []*commonEng.Fx,
+	appSender commonEng.AppSender,
 ) error {
 	if err := vm.extensionConfig.Validate(); err != nil {
 		return fmt.Errorf("failed to validate extension config: %w", err)
@@ -743,17 +744,17 @@ func (vm *VM) initChainState(lastAcceptedBlock *types.Block) error {
 	return vm.ctx.Metrics.Register(chainStateMetricsPrefix, chainStateRegisterer)
 }
 
-func (vm *VM) SetState(_ context.Context, state quasar.State) error {
+func (vm *VM) SetState(_ context.Context, state uint32) error {
 	switch state {
-	case quasar.StateSyncing:
+	case uint32(consensus.StateSyncing):
 		vm.bootstrapped.Set(false)
 		return nil
-	case quasar.Bootstrapping:
+	case uint32(consensus.Bootstrapping):
 		return vm.onBootstrapStarted()
-	case quasar.NormalOp:
+	case uint32(consensus.NormalOp):
 		return vm.onNormalOperationsStarted()
 	default:
-		return quasar.ErrUnknownState
+		return consensus.ErrUnknownState
 	}
 }
 
@@ -893,7 +894,7 @@ func (vm *VM) initBlockBuilding() error {
 	return nil
 }
 
-func (vm *VM) WaitForEvent(ctx context.Context) (consensuscore.Message, error) {
+func (vm *VM) WaitForEvent(ctx context.Context) (commonEng.Message, error) {
 	vm.builderLock.Lock()
 	builder := vm.builder
 	vm.builderLock.Unlock()
@@ -904,9 +905,9 @@ func (vm *VM) WaitForEvent(ctx context.Context) (consensuscore.Message, error) {
 		case <-ctx.Done():
 			return 0, ctx.Err()
 		case <-vm.stateSyncDone:
-			return consensuscore.StateSyncDone, nil
+			return commonEng.StateSyncDone, nil
 		case <-vm.shutdownChan:
-			return consensuscore.Message(0), errShuttingDownVM
+			return commonEng.Message(0), errShuttingDownVM
 		}
 	}
 

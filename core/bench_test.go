@@ -34,13 +34,14 @@ import (
 
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/ethdb"
+	"github.com/luxfi/geth/ethdb/leveldb"
 )
 
 func BenchmarkInsertChain_empty_memdb(b *testing.B) {
@@ -78,7 +79,7 @@ func BenchmarkInsertChain_ring1000_diskdb(b *testing.B) {
 var (
 	// This is the content of the genesis block used by the benchmarks.
 	benchRootKey, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	benchRootAddr   = crypto.PubkeyToAddress(benchRootKey.PublicKey)
+	benchRootAddr   = common.PubkeyToAddress(benchRootKey.PublicKey)
 	benchRootFunds  = math.BigPow(2, 100)
 )
 
@@ -117,7 +118,7 @@ func init() {
 	ringAddrs[0] = benchRootAddr
 	for i := 1; i < len(ringKeys); i++ {
 		ringKeys[i], _ = crypto.GenerateKey()
-		ringAddrs[i] = crypto.PubkeyToAddress(ringKeys[i].PublicKey)
+		ringAddrs[i] = common.PubkeyToAddress(ringKeys[i].PublicKey)
 	}
 }
 
@@ -160,15 +161,15 @@ func genTxRing(naccounts int) func(int, *BlockGen) {
 func benchInsertChain(b *testing.B, disk bool, gen func(int, *BlockGen)) {
 	// Create the database in memory or in a temporary directory.
 	var db ethdb.Database
-	var err error
 	if !disk {
 		db = rawdb.NewMemoryDatabase()
 	} else {
 		dir := b.TempDir()
-		db, err = rawdb.NewLevelDBDatabase(dir, 128, 128, "", false)
+		kvdb, err := leveldb.New(dir, 128, 128, "", false)
 		if err != nil {
 			b.Fatalf("cannot create temporary database: %v", err)
 		}
+		db = rawdb.NewDatabase(kvdb)
 		defer db.Close()
 	}
 
@@ -267,10 +268,11 @@ func benchWriteChain(b *testing.B, full bool, count uint64) {
 	genesis := &Genesis{Config: params.TestChainConfig}
 	for i := 0; i < b.N; i++ {
 		dir := b.TempDir()
-		db, err := rawdb.NewLevelDBDatabase(dir, 128, 1024, "", false)
+		kvdb, err := leveldb.New(dir, 128, 1024, "", false)
 		if err != nil {
 			b.Fatalf("error opening database at %v: %v", dir, err)
 		}
+		db := rawdb.NewDatabase(kvdb)
 		makeChainForBench(db, genesis, full, count)
 		db.Close()
 	}
@@ -279,10 +281,11 @@ func benchWriteChain(b *testing.B, full bool, count uint64) {
 func benchReadChain(b *testing.B, full bool, count uint64) {
 	dir := b.TempDir()
 
-	db, err := rawdb.NewLevelDBDatabase(dir, 128, 1024, "", false)
+	kvdb, err := leveldb.New(dir, 128, 1024, "", false)
 	if err != nil {
 		b.Fatalf("error opening database at %v: %v", dir, err)
 	}
+	db := rawdb.NewDatabase(kvdb)
 	genesis := &Genesis{Config: params.TestChainConfig}
 	makeChainForBench(db, genesis, full, count)
 	db.Close()
@@ -291,10 +294,11 @@ func benchReadChain(b *testing.B, full bool, count uint64) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		db, err := rawdb.NewLevelDBDatabase(dir, 128, 1024, "", false)
+		kvdb, err := leveldb.New(dir, 128, 1024, "", false)
 		if err != nil {
 			b.Fatalf("error opening database at %v: %v", dir, err)
 		}
+		db := rawdb.NewDatabase(kvdb)
 		chain, err := NewBlockChain(db, DefaultCacheConfig, genesis, dummy.NewFaker(), vm.Config{}, common.Hash{}, false)
 		if err != nil {
 			b.Fatalf("error creating chain: %v", err)

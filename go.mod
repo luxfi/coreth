@@ -17,11 +17,11 @@ require (
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.3.2
 	github.com/luxfi/crypto v1.17.21
-	github.com/luxfi/geth v1.16.50
+	github.com/luxfi/geth v1.16.51
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/log v1.1.24
 	github.com/luxfi/metric v1.4.6 // indirect
-	github.com/luxfi/node v1.21.34
+	github.com/luxfi/node v1.22.12
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.25.1
@@ -51,7 +51,7 @@ require (
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20251211224604-2e727cd2e6fe // indirect
+	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20251001021608-1fe7b43fc4d6 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.24.4 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.6 // indirect
@@ -108,6 +108,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/luxfi/cache v1.0.0 // indirect
 	github.com/luxfi/genesis v1.4.6 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
 	github.com/luxfi/trace v0.1.3 // indirect
@@ -168,36 +169,31 @@ require (
 )
 
 require (
-	github.com/luxfi/consensus v1.22.24
+	github.com/luxfi/consensus v1.22.25
 	github.com/luxfi/constants v1.2.1
 	github.com/luxfi/database v1.2.10
 	github.com/luxfi/ids v1.2.2
 	github.com/luxfi/math v1.0.0
+	github.com/luxfi/migrate v1.2.6
 	github.com/luxfi/p2p v1.4.5
 	github.com/luxfi/warp v1.16.35
 )
 
-// All local replace directives removed for v1 genesis launch
-
 // Local replace directives for development (DO NOT COMMIT)
-replace github.com/luxfi/geth => ../geth
-
-replace github.com/luxfi/crypto => ../crypto
-
-replace github.com/luxfi/node => ../node
-
-replace github.com/luxfi/consensus => ../consensus
-
-replace github.com/luxfi/ids => ../ids
-
-replace github.com/luxfi/constants => ../constants
-
-replace github.com/luxfi/database => ../database
-
-replace github.com/luxfi/p2p => ../p2p
-
-replace github.com/luxfi/warp => ../warp
-
-replace github.com/luxfi/log => ../log
-
-replace github.com/luxfi/math => ../math
+replace (
+	github.com/luxfi/consensus => ../consensus
+	github.com/luxfi/constants => ../constants
+	github.com/luxfi/crypto => ../crypto
+	github.com/luxfi/database => ../database
+	github.com/luxfi/genesis => ../genesis
+	github.com/luxfi/geth => ../geth
+	github.com/luxfi/ids => ../ids
+	github.com/luxfi/log => ../log
+	github.com/luxfi/math => ../math
+	github.com/luxfi/metric => ../metric
+	github.com/luxfi/migrate => ../migrate
+	github.com/luxfi/node => ../node
+	github.com/luxfi/p2p => ../p2p
+	github.com/luxfi/trace => ../trace
+	github.com/luxfi/warp => ../warp
+)

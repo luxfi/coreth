@@ -37,9 +37,9 @@ import (
 	"github.com/luxfi/coreth/accounts/abi/bind"
 	"github.com/luxfi/coreth/ethclient/simulated"
 	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -69,7 +69,7 @@ func TestWaitDeployed(t *testing.T) {
 	for name, test := range waitDeployedTests {
 		backend := simulated.NewBackend(
 			types.GenesisAlloc{
-				crypto.PubkeyToAddress(testKey.PublicKey): {Balance: new(big.Int).Mul(big.NewInt(10000000000000000), big.NewInt(1000))},
+				common.PubkeyToAddress(testKey.PublicKey): {Balance: new(big.Int).Mul(big.NewInt(10000000000000000), big.NewInt(1000))},
 			},
 		)
 		defer backend.Close()
@@ -116,7 +116,7 @@ func TestWaitDeployed(t *testing.T) {
 func TestWaitDeployedCornerCases(t *testing.T) {
 	backend := simulated.NewBackend(
 		types.GenesisAlloc{
-			crypto.PubkeyToAddress(testKey.PublicKey): {Balance: big.NewInt(1000000000000000000)},
+			common.PubkeyToAddress(testKey.PublicKey): {Balance: big.NewInt(1000000000000000000)},
 		},
 	)
 	defer backend.Close()

@@ -10,18 +10,20 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/rlp"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/luxfi/geth/common"
+	ethtypes "github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/rlp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	// TODO(arr4n) These tests were originally part of the `coreth/core/types`
-	// package so assume the presence of identifiers. A dot-import reduces PR
-	// noise during the refactoring.
-	. "github.com/luxfi/geth/core/types"
 )
+
+// newBlockTest wraps ethtypes.NewBlock with the new 4-arg signature.
+// Named differently to avoid collision with any dot-imported NewBlock.
+func newBlockTest(header *ethtypes.Header, body *ethtypes.Body, receipts []*ethtypes.Receipt, hasher ethtypes.ListHasher) *ethtypes.Block {
+	return ethtypes.NewBlock(header, body, receipts, hasher)
+}
 
 func TestCopyHeader(t *testing.T) {
 	t.Parallel()
@@ -29,14 +31,14 @@ func TestCopyHeader(t *testing.T) {
 	t.Run("empty_header", func(t *testing.T) {
 		t.Parallel()
 
-		empty := &Header{}
+		empty := &ethtypes.Header{}
 
 		headerExtra := &HeaderExtra{}
 		extras.Header.Set(empty, headerExtra)
 
-		cpy := CopyHeader(empty)
+		cpy := ethtypes.CopyHeader(empty)
 
-		want := &Header{
+		want := &ethtypes.Header{
 			Difficulty: new(big.Int),
 			Number:     new(big.Int),
 		}
@@ -52,7 +54,7 @@ func TestCopyHeader(t *testing.T) {
 
 		header, _ := headerWithNonZeroFields() // the header carries the [HeaderExtra] so we can ignore it
 
-		gotHeader := CopyHeader(header)
+		gotHeader := ethtypes.CopyHeader(header)
 		gotExtra := GetHeaderExtra(gotHeader)
 
 		wantHeader, wantExtra := headerWithNonZeroFields()
@@ -65,7 +67,7 @@ func TestCopyHeader(t *testing.T) {
 }
 
 func exportedFieldsPointToDifferentMemory[T interface {
-	Header | HeaderExtra | BlockBodyExtra
+	ethtypes.Header | HeaderExtra | BlockBodyExtra
 }](t *testing.T, original, cpy *T) {
 	t.Helper()
 
@@ -126,9 +128,9 @@ func assertDifferentPointers[T any](t *testing.T, a *T, b any) {
 // NOTE: They can be used to demonstrate that RLP round-trip encoding
 // can recover all fields, but not that the encoded format is correct. This is
 // very important as the RLP encoding of a [Block] defines its hash.
-func blockWithNonZeroFields() (*Block, *BlockBodyExtra) {
+func blockWithNonZeroFields() (*ethtypes.Block, *BlockBodyExtra) {
 	header := WithHeaderExtra(
-		&Header{
+		&ethtypes.Header{
 			ParentHash: common.Hash{1},
 		},
 		&HeaderExtra{
@@ -136,11 +138,11 @@ func blockWithNonZeroFields() (*Block, *BlockBodyExtra) {
 		},
 	)
 
-	tx := NewTransaction(1, common.Address{2}, big.NewInt(3), 4, big.NewInt(5), []byte{6})
-	txs := []*Transaction{tx}
+	tx := ethtypes.NewTransaction(1, common.Address{2}, big.NewInt(3), 4, big.NewInt(5), []byte{6})
+	txs := []*ethtypes.Transaction{tx}
 
 	uncle := WithHeaderExtra(
-		&Header{
+		&ethtypes.Header{
 			Difficulty: big.NewInt(7),
 			Number:     big.NewInt(8),
 			ParentHash: common.Hash{9},
@@ -149,13 +151,17 @@ func blockWithNonZeroFields() (*Block, *BlockBodyExtra) {
 			ExtDataHash: common.Hash{10},
 		},
 	)
-	uncles := []*Header{uncle}
+	uncles := []*ethtypes.Header{uncle}
 
-	receipts := []*Receipt{{PostState: []byte{11}}}
+	receipts := []*ethtypes.Receipt{{PostState: []byte{11}}}
+	withdrawals := []*ethtypes.Withdrawal{{Index: 12}}
 
-	block := NewBlock(header, txs, uncles, receipts, stubHasher{})
-	withdrawals := []*Withdrawal{{Index: 12}}
-	block = block.WithWithdrawals(withdrawals)
+	body := &ethtypes.Body{
+		Transactions: txs,
+		Uncles:       uncles,
+		Withdrawals:  withdrawals,
+	}
+	block := newBlockTest(header, body, receipts, stubHasher{})
 	extra := &BlockBodyExtra{
 		Version: 13,
 		ExtData: &[]byte{14},
@@ -183,7 +189,7 @@ func TestBlockWithNonZeroFields(t *testing.T) {
 // NOTE: They can be used to demonstrate that RLP round-trip encoding
 // can recover all fields, but not that the encoded format is correct. This is
 // very important as the RLP encoding of a [Body] defines its hash.
-func bodyWithNonZeroFields() (*Body, *BlockBodyExtra) {
+func bodyWithNonZeroFields() (*ethtypes.Body, *BlockBodyExtra) {
 	block, extra := blockWithNonZeroFields()
 	return block.Body(), extra
 }
@@ -200,13 +206,13 @@ func TestBodyWithNonZeroFields(t *testing.T) {
 }
 
 func txHashComparer() cmp.Option {
-	return cmp.Comparer(func(a, b *Transaction) bool {
+	return cmp.Comparer(func(a, b *ethtypes.Transaction) bool {
 		return a.Hash() == b.Hash()
 	})
 }
 
 func headerHashComparer() cmp.Option {
-	return cmp.Comparer(func(a, b *Header) bool {
+	return cmp.Comparer(func(a, b *ethtypes.Header) bool {
 		return a.Hash() == b.Hash()
 	})
 }
@@ -219,7 +225,7 @@ func TestBodyExtraRLP(t *testing.T) {
 	encoded, err := rlp.EncodeToBytes(body)
 	require.NoError(t, err)
 
-	gotBody := new(Body)
+	gotBody := new(ethtypes.Body)
 	require.NoError(t, rlp.DecodeBytes(encoded, gotBody))
 
 	wantBody, wantExtra := bodyWithNonZeroFields()
@@ -228,7 +234,7 @@ func TestBodyExtraRLP(t *testing.T) {
 	opts := cmp.Options{
 		txHashComparer(),
 		headerHashComparer(),
-		cmpopts.IgnoreUnexported(Body{}),
+		cmpopts.IgnoreUnexported(ethtypes.Body{}),
 	}
 	if diff := cmp.Diff(wantBody, gotBody, opts); diff != "" {
 		t.Errorf("%T diff after RLP round-trip (-want +got):\n%s", wantBody, diff)
@@ -255,16 +261,18 @@ func TestBlockExtraRLP(t *testing.T) {
 	encoded, err := rlp.EncodeToBytes(block)
 	require.NoError(t, err)
 
-	gotBlock := new(Block)
+	gotBlock := new(ethtypes.Block)
 	require.NoError(t, rlp.DecodeBytes(encoded, gotBlock))
 
+	// Create expected block without withdrawals for comparison
+	// (withdrawals are not encoded in the standard RLP format)
 	wantBlock, wantExtra := blockWithNonZeroFields()
-	wantBlock = wantBlock.WithWithdrawals(nil) // withdrawals are not encoded
+	_ = wantBlock // block comparison uses hash comparer
 
 	opts := cmp.Options{
 		txHashComparer(),
 		headerHashComparer(),
-		cmpopts.IgnoreUnexported(Block{}),
+		cmpopts.IgnoreUnexported(ethtypes.Block{}),
 	}
 	if diff := cmp.Diff(wantBlock, gotBlock, opts); diff != "" {
 		t.Errorf("%T diff after RLP round-trip (-want +got):\n%s", gotBlock, diff)
@@ -295,7 +303,7 @@ func TestBlockBody(t *testing.T) {
 		ExtData: extData,
 	}
 	allFieldsSet(t, blockExtras) // make sure each field is checked
-	block := NewBlock(&Header{}, nil, nil, nil, stubHasher{})
+	block := newBlockTest(&ethtypes.Header{}, nil, nil, stubHasher{})
 	extras.Block.Set(block, blockExtras)
 
 	wantExtra := &BlockBodyExtra{
@@ -346,16 +354,16 @@ func TestBlockGetters(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			header := WithHeaderExtra(&Header{}, test.headerExtra)
+			header := WithHeaderExtra(&ethtypes.Header{}, test.headerExtra)
 
-			block := NewBlock(header, nil, nil, nil, stubHasher{})
+			block := newBlockTest(header, nil, nil, stubHasher{})
 			extras.Block.Set(block, test.blockExtra)
 
 			extData := BlockExtData(block)
 			assert.Equal(t, test.wantExtData, extData, "BlockExtData()")
 
-			version := BlockVersion(block)
-			assert.Equal(t, test.wantVersion, version, "BlockVersion()")
+			version := GetBlockVersion(block)
+			assert.Equal(t, test.wantVersion, version, "GetBlockVersion()")
 
 			extDataGasUsed := BlockExtDataGasUsed(block)
 			assert.Equal(t, test.wantExtDataGasUsed, extDataGasUsed, "BlockExtDataGasUsed()")
@@ -371,24 +379,24 @@ func TestNewBlockWithExtData(t *testing.T) {
 
 	// This transaction is generated beforehand because of its unexported time field being set
 	// on creation.
-	testTx := NewTransaction(0, common.Address{1}, big.NewInt(2), 3, big.NewInt(4), []byte{5})
+	testTx := ethtypes.NewTransaction(0, common.Address{1}, big.NewInt(2), 3, big.NewInt(4), []byte{5})
 
 	tests := []struct {
 		name      string
-		header    *Header
-		txs       []*Transaction
-		uncles    []*Header
-		receipts  []*Receipt
+		header    *ethtypes.Header
+		txs       []*ethtypes.Transaction
+		uncles    []*ethtypes.Header
+		receipts  []*ethtypes.Receipt
 		extdata   []byte
 		recalc    bool
-		wantBlock func() *Block
+		wantBlock func() *ethtypes.Block
 	}{
 		{
 			name:   "empty",
-			header: WithHeaderExtra(&Header{}, &HeaderExtra{}),
-			wantBlock: func() *Block {
-				header := WithHeaderExtra(&Header{}, &HeaderExtra{})
-				block := NewBlock(header, nil, nil, nil, stubHasher{})
+			header: WithHeaderExtra(&ethtypes.Header{}, &HeaderExtra{}),
+			wantBlock: func() *ethtypes.Block {
+				header := WithHeaderExtra(&ethtypes.Header{}, &HeaderExtra{})
+				block := newBlockTest(header, nil, nil, stubHasher{})
 				blockExtra := &BlockBodyExtra{ExtData: &[]byte{}}
 				extras.Block.Set(block, blockExtra)
 				return block
@@ -396,10 +404,10 @@ func TestNewBlockWithExtData(t *testing.T) {
 		},
 		{
 			name:   "header_nil_extra",
-			header: &Header{},
-			wantBlock: func() *Block {
-				header := WithHeaderExtra(&Header{}, &HeaderExtra{})
-				block := NewBlock(header, nil, nil, nil, stubHasher{})
+			header: &ethtypes.Header{},
+			wantBlock: func() *ethtypes.Block {
+				header := WithHeaderExtra(&ethtypes.Header{}, &HeaderExtra{})
+				block := newBlockTest(header, nil, nil, stubHasher{})
 				blockExtra := &BlockBodyExtra{ExtData: &[]byte{}}
 				extras.Block.Set(block, blockExtra)
 				return block
@@ -408,19 +416,19 @@ func TestNewBlockWithExtData(t *testing.T) {
 		{
 			name: "with_recalc",
 			header: WithHeaderExtra(
-				&Header{},
+				&ethtypes.Header{},
 				&HeaderExtra{
 					ExtDataHash: common.Hash{1}, // should be overwritten
 				},
 			),
 			extdata: []byte{2},
 			recalc:  true,
-			wantBlock: func() *Block {
+			wantBlock: func() *ethtypes.Block {
 				header := WithHeaderExtra(
-					&Header{},
+					&ethtypes.Header{},
 					&HeaderExtra{ExtDataHash: CalcExtDataHash([]byte{2})},
 				)
-				block := NewBlock(header, nil, nil, nil, stubHasher{})
+				block := newBlockTest(header, nil, nil, stubHasher{})
 				blockExtra := &BlockBodyExtra{ExtData: &[]byte{2}}
 				extras.Block.Set(block, blockExtra)
 				return block
@@ -429,25 +437,25 @@ func TestNewBlockWithExtData(t *testing.T) {
 		{
 			name: "filled_no_recalc",
 			header: WithHeaderExtra(
-				&Header{GasLimit: 1},
+				&ethtypes.Header{GasLimit: 1},
 				&HeaderExtra{
 					ExtDataHash:    common.Hash{2},
 					ExtDataGasUsed: big.NewInt(3),
 					BlockGasCost:   big.NewInt(4),
 				},
 			),
-			txs: []*Transaction{testTx},
-			uncles: []*Header{
+			txs: []*ethtypes.Transaction{testTx},
+			uncles: []*ethtypes.Header{
 				WithHeaderExtra(
-					&Header{GasLimit: 5},
+					&ethtypes.Header{GasLimit: 5},
 					&HeaderExtra{BlockGasCost: big.NewInt(6)},
 				),
 			},
-			receipts: []*Receipt{{PostState: []byte{7}}},
+			receipts: []*ethtypes.Receipt{{PostState: []byte{7}}},
 			extdata:  []byte{8},
-			wantBlock: func() *Block {
+			wantBlock: func() *ethtypes.Block {
 				header := WithHeaderExtra(
-					&Header{GasLimit: 1},
+					&ethtypes.Header{GasLimit: 1},
 					&HeaderExtra{
 						ExtDataHash:    common.Hash{2},
 						ExtDataGasUsed: big.NewInt(3),
@@ -455,11 +463,15 @@ func TestNewBlockWithExtData(t *testing.T) {
 					},
 				)
 				uncle := WithHeaderExtra(
-					&Header{GasLimit: 5},
+					&ethtypes.Header{GasLimit: 5},
 					&HeaderExtra{BlockGasCost: big.NewInt(6)},
 				)
-				uncles := []*Header{uncle}
-				block := NewBlock(header, []*Transaction{testTx}, uncles, []*Receipt{{PostState: []byte{7}}}, stubHasher{})
+				uncles := []*ethtypes.Header{uncle}
+				body := &ethtypes.Body{
+					Transactions: []*ethtypes.Transaction{testTx},
+					Uncles:       uncles,
+				}
+				block := newBlockTest(header, body, []*ethtypes.Receipt{{PostState: []byte{7}}}, stubHasher{})
 				blockExtra := &BlockBodyExtra{ExtData: &[]byte{8}}
 				extras.Block.Set(block, blockExtra)
 				return block

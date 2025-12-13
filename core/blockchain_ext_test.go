@@ -12,11 +12,11 @@ import (
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
@@ -247,8 +247,8 @@ func InsertChainAcceptSingleBlockTest(t *testing.T, create createFunc) {
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -317,8 +317,8 @@ func InsertLongForkedChainTest(t *testing.T, create createFunc) {
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -481,8 +481,8 @@ func AcceptNonCanonicalBlockTest(t *testing.T, create createFunc) {
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		// We use two separate databases since GenerateChain commits the state roots to its underlying
 		// database.
 		chainDB = rawdb.NewMemoryDatabase()
@@ -592,8 +592,8 @@ func SetPreferenceRewindTest(t *testing.T, create createFunc) {
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -725,9 +725,9 @@ func BuildOnVariousStagesTest(t *testing.T, create createFunc) {
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
 		key3, _ = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
-		addr3   = crypto.PubkeyToAddress(key3.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
+		addr3   = common.PubkeyToAddress(key3.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -930,8 +930,8 @@ func EmptyAndNonEmptyBlocksTest(t *testing.T, create createFunc) {
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -1000,8 +1000,8 @@ func ReorgReInsertTest(t *testing.T, create createFunc) {
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -1106,8 +1106,8 @@ func AcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc) {
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -1250,8 +1250,8 @@ func ReprocessAcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc)
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -1406,8 +1406,8 @@ func GenerateChainInvalidBlockFeeTest(t *testing.T, create createFunc) {
 		require = require.New(t)
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -1447,8 +1447,8 @@ func InsertChainInvalidBlockFeeTest(t *testing.T, create createFunc) {
 		require = require.New(t)
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -1491,8 +1491,8 @@ func InsertChainValidBlockFeeTest(t *testing.T, create createFunc) {
 		require = require.New(t)
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		// We use two separate databases since GenerateChain commits the state roots to its underlying
 		// database.
 		chainDB = rawdb.NewMemoryDatabase()
@@ -1575,8 +1575,8 @@ func ReexecBlocksTest(t *testing.T, create ReexecTestFunc) {
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
@@ -1705,8 +1705,8 @@ func ReexecMaxBlocksTest(t *testing.T, create ReexecTestFunc) {
 	var (
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
+		addr2   = common.PubkeyToAddress(key2.PublicKey)
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
