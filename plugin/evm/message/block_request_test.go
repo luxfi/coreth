@@ -39,12 +39,12 @@ func TestMarshalBlockRequest(t *testing.T) {
 // ensure compatibility with the network.
 func TestMarshalBlockResponse(t *testing.T) {
 	// create some random bytes
-	// set seed to ensure deterministic random behaviour
-	rand.Seed(1)
+	// use a local random source for deterministic random
+	rng := rand.New(rand.NewSource(1))
 	blocksBytes := make([][]byte, 32)
 	for i := range blocksBytes {
-		blocksBytes[i] = make([]byte, rand.Intn(32)+32) // min 32 length, max 64
-		_, err := rand.Read(blocksBytes[i])
+		blocksBytes[i] = make([]byte, rng.Intn(32)+32) // min 32 length, max 64
+		_, err := rng.Read(blocksBytes[i])
 		assert.NoError(t, err)
 	}
 
