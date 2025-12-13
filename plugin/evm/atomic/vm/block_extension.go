@@ -9,7 +9,7 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
-	"github.com/luxfi/node/database"
+	"github.com/luxfi/database"
 	safemath "github.com/luxfi/node/utils/math"
 
 	"github.com/luxfi/coreth/params/extras"

@@ -9,19 +9,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar"
-	"github.com/luxfi/node/quasar/engine/quasarman/block"
-	"github.com/luxfi/node/quasar/quasartest"
-	"github.com/luxfi/node/quasar/validators"
-	"github.com/luxfi/node/quasar/validators/validatorstest"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus"
+	"github.com/luxfi/consensus/engine/chain/block"
+	"github.com/luxfi/consensus/engine/chain/chaintest"
+	"github.com/luxfi/consensus/validator"
+	"github.com/luxfi/consensus/validator/validatorstest"
 	agoUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/crypto/bls/signer/localsigner"
-	"github.com/luxfi/node/utils/set"
-	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
-	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/math/set"
+	luxWarp "github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/precompile/precompiletest"
 	"github.com/luxfi/coreth/predicate"
@@ -169,8 +169,8 @@ type validatorRange struct {
 	publicKey bool
 }
 
-// createConsensusCtx creates a quasar.Context instance with a validator state specified by the given validatorRanges
-func createConsensusCtx(tb testing.TB, validatorRanges []validatorRange) *quasar.Context {
+// createConsensusCtx creates a consensusctx.Context instance with a validator state specified by the given validatorRanges
+func createConsensusCtx(tb testing.TB, validatorRanges []validatorRange) *consensusctx.Context {
 	getValidatorsOutput := make(map[ids.NodeID]*validators.GetValidatorOutput)
 
 	for _, validatorRange := range validatorRanges {
@@ -186,7 +186,7 @@ func createConsensusCtx(tb testing.TB, validatorRanges []validatorRange) *quasar
 		}
 	}
 
-	quasarCtx := quasartest.Context(tb, quasartest.CChainID)
+	quasarCtx := consensustest.Context(tb, consensustest.CChainID)
 	state := &validatorstest.State{
 		GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
 			return sourceSubnetID, nil
@@ -199,7 +199,7 @@ func createConsensusCtx(tb testing.TB, validatorRanges []validatorRange) *quasar
 	return quasarCtx
 }
 
-func createValidPredicateTest(quasarCtx *quasar.Context, numKeys uint64, predicateBytes []byte) precompiletest.PredicateTest {
+func createValidPredicateTest(quasarCtx *consensusctx.Context, numKeys uint64, predicateBytes []byte) precompiletest.PredicateTest {
 	return precompiletest.PredicateTest{
 		Config: NewDefaultConfig(utils.NewUint64(0)),
 		PredicateContext: &precompileconfig.PredicateContext{
@@ -259,7 +259,7 @@ func testWarpMessageFromPrimaryNetwork(t *testing.T, requirePrimaryNetworkSigner
 
 	predicateBytes := predicate.PackPredicate(warpMsg.Bytes())
 
-	quasarCtx := quasartest.Context(t, ids.GenerateTestID())
+	quasarCtx := consensustest.Context(t, ids.GenerateTestID())
 	quasarCtx.SubnetID = ids.GenerateTestID()
 	quasarCtx.CChainID = cChainID
 	quasarCtx.ValidatorState = &validatorstest.State{
@@ -665,7 +665,7 @@ func makeWarpPredicateTests(tb testing.TB) map[string]precompiletest.PredicateTe
 			}
 		}
 
-		quasarCtx := quasartest.Context(tb, quasartest.CChainID)
+		quasarCtx := consensustest.Context(tb, consensustest.CChainID)
 		state := &validatorstest.State{
 			GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
 				return sourceSubnetID, nil

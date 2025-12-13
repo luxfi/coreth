@@ -142,7 +142,7 @@ func CalcExtDataHash(extdata []byte) common.Hash {
 
 func NewBlockWithExtData(
 	header *ethtypes.Header, txs []*ethtypes.Transaction, uncles []*ethtypes.Header, receipts []*ethtypes.Receipt,
-	hasher ethtypes.TrieHasher, extdata []byte, recalc bool,
+	hasher ethtypes.ListHasher, extdata []byte, recalc bool,
 ) *ethtypes.Block {
 	if recalc {
 		headerExtra := GetHeaderExtra(header)

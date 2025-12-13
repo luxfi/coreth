@@ -11,16 +11,16 @@ import (
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/database/prefixdb"
-	"github.com/luxfi/node/database/versiondb"
+	"github.com/luxfi/database"
+	"github.com/luxfi/database/prefixdb"
+	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/luxfi/node/database/memdb"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/database/memdb"
+	"github.com/luxfi/ids"
 )
 
 // addTxs writes [txsPerHeight] txs for heights ranging in [fromHeight, toHeight) directly to [acceptedAtomicTxDB],

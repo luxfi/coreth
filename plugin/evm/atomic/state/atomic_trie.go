@@ -10,8 +10,8 @@ import (
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
-	luxdatabase "github.com/luxfi/node/database"
-	"github.com/luxfi/node/ids"
+	luxdatabase "github.com/luxfi/database"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/utils/wrappers"
 

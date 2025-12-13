@@ -9,9 +9,9 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic/atomictest"
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/database/memdb"
-	"github.com/luxfi/node/database/versiondb"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/database/memdb"
+	"github.com/luxfi/database/versiondb"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/node/utils"
 	"github.com/luxfi/geth/common"
 	"github.com/stretchr/testify/assert"

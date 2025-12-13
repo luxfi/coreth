@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"
 
-	commonEng "github.com/luxfi/node/quasar/engine/common"
+	commonEng "github.com/luxfi/consensus/core"
 
 	"github.com/stretchr/testify/require"
 
@@ -23,8 +23,8 @@ import (
 	"github.com/luxfi/coreth/utils"
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus"
 	"github.com/luxfi/node/upgrade/upgradetest"
 )
 
@@ -66,7 +66,7 @@ func TestCalculateDynamicFee(t *testing.T) {
 }
 
 type atomicTxVerifyTest struct {
-	ctx         *quasar.Context
+	ctx         *consensusctx.Context
 	generate    func(t *testing.T) atomic.UnsignedAtomicTx
 	rules       extras.Rules
 	expectedErr string
@@ -165,7 +165,7 @@ func executeTxTest(t *testing.T, test atomicTxTest) {
 		t.Fatal(err)
 	}
 
-	require.Equal(t, commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
+	require.Equal(t, consensuscore.PendingTxs, tvm.WaitForEvent(context.Background()))
 
 	// If we've reached this point, we expect to be able to build and verify the block without any errors
 	blk, err := tvm.vm.BuildBlock(context.Background())

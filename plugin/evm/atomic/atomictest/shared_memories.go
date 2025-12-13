@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/database/memdb"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar/quasartest"
+	"github.com/luxfi/database"
+	"github.com/luxfi/database/memdb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus/engine/chain/chaintest"
 	"github.com/stretchr/testify/require"
 )
 
@@ -84,5 +84,5 @@ func NewSharedMemories(atomicMemory *atomic.Memory, thisChainID, peerChainID ids
 
 func TestSharedMemory() atomic.SharedMemory {
 	m := atomic.NewMemory(memdb.New())
-	return m.NewSharedMemory(quasartest.CChainID)
+	return m.NewSharedMemory(consensustest.CChainID)
 }

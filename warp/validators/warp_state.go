@@ -7,10 +7,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/warp"
-	"github.com/luxfi/warp/bls"
-	cryptobls "github.com/luxfi/crypto/bls"
 )
 
 // warpValidatorState wraps State to implement warp.ValidatorState
@@ -19,42 +18,32 @@ type warpValidatorState struct {
 }
 
 // GetValidatorSet implements warp.ValidatorState interface
-func (w *warpValidatorState) GetValidatorSet(chainID []byte, height uint64) (map[string]*warp.Validator, error) {
-	// Convert chainID bytes to subnetID
-	if len(chainID) != 32 {
-		return nil, fmt.Errorf("invalid chainID length: expected 32, got %d", len(chainID))
-	}
-	
-	var subnetID ids.ID
-	copy(subnetID[:], chainID)
-	
+func (w *warpValidatorState) GetValidatorSet(chainID ids.ID, height uint64) (map[ids.NodeID]*warp.Validator, error) {
 	// Get validators from the underlying state
 	ctx := context.Background()
-	nodeValidators, err := w.State.GetValidatorSet(ctx, height, subnetID)
+	nodeValidators, err := w.State.GetValidatorSet(ctx, height, chainID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert to warp.Validator format
-	warpValidators := make(map[string]*warp.Validator, len(nodeValidators))
+	warpValidators := make(map[ids.NodeID]*warp.Validator, len(nodeValidators))
 	for nodeID, validator := range nodeValidators {
-		// validator.PublicKey is from luxfi/crypto/bls, we need to convert to warp/bls
-		// Serialize the public key to bytes
-		publicKeyBytes := cryptobls.PublicKeyToCompressedBytes(validator.PublicKey)
-		warpPK, err := bls.PublicKeyFromBytes(publicKeyBytes)
+		// validator.PublicKey is []byte, parse it to *bls.PublicKey
+		publicKey, err := bls.PublicKeyFromCompressedBytes(validator.PublicKey)
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert public key for node %s: %w", nodeID, err)
+			return nil, fmt.Errorf("failed to parse public key for node %s: %w", nodeID, err)
 		}
-		
+
 		warpValidator := &warp.Validator{
-			PublicKey:      warpPK,
-			PublicKeyBytes: publicKeyBytes,
+			PublicKey:      publicKey,
+			PublicKeyBytes: validator.PublicKey,
 			Weight:         validator.Weight,
-			NodeID:         nodeID[:],
+			NodeID:         nodeID,
 		}
-		warpValidators[string(nodeID[:])] = warpValidator
+		warpValidators[nodeID] = warpValidator
 	}
-	
+
 	return warpValidators, nil
 }
 

@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/luxfi/ids"
-	"github.com/luxfi/node/consensus/validators"
+	"github.com/luxfi/consensus/validator"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/precompile/precompileconfig"

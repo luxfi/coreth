@@ -10,14 +10,14 @@ import (
 
 	"github.com/luxfi/node/cache"
 	"github.com/luxfi/node/cache/lru"
-	"github.com/luxfi/node/database/memdb"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p/acp118"
+	"github.com/luxfi/database/memdb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p/lp118"
 	"github.com/luxfi/node/proto/pb/sdk"
-	"github.com/luxfi/node/quasar/engine/common"
-	"github.com/luxfi/node/quasar/quasartest"
-	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
-	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/consensus/core"
+	"github.com/luxfi/consensus/engine/chain/chaintest"
+	luxWarp "github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/metrics/metricstest"
 	"github.com/luxfi/coreth/warp/warptest"
 	"github.com/stretchr/testify/require"
@@ -28,7 +28,7 @@ func TestAddressedCallSignatures(t *testing.T) {
 	metricstest.WithMetrics(t)
 
 	database := memdb.New()
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 
 	offChainPayload, err := payload.NewAddressedCall([]byte{1, 2, 3}, []byte{1, 2, 3})
 	require.NoError(t, err)
@@ -141,7 +141,7 @@ func TestBlockSignatures(t *testing.T) {
 	metricstest.WithMetrics(t)
 
 	database := memdb.New()
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 
 	knownBlkID := ids.GenerateTestID()
 	blockClient := warptest.MakeBlockClient(knownBlkID)

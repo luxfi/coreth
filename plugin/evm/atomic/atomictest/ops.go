@@ -5,7 +5,7 @@ package atomictest
 
 import (
 	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 )
 

@@ -6,9 +6,9 @@ package evm
 import (
 	"time"
 
-	luxdatabase "github.com/luxfi/node/database"
-	"github.com/luxfi/node/database/prefixdb"
-	"github.com/luxfi/node/database/versiondb"
+	luxdatabase "github.com/luxfi/database"
+	"github.com/luxfi/database/prefixdb"
+	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/coreth/plugin/evm/database"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"

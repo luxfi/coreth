@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/sync/handlers/stats/statstest"
 
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"

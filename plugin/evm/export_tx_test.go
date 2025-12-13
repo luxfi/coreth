@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/ids"
-	commonEng "github.com/luxfi/node/quasar/engine/common"
-	"github.com/luxfi/node/quasar/quasartest"
+	"github.com/luxfi/ids"
+	commonEng "github.com/luxfi/consensus/core"
+	"github.com/luxfi/consensus/engine/chain/chaintest"
 	"github.com/luxfi/node/upgrade/upgradetest"
 	luxutils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
@@ -76,7 +76,7 @@ func createExportTxOptions(t *testing.T, vm *atomicvm.VM, sharedMemory *luxatomi
 
 	msg, err := vm.WaitForEvent(context.Background())
 	require.NoError(t, err)
-	require.Equal(t, commonEng.PendingTxs, msg)
+	require.Equal(t, consensuscore.PendingTxs, msg)
 
 	blk, err := vm.BuildBlock(context.Background())
 	if err != nil {
@@ -168,7 +168,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount / 2,
-					AssetID: quasartest.LUXAssetID,
+					AssetID: consensustest.LUXAssetID,
 					Nonce:   0,
 				},
 			},
@@ -185,7 +185,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: quasartest.LUXAssetID,
+					AssetID: consensustest.LUXAssetID,
 					Nonce:   0,
 				},
 			},
@@ -202,7 +202,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount + 1,
-					AssetID: quasartest.LUXAssetID,
+					AssetID: consensustest.LUXAssetID,
 					Nonce:   0,
 				},
 			},
@@ -276,7 +276,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: quasartest.LUXAssetID,
+					AssetID: consensustest.LUXAssetID,
 					Nonce:   0,
 				},
 			},
@@ -299,7 +299,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: quasartest.LUXAssetID,
+					AssetID: consensustest.LUXAssetID,
 					Nonce:   1,
 				},
 			},
@@ -322,7 +322,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: quasartest.LUXAssetID,
+					AssetID: consensustest.LUXAssetID,
 					Nonce:   1,
 				},
 			},
@@ -397,7 +397,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			require.Equal(t, commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
+			require.Equal(t, consensuscore.PendingTxs, tvm.WaitForEvent(context.Background()))
 
 			blk, err := tvm.vm.BuildBlock(context.Background())
 			if err != nil {
@@ -1104,25 +1104,25 @@ func TestExportTxVerify(t *testing.T) {
 	var exportAmount uint64 = 10000000
 	exportTx := &atomic.UnsignedExportTx{
 		NetworkID:        constants.UnitTestID,
-		BlockchainID:     quasartest.CChainID,
-		DestinationChain: quasartest.XChainID,
+		BlockchainID:     consensustest.CChainID,
+		DestinationChain: consensustest.XChainID,
 		Ins: []atomic.EVMInput{
 			{
 				Address: testEthAddrs[0],
 				Amount:  exportAmount,
-				AssetID: quasartest.LUXAssetID,
+				AssetID: consensustest.LUXAssetID,
 				Nonce:   0,
 			},
 			{
 				Address: testEthAddrs[2],
 				Amount:  exportAmount,
-				AssetID: quasartest.LUXAssetID,
+				AssetID: consensustest.LUXAssetID,
 				Nonce:   0,
 			},
 		},
 		ExportedOutputs: []*lux.TransferableOutput{
 			{
-				Asset: lux.Asset{ID: quasartest.LUXAssetID},
+				Asset: lux.Asset{ID: consensustest.LUXAssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: exportAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1133,7 +1133,7 @@ func TestExportTxVerify(t *testing.T) {
 				},
 			},
 			{
-				Asset: lux.Asset{ID: quasartest.LUXAssetID},
+				Asset: lux.Asset{ID: consensustest.LUXAssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: exportAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1153,7 +1153,7 @@ func TestExportTxVerify(t *testing.T) {
 	emptySigners := make([][]*secp256k1.PrivateKey, 2)
 	atomic.SortEVMInputsAndSigners(exportTx.Ins, emptySigners)
 
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 
 	tests := map[string]atomicTxVerifyTest{
 		"nil tx": {
@@ -1276,7 +1276,7 @@ func TestExportTxVerify(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  0,
-						AssetID: quasartest.LUXAssetID,
+						AssetID: consensustest.LUXAssetID,
 						Nonce:   0,
 					},
 				}
@@ -1747,7 +1747,7 @@ func TestNewExportTx(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			require.Equal(t, commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
+			require.Equal(t, consensuscore.PendingTxs, tvm.WaitForEvent(context.Background()))
 
 			blk, err := tvm.vm.BuildBlock(context.Background())
 			if err != nil {
@@ -1936,7 +1936,7 @@ func TestNewExportTxMulticoin(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			require.Equal(t, commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
+			require.Equal(t, consensuscore.PendingTxs, tvm.WaitForEvent(context.Background()))
 
 			blk, err := tvm.vm.BuildBlock(context.Background())
 			if err != nil {

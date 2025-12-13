@@ -17,13 +17,13 @@ import (
 
 	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus"
 	luxutils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/math"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/components/verify"
@@ -94,7 +94,7 @@ func (utx *UnsignedExportTx) InputUTXOs() set.Set[ids.ID] {
 
 // Verify this transaction is well-formed
 func (utx *UnsignedExportTx) Verify(
-	ctx *quasar.Context,
+	ctx *consensusctx.Context,
 	rules extras.Rules,
 ) error {
 	switch {
@@ -239,7 +239,7 @@ func (utx *UnsignedExportTx) AtomicOps() (ids.ID, *atomic.Requests, error) {
 
 // NewExportTx returns a new ExportTx
 func NewExportTx(
-	ctx *quasar.Context,
+	ctx *consensusctx.Context,
 	rules extras.Rules,
 	state StateDB,
 	assetID ids.ID, // AssetID of the tokens to export
@@ -332,7 +332,7 @@ func NewExportTx(
 }
 
 // EVMStateTransfer executes the state update from the atomic export transaction
-func (utx *UnsignedExportTx) EVMStateTransfer(ctx *quasar.Context, state StateDB) error {
+func (utx *UnsignedExportTx) EVMStateTransfer(ctx *consensusctx.Context, state StateDB) error {
 	addrs := map[[20]byte]uint64{}
 	for _, from := range utx.Ins {
 		if luxfiidsEqual(ctx.AVAXAssetID, from.AssetID) {
@@ -372,7 +372,7 @@ func (utx *UnsignedExportTx) EVMStateTransfer(ctx *quasar.Context, state StateDB
 // corresponds to a single key, so that the signers can be passed in to
 // [tx.Sign] which supports multiple keys on a single input.
 func getSpendableFunds(
-	ctx *quasar.Context,
+	ctx *consensusctx.Context,
 	state StateDB,
 	keys []*secp256k1.PrivateKey,
 	assetID ids.ID,
@@ -429,7 +429,7 @@ func getSpendableFunds(
 // corresponds to a single key, so that the signers can be passed in to
 // [tx.Sign] which supports multiple keys on a single input.
 func getSpendableLUXWithFee(
-	ctx *quasar.Context,
+	ctx *consensusctx.Context,
 	state StateDB,
 	keys []*secp256k1.PrivateKey,
 	amount uint64,

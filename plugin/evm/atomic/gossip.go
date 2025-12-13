@@ -3,7 +3,7 @@
 
 package atomic
 
-import "github.com/luxfi/node/network/p2p/gossip"
+import "github.com/luxfi/p2p/gossip"
 
 var _ gossip.Marshaller[*Tx] = (*TxMarshaller)(nil)
 

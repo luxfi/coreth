@@ -64,7 +64,7 @@ import (
 	"github.com/luxfi/geth/event"
 	"github.com/luxfi/geth/params"
 	"github.com/luxfi/log"
-	"github.com/luxfi/metrics"
+	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/triedb"
 
 	// Force geth metrics of the same name to be registered first.

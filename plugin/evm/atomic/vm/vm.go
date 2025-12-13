@@ -19,19 +19,19 @@ import (
 
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/codec/linearcodec"
-	luxdatabase "github.com/luxfi/node/database"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p"
-	luxdssip "github.com/luxfi/node/network/p2p/gossip"
-	"github.com/luxfi/node/quasar"
-	"github.com/luxfi/node/quasar/consensus/quasarman"
-	luxcommon "github.com/luxfi/node/quasar/engine/common"
-	"github.com/luxfi/node/quasar/engine/quasarman/block"
+	luxdatabase "github.com/luxfi/database"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p"
+	luxdssip "github.com/luxfi/p2p/gossip"
+	"github.com/luxfi/consensus"
+	"github.com/luxfi/consensus/engine/chain"
+	luxcommon "github.com/luxfi/consensus/core"
+	"github.com/luxfi/consensus/engine/chain/block"
 	luxutils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
 	"github.com/luxfi/crypto/secp256k1"
-	"github.com/luxfi/node/utils/logging"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/log"
+	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/utils/timer/mockable"
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/vms/components/lux"
@@ -79,7 +79,7 @@ const (
 
 type VM struct {
 	extension.InnerVM
-	Ctx *quasar.Context
+	Ctx *consensusctx.Context
 
 	// TODO: unexport these fields
 	SecpCache     *secp256k1.RecoverCache
@@ -114,7 +114,7 @@ func WrapVM(vm extension.InnerVM) *VM {
 // Initialize implements the quasarman.ChainVM interface
 func (vm *VM) Initialize(
 	ctx context.Context,
-	chainCtx *quasar.Context,
+	chainCtx *consensusctx.Context,
 	db luxdatabase.Database,
 	genesisBytes []byte,
 	upgradeBytes []byte,
@@ -305,6 +305,7 @@ func (vm *VM) onNormalOperationsStarted() error {
 		config.TxGossipThrottlingPeriod,
 		config.TxGossipThrottlingLimit,
 		vm.InnerVM.P2PValidators(),
+		nil, // BloomChecker - not needed for atomic tx gossip
 	)
 
 	if err := vm.InnerVM.AddHandler(p2p.AtomicTxGossipHandlerID, vm.atomicTxGossipHandler); err != nil {
@@ -722,11 +723,11 @@ func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, state
 	return batchContribution, batchGasUsed, nil
 }
 
-func (vm *VM) BuildBlock(ctx context.Context) (quasarman.Block, error) {
+func (vm *VM) BuildBlock(ctx context.Context) (block.Block, error) {
 	return vm.BuildBlockWithContext(ctx, nil)
 }
 
-func (vm *VM) BuildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (quasarman.Block, error) {
+func (vm *VM) BuildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (block.Block, error) {
 	blk, err := vm.InnerVM.BuildBlockWithContext(ctx, proposerVMBlockCtx)
 
 	// Handle errors and signal the mempool to take appropriate action

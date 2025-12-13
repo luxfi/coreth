@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/plugin/evm/message"
 
-	"github.com/luxfi/node/quasar/engine/quasarman/block"
+	"github.com/luxfi/consensus/engine/chain/block"
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/crypto"

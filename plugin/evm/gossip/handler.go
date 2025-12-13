@@ -9,9 +9,8 @@ import (
 
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
-	"github.com/luxfi/node/consensus/engine/core"
-	"github.com/luxfi/node/network/p2p"
-	"github.com/luxfi/node/network/p2p/gossip"
+	"github.com/luxfi/p2p"
+	"github.com/luxfi/p2p/gossip"
 )
 
 var _ p2p.Handler = (*txGossipHandler)(nil)
@@ -25,6 +24,7 @@ func NewTxGossipHandler[T gossip.Gossipable](
 	throttlingPeriod time.Duration,
 	throttlingLimit int,
 	validators p2p.ValidatorSet,
+	bloomChecker gossip.BloomChecker,
 ) *txGossipHandler {
 	// push gossip messages can be handled from any peer
 	handler := gossip.NewHandler(
@@ -33,6 +33,7 @@ func NewTxGossipHandler[T gossip.Gossipable](
 		mempool,
 		metrics,
 		maxMessageSize,
+		bloomChecker,
 	)
 
 	// pull gossip requests are filtered by validators and are throttled
@@ -48,25 +49,20 @@ func NewTxGossipHandler[T gossip.Gossipable](
 	)
 
 	return &txGossipHandler{
-		appGossipHandler:  handler,
-		appRequestHandler: validatorHandler,
+		gossipHandler:  handler,
+		requestHandler: validatorHandler,
 	}
 }
 
 type txGossipHandler struct {
-	appGossipHandler  p2p.Handler
-	appRequestHandler p2p.Handler
+	gossipHandler  p2p.Handler
+	requestHandler p2p.Handler
 }
 
-func (t *txGossipHandler) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) {
-	t.appGossipHandler.AppGossip(ctx, nodeID, gossipBytes)
+func (t *txGossipHandler) Gossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) {
+	t.gossipHandler.Gossip(ctx, nodeID, gossipBytes)
 }
 
-func (t *txGossipHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *core.AppError) {
-	return t.appRequestHandler.AppRequest(ctx, nodeID, deadline, requestBytes)
-}
-
-func (t *txGossipHandler) CrossChainAppRequest(ctx context.Context, chainID ids.ID, deadline time.Time, requestBytes []byte) ([]byte, error) {
-	// We don't handle cross-chain requests in the gossip handler
-	return nil, nil
+func (t *txGossipHandler) Request(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *p2p.Error) {
+	return t.requestHandler.Request(ctx, nodeID, deadline, requestBytes)
 }

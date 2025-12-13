@@ -12,10 +12,10 @@ import (
 
 	"go.uber.org/mock/gomock"
 
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/crypto/bls/signer/localsigner"
-	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
+	luxWarp "github.com/luxfi/warp"
 )
 
 func newValidator(t testing.TB, weight uint64) (bls.Signer, *luxWarp.Validator) {

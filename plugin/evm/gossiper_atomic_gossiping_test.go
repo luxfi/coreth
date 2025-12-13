@@ -12,14 +12,14 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p"
 	"github.com/luxfi/node/proto/pb/sdk"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/math/set"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 
-	commonEng "github.com/luxfi/node/quasar/engine/common"
+	commonEng "github.com/luxfi/consensus/core"
 )
 
 // show that a txID discovered from gossip is requested to the same node only if
@@ -40,7 +40,7 @@ func TestMempoolAtmTxsAppGossipHandling(t *testing.T) {
 		txRequested    bool
 	)
 	tvm.appSender.CantSendAppGossip = false
-	tvm.appSender.SendAppGossipF = func(context.Context, commonEng.SendConfig, []byte) error {
+	tvm.appSender.SendAppGossipF = func(context.Context, consensuscore.SendConfig, []byte) error {
 		txGossipedLock.Lock()
 		defer txGossipedLock.Unlock()
 
@@ -124,7 +124,7 @@ func TestMempoolAtmTxsAppGossipHandlingDiscardedTx(t *testing.T) {
 		txRequested    bool
 	)
 	tvm.appSender.CantSendAppGossip = false
-	tvm.appSender.SendAppGossipF = func(context.Context, commonEng.SendConfig, []byte) error {
+	tvm.appSender.SendAppGossipF = func(context.Context, consensuscore.SendConfig, []byte) error {
 		txGossipedLock.Lock()
 		defer txGossipedLock.Unlock()
 

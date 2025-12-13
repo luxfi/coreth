@@ -21,16 +21,16 @@ import (
 
 	"github.com/luxfi/node/api/metrics"
 	luxatomic "github.com/luxfi/node/chains/atomic"
-	luxdatabase "github.com/luxfi/node/database"
-	"github.com/luxfi/node/database/prefixdb"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar"
-	commonEng "github.com/luxfi/node/quasar/engine/common"
-	"github.com/luxfi/node/quasar/engine/enginetest"
-	"github.com/luxfi/node/quasar/engine/quasarman/block"
+	luxdatabase "github.com/luxfi/database"
+	"github.com/luxfi/database/prefixdb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus"
+	commonEng "github.com/luxfi/consensus/core"
+	"github.com/luxfi/consensus/engine/enginetest"
+	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/node/upgrade/upgradetest"
 	"github.com/luxfi/crypto/secp256k1"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/utils/units"
 
 	"github.com/luxfi/coreth/consensus/dummy"
@@ -109,7 +109,7 @@ func TestStateSyncToggleEnabledToDisabled(t *testing.T) {
 			reqCount++
 			// Fail all requests after number 50 to interrupt the sync
 			if reqCount > 50 {
-				if err := syncerVM.AppRequestFailed(context.Background(), nodeID, requestID, commonEng.ErrTimeout); err != nil {
+				if err := syncerVM.AppRequestFailed(context.Background(), nodeID, requestID, consensuscore.ErrTimeout); err != nil {
 					panic(err)
 				}
 				if err := syncerVM.Client.Shutdown(); err != nil {
@@ -132,7 +132,7 @@ func TestStateSyncToggleEnabledToDisabled(t *testing.T) {
 
 	syncDisabledVM := atomicvm.WrapVM(&VM{})
 	appSender := &enginetest.Sender{T: t}
-	appSender.SendAppGossipF = func(context.Context, commonEng.SendConfig, []byte) error { return nil }
+	appSender.SendAppGossipF = func(context.Context, consensuscore.SendConfig, []byte) error { return nil }
 	appSender.SendAppRequestF = func(ctx context.Context, nodeSet set.Set[ids.NodeID], requestID uint32, request []byte) error {
 		nodeID, hasItem := nodeSet.Pop()
 		if !hasItem {
@@ -152,7 +152,7 @@ func TestStateSyncToggleEnabledToDisabled(t *testing.T) {
 		genesisJSON,
 		nil,
 		[]byte(stateSyncDisabledConfigJSON),
-		[]*commonEng.Fx{},
+		[]*consensuscore.Fx{},
 		appSender,
 	); err != nil {
 		t.Fatal(err)
@@ -217,7 +217,7 @@ func TestStateSyncToggleEnabledToDisabled(t *testing.T) {
 		genesisJSON,
 		nil,
 		[]byte(configJSON),
-		[]*commonEng.Fx{},
+		[]*consensuscore.Fx{},
 		appSender,
 	); err != nil {
 		t.Fatal(err)
@@ -484,7 +484,7 @@ func testSyncerVM(t *testing.T, vmSetup *syncVMSetup, test syncTest) {
 	}
 
 	msg, err := syncerVM.WaitForEvent(context.Background())
-	require.Equal(commonEng.StateSyncDone, msg)
+	require.Equal(consensuscore.StateSyncDone, msg)
 	require.NoError(err)
 
 	// If the test is expected to error, assert the correct error is returned and finish the test.

@@ -7,10 +7,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar/quasartest"
-	"github.com/luxfi/node/quasar/validators"
-	"github.com/luxfi/node/quasar/validators/validatorsmock"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus/engine/chain/chaintest"
+	"github.com/luxfi/consensus/validator"
+	"github.com/luxfi/consensus/validator/validatorsmock"
 	"github.com/luxfi/node/utils/constants"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -24,7 +24,7 @@ func TestGetValidatorSetPrimaryNetwork(t *testing.T) {
 	otherSubnetID := ids.GenerateTestID()
 
 	mockState := validatorsmock.NewState(ctrl)
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 	quasarCtx.SubnetID = mySubnetID
 	quasarCtx.ValidatorState = mockState
 	state := NewState(quasarCtx.ValidatorState, quasarCtx.SubnetID, quasarCtx.ChainID, false)

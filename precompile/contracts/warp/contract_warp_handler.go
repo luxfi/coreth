@@ -6,9 +6,9 @@ package warp
 import (
 	"fmt"
 
-	"github.com/luxfi/node/utils/set"
-	"github.com/luxfi/node/vms/platformvm/warp"
-	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/math/set"
+	"github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"

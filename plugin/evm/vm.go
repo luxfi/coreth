@@ -19,8 +19,8 @@ import (
 	"time"
 
 	"github.com/luxfi/node/cache/metercacher"
-	"github.com/luxfi/node/network/p2p"
-	"github.com/luxfi/node/network/p2p/acp118"
+	"github.com/luxfi/p2p"
+	"github.com/luxfi/p2p/lp118"
 	"github.com/luxfi/coreth/network"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/extension"
@@ -49,7 +49,7 @@ import (
 
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/metrics"
+	"github.com/luxfi/geth/metrics"
 	ethparams "github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/triedb"
 
@@ -70,14 +70,14 @@ import (
 
 	"github.com/luxfi/node/cache/lru"
 	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/database/versiondb"
-	"github.com/luxfi/node/ids"
-	luxdssip "github.com/luxfi/node/network/p2p/gossip"
-	"github.com/luxfi/node/quasar"
-	"github.com/luxfi/node/quasar/consensus/quasarman"
-	commonEng "github.com/luxfi/node/quasar/engine/common"
-	"github.com/luxfi/node/quasar/engine/quasarman/block"
+	"github.com/luxfi/database"
+	"github.com/luxfi/database/versiondb"
+	"github.com/luxfi/ids"
+	luxdssip "github.com/luxfi/p2p/gossip"
+	"github.com/luxfi/consensus"
+	"github.com/luxfi/consensus/engine/chain"
+	commonEng "github.com/luxfi/consensus/core"
+	"github.com/luxfi/consensus/engine/chain/block"
 	luxUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/perms"
 	"github.com/luxfi/node/utils/profiler"
@@ -182,7 +182,7 @@ func init() {
 
 // VM implements the quasarman.ChainVM interface
 type VM struct {
-	ctx *quasar.Context
+	ctx *consensusctx.Context
 	// [cancel] may be nil until [quasar.NormalOp] starts
 	cancel context.CancelFunc
 	// *chain.State helps to implement the VM interface by wrapping blocks
@@ -271,13 +271,13 @@ type VM struct {
 // Initialize implements the quasarman.ChainVM interface
 func (vm *VM) Initialize(
 	_ context.Context,
-	chainCtx *quasar.Context,
+	chainCtx *consensusctx.Context,
 	db database.Database,
 	genesisBytes []byte,
 	_ []byte,
 	configBytes []byte,
-	_ []*commonEng.Fx,
-	appSender commonEng.AppSender,
+	_ []*consensuscore.Fx,
+	appSender consensuscore.AppSender,
 ) error {
 	if err := vm.extensionConfig.Validate(); err != nil {
 		return fmt.Errorf("failed to validate extension config: %w", err)
@@ -506,7 +506,7 @@ func (vm *VM) Initialize(
 	return vm.initializeStateSync(lastAcceptedHeight)
 }
 
-func parseGenesis(ctx *quasar.Context, bytes []byte) (*core.Genesis, error) {
+func parseGenesis(ctx *consensusctx.Context, bytes []byte) (*core.Genesis, error) {
 	g := new(core.Genesis)
 	if err := json.Unmarshal(bytes, g); err != nil {
 		return nil, fmt.Errorf("parsing genesis: %w", err)
@@ -846,6 +846,7 @@ func (vm *VM) initBlockBuilding() error {
 		config.TxGossipThrottlingPeriod,
 		config.TxGossipThrottlingLimit,
 		vm.P2PValidators(),
+		nil, // BloomChecker - not needed for tx gossip
 	)
 
 	if err := vm.Network.AddHandler(p2p.TxGossipHandlerID, vm.ethTxGossipHandler); err != nil {
@@ -892,7 +893,7 @@ func (vm *VM) initBlockBuilding() error {
 	return nil
 }
 
-func (vm *VM) WaitForEvent(ctx context.Context) (commonEng.Message, error) {
+func (vm *VM) WaitForEvent(ctx context.Context) (consensuscore.Message, error) {
 	vm.builderLock.Lock()
 	builder := vm.builder
 	vm.builderLock.Unlock()
@@ -903,9 +904,9 @@ func (vm *VM) WaitForEvent(ctx context.Context) (commonEng.Message, error) {
 		case <-ctx.Done():
 			return 0, ctx.Err()
 		case <-vm.stateSyncDone:
-			return commonEng.StateSyncDone, nil
+			return consensuscore.StateSyncDone, nil
 		case <-vm.shutdownChan:
-			return commonEng.Message(0), errShuttingDownVM
+			return consensuscore.Message(0), errShuttingDownVM
 		}
 	}
 
@@ -935,11 +936,11 @@ func (vm *VM) Shutdown(context.Context) error {
 }
 
 // buildBlock builds a block to be wrapped by ChainState
-func (vm *VM) buildBlock(ctx context.Context) (quasarman.Block, error) {
+func (vm *VM) buildBlock(ctx context.Context) (block.Block, error) {
 	return vm.buildBlockWithContext(ctx, nil)
 }
 
-func (vm *VM) buildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (quasarman.Block, error) {
+func (vm *VM) buildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (block.Block, error) {
 	if proposerVMBlockCtx != nil {
 		log.Debug("Building block with context", "pChainBlockHeight", proposerVMBlockCtx.PChainHeight)
 	} else {
@@ -984,7 +985,7 @@ func (vm *VM) buildBlockWithContext(ctx context.Context, proposerVMBlockCtx *blo
 }
 
 // parseBlock parses [b] into a block to be wrapped by ChainState.
-func (vm *VM) parseBlock(_ context.Context, b []byte) (quasarman.Block, error) {
+func (vm *VM) parseBlock(_ context.Context, b []byte) (block.Block, error) {
 	ethBlock := new(types.Block)
 	if err := rlp.DecodeBytes(b, ethBlock); err != nil {
 		return nil, err
@@ -1014,7 +1015,7 @@ func (vm *VM) ParseEthBlock(b []byte) (*types.Block, error) {
 
 // getBlock attempts to retrieve block [id] from the VM to be wrapped
 // by ChainState.
-func (vm *VM) getBlock(_ context.Context, id ids.ID) (quasarman.Block, error) {
+func (vm *VM) getBlock(_ context.Context, id ids.ID) (block.Block, error) {
 	ethBlock := vm.blockChain.GetBlockByHash(common.Hash(id))
 	// If [ethBlock] is nil, return [database.ErrNotFound] here
 	// so that the miss is considered cacheable.
@@ -1027,7 +1028,7 @@ func (vm *VM) getBlock(_ context.Context, id ids.ID) (quasarman.Block, error) {
 
 // GetAcceptedBlock attempts to retrieve block [blkID] from the VM. This method
 // only returns accepted blocks.
-func (vm *VM) GetAcceptedBlock(ctx context.Context, blkID ids.ID) (quasarman.Block, error) {
+func (vm *VM) GetAcceptedBlock(ctx context.Context, blkID ids.ID) (block.Block, error) {
 	blk, err := vm.GetBlock(ctx, blkID)
 	if err != nil {
 		return nil, err

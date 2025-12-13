@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/node/network/p2p/gossip"
+	"github.com/luxfi/p2p/gossip"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"

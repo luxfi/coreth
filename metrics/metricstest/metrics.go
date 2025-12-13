@@ -6,14 +6,14 @@ package metricstest
 import (
 	"testing"
 
-	"github.com/luxfi/metrics"
+	"github.com/luxfi/geth/metrics"
 )
 
 // WithMetrics enables go-ethereum metrics globally for the test.
 // If metrics are already enabled, nothing is done.
 // Otherwise, it enables metrics and reverts when the test finishes.
 func WithMetrics(t *testing.T) {
-	if !metrics.IsEnabled() {
+	if !metrics.Enabled() {
 		metrics.Enable()
 		t.Cleanup(func() {
 			// Note: There's no standard way to disable metrics once enabled

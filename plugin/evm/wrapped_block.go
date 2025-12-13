@@ -30,13 +30,13 @@ import (
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar/consensus/quasarman"
-	"github.com/luxfi/node/quasar/engine/quasarman/block"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus/engine/chain"
+	"github.com/luxfi/consensus/engine/chain/block"
 )
 
 var (
-	_ quasarman.Block           = (*wrappedBlock)(nil)
+	_ block.Block           = (*wrappedBlock)(nil)
 	_ block.WithVerifyContext = (*wrappedBlock)(nil)
 	_ extension.ExtendedBlock = (*wrappedBlock)(nil)
 )
@@ -54,7 +54,7 @@ type wrappedBlock struct {
 	vm        *VM
 }
 
-// wrapBlock returns a new Block wrapping the ethBlock type and implementing the quasarman.Block interface
+// wrapBlock returns a new Block wrapping the ethBlock type and implementing the block.Block interface
 func wrapBlock(ethBlock *types.Block, vm *VM) (*wrappedBlock, error) {
 	b := &wrappedBlock{
 		id:       ids.ID(ethBlock.Hash()),
@@ -71,10 +71,10 @@ func wrapBlock(ethBlock *types.Block, vm *VM) (*wrappedBlock, error) {
 	return b, nil
 }
 
-// ID implements the quasarman.Block interface
+// ID implements the block.Block interface
 func (b *wrappedBlock) ID() ids.ID { return b.id }
 
-// Accept implements the quasarman.Block interface
+// Accept implements the block.Block interface
 func (b *wrappedBlock) Accept(context.Context) error {
 	vm := b.vm
 	// Although returning an error from Accept is considered fatal, it is good
@@ -154,7 +154,7 @@ func (b *wrappedBlock) handlePrecompileAccept(rules extras.Rules) error {
 	return nil
 }
 
-// Reject implements the quasarman.Block interface
+// Reject implements the block.Block interface
 // If [b] contains an atomic transaction, attempt to re-issue it
 func (b *wrappedBlock) Reject(context.Context) error {
 	blkID := b.ID()
@@ -172,22 +172,22 @@ func (b *wrappedBlock) Reject(context.Context) error {
 	return b.vm.blockChain.Reject(b.ethBlock)
 }
 
-// Parent implements the quasarman.Block interface
+// Parent implements the block.Block interface
 func (b *wrappedBlock) Parent() ids.ID {
 	return ids.ID(b.ethBlock.ParentHash())
 }
 
-// Height implements the quasarman.Block interface
+// Height implements the block.Block interface
 func (b *wrappedBlock) Height() uint64 {
 	return b.ethBlock.NumberU64()
 }
 
-// Timestamp implements the quasarman.Block interface
+// Timestamp implements the block.Block interface
 func (b *wrappedBlock) Timestamp() time.Time {
 	return time.Unix(int64(b.ethBlock.Time()), 0)
 }
 
-// Verify implements the quasarman.Block interface
+// Verify implements the block.Block interface
 func (b *wrappedBlock) Verify(context.Context) error {
 	return b.verify(&precompileconfig.PredicateContext{
 		ConsensusCtx:            b.vm.ctx,
@@ -464,7 +464,7 @@ func (b *wrappedBlock) verifyPredicates(predicateContext *precompileconfig.Predi
 	return nil
 }
 
-// Bytes implements the quasarman.Block interface
+// Bytes implements the block.Block interface
 func (b *wrappedBlock) Bytes() []byte {
 	res, err := rlp.EncodeToBytes(b.ethBlock)
 	if err != nil {
