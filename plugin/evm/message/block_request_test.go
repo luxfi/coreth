@@ -39,8 +39,8 @@ func TestMarshalBlockRequest(t *testing.T) {
 // ensure compatibility with the network.
 func TestMarshalBlockResponse(t *testing.T) {
 	// create some random bytes
-	// use a local random source for deterministic random
-	rng := rand.New(rand.NewSource(1))
+	// use local random generator for deterministic results (rand.Seed is deprecated in Go 1.20+)
+	rng := rand.New(rand.NewSource(1)) //nolint:gosec
 	blocksBytes := make([][]byte, 32)
 	for i := range blocksBytes {
 		blocksBytes[i] = make([]byte, rng.Intn(32)+32) // min 32 length, max 64

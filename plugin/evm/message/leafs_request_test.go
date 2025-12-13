@@ -16,8 +16,8 @@ import (
 // ensure compatibility with the network.
 func TestMarshalLeafsRequest(t *testing.T) {
 	// generate some random code data
-	// use a local random source for deterministic random
-	rng := rand.New(rand.NewSource(1))
+	// use local random generator for deterministic results (rand.Seed is deprecated in Go 1.20+)
+	rng := rand.New(rand.NewSource(1)) //nolint:gosec
 
 	startBytes := make([]byte, common.HashLength)
 	endBytes := make([]byte, common.HashLength)
@@ -56,8 +56,8 @@ func TestMarshalLeafsRequest(t *testing.T) {
 // ensure compatibility with the network.
 func TestMarshalLeafsResponse(t *testing.T) {
 	// generate some random code data
-	// use a local random source for deterministic random
-	rng := rand.New(rand.NewSource(1))
+	// use local random generator for deterministic results (rand.Seed is deprecated in Go 1.20+)
+	rng := rand.New(rand.NewSource(1)) //nolint:gosec
 
 	keysBytes := make([][]byte, 16)
 	valsBytes := make([][]byte, 16)

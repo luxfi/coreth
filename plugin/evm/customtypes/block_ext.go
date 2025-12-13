@@ -146,15 +146,20 @@ func NewBlockWithExtData(
 	header *ethtypes.Header, txs []*ethtypes.Transaction, uncles []*ethtypes.Header, receipts []*ethtypes.Receipt,
 	hasher ethtypes.ListHasher, extdata []byte, recalc bool,
 ) *ethtypes.Block {
-	if recalc {
-		headerExtra := GetHeaderExtra(header)
-		headerExtra.ExtDataHash = CalcExtDataHash(extdata)
-	}
 	body := &ethtypes.Body{
 		Transactions: txs,
 		Uncles:       uncles,
 	}
 	block := ethtypes.NewBlock(header, body, receipts, hasher)
+
+	// Set ExtDataHash on the block's internal header (not the original header)
+	// because NewBlock creates a copy of the header
+	if recalc {
+		headerExtra := GetHeaderExtra(block.Header())
+		headerExtra.ExtDataHash = CalcExtDataHash(extdata)
+		SetHeaderExtra(block.Header(), headerExtra)
+	}
+
 	extdataCopy := make([]byte, len(extdata))
 	copy(extdataCopy, extdata)
 	extra := &BlockBodyExtra{
