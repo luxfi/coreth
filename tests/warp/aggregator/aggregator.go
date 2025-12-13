@@ -10,7 +10,6 @@ import (
 	"github.com/luxfi/log"
 
 	"github.com/luxfi/crypto/bls"
-	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	luxWarp "github.com/luxfi/warp"
 	"github.com/luxfi/coreth/precompile/contracts/warp"
@@ -61,8 +60,7 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *l
 		var (
 			i         = i
 			validator = validator
-			// TODO: update from a single nodeID to the original slice and use extra nodeIDs as backup.
-			nodeID = validator.NodeIDs[0]
+			nodeID    = validator.NodeID
 		)
 		go func() {
 			log.Debug("Fetching warp signature",

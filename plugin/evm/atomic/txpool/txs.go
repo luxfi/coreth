@@ -9,7 +9,7 @@ import (
 
 	"github.com/luxfi/node/cache/lru"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/log"

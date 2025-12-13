@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/codec/linearcodec"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/node/utils"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/utils/wrappers"

@@ -10,7 +10,7 @@ import (
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus/engine/chain/chaintest"
+	consensustest "github.com/luxfi/consensus/test/helpers"
 	"github.com/stretchr/testify/require"
 )
 
