@@ -38,10 +38,11 @@ import (
 	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/luxfi/coreth/nativeasset"
 	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/crypto"
+	cryptocommon "github.com/luxfi/crypto/common"
 	ethereum "github.com/luxfi/geth"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/event"
 )
 
@@ -176,7 +177,7 @@ func DeployContract(opts *TransactOpts, abi abi.ABI, bytecode []byte, backend Co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	c.address = crypto.CreateAddress(opts.From, tx.Nonce())
+	c.address = common.Address(crypto.CreateAddress(cryptocommon.Address(opts.From), tx.Nonce()))
 	return c.address, tx, c, nil
 }
 
