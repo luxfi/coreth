@@ -35,8 +35,8 @@ func TestMarshalCodeRequest(t *testing.T) {
 // ensure compatibility with the network.
 func TestMarshalCodeResponse(t *testing.T) {
 	// generate some random code data
-	// use a local random source for deterministic random
-	rng := rand.New(rand.NewSource(1))
+	// use local random generator for deterministic results (rand.Seed is deprecated in Go 1.20+)
+	rng := rand.New(rand.NewSource(1)) //nolint:gosec
 	codeData := make([]byte, 50)
 	_, err := rng.Read(codeData)
 	assert.NoError(t, err)
