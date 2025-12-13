@@ -34,7 +34,6 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/common/math"
 )
 
 func TestBlockNumberJSONUnmarshal(t *testing.T) {
@@ -50,7 +49,7 @@ func TestBlockNumberJSONUnmarshal(t *testing.T) {
 		4:  {`"0x01"`, true, BlockNumber(0)},
 		5:  {`"0x1"`, false, BlockNumber(1)},
 		6:  {`"0x12"`, false, BlockNumber(18)},
-		7:  {`"0x7fffffffffffffff"`, false, BlockNumber(math.MaxInt64)},
+		7:  {`"0x7fffffffffffffff"`, false, BlockNumber(stdmath.MaxInt64)},
 		8:  {`"0x8000000000000000"`, true, BlockNumber(0)},
 		9:  {"0", true, BlockNumber(0)},
 		10: {`"ff"`, true, BlockNumber(0)},
@@ -92,7 +91,7 @@ func TestBlockNumberOrHash_UnmarshalJSON(t *testing.T) {
 		4:  {`"0x01"`, true, BlockNumberOrHash{}},
 		5:  {`"0x1"`, false, BlockNumberOrHashWithNumber(1)},
 		6:  {`"0x12"`, false, BlockNumberOrHashWithNumber(18)},
-		7:  {`"0x7fffffffffffffff"`, false, BlockNumberOrHashWithNumber(math.MaxInt64)},
+		7:  {`"0x7fffffffffffffff"`, false, BlockNumberOrHashWithNumber(stdmath.MaxInt64)},
 		8:  {`"0x8000000000000000"`, true, BlockNumberOrHash{}},
 		9:  {"0", true, BlockNumberOrHash{}},
 		10: {`"ff"`, true, BlockNumberOrHash{}},
@@ -141,7 +140,7 @@ func TestBlockNumberOrHash_WithNumber_MarshalAndUnmarshal(t *testing.T) {
 		name   string
 		number int64
 	}{
-		{"max", math.MaxInt64},
+		{"max", stdmath.MaxInt64},
 		{"pending", int64(PendingBlockNumber)},
 		{"latest", int64(LatestBlockNumber)},
 		{"earliest", int64(EarliestBlockNumber)},
@@ -167,7 +166,7 @@ func TestBlockNumberOrHash_WithNumber_MarshalAndUnmarshal(t *testing.T) {
 
 func TestBlockNumberOrHash_StringAndUnmarshal(t *testing.T) {
 	tests := []BlockNumberOrHash{
-		BlockNumberOrHashWithNumber(math.MaxInt64),
+		BlockNumberOrHashWithNumber(stdmath.MaxInt64),
 		BlockNumberOrHashWithNumber(PendingBlockNumber),
 		BlockNumberOrHashWithNumber(LatestBlockNumber),
 		BlockNumberOrHashWithNumber(EarliestBlockNumber),

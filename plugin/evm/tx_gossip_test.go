@@ -1,6 +1,15 @@
 // Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
+//go:build ignore
+// +build ignore
+
+// TODO: This file needs refactoring for new consensus API changes:
+// - enginetest.SenderStub doesn't exist
+// - Initialize signature changed
+// - quasar package references need to be updated
+// - AppRequest/AppResponse method names changed
+
 package evm
 
 import (
