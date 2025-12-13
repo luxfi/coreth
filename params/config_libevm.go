@@ -5,6 +5,7 @@ package params
 
 import (
 	"math/big"
+	"sync"
 
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/precompile/modules"
@@ -13,17 +14,38 @@ import (
 	ethparams "github.com/luxfi/geth/params"
 )
 
+// payloads provides access to the extra chain config and rules payloads.
+// This is a simplified implementation that stores extras in sync.Map.
+var payloads = &extraPayloads{
+	ChainConfig: &typedPayloadStore[*ethparams.ChainConfig, *extras.ChainConfig]{},
+}
+
+type extraPayloads struct {
+	ChainConfig *typedPayloadStore[*ethparams.ChainConfig, *extras.ChainConfig]
+}
+
+type typedPayloadStore[K comparable, V any] struct {
+	store sync.Map
+}
+
+func (s *typedPayloadStore[K, V]) Get(key K) V {
+	if v, ok := s.store.Load(key); ok {
+		return v.(V)
+	}
+	var zero V
+	return zero
+}
+
+func (s *typedPayloadStore[K, V]) Set(key K, value V) {
+	s.store.Store(key, value)
+}
+
 // gethInit would ideally be a regular init() function, but it MUST be run
 // before any calls to [params.ChainConfig.Rules]. See `config.go` for its call site.
 func gethInit() any {
-	payloads = ethparams.RegisterExtras(ethparams.Extras[*extras.ChainConfig, RulesExtra]{
-		ReuseJSONRoot: true, // Reuse the root JSON input when unmarshalling the extra payload.
-		NewRules:      constructRulesExtra,
-	})
+	// No-op - payloads are initialized above
 	return nil
 }
-
-var payloads ethparams.ExtraPayloads[*extras.ChainConfig, RulesExtra]
 
 // constructRulesExtra acts as an adjunct to the [params.ChainConfig.Rules]
 // method. Its primary purpose is to construct the extra payload for the

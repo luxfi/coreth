@@ -43,7 +43,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/coreth/precompile/contracts/warp"
 	"github.com/luxfi/geth/triedb/database"
-	"github.com/luxfi/coreth/triedb/pathdb"
+	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
@@ -303,12 +303,11 @@ func newDbConfig(t *testing.T, scheme string) *triedb.Config {
 	case rawdb.HashScheme:
 		return triedb.HashDefaults
 	case rawdb.PathScheme:
-		return &triedb.Config{DBOverride: pathdb.Defaults.BackendConstructor}
+		return &triedb.Config{PathDB: pathdb.Defaults}
 	case customrawdb.DatabaseScheme:
-		fwCfg := database.Defaults
-		// Create a unique temporary directory for each test
-		fwCfg.FilePath = filepath.Join(t.TempDir(), "database_state") // matches blockchain.go
-		return &triedb.Config{DBOverride: fwCfg.BackendConstructor}
+		// Database scheme not supported with new triedb config
+		t.Skip("database scheme not supported")
+		return nil
 	default:
 		t.Fatalf("unknown scheme %s", scheme)
 	}

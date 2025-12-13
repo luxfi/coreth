@@ -336,6 +336,15 @@ func (ec *Client) TransactionReceipt(ctx context.Context, txHash common.Hash) (*
 	return r, err
 }
 
+// SubscribeTransactionReceipts subscribes to notifications about transaction receipts.
+// This is a stub implementation to satisfy the ethereum.TransactionReader interface.
+func (ec *Client) SubscribeTransactionReceipts(ctx context.Context, q *ethereum.TransactionReceiptsQuery, ch chan<- []*types.Receipt) (ethereum.Subscription, error) {
+	// NOTE: This is a stub implementation. The Coreth chain does not support
+	// real-time transaction receipt subscriptions via the standard geth API.
+	// For now, we return an error indicating this feature is not supported.
+	return nil, errors.New("transaction receipts subscription not supported")
+}
+
 // SyncProgress retrieves the current progress of the sync algorithm. If there's
 // no sync currently running, it returns nil.
 func (ec *Client) SyncProgress(ctx context.Context) error {

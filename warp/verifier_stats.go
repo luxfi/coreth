@@ -6,9 +6,9 @@ package warp
 import "github.com/luxfi/geth/metrics"
 
 type verifierStats struct {
-	messageParseFail metrics.Counter
+	messageParseFail *metrics.Counter
 	// BlockRequest metrics
-	blockValidationFail metrics.Counter
+	blockValidationFail *metrics.Counter
 }
 
 func newVerifierStats() *verifierStats {

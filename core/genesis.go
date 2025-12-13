@@ -37,7 +37,7 @@ import (
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
-	"github.com/luxfi/coreth/triedb/pathdb"
+	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/luxfi/geth/common/math"
@@ -225,8 +225,8 @@ func (g *Genesis) trieConfig() *triedb.Config {
 		return nil
 	}
 	return &triedb.Config{
-		DBOverride: pathdb.Defaults.BackendConstructor,
-		IsVerkle:   true,
+		PathDB:   pathdb.Defaults,
+		IsVerkle: true,
 	}
 }
 

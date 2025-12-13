@@ -16,7 +16,6 @@ import (
 	"github.com/luxfi/node/utils/wrappers"
 
 	"github.com/luxfi/coreth/plugin/evm/database"
-	"github.com/luxfi/coreth/triedb/hashdb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/geth/triedb/hashdb"
 )
 
 const (
@@ -74,9 +74,9 @@ func newAtomicTrie(
 	trieDB := triedb.NewDatabase(
 		rawdb.NewDatabase(database.WrapDatabase(atomicTrieDB)),
 		&triedb.Config{
-			DBOverride: hashdb.Config{
+			HashDB: &hashdb.Config{
 				CleanCacheSize: 64 * units.MiB, // Allocate 64MB of memory for clean cache
-			}.BackendConstructor,
+			},
 		},
 	)
 
