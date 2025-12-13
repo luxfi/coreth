@@ -63,6 +63,7 @@ import (
 	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/event"
+	gethparams "github.com/luxfi/geth/params"
 	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -114,7 +115,7 @@ func TestTransaction_RoundTripRpcJSON(t *testing.T) {
 }
 
 func TestTransactionBlobTx(t *testing.T) {
-	config := *params.TestChainConfig
+	config := params.Copy(params.TestChainConfig)
 	// config.ShanghaiTime = new(uint64)
 	config.CancunTime = new(uint64)
 	tests := allBlobTxs(common.Address{0xde, 0xad}, &config)
@@ -644,7 +645,8 @@ func TestEstimateGas(t *testing.T) {
 	var (
 		accounts = newAccounts(2)
 		genesis  = &core.Genesis{
-			Config: params.TestChainConfig,
+			Config:  params.TestChainConfig,
+			BaseFee: big.NewInt(gethparams.InitialBaseFee),
 			Alloc: types.GenesisAlloc{
 				accounts[0].addr: {Balance: big.NewInt(params.Ether)},
 				accounts[1].addr: {Balance: big.NewInt(params.Ether)},
@@ -797,7 +799,7 @@ func TestEstimateGas(t *testing.T) {
 
 func TestCall(t *testing.T) {
 	// Enable BLOBHASH opcode in Cancun
-	cfg := *params.TestChainConfig
+	cfg := params.Copy(params.TestChainConfig)
 	cfg.ShanghaiTime = utils.NewUint64(0)
 	cfg.CancunTime = utils.NewUint64(0)
 	t.Parallel()
@@ -805,7 +807,8 @@ func TestCall(t *testing.T) {
 	var (
 		accounts = newAccounts(3)
 		genesis  = &core.Genesis{
-			Config: &cfg,
+			Config:  &cfg,
+			BaseFee: big.NewInt(gethparams.InitialBaseFee),
 			Alloc: types.GenesisAlloc{
 				accounts[0].addr: {Balance: big.NewInt(params.Ether)},
 				accounts[1].addr: {Balance: big.NewInt(params.Ether)},
@@ -1003,8 +1006,9 @@ func TestSignTransaction(t *testing.T) {
 		cryptoTo  = crypto.PubkeyToAddress(key.PublicKey)
 		to        = common.BytesToAddress(cryptoTo[:])
 		genesis   = &core.Genesis{
-			Config: params.TestChainConfig,
-			Alloc:  types.GenesisAlloc{},
+			Config:  params.TestChainConfig,
+			BaseFee: big.NewInt(gethparams.InitialBaseFee),
+			Alloc:   types.GenesisAlloc{},
 		}
 	)
 	b := newTestBackend(t, 1, genesis, dummy.NewCoinbaseFaker(), func(i int, b *core.BlockGen) {
@@ -1045,8 +1049,9 @@ func TestSignBlobTransaction(t *testing.T) {
 		cryptoTo  = crypto.PubkeyToAddress(key.PublicKey)
 		to        = common.BytesToAddress(cryptoTo[:])
 		genesis   = &core.Genesis{
-			Config: params.TestChainConfig,
-			Alloc:  types.GenesisAlloc{},
+			Config:  params.TestChainConfig,
+			BaseFee: big.NewInt(gethparams.InitialBaseFee),
+			Alloc:   types.GenesisAlloc{},
 		}
 	)
 	b := newTestBackend(t, 1, genesis, dummy.NewCoinbaseFaker(), func(i int, b *core.BlockGen) {
@@ -1080,8 +1085,9 @@ func TestSendBlobTransaction(t *testing.T) {
 		cryptoTo  = crypto.PubkeyToAddress(key.PublicKey)
 		to        = common.BytesToAddress(cryptoTo[:])
 		genesis   = &core.Genesis{
-			Config: params.TestChainConfig,
-			Alloc:  types.GenesisAlloc{},
+			Config:  params.TestChainConfig,
+			BaseFee: big.NewInt(gethparams.InitialBaseFee),
+			Alloc:   types.GenesisAlloc{},
 		}
 	)
 	b := newTestBackend(t, 1, genesis, dummy.NewCoinbaseFaker(), func(i int, b *core.BlockGen) {
@@ -1114,8 +1120,9 @@ func TestFillBlobTransaction(t *testing.T) {
 		cryptoTo  = crypto.PubkeyToAddress(key.PublicKey)
 		to        = common.BytesToAddress(cryptoTo[:])
 		genesis   = &core.Genesis{
-			Config: params.TestChainConfig,
-			Alloc:  types.GenesisAlloc{},
+			Config:  params.TestChainConfig,
+			BaseFee: big.NewInt(gethparams.InitialBaseFee),
+			Alloc:   types.GenesisAlloc{},
 		}
 		emptyBlob                      = new(kzg4844.Blob)
 		emptyBlobs                     = []kzg4844.Blob{*emptyBlob}
@@ -1573,7 +1580,8 @@ func TestRPCGetBlockOrHeader(t *testing.T) {
 		acc1Addr         = common.BytesToAddress(acc1CryptoAddr[:])
 		acc2Addr         = common.BytesToAddress(acc2CryptoAddr[:])
 		genesis          = &core.Genesis{
-			Config: params.TestChainConfig,
+			Config:  params.TestChainConfig,
+			BaseFee: big.NewInt(gethparams.InitialBaseFee),
 			Alloc: types.GenesisAlloc{
 				acc1Addr: {Balance: big.NewInt(params.Ether)},
 				acc2Addr: {Balance: big.NewInt(params.Ether)},
@@ -1811,7 +1819,7 @@ func TestRPCGetBlockOrHeader(t *testing.T) {
 }
 
 func setupReceiptBackend(t *testing.T, genBlocks int) (*testBackend, []common.Hash) {
-	config := *params.TestChainConfig
+	config := params.Copy(params.TestChainConfig)
 	config.ShanghaiTime = new(uint64)
 	config.CancunTime = new(uint64)
 	var (
@@ -1824,6 +1832,7 @@ func setupReceiptBackend(t *testing.T, genBlocks int) (*testBackend, []common.Ha
 		contract         = common.HexToAddress("0000000000000000000000000000000000031ec7")
 		genesis          = &core.Genesis{
 			Config:        &config,
+			BaseFee:       big.NewInt(gethparams.InitialBaseFee),
 			ExcessBlobGas: new(uint64),
 			BlobGasUsed:   new(uint64),
 			Alloc: types.GenesisAlloc{
