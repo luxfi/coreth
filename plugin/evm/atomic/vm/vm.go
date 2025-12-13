@@ -438,7 +438,7 @@ func (vm *VM) verifyTx(tx *atomic.Tx, parentHash common.Hash, baseFee *big.Int, 
 		return err
 	}
 	wrappedStateDB := extstate.New(statedb)
-	atomicStateDB := atomic.NewStateDBWrapper(wrappedStateDB)
+	atomicStateDB := newStateDBWrapper(wrappedStateDB)
 	return tx.UnsignedAtomicTx.EVMStateTransfer(vm.Ctx, atomicStateDB)
 }
 
@@ -706,7 +706,7 @@ func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, state
 	}
 
 	wrappedStateDB := extstate.New(statedb)
-	atomicStateDB := atomic.NewStateDBWrapper(wrappedStateDB)
+	atomicStateDB := newStateDBWrapper(wrappedStateDB)
 	for _, tx := range txs {
 		if err := tx.UnsignedAtomicTx.EVMStateTransfer(vm.Ctx, atomicStateDB); err != nil {
 			return nil, nil, err
@@ -839,7 +839,7 @@ func (vm *VM) NewExportTx(
 	tx, err := atomic.NewExportTx(
 		vm.Ctx,            // Context
 		vm.CurrentRules(), // VM rules
-		atomic.NewStateDBWrapper(extstate.New(statedb)),
+		newStateDBWrapper(extstate.New(statedb)),
 		assetID, // AssetID
 		amount,  // Amount
 		chainID, // ID of the chain to send the funds to
