@@ -328,7 +328,7 @@ func (b *wrappedBlock) syntacticVerify() error {
 		return err
 	}
 
-	if version := customtypes.BlockVersion(b.ethBlock); version != 0 {
+	if version := customtypes.GetBlockVersion(b.ethBlock); version != 0 {
 		return fmt.Errorf("invalid version: %d", version)
 	}
 

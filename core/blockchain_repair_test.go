@@ -39,11 +39,12 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/ethdb/leveldb"
 	"github.com/luxfi/geth/triedb"
 	"github.com/stretchr/testify/require"
 )
@@ -526,20 +527,18 @@ func testRepairWithScheme(t *testing.T, tt *rewindTest, snapshots bool, scheme s
 	// Create a temporary persistent database
 	datadir := t.TempDir()
 
-	db, err := rawdb.Open(rawdb.OpenOptions{
-		Directory: datadir,
-		Ephemeral: true,
-	})
+	kvdb, err := leveldb.New(datadir, 0, 0, "", false)
 	if err != nil {
 		t.Fatalf("Failed to create persistent database: %v", err)
 	}
+	db := rawdb.NewDatabase(kvdb)
 	defer db.Close() // Might double close, should be fine
 
 	// Initialize a fresh chain
 	var (
 		require = require.New(t)
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
+		addr1   = common.PubkeyToAddress(key1.PublicKey)
 		gspec   = &Genesis{
 			BaseFee: big.NewInt(ap3.InitialBaseFee),
 			Config:  params.TestChainConfig,
@@ -619,13 +618,11 @@ func testRepairWithScheme(t *testing.T, tt *rewindTest, snapshots bool, scheme s
 	chain.stopWithoutSaving()
 
 	// Start a new blockchain back up and see where the repair leads us
-	db, err = rawdb.Open(rawdb.OpenOptions{
-		Directory: datadir,
-		Ephemeral: true,
-	})
+	kvdb, err = leveldb.New(datadir, 0, 0, "", false)
 	if err != nil {
 		t.Fatalf("Failed to reopen persistent database: %v", err)
 	}
+	db = rawdb.NewDatabase(kvdb)
 	defer db.Close()
 
 	newChain, err := NewBlockChain(db, config, gspec, engine, vm.Config{}, lastAcceptedHash, false)

@@ -23,6 +23,10 @@ type extrasType struct {
 		Get func(*ethtypes.Header) *HeaderExtra
 		Set func(*ethtypes.Header, *HeaderExtra)
 	}
+	Body struct {
+		Get func(*ethtypes.Body) *BlockBodyExtra
+		Set func(*ethtypes.Body, *BlockBodyExtra)
+	}
 }
 
 var extras = extrasType{
@@ -47,6 +51,18 @@ var extras = extrasType{
 			return &HeaderExtra{}
 		},
 		Set: func(h *ethtypes.Header, extra *HeaderExtra) {
+			// No-op for now
+		},
+	},
+	Body: struct {
+		Get func(*ethtypes.Body) *BlockBodyExtra
+		Set func(*ethtypes.Body, *BlockBodyExtra)
+	}{
+		Get: func(b *ethtypes.Body) *BlockBodyExtra {
+			// Return default empty extra for now
+			return &BlockBodyExtra{}
+		},
+		Set: func(b *ethtypes.Body, extra *BlockBodyExtra) {
 			// No-op for now
 		},
 	},

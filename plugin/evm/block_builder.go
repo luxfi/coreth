@@ -13,6 +13,7 @@ import (
 
 	"github.com/luxfi/consensus"
 	commonEng "github.com/luxfi/consensus/core"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/node/utils/lock"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
@@ -116,7 +117,7 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 
 // waitForEvent waits until a block needs to be built.
 // It returns only after at least [minBlockBuildingRetryDelay] passed from the last time a block was built.
-func (b *blockBuilder) waitForEvent(ctx context.Context) (consensuscore.Message, error) {
+func (b *blockBuilder) waitForEvent(ctx context.Context) (commonEng.Message, error) {
 	lastBuildTime, err := b.waitForNeedToBuild(ctx)
 	if err != nil {
 		return 0, err
@@ -126,7 +127,7 @@ func (b *blockBuilder) waitForEvent(ctx context.Context) (consensuscore.Message,
 		b.ctx.Log.Debug("Last time we built a block was long enough ago, no need to wait",
 			zap.Duration("timeSinceLastBuildTime", timeSinceLastBuildTime),
 		)
-		return consensuscore.PendingTxs, nil
+		return commonEng.PendingTxs, nil
 	}
 	timeUntilNextBuild := minBlockBuildingRetryDelay - timeSinceLastBuildTime
 	b.ctx.Log.Debug("Last time we built a block was too recent, waiting",
@@ -136,7 +137,7 @@ func (b *blockBuilder) waitForEvent(ctx context.Context) (consensuscore.Message,
 	case <-ctx.Done():
 		return 0, ctx.Err()
 	case <-time.After(timeUntilNextBuild):
-		return consensuscore.PendingTxs, nil
+		return commonEng.PendingTxs, nil
 	}
 }
 

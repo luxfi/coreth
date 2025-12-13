@@ -10,6 +10,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
 	"github.com/luxfi/database"
+	luxatomic "github.com/luxfi/node/chains/atomic"
 	safemath "github.com/luxfi/node/utils/math"
 
 	"github.com/luxfi/coreth/params/extras"
@@ -253,13 +254,17 @@ func (be *blockExtension) verifyUTXOsPresent(atomicTxs []*atomic.Tx) error {
 	}
 
 	// verify UTXOs named in import txs are present in shared memory.
+	sharedMemory, ok := vm.Ctx.SharedMemory.(luxatomic.SharedMemory)
+	if !ok {
+		return fmt.Errorf("expected luxatomic.SharedMemory, got %T", vm.Ctx.SharedMemory)
+	}
 	for _, atomicTx := range atomicTxs {
 		utx := atomicTx.UnsignedAtomicTx
 		chainID, requests, err := utx.AtomicOps()
 		if err != nil {
 			return err
 		}
-		if _, err := vm.Ctx.SharedMemory.Get(chainID, requests.RemoveRequests); err != nil {
+		if _, err := sharedMemory.Get(chainID, requests.RemoveRequests); err != nil {
 			return fmt.Errorf("%w: %s", ErrMissingUTXOs, err)
 		}
 	}

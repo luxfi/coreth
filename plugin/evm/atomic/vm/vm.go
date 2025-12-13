@@ -17,6 +17,7 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic/txpool"
 
+	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/codec/linearcodec"
 	luxdatabase "github.com/luxfi/database"
@@ -25,7 +26,6 @@ import (
 	luxdssip "github.com/luxfi/p2p/gossip"
 	quasar "github.com/luxfi/consensus"
 	"github.com/luxfi/consensus/engine/chain"
-	luxcommon "github.com/luxfi/consensus/core"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
 	luxutils "github.com/luxfi/node/utils"
@@ -114,19 +114,25 @@ func WrapVM(vm extension.InnerVM) *VM {
 // Initialize implements the quasarman.ChainVM interface
 func (vm *VM) Initialize(
 	ctx context.Context,
-	chainCtx *consensusctx.Context,
-	db luxdatabase.Database,
+	chainCtx interface{},
+	db interface{},
 	genesisBytes []byte,
 	upgradeBytes []byte,
 	configBytes []byte,
-	fxs []*luxcommon.Fx,
-	appSender luxcommon.AppSender,
+	msgChan interface{},
+	fxs []interface{},
+	appSender interface{},
 ) error {
-	vm.Ctx = chainCtx
+	// Type assert chainCtx to *consensusctx.Context
+	consensusCtx, ok := chainCtx.(*consensusctx.Context)
+	if !ok {
+		return fmt.Errorf("expected *consensusctx.Context, got %T", chainCtx)
+	}
+	vm.Ctx = consensusCtx
 
 	var extDataHashes map[common.Hash]common.Hash
 	// Set the chain config for mainnet/testnet chain IDs
-	switch chainCtx.NetworkID {
+	switch consensusCtx.NetworkID {
 	case constants.MainnetID:
 		extDataHashes = mainnetExtDataHashes
 	case constants.TestnetID:
@@ -150,7 +156,7 @@ func (vm *VM) Initialize(
 		Handler:    leafHandler,
 	}
 
-	atomicTxs := txpool.NewTxs(chainCtx, defaultMempoolSize)
+	atomicTxs := txpool.NewTxs(consensusCtx, defaultMempoolSize)
 	extensionConfig := &extension.Config{
 		ConsensusCallbacks:         vm.createConsensusCallbacks(),
 		BlockExtender:              blockExtender,
@@ -173,6 +179,7 @@ func (vm *VM) Initialize(
 		genesisBytes,
 		upgradeBytes,
 		configBytes,
+		msgChan,
 		fxs,
 		appSender,
 	); err != nil {
@@ -206,8 +213,12 @@ func (vm *VM) Initialize(
 	if err != nil {
 		return fmt.Errorf("failed to create atomic repository: %w", err)
 	}
+	sharedMemory, ok := vm.Ctx.SharedMemory.(luxatomic.SharedMemory)
+	if !ok {
+		return fmt.Errorf("expected luxatomic.SharedMemory, got %T", vm.Ctx.SharedMemory)
+	}
 	vm.AtomicBackend, err = atomicstate.NewAtomicBackend(
-		vm.Ctx.SharedMemory, bonusBlockHeights,
+		sharedMemory, bonusBlockHeights,
 		vm.AtomicTxRepository, lastAcceptedHeight, lastAcceptedHash,
 		vm.InnerVM.Config().CommitInterval,
 	)
@@ -230,8 +241,8 @@ func (vm *VM) Initialize(
 	return vm.Fx.Initialize(vm)
 }
 
-func (vm *VM) SetState(ctx context.Context, state quasar.State) error {
-	switch state {
+func (vm *VM) SetState(ctx context.Context, state uint32) error {
+	switch quasar.State(state) {
 	case quasar.StateSyncing:
 		vm.bootstrapped.Set(false)
 	case quasar.Bootstrapping:
@@ -259,6 +270,12 @@ func (vm *VM) onNormalOperationsStarted() error {
 	vm.bootstrapped.Set(true)
 	if err := vm.Fx.Bootstrapped(); err != nil {
 		return err
+	}
+
+	// Type assert Log from context
+	logger, ok := vm.Ctx.Log.(log.Logger)
+	if !ok {
+		return fmt.Errorf("expected log.Logger, got %T", vm.Ctx.Log)
 	}
 
 	ctx, cancel := context.WithCancel(context.TODO())
@@ -297,7 +314,7 @@ func (vm *VM) onNormalOperationsStarted() error {
 	}
 
 	vm.atomicTxGossipHandler = gossip.NewTxGossipHandler[*atomic.Tx](
-		vm.Ctx.Log,
+		logger,
 		&atomicTxGossipMarshaller,
 		vm.AtomicMempool,
 		atomicTxGossipMetrics,
@@ -313,7 +330,7 @@ func (vm *VM) onNormalOperationsStarted() error {
 	}
 
 	atomicTxPullGossiper := luxdssip.NewPullGossiper[*atomic.Tx](
-		vm.Ctx.Log,
+		logger,
 		&atomicTxGossipMarshaller,
 		vm.AtomicMempool,
 		atomicTxGossipClient,
@@ -329,13 +346,13 @@ func (vm *VM) onNormalOperationsStarted() error {
 
 	vm.shutdownWg.Add(1)
 	go func() {
-		luxdssip.Every(ctx, vm.Ctx.Log, vm.AtomicTxPushGossiper, vm.InnerVM.Config().PushGossipFrequency.Duration)
+		luxdssip.Every(ctx, logger, vm.AtomicTxPushGossiper, vm.InnerVM.Config().PushGossipFrequency.Duration)
 		vm.shutdownWg.Done()
 	}()
 
 	vm.shutdownWg.Add(1)
 	go func() {
-		luxdssip.Every(ctx, vm.Ctx.Log, vm.AtomicTxPullGossiper, vm.InnerVM.Config().PullGossipFrequency.Duration)
+		luxdssip.Every(ctx, logger, vm.AtomicTxPullGossiper, vm.InnerVM.Config().PullGossipFrequency.Duration)
 		vm.shutdownWg.Done()
 	}()
 
