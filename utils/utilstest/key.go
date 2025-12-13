@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,8 +25,9 @@ func NewKey(t *testing.T) *Key {
 	t.Helper()
 	privateKeyECDSA, err := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
 	require.NoError(t, err)
+	addr := crypto.PubkeyToAddress(privateKeyECDSA.PublicKey)
 	return &Key{
-		Address:    crypto.PubkeyToAddress(privateKeyECDSA.PublicKey),
+		Address:    common.Address(addr),
 		PrivateKey: privateKeyECDSA,
 	}
 }

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	ethparams "github.com/luxfi/geth/params"

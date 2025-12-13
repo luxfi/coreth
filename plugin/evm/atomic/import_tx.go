@@ -17,7 +17,7 @@ import (
 
 	"github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/node/utils"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/math"

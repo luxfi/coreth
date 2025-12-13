@@ -150,7 +150,7 @@ func (c *NativeAssetCall) run(env vm.PrecompileEnvironment, stateDB contract.Sta
 	stateDB.SubBalanceMultiCoin(caller, assetID, assetAmount)
 	stateDB.AddBalanceMultiCoin(to, assetID, assetAmount)
 
-	ret, err = env.Call(to, callData, env.Gas(), new(uint256.Int), vm.WithUNSAFECallerAddressProxying())
+	ret, _, err = env.Call(to, callData, env.Gas(), big.NewInt(0), vm.WithUNSAFECallerAddressProxying())
 	// When an error was returned by the EVM or when setting the creation code
 	// above we revert to the snapshot and consume any gas remaining. Additionally
 	// when we're in homestead this also counts for code storage gas errors.

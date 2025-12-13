@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/consensus/engine/chain/chaintest"
 	"github.com/luxfi/consensus/validator"
 	"github.com/luxfi/consensus/validator/validatorsmock"
-	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/constants"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

@@ -13,7 +13,7 @@ import (
 	big "math/big"
 	reflect "reflect"
 
-	quasar "github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 	precompileconfig "github.com/luxfi/coreth/precompile/precompileconfig"
 	common "github.com/luxfi/geth/common"
 	types "github.com/luxfi/geth/core/types"

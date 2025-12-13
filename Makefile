@@ -54,10 +54,10 @@ coverage:
 	@echo "Generating coverage report..."
 	@./scripts/coverage.sh
 
-# Build with Avalanchego
-build-with-avalanchego:
-	@echo "Building with Avalanchego..."
-	@./scripts/build_avalanchego_with_coreth.sh
+# Build with Node
+build-with-node:
+	@echo "Building with Lux Node..."
+	@./scripts/build_node_with_coreth.sh
 
 # Help
 help:
@@ -73,5 +73,5 @@ help:
 	@echo "  lint                  - Run linters"
 	@echo "  mod-tidy              - Update dependencies"
 	@echo "  coverage              - Generate coverage report"
-	@echo "  build-with-avalanchego - Build with Avalanchego"
+	@echo "  build-with-node       - Build with Node"
 	@echo "  help                  - Show this help message"

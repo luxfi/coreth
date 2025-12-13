@@ -28,7 +28,7 @@ import (
 	luxcommon "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/chain/block"
 	luxutils "github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/log"
 	"github.com/luxfi/math/set"

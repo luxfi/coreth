@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/crypto"
+	"github.com/luxfi/crypto"
 )
 
 type Key struct {
@@ -20,7 +20,8 @@ type Key struct {
 }
 
 func CreateKey(pk *ecdsa.PrivateKey) *Key {
-	return &Key{pk, crypto.PubkeyToAddress(pk.PublicKey)}
+	addr := crypto.PubkeyToAddress(pk.PublicKey)
+	return &Key{pk, common.Address(addr)}
 }
 
 // Load attempts to open a [Key] stored at [file].
