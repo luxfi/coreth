@@ -27,7 +27,7 @@ func TestBlockChainAPI_stateQueryBlockNumberAllowed(t *testing.T) {
 		header := &types.Header{
 			Number: big.NewInt(int64(number)),
 		}
-		return types.NewBlock(header, nil, nil, nil, nil)
+		return types.NewBlockWithHeader(header)
 	}
 
 	testCases := map[string]struct {

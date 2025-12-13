@@ -29,6 +29,9 @@
 package tracers
 
 import (
+	"errors"
+	"fmt"
+
 	ethtracers "github.com/luxfi/geth/eth/tracers"
 )
 
@@ -43,6 +46,46 @@ type Tracer = ethtracers.Tracer
 // DefaultDirectory is the collection of tracers bundled by default.
 var DefaultDirectory = ethtracers.DefaultDirectory
 
+const memoryPadLimit = 1024 * 1024
+
 // GetMemoryCopyPadded returns offset + size as a new slice.
 // It zero-pads the slice if it extends beyond memory bounds.
-var GetMemoryCopyPadded = ethtracers.GetMemoryCopyPadded
+func GetMemoryCopyPadded(m []byte, offset, size int64) ([]byte, error) {
+	if offset < 0 || size < 0 {
+		return nil, errors.New("offset or size must not be negative")
+	}
+	length := int64(len(m))
+	if offset+size < length { // slice fully inside memory
+		return memoryCopy(m, offset, size), nil
+	}
+	paddingNeeded := offset + size - length
+	if paddingNeeded > memoryPadLimit {
+		return nil, fmt.Errorf("reached limit for padding memory slice: %d", paddingNeeded)
+	}
+	cpy := make([]byte, size)
+	if overlap := length - offset; overlap > 0 {
+		copy(cpy, memoryPtr(m, offset, overlap))
+	}
+	return cpy, nil
+}
+
+func memoryCopy(m []byte, offset, size int64) (cpy []byte) {
+	if size == 0 {
+		return nil
+	}
+	if len(m) > int(offset) {
+		cpy = make([]byte, size)
+		copy(cpy, m[offset:offset+size])
+	}
+	return
+}
+
+func memoryPtr(m []byte, offset, size int64) []byte {
+	if size == 0 {
+		return nil
+	}
+	if len(m) > int(offset) {
+		return m[offset : offset+size]
+	}
+	return nil
+}

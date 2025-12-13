@@ -276,17 +276,17 @@ func (mr *MockBackendMockRecorder) GetBody(ctx, hash, number any) *gomock.Call {
 }
 
 // GetEVM mocks base method.
-func (m *MockBackend) GetEVM(ctx context.Context, msg *core.Message, state *state.StateDB, header *types.Header, vmConfig *vm.Config, blockCtx *vm.BlockContext) *vm.EVM {
+func (m *MockBackend) GetEVM(ctx context.Context, msg *core.Message, arg2 *state.StateDB, header *types.Header, vmConfig *vm.Config, blockCtx *vm.BlockContext) *vm.EVM {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEVM", ctx, msg, state, header, vmConfig, blockCtx)
+	ret := m.ctrl.Call(m, "GetEVM", ctx, msg, arg2, header, vmConfig, blockCtx)
 	ret0, _ := ret[0].(*vm.EVM)
 	return ret0
 }
 
 // GetEVM indicates an expected call of GetEVM.
-func (mr *MockBackendMockRecorder) GetEVM(ctx, msg, state, header, vmConfig, blockCtx any) *gomock.Call {
+func (mr *MockBackendMockRecorder) GetEVM(ctx, msg, arg2, header, vmConfig, blockCtx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEVM", reflect.TypeOf((*MockBackend)(nil).GetEVM), ctx, msg, state, header, vmConfig, blockCtx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEVM", reflect.TypeOf((*MockBackend)(nil).GetEVM), ctx, msg, arg2, header, vmConfig, blockCtx)
 }
 
 // GetLogs mocks base method.
@@ -439,6 +439,20 @@ func (m *MockBackend) HistoricalProofQueryWindow() uint64 {
 func (mr *MockBackendMockRecorder) HistoricalProofQueryWindow() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HistoricalProofQueryWindow", reflect.TypeOf((*MockBackend)(nil).HistoricalProofQueryWindow))
+}
+
+// InsecureUnlockAllowed mocks base method.
+func (m *MockBackend) InsecureUnlockAllowed() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsecureUnlockAllowed")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// InsecureUnlockAllowed indicates an expected call of InsecureUnlockAllowed.
+func (mr *MockBackendMockRecorder) InsecureUnlockAllowed() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsecureUnlockAllowed", reflect.TypeOf((*MockBackend)(nil).InsecureUnlockAllowed))
 }
 
 // IsArchive mocks base method.

@@ -10,7 +10,7 @@ import (
 	"math/big"
 
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/vms/components/lux"
@@ -44,7 +44,7 @@ type VerifierBackend struct {
 	Rules        extras.Rules
 	Bootstrapped bool
 	BlockFetcher BlockFetcher
-	SecpCache    *secp256k1.RecoverCache
+	SecpCache    secp256k1.RecoverCacheType
 }
 
 func NewVerifierBackend(vm *VM, rules extras.Rules) *VerifierBackend {

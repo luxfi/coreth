@@ -456,6 +456,10 @@ func (b *EthAPIBackend) ExtRPCEnabled() bool {
 	return b.extRPCEnabled
 }
 
+func (b *EthAPIBackend) InsecureUnlockAllowed() bool {
+	return false
+}
+
 func (b *EthAPIBackend) UnprotectedAllowed(tx *types.Transaction) bool {
 	if b.allowUnprotectedTxs {
 		return true

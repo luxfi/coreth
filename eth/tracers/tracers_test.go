@@ -104,7 +104,6 @@ func benchmarkTransactionTrace(b *testing.B, scheme string) {
 
 	// Create the tracer, the EVM environment and run it
 	tracer := logger.NewStructLogger(&logger.Config{
-		Debug: false,
 		//DisableStorage: true,
 		//EnableMemory: false,
 		//EnableReturnData: false,
@@ -151,7 +150,7 @@ func TestMemCopying(t *testing.T) {
 	} {
 		mem := vm.NewMemory()
 		mem.Resize(uint64(tc.memsize))
-		cpy, err := GetMemoryCopyPadded(mem, tc.offset, tc.size)
+		cpy, err := GetMemoryCopyPadded(mem.Data(), tc.offset, tc.size)
 		if want := tc.wantErr; want != "" {
 			if err == nil {
 				t.Fatalf("test %d: want '%v' have no error", i, want)

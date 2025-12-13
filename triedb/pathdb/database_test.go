@@ -37,7 +37,6 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie/testutil"
 	"github.com/luxfi/geth/trie/trienode"
@@ -66,7 +65,7 @@ func generateAccount(storageRoot common.Hash) types.StateAccount {
 	return types.StateAccount{
 		Nonce:    uint64(rand.Intn(100)),
 		Balance:  uint256.NewInt(rand.Uint64()),
-		CodeHash: testutil.RandBytes(32),
+		CodeHash: testutil.RandomData(32),
 		Root:     storageRoot,
 	}
 }
@@ -155,12 +154,12 @@ func (t *tester) randAccount() (common.Address, []byte) {
 
 func (t *tester) generateStorage(ctx *genctx, addr common.Address) common.Hash {
 	var (
-		addrHash = crypto.Keccak256Hash(addr.Bytes())
+		addrHash = common.Keccak256Hash(addr.Bytes())
 		storage  = make(map[common.Hash][]byte)
 		origin   = make(map[common.Hash][]byte)
 	)
 	for i := 0; i < 10; i++ {
-		v, _ := rlp.EncodeToBytes(common.TrimLeftZeroes(testutil.RandBytes(32)))
+		v, _ := rlp.EncodeToBytes(common.TrimLeftZeroes(testutil.RandomData(32)))
 		hash := testutil.RandomHash()
 
 		storage[hash] = v
@@ -176,7 +175,7 @@ func (t *tester) generateStorage(ctx *genctx, addr common.Address) common.Hash {
 
 func (t *tester) mutateStorage(ctx *genctx, addr common.Address, root common.Hash) common.Hash {
 	var (
-		addrHash = crypto.Keccak256Hash(addr.Bytes())
+		addrHash = common.Keccak256Hash(addr.Bytes())
 		storage  = make(map[common.Hash][]byte)
 		origin   = make(map[common.Hash][]byte)
 	)
@@ -189,13 +188,13 @@ func (t *tester) mutateStorage(ctx *genctx, addr common.Address, root common.Has
 		}
 	}
 	for i := 0; i < 3; i++ {
-		v, _ := rlp.EncodeToBytes(common.TrimLeftZeroes(testutil.RandBytes(32)))
+		v, _ := rlp.EncodeToBytes(common.TrimLeftZeroes(testutil.RandomData(32)))
 		hash := testutil.RandomHash()
 
 		storage[hash] = v
 		origin[hash] = nil
 	}
-	root, set := updateTrie(crypto.Keccak256Hash(addr.Bytes()), root, storage, t.storages[addrHash])
+	root, set := updateTrie(common.Keccak256Hash(addr.Bytes()), root, storage, t.storages[addrHash])
 
 	ctx.storages[addrHash] = storage
 	ctx.storageOrigin[addr] = origin
@@ -205,7 +204,7 @@ func (t *tester) mutateStorage(ctx *genctx, addr common.Address, root common.Has
 
 func (t *tester) clearStorage(ctx *genctx, addr common.Address, root common.Hash) common.Hash {
 	var (
-		addrHash = crypto.Keccak256Hash(addr.Bytes())
+		addrHash = common.Keccak256Hash(addr.Bytes())
 		storage  = make(map[common.Hash][]byte)
 		origin   = make(map[common.Hash][]byte)
 	)
@@ -237,7 +236,7 @@ func (t *tester) generate(parent common.Hash) (common.Hash, *trienode.MergedNode
 		case createAccountOp:
 			// account creation
 			addr := testutil.RandomAddress()
-			addrHash := crypto.Keccak256Hash(addr.Bytes())
+			addrHash := common.Keccak256Hash(addr.Bytes())
 			if _, ok := t.accounts[addrHash]; ok {
 				continue
 			}
@@ -257,7 +256,7 @@ func (t *tester) generate(parent common.Hash) (common.Hash, *trienode.MergedNode
 			if addr == (common.Address{}) {
 				continue
 			}
-			addrHash := crypto.Keccak256Hash(addr.Bytes())
+			addrHash := common.Keccak256Hash(addr.Bytes())
 			if _, ok := dirties[addrHash]; ok {
 				continue
 			}
@@ -276,7 +275,7 @@ func (t *tester) generate(parent common.Hash) (common.Hash, *trienode.MergedNode
 			if addr == (common.Address{}) {
 				continue
 			}
-			addrHash := crypto.Keccak256Hash(addr.Bytes())
+			addrHash := common.Keccak256Hash(addr.Bytes())
 			if _, ok := dirties[addrHash]; ok {
 				continue
 			}
@@ -338,14 +337,14 @@ func (t *tester) verifyState(root common.Hash) error {
 		return errors.New("root node is not available")
 	}
 	for addrHash, account := range t.snapAccounts[root] {
-		blob, err := reader.Node(common.Hash{}, addrHash.Bytes(), crypto.Keccak256Hash(account))
+		blob, err := reader.Node(common.Hash{}, addrHash.Bytes(), common.Keccak256Hash(account))
 		if err != nil || !bytes.Equal(blob, account) {
 			return fmt.Errorf("account is mismatched: %w", err)
 		}
 	}
 	for addrHash, slots := range t.snapStorages[root] {
 		for hash, slot := range slots {
-			blob, err := reader.Node(addrHash, hash.Bytes(), crypto.Keccak256Hash(slot))
+			blob, err := reader.Node(addrHash, hash.Bytes(), common.Keccak256Hash(slot))
 			if err != nil || !bytes.Equal(blob, slot) {
 				return fmt.Errorf("slot is mismatched: %w", err)
 			}
@@ -440,7 +439,8 @@ func TestDisable(t *testing.T) {
 	tester := newTester(t, 0)
 	defer tester.release()
 
-	_, stored := rawdb.ReadAccountTrieNode(tester.db.diskdb, nil)
+	storedBlob := rawdb.ReadAccountTrieNode(tester.db.diskdb, nil)
+	stored := types.TrieRootHash(storedBlob)
 	if err := tester.db.Disable(); err != nil {
 		t.Fatal("Failed to deactivate database")
 	}
@@ -530,7 +530,8 @@ func TestCorruptedJournal(t *testing.T) {
 		t.Errorf("Failed to journal, err: %v", err)
 	}
 	tester.db.Close()
-	_, root := rawdb.ReadAccountTrieNode(tester.db.diskdb, nil)
+	rootBlob := rawdb.ReadAccountTrieNode(tester.db.diskdb, nil)
+	root := types.TrieRootHash(rootBlob)
 
 	// Mutate the journal in disk, it should be regarded as invalid
 	blob := rawdb.ReadTrieJournal(tester.db.diskdb)

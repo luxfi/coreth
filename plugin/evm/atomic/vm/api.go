@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/luxfi/node/api"
+	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/node/utils/formatting"
 	"github.com/luxfi/node/utils/json"
@@ -101,7 +102,7 @@ func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *
 	}
 
 	utxos, endAddr, endUTXOID, err := lux.GetAtomicUTXOs(
-		service.vm.Ctx.SharedMemory,
+		service.vm.Ctx.SharedMemory.(luxatomic.SharedMemory),
 		atomic.Codec,
 		sourceChainID,
 		addrSet,

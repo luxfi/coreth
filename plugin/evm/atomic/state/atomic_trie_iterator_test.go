@@ -88,8 +88,7 @@ func TestIteratorHandlesInvalidData(t *testing.T) {
 	require.NoError(err)
 	require.NoError(atomicTrieSnapshot.Update(utils.RandomBytes(50), utils.RandomBytes(50)))
 
-	nextRoot, nodes, err := atomicTrieSnapshot.Commit(false)
-	require.NoError(err)
+	nextRoot, nodes := atomicTrieSnapshot.Commit(false)
 	require.NoError(atomicTrie.InsertTrie(nodes, nextRoot))
 	isCommit, err := atomicTrie.AcceptTrie(lastCommittedHeight+commitInterval, nextRoot)
 	require.NoError(err)

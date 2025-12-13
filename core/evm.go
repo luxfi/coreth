@@ -28,61 +28,44 @@
 package core
 
 import (
-	"bytes"
 	"math/big"
 
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/core/extstate"
-	"github.com/luxfi/coreth/params"
+	corethparams "github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/params/extras"
-	customheader "github.com/luxfi/coreth/plugin/evm/header"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/params"
 	"github.com/holiman/uint256"
 )
 
-func init() {
-	vm.RegisterHooks(hooks{})
-}
-
-type hooks struct{}
-
-// OverrideNewEVMArgs is a hook that is called in [vm.NewEVM].
-// It allows for the modification of the EVM arguments before the EVM is created.
-// Specifically, we set Random to be the same as Difficulty since Shanghai.
-// This allows using the same jump table as upstream.
-// Then we set Difficulty to 0 as it is post Merge in upstream.
-// Additionally we wrap the StateDB with the appropriate StateDB wrapper,
-// which is used in coreth to process historical pre-AP1 blocks with the
+// WrapStateDB wraps the given StateDB with coreth's extended StateDB wrapper.
+// This is used to process historical pre-AP1 blocks with the
 // [StateDbAP1.GetCommittedState] method as it was historically.
-func (hooks) OverrideNewEVMArgs(args *vm.NewEVMArgs) *vm.NewEVMArgs {
-	rules := args.ChainConfig.Rules(args.BlockContext.BlockNumber, params.IsMergeTODO, args.BlockContext.Time)
-	args.StateDB = wrapStateDB(rules, args.StateDB)
-
-	if rules.IsShanghai {
-		args.BlockContext.Random = new(common.Hash)
-		args.BlockContext.Random.SetBytes(args.BlockContext.Difficulty.Bytes())
-		args.BlockContext.Difficulty = new(big.Int)
-	}
-
-	return args
-}
-
-func (hooks) OverrideEVMResetArgs(rules params.Rules, args *vm.EVMResetArgs) *vm.EVMResetArgs {
-	args.StateDB = wrapStateDB(rules, args.StateDB)
-	return args
-}
-
-func wrapStateDB(rules params.Rules, statedb vm.StateDB) vm.StateDB {
-	wrappedStateDB := extstate.New(statedb.(*state.StateDB))
-	if params.GetRulesExtra(rules).IsApricotPhase1 {
+// Callers should use this when creating a new EVM to ensure proper state handling.
+func WrapStateDB(rules params.Rules, statedb *state.StateDB) vm.StateDB {
+	wrappedStateDB := extstate.New(statedb)
+	if corethparams.GetRulesExtra(rules).IsApricotPhase1 {
 		return wrappedStateDB
 	}
 	return &StateDBAP0{wrappedStateDB}
+}
+
+// PrepareBlockContext adjusts the block context for coreth-specific requirements.
+// Specifically, it sets Random to be the same as Difficulty since Shanghai.
+// This allows using the same jump table as upstream.
+// Then it sets Difficulty to 0 as it is post Merge in upstream.
+func PrepareBlockContext(blockCtx *vm.BlockContext, rules params.Rules) {
+	if rules.IsShanghai {
+		blockCtx.Random = new(common.Hash)
+		blockCtx.Random.SetBytes(blockCtx.Difficulty.Bytes())
+		blockCtx.Difficulty = new(big.Int)
+	}
 }
 
 // StateDBAP0 implements the GetCommittedState behavior that existed prior to
@@ -100,8 +83,8 @@ type StateDBAP0 struct {
 	*extstate.StateDB
 }
 
-func (s *StateDBAP0) GetCommittedState(addr common.Address, key common.Hash, _ ...stateconf.StateDBStateOption) common.Hash {
-	return s.StateDB.GetCommittedState(addr, key, stateconf.SkipStateKeyTransformation())
+func (s *StateDBAP0) GetCommittedState(addr common.Address, key common.Hash) common.Hash {
+	return s.StateDB.GetCommittedState(addr, key)
 }
 
 // ChainContext supports retrieving headers and consensus parameters from the
@@ -145,27 +128,18 @@ func NewEVMBlockContext(header *types.Header, chain ChainContext, author *common
 		BaseFee:     baseFee,
 		BlobBaseFee: blobBaseFee,
 		GasLimit:    header.GasLimit,
-		Header: &types.Header{
-			Number: new(big.Int).Set(header.Number),
-			Time:   header.Time,
-			Extra:  header.Extra,
-		},
 	}
 }
 
 // NewEVMBlockContextWithPredicateResults creates a new context for use in the
 // EVM with an override for the predicate results. The miner uses this to pass
 // predicate results to the EVM when header.Extra is not fully formed yet.
+// Note: The predicate bytes are no longer stored in the block context as geth
+// removed the Header field. This function now returns a standard block context.
 func NewEVMBlockContextWithPredicateResults(rules extras.LuxRules, header *types.Header, chain ChainContext, author *common.Address, predicateBytes []byte) vm.BlockContext {
-	blockCtx := NewEVMBlockContext(header, chain, author)
-	// Note this only sets the block context, which is the hand-off point for
-	// the EVM. The actual header is not modified.
-	blockCtx.Header.Extra = customheader.SetPredicateBytesInExtra(
-		rules,
-		bytes.Clone(header.Extra),
-		predicateBytes,
-	)
-	return blockCtx
+	_ = rules          // unused - kept for API compatibility
+	_ = predicateBytes // unused - predicate results no longer stored in block context
+	return NewEVMBlockContext(header, chain, author)
 }
 
 // NewEVMTxContext creates a new transaction context for a single transaction.
@@ -228,6 +202,6 @@ func CanTransfer(db vm.StateDB, addr common.Address, amount *uint256.Int) bool {
 
 // Transfer subtracts amount from sender and adds amount to recipient using the given Db
 func Transfer(db vm.StateDB, sender, recipient common.Address, amount *uint256.Int) {
-	db.SubBalance(sender, amount)
-	db.AddBalance(recipient, amount)
+	db.SubBalance(sender, amount, tracing.BalanceChangeTransfer)
+	db.AddBalance(recipient, amount, tracing.BalanceChangeTransfer)
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/ids"
 
 	"github.com/luxfi/geth/common"
@@ -73,10 +74,9 @@ func (s *BlockSyncSummary) String() string {
 	return fmt.Sprintf("BlockSyncSummary(BlockHash=%s, BlockNumber=%d, BlockRoot=%s)", s.BlockHash, s.BlockNumber, s.BlockRoot)
 }
 
-// TODO: Temporarily disabled - needs block.StateSyncMode from node
-func (s *BlockSyncSummary) Accept(context.Context) (int, error) {
+func (s *BlockSyncSummary) Accept(context.Context) (block.StateSyncMode, error) {
 	if s.acceptImpl == nil {
-		return 0, fmt.Errorf("accept implementation not specified for summary: %s", s)
+		return block.StateSyncSkipped, fmt.Errorf("accept implementation not specified for summary: %s", s)
 	}
 	return s.acceptImpl(s)
 }

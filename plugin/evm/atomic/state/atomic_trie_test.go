@@ -11,8 +11,6 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/atomictest"
 
-	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -24,8 +22,7 @@ import (
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus/engine/chain/chaintest"
-	"github.com/luxfi/log"
+	consensustest "github.com/luxfi/consensus/test/helpers"
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
@@ -46,10 +43,7 @@ func indexAtomicTxs(tr *AtomicTrie, height uint64, atomicOps map[ids.ID]*luxatom
 	if err := tr.UpdateTrie(snapshot, height, atomicOps); err != nil {
 		return err
 	}
-	root, nodes, err := snapshot.Commit(false)
-	if err != nil {
-		return err
-	}
+	root, nodes := snapshot.Commit(false)
 	if err := tr.InsertTrie(nodes, root); err != nil {
 		return err
 	}
@@ -639,7 +633,7 @@ func TestAtomicTrie_AcceptTrie(t *testing.T) {
 				require.NoError(t, encoder.Flush())
 
 				nodeSet := trienode.NewNodeSet(testCase.lastAcceptedRoot)
-				nodeSet.AddNode([]byte("any"), trienode.New(testCase.lastAcceptedRoot, testBlob)) // dirty node
+				nodeSet.AddNode([]byte("any"), trienode.NewNodeWithPrev(testCase.lastAcceptedRoot, testBlob, nil)) // dirty node
 				require.NoError(t, atomicTrie.InsertTrie(nodeSet, testCase.lastAcceptedRoot))
 
 				_, storageSize, _ := atomicTrie.trieDB.Size()
@@ -739,7 +733,8 @@ func BenchmarkAtomicTrieIterate(b *testing.B) {
 }
 
 func levelDB(t testing.TB) database.Database {
-	db, err := leveldb.New(t.TempDir(), nil, logging.NoLog{}, prometheus.NewRegistry())
+	// leveldb.New(path, blockCacheSize, writeCacheSize, handleCap)
+	db, err := leveldb.New(t.TempDir(), 0, 0, 0)
 	if err != nil {
 		t.Fatal(err)
 	}

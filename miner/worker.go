@@ -42,7 +42,6 @@ import (
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/core"
-	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/params"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
@@ -198,7 +197,7 @@ func (w *worker) commitNewWork(predicateContext *precompileconfig.PredicateConte
 	}
 	if header.ParentBeaconRoot != nil {
 		context := core.NewEVMBlockContext(header, w.chain, nil)
-		vmenv := vm.NewEVM(context, vm.TxContext{}, env.state, w.chainConfig, vm.Config{})
+		vmenv := vm.NewEVM(context, env.state, w.chainConfig, vm.Config{})
 		core.ProcessBeaconBlockRoot(*header.ParentBeaconRoot, vmenv, env.state)
 	}
 	// Ensure we always stop prefetcher after block building is complete.
@@ -295,8 +294,7 @@ func (w *worker) createCurrentEnvironment(predicateContext *precompileconfig.Pre
 			return nil, fmt.Errorf("%w: %d waiting for %d", ErrInsufficientGasCapacityToBuild, capacity, minimumBuildableCapacity)
 		}
 	}
-	numPrefetchers := w.chain.CacheConfig().TriePrefetcherParallelism
-	currentState.StartPrefetcher("miner", extstate.WithConcurrentWorkers(numPrefetchers))
+	currentState.StartPrefetcher("miner", nil, nil)
 	return &environment{
 		signer:           types.MakeSigner(w.chainConfig, header.Number, header.Time),
 		state:            currentState,
@@ -571,7 +569,8 @@ func totalFees(block *types.Block, receipts []*types.Receipt) *big.Int {
 		var minerFee *big.Int
 		if baseFee := block.BaseFee(); baseFee != nil {
 			// Note in coreth the coinbase payment is (baseFee + effectiveGasTip) * gasUsed
-			minerFee = new(big.Int).Add(baseFee, tx.EffectiveGasTipValue(baseFee))
+			effectiveTip, _ := tx.EffectiveGasTip(baseFee)
+			minerFee = new(big.Int).Add(baseFee, effectiveTip)
 		} else {
 			// Prior to activation of EIP-1559, the coinbase payment was gasPrice * gasUsed
 			minerFee = tx.GasPrice()

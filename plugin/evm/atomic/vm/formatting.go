@@ -6,9 +6,9 @@ package vm
 import (
 	"fmt"
 
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus"
-	"github.com/luxfi/constants"
+	"github.com/luxfi/node/utils/constants"
 	"github.com/luxfi/node/utils/formatting/address"
 )
 

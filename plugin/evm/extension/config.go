@@ -11,8 +11,6 @@ import (
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/p2p"
-	"github.com/luxfi/consensus/engine/chain"
-	luxcommon "github.com/luxfi/consensus/core"
 	"github.com/luxfi/node/utils/timer/mockable"
 
 	"github.com/luxfi/consensus/engine/chain/block"
@@ -67,13 +65,15 @@ type ExtensibleVM interface {
 }
 
 // InnerVM is the interface that must be implemented by the VM
-// that's being wrapped by the extension
+// that's being wrapped by the extension.
+// It embeds block.StateSyncableVM which includes block.ChainVM methods.
+// BuildBlockWithContext is declared directly to avoid duplicate method
+// conflicts from embedding multiple interfaces that all embed ChainVM.
 type InnerVM interface {
 	ExtensibleVM
-	luxcommon.VM
-	block.ChainVM
-	block.BuildBlockWithContextChainVM
 	block.StateSyncableVM
+	// BuildBlockWithContext builds a block with the given context
+	BuildBlockWithContext(ctx context.Context, blockCtx *block.Context) (block.Block, error)
 }
 
 // ExtendedBlock is a block that can be used by the extension

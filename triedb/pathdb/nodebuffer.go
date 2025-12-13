@@ -34,7 +34,6 @@ import (
 	"github.com/VictoriaMetrics/fastcache"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/log"
 	"github.com/luxfi/geth/trie/trienode"
@@ -165,17 +164,17 @@ func (b *nodebuffer) revert(db ethdb.KeyValueReader, nodes map[common.Hash]map[s
 				//
 				// In case of database rollback, don't panic if this "clean"
 				// node occurs which is not present in buffer.
-				var nhash common.Hash
+				var blob []byte
 				if owner == (common.Hash{}) {
-					_, nhash = rawdb.ReadAccountTrieNode(db, []byte(path))
+					blob = rawdb.ReadAccountTrieNode(db, []byte(path))
 				} else {
-					_, nhash = rawdb.ReadStorageTrieNode(db, owner, []byte(path))
+					blob = rawdb.ReadStorageTrieNode(db, owner, []byte(path))
 				}
 				// Ignore the clean node in the case described above.
-				if nhash == n.Hash {
+				if len(blob) > 0 && common.Keccak256Hash(blob) == n.Hash {
 					continue
 				}
-				panic(fmt.Sprintf("non-existent node (%x %v) blob: %v", owner, path, crypto.Keccak256Hash(n.Blob).Hex()))
+				panic(fmt.Sprintf("non-existent node (%x %v) blob: %v", owner, path, common.Keccak256Hash(n.Blob).Hex()))
 			}
 			current[path] = n
 			delta += int64(len(n.Blob)) - int64(len(orig.Blob))

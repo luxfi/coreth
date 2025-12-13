@@ -23,9 +23,10 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/p2p"
 	luxdssip "github.com/luxfi/p2p/gossip"
-	"github.com/luxfi/consensus"
+	quasar "github.com/luxfi/consensus"
 	"github.com/luxfi/consensus/engine/chain"
 	luxcommon "github.com/luxfi/consensus/core"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
 	luxutils "github.com/luxfi/node/utils"
 	"github.com/luxfi/constants"
@@ -54,7 +55,6 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/log"
 )
 
 var (
@@ -82,7 +82,7 @@ type VM struct {
 	Ctx *consensusctx.Context
 
 	// TODO: unexport these fields
-	SecpCache     *secp256k1.RecoverCache
+	SecpCache     secp256k1.RecoverCacheType
 	Fx            secp256k1fx.Fx
 	baseCodec     codec.Registry
 	AtomicMempool *txpool.Mempool
@@ -471,7 +471,7 @@ func (vm *VM) CodecRegistry() codec.Registry { return vm.baseCodec }
 func (vm *VM) Clock() *mockable.Clock { return &vm.clock }
 
 // Logger implements the secp256k1fx interface
-func (vm *VM) Logger() logging.Logger { return vm.Ctx.Log }
+func (vm *VM) Logger() log.Logger { return vm.Ctx.Log.(log.Logger) }
 
 func (vm *VM) createConsensusCallbacks() dummy.ConsensusCallbacks {
 	return dummy.ConsensusCallbacks{

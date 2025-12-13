@@ -14,7 +14,6 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/log"
 	ethparams "github.com/luxfi/geth/params"
 )
@@ -31,7 +30,7 @@ func IssueTxsToActivateProposerVMFork(
 	ctx context.Context, chainID *big.Int, fundedKey *ecdsa.PrivateKey,
 	client *ethclient.Client,
 ) error {
-	addr := crypto.PubkeyToAddress(fundedKey.PublicKey)
+	addr := common.PubkeyToAddress(fundedKey.PublicKey)
 	nonce, err := client.NonceAt(ctx, addr, nil)
 	if err != nil {
 		return err

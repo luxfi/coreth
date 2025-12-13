@@ -4,29 +4,17 @@
 package extstate
 
 import (
-	"github.com/luxfi/geth/triedb/database"
+	corethsnap "github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/triedb"
 )
 
-func NewDatabaseWithConfig(db ethdb.Database, config *triedb.Config) state.Database {
-	coredb := state.NewDatabaseWithConfig(db, config)
-	return wrapIfDatabase(coredb)
-}
-
-func NewDatabaseWithNodeDB(db ethdb.Database, triedb *triedb.Database) state.Database {
-	coredb := state.NewDatabaseWithNodeDB(db, triedb)
-	return wrapIfDatabase(coredb)
-}
-
-func wrapIfDatabase(db state.Database) state.Database {
-	fw, ok := db.TrieDB().Backend().(*database.Database)
-	if !ok {
-		return db
-	}
-	return &databaseAccessorDb{
-		Database: db,
-		fw:       fw,
-	}
+// NewDatabase creates a new state database using the standard geth API.
+// The coreth snapshot.Tree is not directly compatible with geth's snapshot.Tree,
+// so we pass nil and let the state package handle it.
+func NewDatabase(triedb *triedb.Database, snap *corethsnap.Tree) state.Database {
+	// Note: coreth uses its own snapshot package which is not directly compatible
+	// with geth's. We pass nil here as the state database will work without snapshots.
+	_ = snap
+	return state.NewDatabase(triedb, nil)
 }

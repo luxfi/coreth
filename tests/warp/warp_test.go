@@ -287,7 +287,7 @@ func (w *warpTest) sendMessageFromSendingSubnet() {
 
 	ginkgo.GinkgoLogr.Info("Constructing warp block hash unsigned message", "blockHash", blockHash)
 	w.blockID = ids.ID(blockHash) // Set blockID to construct a warp message containing a block hash payload later
-	w.blockPayload, err = payload.NewHash(w.blockID)
+	w.blockPayload, err = payload.NewHash(w.blockID[:])
 	require.NoError(err)
 	w.blockPayloadUnsignedMessage, err = luxWarp.NewUnsignedMessage(w.networkID, w.sendingSubnet.BlockchainID, w.blockPayload.Bytes())
 	require.NoError(err)
@@ -364,7 +364,7 @@ func (w *warpTest) aggregateSignaturesViaAPI() {
 		warpValidators = append(warpValidators, &luxWarp.Validator{
 			PublicKey: validator.PublicKey,
 			Weight:    validator.Weight,
-			NodeIDs:   []ids.NodeID{nodeID},
+			NodeID:    nodeID,
 		})
 		totalWeight += validator.Weight
 	}
