@@ -95,7 +95,7 @@ func NewKeyStoreTransactor(keystore *keystore.KeyStore, account accounts.Account
 // Deprecated: Use NewKeyedTransactorWithChainID instead.
 func NewKeyedTransactor(key *ecdsa.PrivateKey) *TransactOpts {
 	log.Warn("WARNING: NewKeyedTransactor has been deprecated in favour of NewKeyedTransactorWithChainID")
-	keyAddr := crypto.PubkeyToAddress(key.PublicKey)
+	keyAddr := common.Address(crypto.PubkeyToAddress(key.PublicKey))
 	signer := types.HomesteadSigner{}
 	return &TransactOpts{
 		From: keyAddr,
@@ -153,7 +153,7 @@ func NewKeyStoreTransactorWithChainID(keystore *keystore.KeyStore, account accou
 // NewKeyedTransactorWithChainID is a utility method to easily create a transaction signer
 // from a single private key.
 func NewKeyedTransactorWithChainID(key *ecdsa.PrivateKey, chainID *big.Int) (*TransactOpts, error) {
-	keyAddr := crypto.PubkeyToAddress(key.PublicKey)
+	keyAddr := common.Address(crypto.PubkeyToAddress(key.PublicKey))
 	if chainID == nil {
 		return nil, ErrNoChainID
 	}
