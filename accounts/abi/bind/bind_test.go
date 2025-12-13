@@ -2183,6 +2183,12 @@ func golangBindings(t *testing.T, overload bool) {
 	if out, err := replacer.CombinedOutput(); err != nil {
 		t.Fatalf("failed to replace binding test dependency to current source tree: %v\n%s", err, out)
 	}
+	// Also replace geth with local version to pick up any changes
+	gethReplacer := exec.Command(gocmd, "mod", "edit", "-x", "-require", "github.com/luxfi/geth@v0.0.0", "-replace", "github.com/luxfi/geth="+filepath.Join(pwd, "..", "..", "..", "..", "geth"))
+	gethReplacer.Dir = pkg
+	if out, err := gethReplacer.CombinedOutput(); err != nil {
+		t.Fatalf("failed to replace geth dependency to local source tree: %v\n%s", err, out)
+	}
 	tidier := exec.Command(gocmd, "mod", "tidy", "-compat=1.23")
 	tidier.Dir = pkg
 	if out, err := tidier.CombinedOutput(); err != nil {
