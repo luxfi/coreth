@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/ethdb/pebble"
 	"github.com/luxfi/log"
 )
 
@@ -34,18 +34,8 @@ func CheckImportMode(importPath string, chainDataDir string) (bool, error) {
 
 // GetImportedChainHeight reads the last block height from the import database
 func GetImportedChainHeight(importPath string) (uint64, common.Hash, error) {
-	// Open the source database
-	sourceDB, err := rawdb.Open(rawdb.OpenOptions{
-		Type:              "pebble",
-		Directory:         importPath,
-		AncientsDirectory: "",
-		Namespace:         "",
-		Cache:             0,
-		Handles:           0,
-		ReadOnly:          true,
-		Ephemeral:         false,
-		DisableFreezer:    true,
-	})
+	// Open the source database using pebble directly
+	sourceDB, err := pebble.New(importPath, 16, 16, "", true)
 	if err != nil {
 		return 0, common.Hash{}, fmt.Errorf("failed to open source database: %w", err)
 	}
