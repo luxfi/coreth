@@ -49,6 +49,7 @@ import (
 
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/metrics"
 	ethparams "github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/triedb"
 	luxlog "github.com/luxfi/log"
@@ -68,6 +69,7 @@ import (
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rlp"
+	luxWarp "github.com/luxfi/warp"
 
 	"github.com/luxfi/node/cache/lru"
 	"github.com/luxfi/node/codec"
@@ -81,6 +83,7 @@ import (
 	commonEng "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/chain/block"
 	consensusversion "github.com/luxfi/consensus/version"
+	"github.com/luxfi/node/upgrade"
 	luxUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/perms"
 	"github.com/luxfi/node/utils/profiler"
@@ -279,10 +282,20 @@ func (vm *VM) Initialize(
 	genesisBytes []byte,
 	_ []byte,
 	configBytes []byte,
-	_ interface{},
+	toEngine interface{},
 	_ []interface{},
-	_ interface{},
+	appSenderIface interface{},
 ) error {
+	// Type assert appSender for use in network initialization
+	var appSender network.AppSender
+	if appSenderIface != nil {
+		var ok bool
+		appSender, ok = appSenderIface.(network.AppSender)
+		if !ok {
+			return fmt.Errorf("expected network.AppSender, got %T", appSenderIface)
+		}
+	}
+	_ = toEngine // unused but keep parameter
 	// Type assert chainCtx
 	vmCtx, ok := chainCtx.(*consensusctx.Context)
 	if !ok {
@@ -495,10 +508,16 @@ func (vm *VM) Initialize(
 		}
 	}
 
+	// Type assert WarpSigner from context
+	warpSigner, ok := vm.ctx.WarpSigner.(luxWarp.Signer)
+	if !ok {
+		return fmt.Errorf("expected luxWarp.Signer, got %T", vm.ctx.WarpSigner)
+	}
+
 	vm.warpBackend, err = warp.NewBackend(
 		vm.ctx.NetworkID,
 		vm.ctx.ChainID,
-		vm.ctx.WarpSigner,
+		warpSigner,
 		vm,
 		vm.warpDB,
 		meteredCache,
@@ -511,11 +530,23 @@ func (vm *VM) Initialize(
 		return err
 	}
 
-	go vm.ctx.Log.RecoverAndPanic(vm.startContinuousProfiler)
+	// Type assert Log from context for RecoverAndPanic
+	if ctxLogger, ok := vm.ctx.Log.(luxlog.Logger); ok {
+		go ctxLogger.RecoverAndPanic(vm.startContinuousProfiler)
+	} else {
+		// Fallback: run without panic recovery
+		go vm.startContinuousProfiler()
+	}
+
+	// Type assert WarpSigner to lp118.Signer for handler
+	lp118Signer, ok := vm.ctx.WarpSigner.(lp118.Signer)
+	if !ok {
+		return fmt.Errorf("expected lp118.Signer, got %T", vm.ctx.WarpSigner)
+	}
 
 	// Add p2p warp message warpHandler
-	warpHandler := acp118.NewCachedHandler(meteredCache, vm.warpBackend, vm.ctx.WarpSigner)
-	vm.Network.AddHandler(p2p.SignatureRequestHandlerID, warpHandler)
+	warpHandler := lp118.NewCachedHandler(meteredCache, vm.warpBackend, lp118Signer)
+	vm.Network.AddHandler(p2p.SignatureRequestHandlerID, lp118.NewHandlerAdapter(warpHandler))
 
 	vm.stateSyncDone = make(chan struct{})
 
@@ -533,7 +564,13 @@ func parseGenesis(ctx *consensusctx.Context, bytes []byte) (*core.Genesis, error
 	configExtra.LuxContext = extras.LuxContext{
 		ConsensusCtx: ctx,
 	}
-	configExtra.NetworkUpgrades = extras.GetNetworkUpgrades(ctx.NetworkUpgrades)
+	// Type assert NetworkUpgrades from context
+	if upgradeConfig, ok := ctx.NetworkUpgrades.(upgrade.Config); ok {
+		configExtra.NetworkUpgrades = extras.GetNetworkUpgrades(upgradeConfig)
+	} else {
+		// Use empty network upgrades if type assertion fails
+		configExtra.NetworkUpgrades = extras.NetworkUpgrades{}
+	}
 
 	// If Durango is scheduled, schedule the Warp Precompile at the same time.
 	if configExtra.DurangoBlockTimestamp != nil {
@@ -553,10 +590,17 @@ func parseGenesis(ctx *consensusctx.Context, bytes []byte) (*core.Genesis, error
 }
 
 func (vm *VM) initializeMetrics() error {
-	metrics.Enabled = true
+	metrics.Enable()
 	vm.sdkMetrics = prometheus.NewRegistry()
 	gatherer := corethprometheus.NewGatherer(metrics.DefaultRegistry)
-	if err := vm.ctx.Metrics.Register(ethMetricsPrefix, gatherer); err != nil {
+
+	// Type assert Metrics from context
+	metricsMultiGatherer, ok := vm.ctx.Metrics.(luxmetric.MultiGatherer)
+	if !ok {
+		return fmt.Errorf("expected luxmetric.MultiGatherer, got %T", vm.ctx.Metrics)
+	}
+
+	if err := metricsMultiGatherer.Register(ethMetricsPrefix, gatherer); err != nil {
 		return err
 	}
 
@@ -564,11 +608,11 @@ func (vm *VM) initializeMetrics() error {
 	// 	if err := ffi.StartMetrics(); err != nil {
 	// 		return fmt.Errorf("failed to start database metrics collection: %w", err)
 	// 	}
-	// 	if err := vm.ctx.Metrics.Register("database", ffi.Gatherer{}); err != nil {
+	// 	if err := metricsMultiGatherer.Register("database", ffi.Gatherer{}); err != nil {
 	// 		return fmt.Errorf("failed to register database metrics: %w", err)
 	// 	}
 	// }
-	return vm.ctx.Metrics.Register(sdkMetricsPrefix, vm.sdkMetrics)
+	return metricsMultiGatherer.Register(sdkMetricsPrefix, vm.sdkMetrics)
 }
 
 func (vm *VM) initializeChain(lastAcceptedHash common.Hash) error {
@@ -732,7 +776,7 @@ func (vm *VM) initChainState(lastAcceptedBlock *types.Block) error {
 		return fmt.Errorf("failed to create block wrapper for the last accepted block: %w", err)
 	}
 
-	config := &chain.Config{
+	config := &nodechain.Config{
 		DecidedCacheSize:      decidedCacheSize,
 		MissingCacheSize:      missingCacheSize,
 		UnverifiedCacheSize:   unverifiedCacheSize,
@@ -746,17 +790,22 @@ func (vm *VM) initChainState(lastAcceptedBlock *types.Block) error {
 
 	// Register chain state metrics
 	chainStateRegisterer := prometheus.NewRegistry()
-	state, err := chain.NewMeteredState(chainStateRegisterer, config)
+	state, err := nodechain.NewMeteredState(chainStateRegisterer, config)
 	if err != nil {
 		return fmt.Errorf("could not create metered state: %w", err)
 	}
 	vm.State = state
 
-	if !metrics.Enabled {
+	if !metrics.Enabled() {
 		return nil
 	}
 
-	return vm.ctx.Metrics.Register(chainStateMetricsPrefix, chainStateRegisterer)
+	// Type assert Metrics for chainState registration
+	metricsGatherer, ok := vm.ctx.Metrics.(luxmetric.MultiGatherer)
+	if !ok {
+		return fmt.Errorf("expected luxmetric.MultiGatherer, got %T", vm.ctx.Metrics)
+	}
+	return metricsGatherer.Register(chainStateMetricsPrefix, chainStateRegisterer)
 }
 
 func (vm *VM) SetState(_ context.Context, state uint32) error {
@@ -802,6 +851,12 @@ func (vm *VM) onNormalOperationsStarted() error {
 
 // initBlockBuilding starts goroutines to manage block building
 func (vm *VM) initBlockBuilding() error {
+	// Type assert Log for gossip operations
+	gossipLogger, ok := vm.ctx.Log.(luxlog.Logger)
+	if !ok {
+		return fmt.Errorf("expected luxlog.Logger, got %T", vm.ctx.Log)
+	}
+
 	ctx, cancel := context.WithCancel(context.TODO())
 	vm.cancel = cancel
 
@@ -854,7 +909,7 @@ func (vm *VM) initBlockBuilding() error {
 	vm.builderLock.Unlock()
 
 	vm.ethTxGossipHandler = gossip.NewTxGossipHandler[*GossipEthTx](
-		vm.ctx.Log,
+		gossipLogger,
 		ethTxGossipMarshaller,
 		ethTxPool,
 		ethTxGossipMetrics,
@@ -870,7 +925,7 @@ func (vm *VM) initBlockBuilding() error {
 	}
 
 	ethTxPullGossiper := luxdssip.NewPullGossiper[*GossipEthTx](
-		vm.ctx.Log,
+		gossipLogger,
 		ethTxGossipMarshaller,
 		ethTxPool,
 		ethTxGossipClient,
@@ -1138,7 +1193,12 @@ func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 
 	if vm.config.WarpAPIEnabled {
 		warpSDKClient := vm.Network.NewClient(p2p.SignatureRequestHandlerID)
-		signatureAggregator := acp118.NewSignatureAggregator(vm.ctx.Log, warpSDKClient)
+		// Type assert Log to log.Logger for NewSignatureAggregator
+		logLogger, ok := vm.ctx.Log.(luxlog.Logger)
+		if !ok {
+			return nil, fmt.Errorf("expected luxlog.Logger for WarpAPI, got %T", vm.ctx.Log)
+		}
+		signatureAggregator := lp118.NewSignatureAggregator(logLogger, warpSDKClient)
 
 		if err := handler.RegisterName("warp", warp.NewAPI(vm.ctx, vm.warpBackend, signatureAggregator, vm.requirePrimaryNetworkSigners)); err != nil {
 			return nil, err

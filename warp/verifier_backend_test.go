@@ -100,7 +100,7 @@ func TestAddressedCallSignatures(t *testing.T) {
 				}
 				warpBackend, err := NewBackend(quasarCtx.NetworkID, quasarCtx.ChainID, quasarCtx.WarpSigner, warptest.EmptyBlockClient, database, sigCache, [][]byte{offchainMessage.Bytes()})
 				require.NoError(t, err)
-				handler := acp118.NewCachedHandler(sigCache, warpBackend, quasarCtx.WarpSigner)
+				handler := lp118.NewCachedHandler(sigCache, warpBackend, quasarCtx.WarpSigner)
 
 				requestBytes, expectedResponse := test.setup(warpBackend)
 				protoMsg := &sdk.SignatureRequest{Message: requestBytes}
@@ -217,7 +217,7 @@ func TestBlockSignatures(t *testing.T) {
 					nil,
 				)
 				require.NoError(t, err)
-				handler := acp118.NewCachedHandler(sigCache, warpBackend, quasarCtx.WarpSigner)
+				handler := lp118.NewCachedHandler(sigCache, warpBackend, quasarCtx.WarpSigner)
 
 				requestBytes, expectedResponse := test.setup()
 				protoMsg := &sdk.SignatureRequest{Message: requestBytes}
