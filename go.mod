@@ -20,7 +20,7 @@ require (
 	github.com/luxfi/geth v1.16.52
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/log v1.1.26
-	github.com/luxfi/metric v1.4.7 // indirect
+	github.com/luxfi/metric v1.4.8
 	github.com/luxfi/node v1.22.13
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20

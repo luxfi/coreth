@@ -898,7 +898,7 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 			protoMsg := &sdk.SignatureRequest{Message: test.message.Bytes()}
 			requestBytes, err := proto.Marshal(protoMsg)
 			require.NoError(t, err)
-			msg := p2p.PrefixMessage(p2p.ProtocolPrefix(acp118.HandlerID), requestBytes)
+			msg := p2p.PrefixMessage(p2p.ProtocolPrefix(lp118.HandlerID), requestBytes)
 
 			// Send the app request and verify the response
 			deadline := time.Now().Add(60 * time.Second)
