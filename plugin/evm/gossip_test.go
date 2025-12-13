@@ -45,7 +45,9 @@ func TestGossipSubscribe(t *testing.T) {
 	require := require.New(t)
 	key, err := crypto.GenerateKey()
 	require.NoError(err)
-	addr := crypto.PubkeyToAddress(key.PublicKey)
+	cryptoAddr := crypto.PubkeyToAddress(key.PublicKey)
+	var addr common.Address
+	copy(addr[:], cryptoAddr[:])
 
 	require.NoError(err)
 	txPool := setupPoolWithConfig(t, params.TestChainConfig, addr)

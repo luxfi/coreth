@@ -31,7 +31,7 @@ import (
 	"github.com/luxfi/geth/trie"
 
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus/engine/chain"
+	consensuscore "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/chain/block"
 )
 
@@ -190,7 +190,7 @@ func (b *wrappedBlock) Height() uint64 {
 // Status implements the block.Block interface
 // Note: The actual status management is handled by the chain.State wrapper
 func (b *wrappedBlock) Status() uint8 {
-	return chain.StatusProcessing
+	return uint8(consensuscore.StatusProcessing)
 }
 
 // Timestamp implements the block.Block interface

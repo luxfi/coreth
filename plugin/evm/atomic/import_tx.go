@@ -13,6 +13,7 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
+	"github.com/luxfi/geth/core/tracing"
 	"github.com/holiman/uint256"
 
 	"github.com/luxfi/node/chains/atomic"
@@ -339,7 +340,7 @@ func (utx *UnsignedImportTx) EVMStateTransfer(ctx *consensusctx.Context, state S
 			// If the asset is LUX, convert the input amount in nLUX to gWei by
 			// multiplying by the x2c rate.
 			amount := new(uint256.Int).Mul(uint256.NewInt(to.Amount), X2CRate)
-			state.AddBalance(to.Address, amount)
+			state.AddBalance(to.Address, amount, tracing.BalanceChangeTransfer)
 		} else {
 			log.Debug("import_tx", "src", utx.SourceChain, "addr", to.Address, "amount", to.Amount, "assetID", to.AssetID)
 			amount := new(big.Int).SetUint64(to.Amount)

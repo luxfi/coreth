@@ -1064,7 +1064,7 @@ func TestABI_EventById(t *testing.T) {
 		}
 
 		topic := test.event
-		topicID := crypto.Keccak256Hash([]byte(topic))
+		topicID := common.Keccak256Hash([]byte(topic))
 
 		event, err := abi.EventByID(topicID)
 		if err != nil {
@@ -1076,7 +1076,7 @@ func TestABI_EventById(t *testing.T) {
 			t.Errorf("Event id %s does not match topic %s, test #%d", event.ID.Hex(), topicID.Hex(), testnum)
 		}
 
-		unknowntopicID := crypto.Keccak256Hash([]byte("unknownEvent"))
+		unknowntopicID := common.Keccak256Hash([]byte("unknownEvent"))
 		unknownEvent, err := abi.EventByID(unknowntopicID)
 		if err == nil {
 			t.Errorf("EventByID should return an error if a topic is not found, test #%d", testnum)

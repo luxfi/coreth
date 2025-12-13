@@ -17,7 +17,8 @@ import (
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/ids"
 	commonEng "github.com/luxfi/consensus/core"
-	"github.com/luxfi/consensus/engine/chain/chaintest"
+	consensuscore "github.com/luxfi/consensus/core"
+	consensustest "github.com/luxfi/consensus/test/helpers"
 	"github.com/luxfi/node/upgrade/upgradetest"
 	luxutils "github.com/luxfi/node/utils"
 	"github.com/luxfi/constants"
@@ -168,7 +169,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount / 2,
-					AssetID: consensustest.LUXAssetID,
+					AssetID: consensustest.XAssetID,
 					Nonce:   0,
 				},
 			},
@@ -185,7 +186,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: consensustest.LUXAssetID,
+					AssetID: consensustest.XAssetID,
 					Nonce:   0,
 				},
 			},
@@ -202,7 +203,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount + 1,
-					AssetID: consensustest.LUXAssetID,
+					AssetID: consensustest.XAssetID,
 					Nonce:   0,
 				},
 			},
@@ -276,7 +277,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: consensustest.LUXAssetID,
+					AssetID: consensustest.XAssetID,
 					Nonce:   0,
 				},
 			},
@@ -299,7 +300,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: consensustest.LUXAssetID,
+					AssetID: consensustest.XAssetID,
 					Nonce:   1,
 				},
 			},
@@ -322,7 +323,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				{
 					Address: ethAddr,
 					Amount:  luxAmount,
-					AssetID: consensustest.LUXAssetID,
+					AssetID: consensustest.XAssetID,
 					Nonce:   1,
 				},
 			},
@@ -1035,7 +1036,7 @@ func TestExportTxAccept(t *testing.T) {
 		t.Fatalf("Failed to accept export transaction due to: %s", err)
 	}
 
-	if err := tvm.vm.ctx.SharedMemory.Apply(map[ids.ID]*luxatomic.Requests{chainID: atomicRequests}, commitBatch); err != nil {
+	if err := tvm.vm.ctx.SharedMemory.(luxatomic.SharedMemory).Apply(map[ids.ID]*luxatomic.Requests{chainID: atomicRequests}, commitBatch); err != nil {
 		t.Fatal(err)
 	}
 	indexedValues, _, _, err := xChainSharedMemory.Indexed(tvm.vm.ctx.ChainID, [][]byte{addr.Bytes()}, nil, nil, 3)
@@ -1110,19 +1111,19 @@ func TestExportTxVerify(t *testing.T) {
 			{
 				Address: testEthAddrs[0],
 				Amount:  exportAmount,
-				AssetID: consensustest.LUXAssetID,
+				AssetID: consensustest.XAssetID,
 				Nonce:   0,
 			},
 			{
 				Address: testEthAddrs[2],
 				Amount:  exportAmount,
-				AssetID: consensustest.LUXAssetID,
+				AssetID: consensustest.XAssetID,
 				Nonce:   0,
 			},
 		},
 		ExportedOutputs: []*lux.TransferableOutput{
 			{
-				Asset: lux.Asset{ID: consensustest.LUXAssetID},
+				Asset: lux.Asset{ID: consensustest.XAssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: exportAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1133,7 +1134,7 @@ func TestExportTxVerify(t *testing.T) {
 				},
 			},
 			{
-				Asset: lux.Asset{ID: consensustest.LUXAssetID},
+				Asset: lux.Asset{ID: consensustest.XAssetID},
 				Out: &secp256k1fx.TransferOutput{
 					Amt: exportAmount,
 					OutputOwners: secp256k1fx.OutputOwners{
@@ -1276,7 +1277,7 @@ func TestExportTxVerify(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  0,
-						AssetID: consensustest.LUXAssetID,
+						AssetID: consensustest.XAssetID,
 						Nonce:   0,
 					},
 				}
@@ -1805,7 +1806,7 @@ func TestNewExportTx(t *testing.T) {
 				t.Fatalf("Failed to accept export transaction due to: %s", err)
 			}
 
-			if err := tvm.vm.ctx.SharedMemory.Apply(map[ids.ID]*luxatomic.Requests{chainID: atomicRequests}, commitBatch); err != nil {
+			if err := tvm.vm.ctx.SharedMemory.(luxatomic.SharedMemory).Apply(map[ids.ID]*luxatomic.Requests{chainID: atomicRequests}, commitBatch); err != nil {
 				t.Fatal(err)
 			}
 
@@ -1819,7 +1820,7 @@ func TestNewExportTx(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			addr := testKeys[0].EthAddress()
+			addr := common.Address(testKeys[0].EthAddress())
 			if wrappedStateDB.GetBalance(addr).Cmp(uint256.NewInt(test.bal*units.Lux)) != 0 {
 				t.Fatalf("address balance %s equal %s not %s", addr.String(), wrappedStateDB.GetBalance(addr), new(big.Int).SetUint64(test.bal*units.Lux))
 			}
@@ -1991,7 +1992,7 @@ func TestNewExportTxMulticoin(t *testing.T) {
 				t.Fatalf("Failed to accept export transaction due to: %s", err)
 			}
 
-			if err := tvm.vm.ctx.SharedMemory.Apply(map[ids.ID]*luxatomic.Requests{chainID: atomicRequests}, commitBatch); err != nil {
+			if err := tvm.vm.ctx.SharedMemory.(luxatomic.SharedMemory).Apply(map[ids.ID]*luxatomic.Requests{chainID: atomicRequests}, commitBatch); err != nil {
 				t.Fatal(err)
 			}
 
@@ -2005,7 +2006,7 @@ func TestNewExportTxMulticoin(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			addr := testKeys[0].EthAddress()
+			addr := common.Address(testKeys[0].EthAddress())
 			if wrappedStateDB.GetBalance(addr).Cmp(uint256.NewInt(test.bal*units.Lux)) != 0 {
 				t.Fatalf("address balance %s equal %s not %s", addr.String(), wrappedStateDB.GetBalance(addr), new(big.Int).SetUint64(test.bal*units.Lux))
 			}

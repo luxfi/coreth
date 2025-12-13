@@ -19,11 +19,11 @@ import (
 func TestMetricsEnabledByDefault(t *testing.T) {
 	assert.True(t, metrics.Enabled(), "geth/metrics.Enabled")
 
-	switch m := metrics.NewCounter().(type) {
-	case metrics.NilCounter:
-		t.Errorf("metrics.NewCounter() got %T; want %T", m, new(metrics.StandardCounter))
-	case *metrics.StandardCounter:
-	default:
-		t.Errorf("metrics.NewCounter() got unknown type %T", m)
-	}
+	// Verify that a counter can be created (metrics are enabled)
+	counter := metrics.NewCounter()
+	assert.NotNil(t, counter, "metrics.NewCounter() should not return nil")
+
+	// Test that the counter works
+	counter.Inc(1)
+	assert.Equal(t, int64(1), counter.Snapshot().Count(), "counter should have value 1 after Inc(1)")
 }

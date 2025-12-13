@@ -12,6 +12,7 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
+	"github.com/luxfi/geth/core/tracing"
 	"github.com/holiman/uint256"
 
 	luxfiids "github.com/luxfi/ids"
@@ -344,7 +345,7 @@ func (utx *UnsignedExportTx) EVMStateTransfer(ctx *consensusctx.Context, state S
 			if state.GetBalance(from.Address).Cmp(amount) < 0 {
 				return errInsufficientFunds
 			}
-			state.SubBalance(from.Address, amount)
+			state.SubBalance(from.Address, amount, tracing.BalanceChangeTransfer)
 		} else {
 			log.Debug("export_tx", "dest", utx.DestinationChain, "addr", from.Address, "amount", from.Amount, "assetID", from.AssetID)
 			amount := new(big.Int).SetUint64(from.Amount)
@@ -359,7 +360,7 @@ func (utx *UnsignedExportTx) EVMStateTransfer(ctx *consensusctx.Context, state S
 		addrs[from.Address] = from.Nonce
 	}
 	for addr, nonce := range addrs {
-		state.SetNonce(addr, nonce+1)
+		state.SetNonce(addr, nonce+1, tracing.NonceChangeUnspecified)
 	}
 	return nil
 }

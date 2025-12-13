@@ -30,8 +30,10 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/consensus"
 	commonEng "github.com/luxfi/consensus/core"
+	consensuscore "github.com/luxfi/consensus/core"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/enginetest"
-	"github.com/luxfi/consensus/engine/chain/chaintest"
+	consensustest "github.com/luxfi/consensus/test/helpers"
 	"github.com/luxfi/node/upgrade"
 	"github.com/luxfi/node/upgrade/upgradetest"
 	"github.com/luxfi/crypto/secp256k1"
@@ -1589,7 +1591,7 @@ func testBonusBlocksTxs(t *testing.T, scheme string) {
 	tvm.atomicVM.AtomicBackend.AddBonusBlock(blk.Height(), blk.ID())
 
 	// Remove the UTXOs from shared memory, so that non-bonus blocks will fail verification
-	if err := tvm.vm.ctx.SharedMemory.Apply(map[ids.ID]*luxatomic.Requests{tvm.vm.ctx.XChainID: {RemoveRequests: [][]byte{inputID[:]}}}); err != nil {
+	if err := tvm.vm.ctx.SharedMemory.(luxatomic.SharedMemory).Apply(map[ids.ID]*luxatomic.Requests{tvm.vm.ctx.XChainID: {RemoveRequests: [][]byte{inputID[:]}}}); err != nil {
 		t.Fatal(err)
 	}
 

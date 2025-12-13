@@ -26,7 +26,7 @@ func main() {
 		fmt.Println(evm.Version)
 		os.Exit(0)
 	}
-	if err := ulimit.Set(ulimit.DefaultFDLimit, logging.NoLog{}); err != nil {
+	if err := ulimit.Set(ulimit.DefaultFDLimit, log.NoLog{}); err != nil {
 		fmt.Printf("failed to set fd limit correctly due to: %s\n", err)
 		os.Exit(1)
 	}

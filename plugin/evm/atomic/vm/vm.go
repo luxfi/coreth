@@ -25,7 +25,6 @@ import (
 	"github.com/luxfi/p2p"
 	luxdssip "github.com/luxfi/p2p/gossip"
 	quasar "github.com/luxfi/consensus"
-	"github.com/luxfi/consensus/engine/chain"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
 	luxutils "github.com/luxfi/node/utils"
@@ -810,7 +809,11 @@ func (vm *VM) NewImportTx(
 		kc.Add(key)
 	}
 
-	atomicUTXOs, _, _, err := lux.GetAtomicUTXOs(vm.Ctx.SharedMemory, atomic.Codec, chainID, kc.Addresses(), ids.ShortEmpty, ids.Empty, maxUTXOsToFetch)
+	sharedMemory, ok := vm.Ctx.SharedMemory.(luxatomic.SharedMemory)
+	if !ok {
+		return nil, errors.New("shared memory not available")
+	}
+	atomicUTXOs, _, _, err := lux.GetAtomicUTXOs(sharedMemory, atomic.Codec, chainID, kc.Addresses(), ids.ShortEmpty, ids.Empty, maxUTXOsToFetch)
 	if err != nil {
 		return nil, fmt.Errorf("problem retrieving atomic UTXOs: %w", err)
 	}

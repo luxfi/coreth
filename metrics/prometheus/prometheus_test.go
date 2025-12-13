@@ -25,7 +25,7 @@ func TestGatherer_Gather(t *testing.T) {
 		require.NoError(t, registry.Register(name, collector))
 	}
 
-	counter := metrics.NewCounter().(*metrics.StandardCounter)
+	counter := metrics.NewCounter()
 	counter.Inc(12345)
 	register(t, "test/counter", counter)
 

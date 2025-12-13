@@ -6,6 +6,7 @@ package extension
 import (
 	"context"
 	"errors"
+	"net/http"
 
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/versiondb"
@@ -74,6 +75,8 @@ type InnerVM interface {
 	block.StateSyncableVM
 	// BuildBlockWithContext builds a block with the given context
 	BuildBlockWithContext(ctx context.Context, blockCtx *block.Context) (block.Block, error)
+	// CreateHandlers creates HTTP handlers for the VM
+	CreateHandlers(ctx context.Context) (map[string]http.Handler, error)
 }
 
 // ExtendedBlock is a block that can be used by the extension
