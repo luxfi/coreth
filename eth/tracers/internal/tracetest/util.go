@@ -24,14 +24,14 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
-	"github.com/luxfi/geth/consensus/misc/eip4844"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/coreth/consensus/misc/eip4844"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
 
 	// Force-load native and js packages, to trigger registration
-	_ "github.com/luxfi/geth/eth/tracers/js"
-	_ "github.com/luxfi/geth/eth/tracers/native"
+	_ "github.com/luxfi/coreth/eth/tracers/js"
+	_ "github.com/luxfi/coreth/eth/tracers/native"
 )
 
 // camel converts a snake cased input string into a camel cased output.

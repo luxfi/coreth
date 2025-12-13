@@ -7,7 +7,7 @@ package vm
 import (
 	"errors"
 
-	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/crypto/mldsa"
 )

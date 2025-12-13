@@ -24,11 +24,11 @@ import (
 	"github.com/luxfi/geth/beacon/engine"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/stateless"
-	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/params/forks"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/stateless"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/params/forks"
 	"github.com/luxfi/geth/rlp"
 )
 

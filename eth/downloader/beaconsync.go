@@ -22,10 +22,10 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/eth/ethconfig"
+	"github.com/luxfi/coreth/log"
 )
 
 // beaconBackfiller is the chain and state backfilling that can be commenced once

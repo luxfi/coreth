@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/vm/runtime"
+	"github.com/luxfi/coreth/core/vm/runtime"
 )
 
 func ExampleExecute() {

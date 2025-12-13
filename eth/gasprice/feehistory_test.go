@@ -22,7 +22,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 )
 
 func TestFeeHistory(t *testing.T) {

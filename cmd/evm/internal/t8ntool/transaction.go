@@ -26,11 +26,11 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/rlp"
-	"github.com/luxfi/geth/tests"
+	"github.com/luxfi/coreth/tests"
 	"github.com/urfave/cli/v2"
 )
 

@@ -22,17 +22,17 @@ import (
 
 	"github.com/luxfi/geth"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/eth"
-	"github.com/luxfi/geth/eth/catalyst"
-	"github.com/luxfi/geth/eth/ethconfig"
-	"github.com/luxfi/geth/eth/filters"
-	"github.com/luxfi/geth/ethclient"
-	"github.com/luxfi/geth/node"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/eth"
+	"github.com/luxfi/coreth/eth/catalyst"
+	"github.com/luxfi/coreth/eth/ethconfig"
+	"github.com/luxfi/coreth/eth/filters"
+	"github.com/luxfi/coreth/ethclient"
+	"github.com/luxfi/coreth/node"
 	"github.com/luxfi/geth/p2p"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // Client exposes the methods provided by the Ethereum RPC client.

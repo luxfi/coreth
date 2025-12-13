@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/coreth/core/vm"
 	"github.com/holiman/uint256"
 )
 

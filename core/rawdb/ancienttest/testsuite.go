@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/internal/testrand"
+	"github.com/luxfi/coreth/internal/testrand"
 )
 
 // TestAncientSuite runs a suite of tests against an ancient database

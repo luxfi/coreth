@@ -27,16 +27,16 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/luxfi/geth/accounts"
-	"github.com/luxfi/geth/accounts/abi"
-	"github.com/luxfi/geth/accounts/abi/abigen"
-	bind2 "github.com/luxfi/geth/accounts/abi/bind/v2"
-	"github.com/luxfi/geth/accounts/external"
-	"github.com/luxfi/geth/accounts/keystore"
+	"github.com/luxfi/coreth/accounts"
+	"github.com/luxfi/coreth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi/abigen"
+	bind2 "github.com/luxfi/coreth/accounts/abi/bind/v2"
+	"github.com/luxfi/coreth/accounts/external"
+	"github.com/luxfi/coreth/accounts/keystore"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 )
 
 // Bind generates a v1 contract binding.

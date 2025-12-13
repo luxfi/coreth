@@ -23,8 +23,8 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/luxfi/geth/consensus/ethash"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/consensus/ethash"
+	"github.com/luxfi/coreth/core/types"
 )
 
 type fuzzer struct {

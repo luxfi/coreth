@@ -29,7 +29,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/internal/testrand"
+	"github.com/luxfi/coreth/internal/testrand"
 )
 
 const jsondata = `

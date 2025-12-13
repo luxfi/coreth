@@ -23,7 +23,7 @@ import (
 	"iter"
 	"math/big"
 
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/rlp"
 )
 

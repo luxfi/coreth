@@ -28,10 +28,10 @@ import (
 	"github.com/luxfi/geth"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core/history"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/internal/ethapi"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/core/history"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/internal/ethapi"
+	"github.com/luxfi/coreth/rpc"
 )
 
 var (

@@ -22,17 +22,17 @@ import (
 	"math/big"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/consensus/misc/eip4844"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/state/snapshot"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/consensus/misc/eip4844"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/state/snapshot"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/rlp"
-	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/coreth/triedb"
 )
 
 // CurrentHeader retrieves the current head header of the canonical chain. The

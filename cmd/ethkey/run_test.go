@@ -21,8 +21,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/luxfi/geth/internal/cmdtest"
-	"github.com/luxfi/geth/internal/reexec"
+	"github.com/luxfi/coreth/internal/cmdtest"
+	"github.com/luxfi/coreth/internal/reexec"
 )
 
 type testEthkey struct {

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/luxfi/geth/precompile/contract"
+	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/geth/common"
 )
 

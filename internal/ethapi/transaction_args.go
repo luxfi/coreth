@@ -27,13 +27,13 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/consensus/misc/eip4844"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/consensus/misc/eip4844"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/crypto/kzg4844"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/holiman/uint256"
 )
 

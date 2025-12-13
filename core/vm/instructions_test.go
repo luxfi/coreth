@@ -27,10 +27,10 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 	"github.com/holiman/uint256"
 )
 

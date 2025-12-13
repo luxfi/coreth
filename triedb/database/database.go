@@ -18,7 +18,7 @@ package database
 
 import (
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 )
 
 // NodeReader wraps the Node method of a backing trie reader.

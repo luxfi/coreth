@@ -25,11 +25,11 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/lru"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/params"
 )
 
 // Vote represents a single vote that an authorized signer made to modify the

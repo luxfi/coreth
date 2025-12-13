@@ -18,7 +18,7 @@ package triedb
 
 import (
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/triedb/pathdb"
+	"github.com/luxfi/coreth/triedb/pathdb"
 )
 
 // StateSet represents a collection of mutated states during a state transition.

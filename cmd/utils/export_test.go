@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/geth/rlp"
 )
 

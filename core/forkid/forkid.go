@@ -27,9 +27,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/params"
 )
 
 var (

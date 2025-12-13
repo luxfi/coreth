@@ -26,7 +26,7 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/crypto/kzg4844"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/rlp"
 	"github.com/holiman/uint256"
 )

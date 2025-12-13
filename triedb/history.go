@@ -20,7 +20,7 @@ import (
 	"errors"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/triedb/pathdb"
+	"github.com/luxfi/coreth/triedb/pathdb"
 )
 
 // AccountHistory inspects the account history within the specified range.

@@ -23,12 +23,12 @@ import (
 	"sync"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/params"
 )
 
 // TxStatus is the current status of a transaction as seen by the pool.

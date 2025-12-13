@@ -19,12 +19,12 @@ package node
 import (
 	"fmt"
 
-	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/ethdb/badgerdb"
 	"github.com/luxfi/geth/ethdb/leveldb"
 	"github.com/luxfi/geth/ethdb/pebble"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 )
 
 // DatabaseOptions contains the options to apply when opening a database.

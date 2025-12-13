@@ -23,18 +23,18 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus/clique"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/txpool"
-	"github.com/luxfi/geth/core/txpool/legacypool"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/consensus/clique"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/core/txpool/legacypool"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/trie"
-	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/coreth/triedb"
 )
 
 type mockBackend struct {

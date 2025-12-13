@@ -21,8 +21,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/luxfi/geth/accounts/keystore"
-	"github.com/luxfi/geth/cmd/utils"
+	"github.com/luxfi/coreth/accounts/keystore"
+	"github.com/luxfi/coreth/cmd/utils"
 	"github.com/urfave/cli/v2"
 )
 

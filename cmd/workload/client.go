@@ -22,10 +22,10 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/ethclient"
-	"github.com/luxfi/geth/ethclient/gethclient"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/ethclient"
+	"github.com/luxfi/coreth/ethclient/gethclient"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/urfave/cli/v2"
 )
 

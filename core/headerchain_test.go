@@ -23,12 +23,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/geth/consensus"
-	"github.com/luxfi/geth/consensus/ethash"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/coreth/consensus"
+	"github.com/luxfi/coreth/consensus/ethash"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/triedb"
 )
 
 func verifyUnbrokenCanonchain(hc *HeaderChain) error {

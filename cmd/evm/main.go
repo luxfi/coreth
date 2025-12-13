@@ -23,17 +23,17 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/luxfi/geth/cmd/evm/internal/t8ntool"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/tracing"
-	"github.com/luxfi/geth/eth/tracers/logger"
-	"github.com/luxfi/geth/internal/debug"
-	"github.com/luxfi/geth/internal/flags"
+	"github.com/luxfi/coreth/cmd/evm/internal/t8ntool"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/tracing"
+	"github.com/luxfi/coreth/eth/tracers/logger"
+	"github.com/luxfi/coreth/internal/debug"
+	"github.com/luxfi/coreth/internal/flags"
 	"github.com/urfave/cli/v2"
 
 	// Force-load the tracer engines to trigger registration
-	_ "github.com/luxfi/geth/eth/tracers/js"
-	_ "github.com/luxfi/geth/eth/tracers/native"
+	_ "github.com/luxfi/coreth/eth/tracers/js"
+	_ "github.com/luxfi/coreth/eth/tracers/native"
 )
 
 // Some other nice-to-haves:

@@ -22,9 +22,9 @@ import (
 	"time"
 
 	"github.com/luxfi/geth"
-	"github.com/luxfi/geth/core"
+	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // DownloaderAPI provides an API which gives information about the current

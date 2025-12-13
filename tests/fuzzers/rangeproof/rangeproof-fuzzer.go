@@ -24,10 +24,10 @@ import (
 	"slices"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/geth/ethdb/memorydb"
 	"github.com/luxfi/geth/trie"
-	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/coreth/triedb"
 )
 
 type kv struct {

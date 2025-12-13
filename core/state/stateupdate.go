@@ -21,7 +21,7 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/trie/trienode"
-	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/coreth/triedb"
 )
 
 // contractCode represents a contract code with associated metadata.

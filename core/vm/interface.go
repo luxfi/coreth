@@ -18,11 +18,11 @@ package vm
 
 import (
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/stateless"
-	"github.com/luxfi/geth/core/tracing"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/stateless"
+	"github.com/luxfi/coreth/core/tracing"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/trie/utils"
 	"github.com/holiman/uint256"
 )

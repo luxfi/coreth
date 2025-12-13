@@ -29,16 +29,16 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/luxfi/geth/accounts"
+	"github.com/luxfi/coreth/accounts"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/coreth/core/rawdb"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/ethdb/memorydb"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/p2p"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/gofrs/flock"
 )
 

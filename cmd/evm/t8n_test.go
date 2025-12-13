@@ -28,9 +28,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luxfi/geth/cmd/evm/internal/t8ntool"
-	"github.com/luxfi/geth/internal/cmdtest"
-	"github.com/luxfi/geth/internal/reexec"
+	"github.com/luxfi/coreth/cmd/evm/internal/t8ntool"
+	"github.com/luxfi/coreth/internal/cmdtest"
+	"github.com/luxfi/coreth/internal/reexec"
 )
 
 func TestMain(m *testing.M) {

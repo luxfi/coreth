@@ -27,9 +27,9 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/lru"
 	"github.com/luxfi/geth/common/mclock"
-	"github.com/luxfi/geth/core/txpool"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/metrics"
 )
 

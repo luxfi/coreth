@@ -21,7 +21,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi"
 )
 
 // tmplData is the data structure required to fill the binding template.

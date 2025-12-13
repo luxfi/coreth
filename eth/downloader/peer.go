@@ -25,9 +25,9 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/eth/protocols/eth"
+	"github.com/luxfi/coreth/eth/protocols/eth"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 	"github.com/luxfi/geth/p2p/msgrate"
 )
 

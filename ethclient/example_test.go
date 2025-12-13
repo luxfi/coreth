@@ -17,7 +17,7 @@
 package ethclient_test
 
 import (
-	"github.com/luxfi/geth/node"
+	"github.com/luxfi/coreth/node"
 )
 
 var exampleNode *node.Node

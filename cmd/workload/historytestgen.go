@@ -25,9 +25,9 @@ import (
 	"path/filepath"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/internal/flags"
+	"github.com/luxfi/coreth/internal/flags"
 	"github.com/luxfi/geth/rlp"
 	"github.com/urfave/cli/v2"
 )

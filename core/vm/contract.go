@@ -18,7 +18,7 @@ package vm
 
 import (
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/tracing"
+	"github.com/luxfi/coreth/core/tracing"
 	"github.com/holiman/uint256"
 )
 

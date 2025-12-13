@@ -23,8 +23,8 @@ import (
 	"math/big"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/forkid"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/forkid"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/rlp"
 )
 

@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 )
 
 // In this example, our client wishes to track the latest 'block number'

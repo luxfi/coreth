@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/golang-jwt/jwt/v4"
 )
 

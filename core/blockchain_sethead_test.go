@@ -28,15 +28,15 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus/ethash"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/consensus/ethash"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/ethdb/pebble"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/triedb"
-	"github.com/luxfi/geth/triedb/hashdb"
-	"github.com/luxfi/geth/triedb/pathdb"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/triedb"
+	"github.com/luxfi/coreth/triedb/hashdb"
+	"github.com/luxfi/coreth/triedb/pathdb"
 )
 
 // rewindTest is a test case for chain rollback upon user request.

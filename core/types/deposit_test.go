@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/luxfi/geth/accounts/abi"
+	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/luxfi/geth/common"
 )
 

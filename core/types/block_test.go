@@ -27,8 +27,8 @@ import (
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/internal/blocktest"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/internal/blocktest"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/rlp"
 	"github.com/holiman/uint256"
 )

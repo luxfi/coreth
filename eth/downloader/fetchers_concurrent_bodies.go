@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/eth/protocols/eth"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/eth/protocols/eth"
+	"github.com/luxfi/coreth/log"
 )
 
 // bodyQueue implements typedQueue and is a type adapter between the generic

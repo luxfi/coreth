@@ -28,9 +28,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/geth/internal/testlog"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/rpc"
+	"github.com/luxfi/coreth/internal/testlog"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/rpc"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"

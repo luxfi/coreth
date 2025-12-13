@@ -20,8 +20,8 @@ import (
 	"context"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/ethclient/simulated"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/ethclient/simulated"
 )
 
 // SimulatedBackend is a simulated blockchain.

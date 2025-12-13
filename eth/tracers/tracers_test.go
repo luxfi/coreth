@@ -21,14 +21,14 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/eth/tracers/logger"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/tests"
+	"github.com/luxfi/coreth/eth/tracers/logger"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/tests"
 )
 
 func BenchmarkTransactionTraceV2(b *testing.B) {

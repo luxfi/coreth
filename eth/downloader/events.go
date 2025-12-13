@@ -16,7 +16,7 @@
 
 package downloader
 
-import "github.com/luxfi/geth/core/types"
+import "github.com/luxfi/coreth/core/types"
 
 type DoneEvent struct {
 	Latest *types.Header

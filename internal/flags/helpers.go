@@ -23,8 +23,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/luxfi/geth/internal/version"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/internal/version"
+	"github.com/luxfi/coreth/log"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"
 )

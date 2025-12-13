@@ -28,10 +28,10 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/eth/tracers"
-	"github.com/luxfi/geth/eth/tracers/logger"
-	"github.com/luxfi/geth/internal/flags"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/eth/tracers"
+	"github.com/luxfi/coreth/eth/tracers/logger"
+	"github.com/luxfi/coreth/internal/flags"
+	"github.com/luxfi/coreth/log"
 	"github.com/urfave/cli/v2"
 )
 

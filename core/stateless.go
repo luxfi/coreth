@@ -19,16 +19,16 @@ package core
 import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/lru"
-	"github.com/luxfi/geth/consensus/beacon"
-	"github.com/luxfi/geth/consensus/ethash"
-	"github.com/luxfi/geth/core/state"
-	"github.com/luxfi/geth/core/stateless"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/log"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/consensus/beacon"
+	"github.com/luxfi/coreth/consensus/ethash"
+	"github.com/luxfi/coreth/core/state"
+	"github.com/luxfi/coreth/core/stateless"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/log"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/trie"
-	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/coreth/triedb"
 )
 
 // ExecuteStateless runs a stateless execution based on a witness, verifies

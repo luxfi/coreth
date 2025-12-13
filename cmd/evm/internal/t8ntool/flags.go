@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/tests"
+	"github.com/luxfi/coreth/core/vm"
+	"github.com/luxfi/coreth/tests"
 	"github.com/urfave/cli/v2"
 )
 

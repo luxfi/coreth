@@ -20,8 +20,8 @@ import (
 	"math/big"
 
 	"github.com/luxfi/geth"
-	"github.com/luxfi/geth/accounts"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/accounts"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
 )
 

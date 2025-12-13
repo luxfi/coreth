@@ -24,13 +24,13 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/consensus/beacon"
-	"github.com/luxfi/geth/consensus/ethash"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/consensus/beacon"
+	"github.com/luxfi/coreth/consensus/ethash"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/crypto"
-	"github.com/luxfi/geth/params"
-	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/triedb"
 )
 
 func TestGeneratePOSChain(t *testing.T) {

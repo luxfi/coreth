@@ -41,10 +41,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/geth/accounts"
+	"github.com/luxfi/coreth/accounts"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/geth/log"
+	"github.com/luxfi/coreth/log"
 	pcsc "github.com/gballet/go-libpcsclite"
 )
 

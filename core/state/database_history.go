@@ -21,13 +21,13 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/lru"
-	"github.com/luxfi/geth/core/state/snapshot"
-	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/coreth/core/state/snapshot"
+	"github.com/luxfi/coreth/core/types"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie/utils"
-	"github.com/luxfi/geth/triedb"
-	"github.com/luxfi/geth/triedb/pathdb"
+	"github.com/luxfi/coreth/triedb"
+	"github.com/luxfi/coreth/triedb/pathdb"
 )
 
 // historicReader wraps a historical state reader defined in path database,

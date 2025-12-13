@@ -20,9 +20,9 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/geth/consensus/ethash"
-	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/geth/params"
+	"github.com/luxfi/coreth/consensus/ethash"
+	"github.com/luxfi/coreth/core/rawdb"
+	"github.com/luxfi/coreth/params"
 )
 
 // Tests that DAO-fork enabled clients can properly filter out fork-commencing

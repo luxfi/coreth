@@ -20,9 +20,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/geth/core"
-	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/eth/protocols/eth"
+	"github.com/luxfi/coreth/core"
+	"github.com/luxfi/coreth/core/types"
+	"github.com/luxfi/coreth/eth/protocols/eth"
 	"github.com/luxfi/geth/p2p/enode"
 )
 
