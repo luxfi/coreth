@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/consensus/validator"
 	"github.com/luxfi/consensus/validator/validatorsmock"
-	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/math/set"
 	luxWarp "github.com/luxfi/warp"

@@ -18,9 +18,9 @@ import (
 	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 	luxutils "github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/math"
 	"github.com/luxfi/math/set"
@@ -126,7 +126,7 @@ func (utx *UnsignedExportTx) Verify(
 		if err := in.Verify(); err != nil {
 			return err
 		}
-		if rules.IsBanff && !luxfiidsEqual(ctx.AVAXAssetID, in.AssetID) {
+		if rules.IsBanff && !luxfiidsEqual(ctx.LUXAssetID, in.AssetID) {
 			return ErrExportNonLUXInputBanff
 		}
 	}
@@ -136,10 +136,10 @@ func (utx *UnsignedExportTx) Verify(
 			return err
 		}
 		assetID := out.AssetID()
-		if !luxfiidsEqual(ctx.AVAXAssetID, nodeIDToLuxfiids(assetID)) && luxfiidsEqual(constants.PlatformChainID, utx.DestinationChain) {
+		if !luxfiidsEqual(ctx.LUXAssetID, nodeIDToLuxfiids(assetID)) && luxfiidsEqual(constants.PlatformChainID, utx.DestinationChain) {
 			return ErrWrongChainID
 		}
-		if rules.IsBanff && !luxfiidsEqual(ctx.AVAXAssetID, assetID) {
+		if rules.IsBanff && !luxfiidsEqual(ctx.LUXAssetID, assetID) {
 			return ErrExportNonLUXOutputBanff
 		}
 	}
@@ -269,7 +269,7 @@ func NewExportTx(
 	)
 
 	// consume non-LUX
-	if !luxfiidsEqual(ctx.AVAXAssetID, assetID) {
+	if !luxfiidsEqual(ctx.LUXAssetID, assetID) {
 		ins, signers, err = getSpendableFunds(ctx, state, keys, assetID, amount)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't generate tx inputs/signers: %w", err)
@@ -305,7 +305,7 @@ func NewExportTx(
 		if err != nil {
 			return nil, errOverflowExport
 		}
-		luxIns, luxSigners, err = getSpendableFunds(ctx, state, keys, nodeIDToLuxfiids(ctx.AVAXAssetID), newLuxNeeded)
+		luxIns, luxSigners, err = getSpendableFunds(ctx, state, keys, nodeIDToLuxfiids(ctx.LUXAssetID), newLuxNeeded)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("couldn't generate tx inputs/signers: %w", err)
@@ -335,7 +335,7 @@ func NewExportTx(
 func (utx *UnsignedExportTx) EVMStateTransfer(ctx *consensusctx.Context, state StateDB) error {
 	addrs := map[[20]byte]uint64{}
 	for _, from := range utx.Ins {
-		if luxfiidsEqual(ctx.AVAXAssetID, from.AssetID) {
+		if luxfiidsEqual(ctx.LUXAssetID, from.AssetID) {
 			log.Debug("export_tx", "dest", utx.DestinationChain, "addr", from.Address, "amount", from.Amount, "assetID", "LUX")
 			// We multiply the input amount by x2cRate to convert LUX back to the appropriate
 			// denomination before export.
@@ -388,7 +388,7 @@ func getSpendableFunds(
 		}
 		addr := key.EthAddress()
 		var balance uint64
-		if luxfiidsEqual(ctx.AVAXAssetID, assetID) {
+		if luxfiidsEqual(ctx.LUXAssetID, assetID) {
 			// If the asset is LUX, we divide by the x2cRate to convert back to the correct
 			// denomination of LUX that can be exported.
 			balance = new(uint256.Int).Div(state.GetBalance(addr), X2CRate).Uint64()
@@ -500,7 +500,7 @@ func getSpendableLUXWithFee(
 		inputs = append(inputs, EVMInput{
 			Address: addr,
 			Amount:  inputAmount,
-			AssetID: nodeIDToLuxfiids(ctx.AVAXAssetID),
+			AssetID: nodeIDToLuxfiids(ctx.LUXAssetID),
 			Nonce:   nonce,
 		})
 		signers = append(signers, []*secp256k1.PrivateKey{key})

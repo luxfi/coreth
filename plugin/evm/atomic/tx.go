@@ -20,7 +20,7 @@ import (
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/p2p/gossip"
-	"github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/hashing"
 	"github.com/luxfi/math/set"

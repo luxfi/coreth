@@ -7,7 +7,7 @@ package contract
 import (
 	"math/big"
 
-	"github.com/luxfi/consensus"
+	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/geth/common"
 	ethtypes "github.com/luxfi/geth/core/types"

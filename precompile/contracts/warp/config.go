@@ -208,7 +208,7 @@ func (c *Config) VerifyPredicate(predicateContext *precompileconfig.PredicateCon
 
 	// Wrap validators.State on the chain quasar context to special case the Primary Network
 	var sourceChainID ids.ID
-	copy(sourceChainID[:], warpMsg.UnsignedMessage.SourceChainID)
+	copy(sourceChainID[:], warpMsg.UnsignedMessage.SourceChainID[:])
 	
 	// Type assert ValidatorState to validators.State
 	validatorState, ok := predicateContext.ConsensusCtx.ValidatorState.(validators.State)

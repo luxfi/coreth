@@ -16,7 +16,7 @@ import (
 	"github.com/luxfi/consensus/validator"
 	"github.com/luxfi/consensus/validator/validatorstest"
 	agoUtils "github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/crypto/bls/signer/localsigner"
 	"github.com/luxfi/math/set"

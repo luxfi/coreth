@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"

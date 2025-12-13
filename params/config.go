@@ -31,7 +31,7 @@ import (
 	"math/big"
 
 	"github.com/luxfi/node/upgrade"
-	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/utils"
 	ethparams "github.com/luxfi/geth/params"

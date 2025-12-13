@@ -8,7 +8,7 @@ import (
 
 	"github.com/luxfi/ids"
 	"github.com/luxfi/consensus"
-	"github.com/luxfi/node/utils/constants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/node/utils/formatting/address"
 )
 
