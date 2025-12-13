@@ -8,12 +8,12 @@ import (
 )
 
 type metrics struct {
-	pendingTxs metricspkg.Gauge // Gauge of currently pending transactions in the txHeap
-	currentTxs metricspkg.Gauge // Gauge of current transactions to be issued into a block
-	issuedTxs  metricspkg.Gauge // Gauge of transactions that have been issued into a block
+	pendingTxs *metricspkg.Gauge // Gauge of currently pending transactions in the txHeap
+	currentTxs *metricspkg.Gauge // Gauge of current transactions to be issued into a block
+	issuedTxs  *metricspkg.Gauge // Gauge of transactions that have been issued into a block
 
-	addedTxs     metricspkg.Counter // Count of all transactions added to the mempool
-	discardedTxs metricspkg.Counter // Count of all discarded transactions
+	addedTxs     *metricspkg.Counter // Count of all transactions added to the mempool
+	discardedTxs *metricspkg.Counter // Count of all discarded transactions
 }
 
 func newMetrics() *metrics {

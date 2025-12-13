@@ -11,6 +11,7 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/p2p/lp118"
 	consensusctx "github.com/luxfi/consensus/context"
+	validators "github.com/luxfi/consensus/validator"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 	warpprecompile "github.com/luxfi/coreth/precompile/contracts/warp"

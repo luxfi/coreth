@@ -52,8 +52,8 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/geth/triedb/database"
-	"github.com/luxfi/coreth/triedb/hashdb"
-	"github.com/luxfi/coreth/triedb/pathdb"
+	"github.com/luxfi/geth/triedb/hashdb"
+	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/lru"
 	"github.com/luxfi/geth/core/rawdb"
@@ -211,32 +211,17 @@ type CacheConfig struct {
 func (c *CacheConfig) triedbConfig() *triedb.Config {
 	config := &triedb.Config{Preimages: c.Preimages}
 	if c.StateScheme == rawdb.HashScheme || c.StateScheme == "" {
-		config.DBOverride = hashdb.Config{
-			CleanCacheSize:                  c.TrieCleanLimit * 1024 * 1024,
-			StatsPrefix:                     trieCleanCacheStatsNamespace,
-			ReferenceRootAtomicallyOnUpdate: true,
-		}.BackendConstructor
+		config.HashDB = &hashdb.Config{
+			CleanCacheSize: c.TrieCleanLimit * 1024 * 1024,
+		}
 	}
 	if c.StateScheme == rawdb.PathScheme {
-		config.DBOverride = pathdb.Config{
-			StateHistory:   c.StateHistory,
-			CleanCacheSize: c.TrieCleanLimit * 1024 * 1024,
-			DirtyCacheSize: c.TrieDirtyLimit * 1024 * 1024,
-		}.BackendConstructor
+		config.PathDB = &pathdb.Config{
+			StateHistory:    c.StateHistory,
+			TrieCleanSize:   c.TrieCleanLimit * 1024 * 1024,
+			WriteBufferSize: c.TrieDirtyLimit * 1024 * 1024,
+		}
 	}
-	// if c.StateScheme == customrawdb.DatabaseScheme {
-	// 	// ChainDataDir may not be set during some tests, where this path won't be called.
-	// 	if c.ChainDataDir == "" {
-	// 		log.Crit("Chain data directory must be specified for Database")
-	// 	}
-	// 	config.DBOverride = database.Config{
-	// 		FilePath:             filepath.Join(c.ChainDataDir, databaseFileName),
-	// 		CleanCacheSize:       c.TrieCleanLimit * 1024 * 1024,
-	// 		FreeListCacheEntries: database.Defaults.FreeListCacheEntries,
-	// 		Revisions:            uint(c.StateHistory), // must be at least 2
-	// 		ReadCacheStrategy:    ffi.CacheAllReads,
-	// 	}.BackendConstructor
-	// }
 	return config
 }
 
