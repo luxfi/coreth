@@ -47,6 +47,17 @@ func gethInit() any {
 	return nil
 }
 
+// init registers the rules hook with geth so that Rules.Payload is populated
+// with Lux-specific rules when chainConfig.Rules() is called.
+func init() {
+	ethparams.SetRulesHook(func(c *ethparams.ChainConfig, rules *ethparams.Rules, num *big.Int, isMerge bool, timestamp uint64) {
+		cEx := GetExtra(c)
+		rulesEx := constructRulesExtra(c, rules, cEx, num, isMerge, timestamp)
+		// Store as RulesExtra so that PrecompileOverride method is available
+		rules.Payload = rulesEx
+	})
+}
+
 // constructRulesExtra acts as an adjunct to the [params.ChainConfig.Rules]
 // method. Its primary purpose is to construct the extra payload for the
 // [params.Rules] but it MAY also modify the [params.Rules].

@@ -37,6 +37,7 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/header"
 	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/consensus/misc/eip1559"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
@@ -388,13 +389,21 @@ func (cm *chainMaker) makeHeader(parent *types.Block, gap uint64, state *state.S
 		panic(err)
 	}
 
+	// Fallback to geth's EIP-1559 BaseFee calculation if Lux-specific calculation
+	// returned nil but London fork is enabled (for compatibility with tests using
+	// standard geth ChainConfig with LondonBlock set).
+	newNumber := new(big.Int).Add(parent.Number(), common.Big1)
+	if baseFee == nil && cm.config.IsLondon(newNumber) {
+		baseFee = eip1559.CalcBaseFee(cm.config, parent.Header())
+	}
+
 	header := &types.Header{
 		Root:       state.IntermediateRoot(cm.config.IsEIP158(parent.Number())),
 		ParentHash: parent.Hash(),
 		Coinbase:   parent.Coinbase(),
 		Difficulty: engine.CalcDifficulty(cm, time, parent.Header()),
 		GasLimit:   gasLimit,
-		Number:     new(big.Int).Add(parent.Number(), common.Big1),
+		Number:     newNumber,
 		Time:       time,
 		BaseFee:    baseFee,
 	}

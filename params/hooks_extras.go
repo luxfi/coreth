@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"slices"
 
+	"github.com/holiman/uint256"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/nativeasset"
 	"github.com/luxfi/coreth/params/extras"
@@ -16,13 +17,19 @@ import (
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/tracing"
+	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 )
 
 type RulesExtra extras.Rules
 
 func GetRulesExtra(r Rules) *extras.Rules {
-	// If Payload is set and is an *extras.Rules, return it
+	// If Payload is set and is a RulesExtra (which is an alias for extras.Rules), convert and return it
+	if extra, ok := r.Payload.(RulesExtra); ok {
+		return (*extras.Rules)(&extra)
+	}
+	// Also check for *extras.Rules for backwards compatibility
 	if extra, ok := r.Payload.(*extras.Rules); ok && extra != nil {
 		return extra
 	}
@@ -122,15 +129,55 @@ func (r RulesExtra) precompileOverrideBuiltin(addr common.Address) (vm.Precompil
 	return makePrecompile(precompile), true
 }
 
-func makePrecompile(contract contract.StatefulPrecompiledContract) vm.PrecompiledContract {
-	// TODO: Implement proper precompile wrapping for libevm
-	// The run function would be:
-	// run := func(env vm.PrecompileEnvironment, input []byte, suppliedGas uint64) ([]byte, uint64, error) {
-	//     ... get header, predicateResults, accessibleState ...
-	//     return contract.Run(accessibleState, env.Addresses().Caller, env.Addresses().Self, input, suppliedGas, env.ReadOnly())
-	// }
-	_ = contract // silence unused variable warning
-	return nil
+// statefulPrecompileWrapper wraps a coreth StatefulPrecompiledContract to implement
+// geth's vm.StatefulPrecompiledContract interface
+type statefulPrecompileWrapper struct {
+	contract contract.StatefulPrecompiledContract
+}
+
+// RequiredGas returns 0 because stateful precompiles handle gas internally
+func (w *statefulPrecompileWrapper) RequiredGas(input []byte) uint64 {
+	return 0
+}
+
+// Run is the standard precompile interface - should not be called for stateful precompiles
+func (w *statefulPrecompileWrapper) Run(input []byte) ([]byte, error) {
+	// This should not be called - RunStateful should be called instead
+	return nil, vm.ErrExecutionReverted
+}
+
+// Name returns the name of the precompile for debugging
+func (w *statefulPrecompileWrapper) Name() string {
+	return "StatefulPrecompile"
+}
+
+// RunStateful implements vm.StatefulPrecompiledContract
+func (w *statefulPrecompileWrapper) RunStateful(env vm.PrecompileEnvironment, input []byte, suppliedGas uint64) ([]byte, uint64, error) {
+	// Create accessible state from the environment
+	accessState := accessibleState{
+		env: env,
+		blockContext: &precompileBlockContext{
+			number: env.BlockNumber(),
+			time:   env.BlockTime(),
+			// predicateResults will be nil for now - can be enhanced later
+		},
+	}
+
+	addrs := env.Addresses()
+	ret, returnedGas, err := w.contract.Run(accessState, addrs.Caller, addrs.Self, input, suppliedGas, env.ReadOnly())
+	// Handle two different gas accounting patterns:
+	// 1. Some precompiles (NativeAssetBalance) calculate and return remaining gas directly
+	// 2. Other precompiles (NativeAssetCall) use env.UseGas() and return suppliedGas unchanged
+	// Use min(returnedGas, env.Gas()) to correctly handle both patterns
+	envGas := env.Gas()
+	if returnedGas < envGas {
+		return ret, returnedGas, err
+	}
+	return ret, envGas, err
+}
+
+func makePrecompile(c contract.StatefulPrecompiledContract) vm.PrecompiledContract {
+	return &statefulPrecompileWrapper{contract: c}
 }
 
 func (r RulesExtra) PrecompileOverride(addr common.Address) (vm.PrecompiledContract, bool) {
@@ -154,10 +201,111 @@ type accessibleState struct {
 }
 
 func (a accessibleState) GetStateDB() contract.StateDB {
-	// TODO the contracts should be refactored to call `env.ReadOnlyState`
-	// or `env.StateDB` based on the env.ReadOnly() flag
-	// For now, return nil until we implement proper state handling
-	return nil
+	// Wrap the vm.StateDB with multicoin support
+	if a.env.ReadOnly() {
+		return &stateDBWrapper{state: a.env.ReadOnlyState()}
+	}
+	return &stateDBWrapper{state: a.env.StateDB()}
+}
+
+// stateDBWrapper wraps vm.StateDB to implement contract.StateDB with multicoin support
+type stateDBWrapper struct {
+	state vm.StateDB
+}
+
+func (w *stateDBWrapper) GetState(addr common.Address, hash common.Hash) common.Hash {
+	return w.state.GetState(addr, hash)
+}
+
+func (w *stateDBWrapper) SetState(addr common.Address, key, value common.Hash) common.Hash {
+	// vm.StateDB.SetState returns the previous value
+	return w.state.SetState(addr, key, value)
+}
+
+func (w *stateDBWrapper) SetNonce(addr common.Address, nonce uint64, reason tracing.NonceChangeReason) {
+	w.state.SetNonce(addr, nonce, reason)
+}
+
+func (w *stateDBWrapper) GetNonce(addr common.Address) uint64 {
+	return w.state.GetNonce(addr)
+}
+
+func (w *stateDBWrapper) GetBalance(addr common.Address) *uint256.Int {
+	return w.state.GetBalance(addr)
+}
+
+func (w *stateDBWrapper) AddBalance(addr common.Address, amount *uint256.Int, reason tracing.BalanceChangeReason) uint256.Int {
+	return w.state.AddBalance(addr, amount, reason)
+}
+
+func (w *stateDBWrapper) SubBalance(addr common.Address, amount *uint256.Int, reason tracing.BalanceChangeReason) uint256.Int {
+	return w.state.SubBalance(addr, amount, reason)
+}
+
+// GetBalanceMultiCoin implements multicoin balance reading using state storage
+func (w *stateDBWrapper) GetBalanceMultiCoin(addr common.Address, coinID common.Hash) *big.Int {
+	// Normalize coinID (set 0th bit to 1 to partition multicoin from normal state)
+	coinID[0] |= 0x01
+	return w.state.GetState(addr, coinID).Big()
+}
+
+// AddBalanceMultiCoin adds multicoin balance using state storage
+func (w *stateDBWrapper) AddBalanceMultiCoin(addr common.Address, coinID common.Hash, amount *big.Int) {
+	if amount.Sign() == 0 {
+		w.state.AddBalance(addr, new(uint256.Int), tracing.BalanceChangeUnspecified)
+		return
+	}
+	newAmount := new(big.Int).Add(w.GetBalanceMultiCoin(addr, coinID), amount)
+	coinID[0] |= 0x01
+	w.state.SetState(addr, coinID, common.BigToHash(newAmount))
+}
+
+// SubBalanceMultiCoin subtracts multicoin balance using state storage
+func (w *stateDBWrapper) SubBalanceMultiCoin(addr common.Address, coinID common.Hash, amount *big.Int) {
+	if amount.Sign() == 0 {
+		return
+	}
+	newAmount := new(big.Int).Sub(w.GetBalanceMultiCoin(addr, coinID), amount)
+	coinID[0] |= 0x01
+	w.state.SetState(addr, coinID, common.BigToHash(newAmount))
+}
+
+func (w *stateDBWrapper) CreateAccount(addr common.Address) {
+	w.state.CreateAccount(addr)
+}
+
+func (w *stateDBWrapper) Exist(addr common.Address) bool {
+	return w.state.Exist(addr)
+}
+
+func (w *stateDBWrapper) AddLog(log *types.Log) {
+	w.state.AddLog(log)
+}
+
+func (w *stateDBWrapper) Logs() []*types.Log {
+	return w.state.Logs()
+}
+
+func (w *stateDBWrapper) GetPredicateStorageSlots(address common.Address, index int) ([]byte, bool) {
+	// Try to get predicate storage slots if the underlying state supports it
+	if ps, ok := w.state.(interface {
+		GetPredicateStorageSlots(common.Address, int) ([]byte, bool)
+	}); ok {
+		return ps.GetPredicateStorageSlots(address, index)
+	}
+	return nil, false
+}
+
+func (w *stateDBWrapper) TxHash() common.Hash {
+	return w.state.TxHash()
+}
+
+func (w *stateDBWrapper) Snapshot() int {
+	return w.state.Snapshot()
+}
+
+func (w *stateDBWrapper) RevertToSnapshot(id int) {
+	w.state.RevertToSnapshot(id)
 }
 
 func (a accessibleState) GetBlockContext() contract.BlockContext {
