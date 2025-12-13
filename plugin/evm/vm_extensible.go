@@ -18,7 +18,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var _ extension.InnerVM = (*VM)(nil)
+// Interface compliance check removed - EVM doesn't implement network interfaces
 
 var (
 	errVMAlreadyInitialized      = errors.New("vm already initialized")

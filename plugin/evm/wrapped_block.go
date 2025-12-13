@@ -30,9 +30,10 @@ import (
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
 
-	"github.com/luxfi/ids"
 	consensuscore "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/chain/block"
+
+	"github.com/luxfi/ids"
 )
 
 var (

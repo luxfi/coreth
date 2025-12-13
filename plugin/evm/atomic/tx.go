@@ -28,6 +28,8 @@ import (
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/node/vms/components/verify"
 	"github.com/luxfi/node/vms/secp256k1fx"
+
+	"github.com/luxfi/coreth/core/extstate"
 )
 
 var _ gossip.Gossipable = (*Tx)(nil)
@@ -151,6 +153,31 @@ type StateDB interface {
 
 	GetNonce(common.Address) uint64
 	SetNonce(common.Address, uint64, tracing.NonceChangeReason)
+}
+
+// StateDBWrapper adapts extstate.StateDB to the atomic StateDB interface
+type StateDBWrapper struct {
+	*extstate.StateDB
+}
+
+// AddBalance implements the atomic.StateDB interface
+func (w *StateDBWrapper) AddBalance(addr common.Address, amount *uint256.Int, reason tracing.BalanceChangeReason) uint256.Int {
+	return w.StateDB.AddBalance(addr, amount, reason)
+}
+
+// SubBalance implements the atomic.StateDB interface
+func (w *StateDBWrapper) SubBalance(addr common.Address, amount *uint256.Int, reason tracing.BalanceChangeReason) uint256.Int {
+	return w.StateDB.SubBalance(addr, amount, reason)
+}
+
+// SetNonce implements the atomic.StateDB interface
+func (w *StateDBWrapper) SetNonce(addr common.Address, nonce uint64, reason tracing.NonceChangeReason) {
+	w.StateDB.SetNonce(addr, nonce, reason)
+}
+
+// NewStateDBWrapper creates a new StateDBWrapper
+func NewStateDBWrapper(extStateDB *extstate.StateDB) StateDB {
+	return &StateDBWrapper{extStateDB}
 }
 
 // UnsignedAtomicTx is an unsigned operation that can be atomically accepted

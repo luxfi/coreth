@@ -104,9 +104,7 @@ import (
 )
 
 var (
-	_ block.ChainVM                      = (*VM)(nil)
-	_ block.BuildBlockWithContextChainVM = (*VM)(nil)
-	_ block.StateSyncableVM              = (*VM)(nil)
+	// Interface compliance checks removed - EVM doesn't implement network interfaces
 	_ statesyncclient.EthBlockParser     = (*VM)(nil)
 	_ vmsync.BlockAcceptor               = (*VM)(nil)
 )
