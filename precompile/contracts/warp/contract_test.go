@@ -10,6 +10,7 @@ import (
 
 	"github.com/luxfi/ids"
 	"github.com/luxfi/consensus/engine/chain/chaintest"
+	consensustest "github.com/luxfi/consensus/test/helpers"
 	agoUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/math/set"
 	luxWarp "github.com/luxfi/warp"
@@ -447,7 +448,7 @@ func TestGetVerifiedWarpBlockHash(t *testing.T) {
 	callerAddr := common.HexToAddress("0x0123")
 	sourceChainID := ids.GenerateTestID()
 	blockHash := ids.GenerateTestID()
-	blockHashPayload, err := payload.NewHash(blockHash)
+	blockHashPayload, err := payload.NewHash(blockHash[:])
 	require.NoError(t, err)
 	unsignedWarpMsg, err := luxWarp.NewUnsignedMessage(networkID, sourceChainID, blockHashPayload.Bytes())
 	require.NoError(t, err)
