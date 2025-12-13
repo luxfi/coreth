@@ -43,6 +43,11 @@ type blockBuilder struct {
 	lastBuildTime time.Time
 }
 
+// Logger returns the logger from the context
+func (b *blockBuilder) Logger() log.Logger {
+	return b.ctx.Log.(log.Logger)
+}
+
 // NewBlockBuilder creates a new block builder. extraMempool is an optional mempool (can be nil) that
 // can be used to add transactions to the block builder, in addition to the txPool.
 func (vm *VM) NewBlockBuilder(extraMempool extension.BuilderMempool) *blockBuilder {
@@ -95,28 +100,7 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 	}
 
 	b.shutdownWg.Add(1)
-	// Type assert Log to get RecoverAndPanic
-	logger, ok := b.ctx.Log.(log.Logger)
-	if !ok {
-		// Fallback to running without panic recovery
-		go func() {
-			defer b.shutdownWg.Done()
-			for {
-				select {
-				case <-txSubmitChan:
-					log.Trace("New tx detected, trying to generate a block")
-					b.signalCanBuild()
-				case <-extraChan:
-					log.Trace("New extra Tx detected, trying to generate a block")
-					b.signalCanBuild()
-				case <-b.shutdownChan:
-					return
-				}
-			}
-		}()
-		return
-	}
-	go logger.RecoverAndPanic(func() {
+	go b.Logger().RecoverAndPanic(func() {
 		defer b.shutdownWg.Done()
 
 		for {

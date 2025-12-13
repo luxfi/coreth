@@ -141,6 +141,10 @@ func (s *StateDB) AddBalanceSimple(addr common.Address, amount *uint256.Int) {
 	s.StateDB.AddBalance(addr, amount, tracing.BalanceChangeUnspecified)
 }
 
+
+
+
+
 // SetNonceSimple sets nonce without specifying a reason.
 func (s *StateDB) SetNonceSimple(addr common.Address, nonce uint64) {
 	s.StateDB.SetNonce(addr, nonce, tracing.NonceChangeUnspecified)

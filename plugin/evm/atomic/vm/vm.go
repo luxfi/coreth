@@ -24,7 +24,7 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/p2p"
 	luxdssip "github.com/luxfi/p2p/gossip"
-	quasar "github.com/luxfi/consensus"
+	luxcore "github.com/luxfi/consensus/core"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
 	luxutils "github.com/luxfi/node/utils"
@@ -113,19 +113,19 @@ func WrapVM(vm extension.InnerVM) *VM {
 // Initialize implements the quasarman.ChainVM interface
 func (vm *VM) Initialize(
 	ctx context.Context,
-	chainCtx interface{},
-	db interface{},
+	chainCtxIntf interface{},
+	dbIntf interface{},
 	genesisBytes []byte,
 	upgradeBytes []byte,
 	configBytes []byte,
-	msgChan interface{},
-	fxs []interface{},
-	appSender interface{},
+	toEngineIntf interface{},
+	fxsIntf []interface{},
+	appSenderIntf interface{},
 ) error {
 	// Type assert chainCtx to *consensusctx.Context
-	consensusCtx, ok := chainCtx.(*consensusctx.Context)
+	consensusCtx, ok := chainCtxIntf.(*consensusctx.Context)
 	if !ok {
-		return fmt.Errorf("expected *consensusctx.Context, got %T", chainCtx)
+		return fmt.Errorf("expected *consensusctx.Context, got %T", chainCtxIntf)
 	}
 	vm.Ctx = consensusCtx
 
@@ -173,14 +173,14 @@ func (vm *VM) Initialize(
 	// Initialize inner vm with the provided parameters
 	if err := vm.InnerVM.Initialize(
 		ctx,
-		chainCtx,
-		db,
+		chainCtxIntf,
+		dbIntf,
 		genesisBytes,
 		upgradeBytes,
 		configBytes,
-		msgChan,
-		fxs,
-		appSender,
+		toEngineIntf,
+		fxsIntf,
+		appSenderIntf,
 	); err != nil {
 		return fmt.Errorf("failed to initialize inner VM: %w", err)
 	}
@@ -241,20 +241,21 @@ func (vm *VM) Initialize(
 }
 
 func (vm *VM) SetState(ctx context.Context, state uint32) error {
-	switch quasar.State(state) {
-	case quasar.StateSyncing:
+	vmState := luxcore.VMState(state)
+	switch vmState {
+	case luxcore.VMStateSyncing:
 		vm.bootstrapped.Set(false)
-	case quasar.Bootstrapping:
+	case luxcore.VMBootstrapping:
 		if err := vm.onBootstrapStarted(); err != nil {
 			return err
 		}
-	case quasar.NormalOp:
+	case luxcore.VMNormalOp:
 		if err := vm.onNormalOperationsStarted(); err != nil {
 			return err
 		}
 	}
 
-	return vm.InnerVM.SetState(ctx, state)
+	return vm.InnerVM.SetState(ctx, uint32(vmState))
 }
 
 func (vm *VM) onBootstrapStarted() error {
@@ -373,10 +374,7 @@ func (vm *VM) Shutdown(context.Context) error {
 }
 
 func (vm *VM) CreateHandlers(ctx context.Context) (map[string]http.Handler, error) {
-	apis, err := vm.InnerVM.CreateHandlers(ctx)
-	if err != nil {
-		return nil, err
-	}
+	apis := make(map[string]http.Handler)
 	luxAPI, err := rpc.NewHandler("lux", &LuxAPI{vm})
 	if err != nil {
 		return nil, fmt.Errorf("failed to register service for LUX API due to %w", err)
@@ -440,7 +438,8 @@ func (vm *VM) verifyTx(tx *atomic.Tx, parentHash common.Hash, baseFee *big.Int, 
 		return err
 	}
 	wrappedStateDB := extstate.New(statedb)
-	return tx.UnsignedAtomicTx.EVMStateTransfer(vm.Ctx, wrappedStateDB)
+	atomicStateDB := atomic.NewStateDBWrapper(wrappedStateDB)
+	return tx.UnsignedAtomicTx.EVMStateTransfer(vm.Ctx, atomicStateDB)
 }
 
 // verifyTxs verifies that [txs] are valid to be issued into a block with parent block [parentHash]
@@ -707,8 +706,9 @@ func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, state
 	}
 
 	wrappedStateDB := extstate.New(statedb)
+	atomicStateDB := atomic.NewStateDBWrapper(wrappedStateDB)
 	for _, tx := range txs {
-		if err := tx.UnsignedAtomicTx.EVMStateTransfer(vm.Ctx, wrappedStateDB); err != nil {
+		if err := tx.UnsignedAtomicTx.EVMStateTransfer(vm.Ctx, atomicStateDB); err != nil {
 			return nil, nil, err
 		}
 		// If ApricotPhase4 is enabled, calculate the block fee contribution
@@ -839,7 +839,7 @@ func (vm *VM) NewExportTx(
 	tx, err := atomic.NewExportTx(
 		vm.Ctx,            // Context
 		vm.CurrentRules(), // VM rules
-		extstate.New(statedb),
+		atomic.NewStateDBWrapper(extstate.New(statedb)),
 		assetID, // AssetID
 		amount,  // Amount
 		chainID, // ID of the chain to send the funds to
