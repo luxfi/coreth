@@ -289,7 +289,8 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 	}
 	if conf := g.Config; conf != nil {
 		num := new(big.Int).SetUint64(g.Number)
-		if params.GetExtra(conf).IsApricotPhase3(g.Timestamp) {
+		// Set BaseFee if either London fork or ApricotPhase3 is enabled
+		if conf.IsLondon(num) || params.GetExtra(conf).IsApricotPhase3(g.Timestamp) {
 			if g.BaseFee != nil {
 				head.BaseFee = g.BaseFee
 			} else {
