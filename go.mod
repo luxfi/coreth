@@ -16,12 +16,12 @@ require (
 	github.com/holiman/billy v0.0.0-20250707135307-f2f9b9aae7db
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.3.2
-	github.com/luxfi/crypto v1.17.21
-	github.com/luxfi/geth v1.16.51
+	github.com/luxfi/crypto v1.17.22
+	github.com/luxfi/geth v1.16.52
 	github.com/luxfi/go-bip39 v1.1.2
-	github.com/luxfi/log v1.1.24
-	github.com/luxfi/metric v1.4.6 // indirect
-	github.com/luxfi/node v1.22.12
+	github.com/luxfi/log v1.1.26
+	github.com/luxfi/metric v1.4.7 // indirect
+	github.com/luxfi/node v1.22.13
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.25.1
@@ -109,9 +109,9 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/luxfi/cache v1.0.0 // indirect
-	github.com/luxfi/genesis v1.4.6 // indirect
+	github.com/luxfi/genesis v1.4.7 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
-	github.com/luxfi/trace v0.1.3 // indirect
+	github.com/luxfi/trace v0.1.4 // indirect
 	github.com/luxfi/utils v1.0.0 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -169,14 +169,14 @@ require (
 )
 
 require (
-	github.com/luxfi/consensus v1.22.25
-	github.com/luxfi/constants v1.2.1
-	github.com/luxfi/database v1.2.10
-	github.com/luxfi/ids v1.2.2
-	github.com/luxfi/math v1.0.0
-	github.com/luxfi/migrate v1.2.6
-	github.com/luxfi/p2p v1.4.5
-	github.com/luxfi/warp v1.16.35
+	github.com/luxfi/consensus v1.22.26
+	github.com/luxfi/constants v1.2.2
+	github.com/luxfi/database v1.2.11
+	github.com/luxfi/ids v1.2.3
+	github.com/luxfi/math v1.0.1
+	github.com/luxfi/migrate v1.2.7
+	github.com/luxfi/p2p v1.4.6
+	github.com/luxfi/warp v1.16.36
 )
 
 // Local replace directives for development (DO NOT COMMIT)

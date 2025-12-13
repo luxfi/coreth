@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/holiman/uint256"
-	"go.uber.org/zap"
 
 	"github.com/luxfi/consensus"
 	commonEng "github.com/luxfi/consensus/core"
@@ -97,7 +96,28 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 	}
 
 	b.shutdownWg.Add(1)
-	go b.ctx.Log.RecoverAndPanic(func() {
+	// Type assert Log to get RecoverAndPanic
+	logger, ok := b.ctx.Log.(log.Logger)
+	if !ok {
+		// Fallback to running without panic recovery
+		go func() {
+			defer b.shutdownWg.Done()
+			for {
+				select {
+				case <-txSubmitChan:
+					log.Trace("New tx detected, trying to generate a block")
+					b.signalCanBuild()
+				case <-extraChan:
+					log.Trace("New extra Tx detected, trying to generate a block")
+					b.signalCanBuild()
+				case <-b.shutdownChan:
+					return
+				}
+			}
+		}()
+		return
+	}
+	go logger.RecoverAndPanic(func() {
 		defer b.shutdownWg.Done()
 
 		for {
@@ -120,24 +140,24 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 func (b *blockBuilder) waitForEvent(ctx context.Context) (commonEng.Message, error) {
 	lastBuildTime, err := b.waitForNeedToBuild(ctx)
 	if err != nil {
-		return 0, err
+		return commonEng.Message{}, err
 	}
 	timeSinceLastBuildTime := time.Since(lastBuildTime)
 	if b.lastBuildTime.IsZero() || timeSinceLastBuildTime >= minBlockBuildingRetryDelay {
-		b.ctx.Log.Debug("Last time we built a block was long enough ago, no need to wait",
-			zap.Duration("timeSinceLastBuildTime", timeSinceLastBuildTime),
+		log.Debug("Last time we built a block was long enough ago, no need to wait",
+			"timeSinceLastBuildTime", timeSinceLastBuildTime,
 		)
-		return commonEng.PendingTxs, nil
+		return commonEng.Message{Type: commonEng.PendingTxs}, nil
 	}
 	timeUntilNextBuild := minBlockBuildingRetryDelay - timeSinceLastBuildTime
-	b.ctx.Log.Debug("Last time we built a block was too recent, waiting",
-		zap.Duration("timeUntilNextBuild", timeUntilNextBuild),
+	log.Debug("Last time we built a block was too recent, waiting",
+		"timeUntilNextBuild", timeUntilNextBuild,
 	)
 	select {
 	case <-ctx.Done():
-		return 0, ctx.Err()
+		return commonEng.Message{}, ctx.Err()
 	case <-time.After(timeUntilNextBuild):
-		return commonEng.PendingTxs, nil
+		return commonEng.Message{Type: commonEng.PendingTxs}, nil
 	}
 }
 

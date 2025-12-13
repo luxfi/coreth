@@ -49,9 +49,10 @@ import (
 
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/metrics"
 	ethparams "github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/triedb"
+	luxlog "github.com/luxfi/log"
+	luxmetric "github.com/luxfi/metric"
 
 	warpcontract "github.com/luxfi/coreth/precompile/contracts/warp"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
@@ -79,6 +80,7 @@ import (
 	consensusctx "github.com/luxfi/consensus/context"
 	commonEng "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/chain/block"
+	consensusversion "github.com/luxfi/consensus/version"
 	luxUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/perms"
 	"github.com/luxfi/node/utils/profiler"
@@ -272,14 +274,25 @@ type VM struct {
 // Initialize implements the quasarman.ChainVM interface
 func (vm *VM) Initialize(
 	_ context.Context,
-	chainCtx *consensusctx.Context,
-	db database.Database,
+	chainCtx interface{},
+	db interface{},
 	genesisBytes []byte,
 	_ []byte,
 	configBytes []byte,
-	_ []*commonEng.Fx,
-	appSender commonEng.AppSender,
+	_ interface{},
+	_ []interface{},
+	_ interface{},
 ) error {
+	// Type assert chainCtx
+	vmCtx, ok := chainCtx.(*consensusctx.Context)
+	if !ok {
+		return fmt.Errorf("expected *consensusctx.Context, got %T", chainCtx)
+	}
+	// Type assert database
+	vmDB, ok := db.(database.Database)
+	if !ok {
+		return fmt.Errorf("expected database.Database, got %T", db)
+	}
 	if err := vm.extensionConfig.Validate(); err != nil {
 		return fmt.Errorf("failed to validate extension config: %w", err)
 	}
@@ -292,7 +305,7 @@ func (vm *VM) Initialize(
 			return fmt.Errorf("failed to unmarshal config %s: %w", string(configBytes), err)
 		}
 	}
-	vm.ctx = chainCtx
+	vm.ctx = vmCtx
 
 	if err := vm.config.Validate(vm.ctx.NetworkID); err != nil {
 		return err
@@ -310,25 +323,27 @@ func (vm *VM) Initialize(
 	}
 	vm.chainAlias = alias
 
-	var writer io.Writer = vm.ctx.Log
-	if vm.IsPlugin {
-		writer = originalStderr
+	var writer io.Writer = originalStderr
+	if logWriter, ok := vm.ctx.Log.(io.Writer); ok && !vm.IsPlugin {
+		writer = logWriter
 	}
 
-	corethLogger, err := corlog.InitLogger(vm.chainAlias, vm.config.LogLevel, vm.config.LogJSONFormat, writer)
+	corethLogger, err := corethlog.InitLogger(vm.chainAlias, vm.config.LogLevel, vm.config.LogJSONFormat, writer)
 	if err != nil {
 		return fmt.Errorf("%w: %w ", errInitializingLogger, err)
 	}
 	vm.logger = corethLogger
 
-	log.Info("Initializing Coreth VM", "Version", Version, "geth version", ethparams.GethVersion, "Config", vm.config)
+	log.Info("Initializing Coreth VM", "Version", Version, "Config", vm.config)
 
 	if deprecateMsg != "" {
 		log.Warn("Deprecation Warning", "msg", deprecateMsg)
 	}
 
 	// Enable debug-level metrics that might impact runtime performance
-	metrics.EnabledExpensive = vm.config.MetricsExpensiveEnabled
+	// Note: MetricsExpensiveEnabled config is stored but expensive metrics
+	// are handled internally by luxfi/metric package
+	_ = vm.config.MetricsExpensiveEnabled // Keep config but don't use geth metrics
 
 	vm.shutdownChan = make(chan struct{}, 1)
 
@@ -337,7 +352,7 @@ func (vm *VM) Initialize(
 	}
 
 	// Initialize the database
-	if err := vm.initializeDBs(db); err != nil {
+	if err := vm.initializeDBs(vmDB); err != nil {
 		return fmt.Errorf("failed to initialize databases: %w", err)
 	}
 	if vm.config.InspectDatabase {
@@ -354,7 +369,7 @@ func (vm *VM) Initialize(
 		}
 	}
 
-	g, err := parseGenesis(chainCtx, genesisBytes)
+	g, err := parseGenesis(vmCtx, genesisBytes)
 	if err != nil {
 		return err
 	}
@@ -894,7 +909,7 @@ func (vm *VM) initBlockBuilding() error {
 	return nil
 }
 
-func (vm *VM) WaitForEvent(ctx context.Context) (commonEng.Message, error) {
+func (vm *VM) WaitForEvent(ctx context.Context) (interface{}, error) {
 	vm.builderLock.Lock()
 	builder := vm.builder
 	vm.builderLock.Unlock()
@@ -903,11 +918,11 @@ func (vm *VM) WaitForEvent(ctx context.Context) (commonEng.Message, error) {
 	if builder == nil {
 		select {
 		case <-ctx.Done():
-			return 0, ctx.Err()
+			return nil, ctx.Err()
 		case <-vm.stateSyncDone:
-			return commonEng.StateSyncDone, nil
+			return commonEng.Message{Type: commonEng.StateSyncDone}, nil
 		case <-vm.shutdownChan:
-			return commonEng.Message(0), errShuttingDownVM
+			return nil, errShuttingDownVM
 		}
 	}
 
@@ -934,6 +949,22 @@ func (vm *VM) Shutdown(context.Context) error {
 	vm.eth.Stop()
 	vm.shutdownWg.Wait()
 	return nil
+}
+
+// Connected handles a peer connecting to the VM. This shadows the embedded
+// Network.Connected method to satisfy the block.ChainVM interface which
+// expects interface{} for the version parameter.
+func (vm *VM) Connected(ctx context.Context, nodeID ids.NodeID, nodeVersion interface{}) error {
+	ver, ok := nodeVersion.(*consensusversion.Application)
+	if !ok && nodeVersion != nil {
+		return fmt.Errorf("expected *consensusversion.Application, got %T", nodeVersion)
+	}
+	return vm.Network.Connected(ctx, nodeID, ver)
+}
+
+// Disconnected handles a peer disconnecting from the VM.
+func (vm *VM) Disconnected(ctx context.Context, nodeID ids.NodeID) error {
+	return vm.Network.Disconnected(ctx, nodeID)
 }
 
 // buildBlock builds a block to be wrapped by ChainState
@@ -1130,7 +1161,7 @@ func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 	return apis, nil
 }
 
-func (*VM) NewHTTPHandler(context.Context) (http.Handler, error) {
+func (*VM) NewHTTPHandler(context.Context) (interface{}, error) {
 	return nil, nil
 }
 

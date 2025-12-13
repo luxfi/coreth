@@ -172,14 +172,25 @@ func (b *wrappedBlock) Reject(context.Context) error {
 	return b.vm.blockChain.Reject(b.ethBlock)
 }
 
-// Parent implements the block.Block interface
+// Parent implements the block.Block interface (alias for ParentID)
 func (b *wrappedBlock) Parent() ids.ID {
+	return ids.ID(b.ethBlock.ParentHash())
+}
+
+// ParentID implements the block.Block interface
+func (b *wrappedBlock) ParentID() ids.ID {
 	return ids.ID(b.ethBlock.ParentHash())
 }
 
 // Height implements the block.Block interface
 func (b *wrappedBlock) Height() uint64 {
 	return b.ethBlock.NumberU64()
+}
+
+// Status implements the block.Block interface
+// Note: The actual status management is handled by the chain.State wrapper
+func (b *wrappedBlock) Status() uint8 {
+	return chain.StatusProcessing
 }
 
 // Timestamp implements the block.Block interface
