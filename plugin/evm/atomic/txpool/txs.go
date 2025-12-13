@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/luxfi/node/cache/lru"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus"
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/log"
@@ -20,7 +20,7 @@ const discardedTxsCacheSize = 50
 var ErrNoGasUsed = errors.New("no gas used")
 
 type Txs struct {
-	ctx     *quasar.Context
+	ctx     *consensusctx.Context
 	metrics *metrics
 	// maxSize is the maximum number of transactions allowed to be kept in mempool
 	maxSize int
@@ -44,7 +44,7 @@ type Txs struct {
 	utxoSpenders map[ids.ID]*atomic.Tx
 }
 
-func NewTxs(ctx *quasar.Context, maxSize int) *Txs {
+func NewTxs(ctx *consensusctx.Context, maxSize int) *Txs {
 	return &Txs{
 		ctx:          ctx,
 		metrics:      newMetrics(),

@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/node/network/p2p"
-	"github.com/luxfi/node/quasar/engine/common"
-	"github.com/luxfi/node/quasar/engine/enginetest"
-	"github.com/luxfi/node/quasar/quasartest"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/p2p"
+	"github.com/luxfi/consensus/core"
+	"github.com/luxfi/consensus/engine/enginetest"
+	"github.com/luxfi/consensus/engine/chain/chaintest"
+	"github.com/luxfi/math/set"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/stretchr/testify/assert"
@@ -26,7 +26,7 @@ import (
 
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/codec/linearcodec"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/node/version"
 )
 
@@ -56,7 +56,7 @@ var (
 )
 
 func TestNetworkDoesNotConnectToItself(t *testing.T) {
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 	n, err := NewNetwork(ctx, nil, nil, 1, prometheus.NewRegistry())
 	require.NoError(t, err)
 	assert.NoError(t, n.Connected(context.Background(), ctx.NodeID, defaultPeerVersion))
@@ -93,7 +93,7 @@ func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
 	}
 
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 	net, err := NewNetwork(ctx, sender, codecManager, 16, prometheus.NewRegistry())
 	require.NoError(t, err)
 	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
@@ -144,7 +144,7 @@ func TestAppRequestOnCtxCancellation(t *testing.T) {
 		},
 	}
 
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 	net, err := NewNetwork(quasarCtx, sender, codecManager, 1, prometheus.NewRegistry())
 	require.NoError(t, err)
 	handler := &HelloGreetingRequestHandler{codec: codecManager}
@@ -197,7 +197,7 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 	}
 
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 	net, err := NewNetwork(ctx, sender, codecManager, 16, prometheus.NewRegistry())
 	require.NoError(t, err)
 	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
@@ -278,7 +278,7 @@ func TestAppRequestOnShutdown(t *testing.T) {
 	}
 
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 	net, err := NewNetwork(ctx, sender, codecManager, 1, prometheus.NewRegistry())
 	require.NoError(t, err)
 	nodeID := ids.GenerateTestNodeID()
@@ -326,7 +326,7 @@ func TestSyncedAppRequestAnyOnCtxCancellation(t *testing.T) {
 		},
 	}
 
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 	net, err := NewNetwork(quasarCtx, sender, codecManager, 1, prometheus.NewRegistry())
 	require.NoError(t, err)
 	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
@@ -405,7 +405,7 @@ func TestRequestMinVersion(t *testing.T) {
 	}
 
 	// passing nil as codec works because the net.AppRequest is never called
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 	net, err := NewNetwork(ctx, sender, codecManager, 1, prometheus.NewRegistry())
 	require.NoError(t, err)
 	requestMessage := TestMessage{Message: "this is a request"}
@@ -470,7 +470,7 @@ func TestOnRequestHonoursDeadline(t *testing.T) {
 		processingDuration: 500 * time.Millisecond,
 	}
 
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 	net, err = NewNetwork(ctx, sender, codecManager, 1, prometheus.NewRegistry())
 	require.NoError(t, err)
 	net.SetRequestHandler(requestHandler)
@@ -497,7 +497,7 @@ func TestHandleInvalidMessages(t *testing.T) {
 			return nil
 		},
 	}
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 	clientNetwork, err := NewNetwork(ctx, sender, codecManager, 1, prometheus.NewRegistry())
 	require.NoError(t, err)
 	clientNetwork.SetRequestHandler(&testRequestHandler{})
@@ -546,7 +546,7 @@ func TestNetworkPropagatesRequestHandlerError(t *testing.T) {
 	requestID := uint32(0)
 	sender := testAppSender{}
 
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 	clientNetwork, err := NewNetwork(ctx, sender, codecManager, 1, prometheus.NewRegistry())
 	require.NoError(t, err)
 	clientNetwork.SetRequestHandler(&testRequestHandler{err: errors.New("fail")}) // Return an error from the request handler
@@ -566,7 +566,7 @@ func TestNetworkPropagatesRequestHandlerError(t *testing.T) {
 func TestNetworkAppRequestAfterShutdown(t *testing.T) {
 	require := require.New(t)
 
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 	net, err := NewNetwork(ctx, nil, nil, 16, prometheus.NewRegistry())
 	require.NoError(err)
 	net.Shutdown()
@@ -589,7 +589,7 @@ func TestNetworkRouting(t *testing.T) {
 	handler := &testSDKHandler{}
 
 	networkCodec := codec.NewManager(0)
-	ctx := quasartest.Context(t, quasartest.CChainID)
+	ctx := consensustest.Context(t, consensustest.CChainID)
 	network, err := NewNetwork(ctx, sender, networkCodec, 1, prometheus.NewRegistry())
 	require.NoError(err)
 	require.NoError(network.AddHandler(uint64(protocol), handler))

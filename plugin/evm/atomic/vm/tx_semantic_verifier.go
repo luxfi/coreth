@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus"
 	"github.com/luxfi/crypto/secp256k1"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/platformvm/fx"
 	"github.com/luxfi/node/vms/secp256k1fx"
@@ -39,7 +39,7 @@ type BlockFetcher interface {
 }
 
 type VerifierBackend struct {
-	Ctx          *quasar.Context
+	Ctx          *consensusctx.Context
 	Fx           fx.Fx
 	Rules        extras.Rules
 	Bootstrapped bool

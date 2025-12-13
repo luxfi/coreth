@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"slices"
 
-	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/consensus"
 	"github.com/luxfi/coreth/nativeasset"
 	"github.com/luxfi/coreth/params/extras"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
@@ -172,7 +172,7 @@ func (a accessibleState) GetChainConfig() precompileconfig.ChainConfig {
 	return GetExtra(a.env.ChainConfig())
 }
 
-func (a accessibleState) GetConsensusContext() *quasar.Context {
+func (a accessibleState) GetConsensusContext() *consensusctx.Context {
 	return GetExtra(a.env.ChainConfig()).ConsensusCtx
 }
 

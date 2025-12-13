@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/node/quasar/quasartest"
+	"github.com/luxfi/consensus/engine/chain/chaintest"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/coreth/precompile/modules"
@@ -105,7 +105,7 @@ func (test PrecompileTest) setup(t testing.TB, module modules.Module, state *tes
 		blockContext.EXPECT().Number().Return(big.NewInt(0)).AnyTimes()
 		blockContext.EXPECT().Timestamp().Return(uint64(time.Now().Unix())).AnyTimes()
 	}
-	quasarContext := quasartest.Context(t, quasartest.CChainID)
+	quasarContext := consensustest.Context(t, consensustest.CChainID)
 
 	accessibleState := contract.NewMockAccessibleState(ctrl)
 	accessibleState.EXPECT().GetStateDB().Return(state).AnyTimes()

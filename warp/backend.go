@@ -8,15 +8,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/luxfi/consensus/engine/chain/block"
+	"github.com/luxfi/database"
 	"github.com/luxfi/node/cache"
 	"github.com/luxfi/node/cache/lru"
-	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p/acp118"
-	"github.com/luxfi/node/quasar/consensus/quasarman"
-	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
-	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
+	"github.com/luxfi/p2p/lp118"
+	luxWarp "github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 )
 
 var (
@@ -27,7 +27,7 @@ var (
 )
 
 type BlockClient interface {
-	GetAcceptedBlock(ctx context.Context, blockID ids.ID) (quasarman.Block, error)
+	GetAcceptedBlock(ctx context.Context, blockID ids.ID) (block.Block, error)
 }
 
 // Backend tracks signature-eligible warp messages and provides an interface to fetch them.
@@ -45,7 +45,7 @@ type Backend interface {
 	// GetMessage retrieves the [unsignedMessage] from the warp backend database if available
 	GetMessage(messageHash ids.ID) (*luxWarp.UnsignedMessage, error)
 
-	acp118.Verifier
+	lp118.Verifier
 }
 
 // backend implements Backend, keeps track of warp messages, and generates message signatures.

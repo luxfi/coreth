@@ -7,12 +7,12 @@ package contract
 import (
 	"math/big"
 
-	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/consensus"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/geth/common"
 	ethtypes "github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/geth/stateconf"
+	"github.com/luxfi/geth/core/stateconf"
 	"github.com/holiman/uint256"
 )
 
@@ -53,7 +53,7 @@ type StateDB interface {
 type AccessibleState interface {
 	GetStateDB() StateDB
 	GetBlockContext() BlockContext
-	GetConsensusContext() *quasar.Context
+	GetConsensusContext() *consensusctx.Context
 	GetChainConfig() precompileconfig.ChainConfig
 	GetPrecompileEnv() vm.PrecompileEnvironment
 }

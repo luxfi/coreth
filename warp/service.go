@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p/acp118"
-	"github.com/luxfi/node/quasar"
-	"github.com/luxfi/node/vms/platformvm/warp"
-	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p/lp118"
+	"github.com/luxfi/consensus"
+	"github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 	warpprecompile "github.com/luxfi/coreth/precompile/contracts/warp"
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/geth/common/hexutil"
@@ -23,13 +23,13 @@ var errNoValidators = errors.New("cannot aggregate signatures from subnet with n
 
 // API introduces quasarman specific functionality to the evm
 type API struct {
-	chainContext                 *quasar.Context
+	chainContext                 *consensusctx.Context
 	backend                      Backend
 	signatureAggregator          *acp118.SignatureAggregator
 	requirePrimaryNetworkSigners func() bool
 }
 
-func NewAPI(chainCtx *quasar.Context, backend Backend, signatureAggregator *acp118.SignatureAggregator, requirePrimaryNetworkSigners func() bool) *API {
+func NewAPI(chainCtx *consensusctx.Context, backend Backend, signatureAggregator *acp118.SignatureAggregator, requirePrimaryNetworkSigners func() bool) *API {
 	return &API{
 		backend:                      backend,
 		chainContext:                 chainCtx,

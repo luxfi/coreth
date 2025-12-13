@@ -5,7 +5,7 @@ package message
 import (
 	"fmt"
 
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/crypto"
 )
 

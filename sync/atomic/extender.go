@@ -8,7 +8,7 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic/state"
 
-	"github.com/luxfi/node/database/versiondb"
+	"github.com/luxfi/database/versiondb"
 
 	"github.com/luxfi/coreth/plugin/evm/message"
 	synccommon "github.com/luxfi/coreth/sync"

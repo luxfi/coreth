@@ -28,7 +28,7 @@
 package pathdb
 
 import (
-	"github.com/luxfi/metrics"
+	"github.com/luxfi/geth/metrics"
 
 	// Force geth metrics of the same name to be registered first.
 	_ "github.com/luxfi/geth/triedb/pathdb"

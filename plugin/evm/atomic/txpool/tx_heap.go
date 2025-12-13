@@ -8,7 +8,7 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 )
 
 // txEntry is used to track the [gasPrice] transactions pay to be included in

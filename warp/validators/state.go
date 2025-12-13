@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/luxfi/ids"
-	"github.com/luxfi/node/consensus/validators"
+	"github.com/luxfi/consensus/validator"
 	"github.com/luxfi/node/utils/constants"
 )
 

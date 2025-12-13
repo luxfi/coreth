@@ -8,12 +8,12 @@ import (
 	"errors"
 
 	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/sync/handlers"
 	"github.com/luxfi/coreth/sync/handlers/stats"
 
-	"github.com/luxfi/metrics"
+	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/triedb"
 )
 

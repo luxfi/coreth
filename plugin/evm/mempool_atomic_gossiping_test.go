@@ -10,7 +10,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	atomictxpool "github.com/luxfi/coreth/plugin/evm/atomic/txpool"
 
-	"github.com/luxfi/node/quasar/engine/common"
+	"github.com/luxfi/consensus/core"
 	"github.com/luxfi/node/upgrade/upgradetest"
 	"github.com/luxfi/node/vms/components/chain"
 	"github.com/luxfi/coreth/plugin/evm/extension"

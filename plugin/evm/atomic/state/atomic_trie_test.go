@@ -18,14 +18,14 @@ import (
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/database/leveldb"
-	"github.com/luxfi/node/database/memdb"
-	"github.com/luxfi/node/database/prefixdb"
-	"github.com/luxfi/node/database/versiondb"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar/quasartest"
-	"github.com/luxfi/node/utils/logging"
+	"github.com/luxfi/database"
+	"github.com/luxfi/database/leveldb"
+	"github.com/luxfi/database/memdb"
+	"github.com/luxfi/database/prefixdb"
+	"github.com/luxfi/database/versiondb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus/engine/chain/chaintest"
+	"github.com/luxfi/log"
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
@@ -462,7 +462,7 @@ func TestApplyToSharedMemory(t *testing.T) {
 
 			// Initialize atomic repository
 			m := luxatomic.NewMemory(db)
-			sharedMemories := atomictest.NewSharedMemories(m, quasartest.CChainID, atomictest.TestBlockchainID)
+			sharedMemories := atomictest.NewSharedMemories(m, consensustest.CChainID, atomictest.TestBlockchainID)
 			backend, err := NewAtomicBackend(sharedMemories.ThisChain, test.bonusBlockHeights, repo, test.lastAcceptedHeight, common.Hash{}, test.commitInterval)
 			assert.NoError(t, err)
 			atomicTrie := backend.AtomicTrie()

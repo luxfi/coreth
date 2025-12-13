@@ -13,10 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/math/set"
 
-	commonEng "github.com/luxfi/node/quasar/engine/common"
+	commonEng "github.com/luxfi/consensus/core"
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/crypto"
@@ -103,7 +103,7 @@ func TestMempoolEthTxsAppGossipHandling(t *testing.T) {
 		return nil
 	}
 	wg.Add(1)
-	tvm.appSender.SendAppGossipF = func(context.Context, commonEng.SendConfig, []byte) error {
+	tvm.appSender.SendAppGossipF = func(context.Context, consensuscore.SendConfig, []byte) error {
 		wg.Done()
 		return nil
 	}

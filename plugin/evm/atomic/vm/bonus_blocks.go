@@ -2,7 +2,7 @@
 // See the file LICENSE for licensing terms.
 package vm
 
-import "github.com/luxfi/node/ids"
+import "github.com/luxfi/ids"
 
 // readMainnetBonusBlocks returns maps of bonus block numbers to block IDs.
 // Note bonus blocks are indexed in the atomic trie.

@@ -15,25 +15,25 @@ import (
 
 	_ "embed"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p"
-	"github.com/luxfi/node/network/p2p/acp118"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p"
+	"github.com/luxfi/p2p/lp118"
 	"github.com/luxfi/node/proto/pb/sdk"
-	commonEng "github.com/luxfi/node/quasar/engine/common"
-	"github.com/luxfi/node/quasar/engine/enginetest"
-	"github.com/luxfi/node/quasar/engine/quasarman/block"
-	"github.com/luxfi/node/quasar/validators"
-	"github.com/luxfi/node/quasar/validators/validatorstest"
+	commonEng "github.com/luxfi/consensus/core"
+	"github.com/luxfi/consensus/engine/enginetest"
+	"github.com/luxfi/consensus/engine/chain/block"
+	"github.com/luxfi/consensus/validator"
+	"github.com/luxfi/consensus/validator/validatorstest"
 	"github.com/luxfi/node/upgrade"
 	"github.com/luxfi/node/upgrade/upgradetest"
 	avagoUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/constants"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/crypto/bls/signer/localsigner"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/vms/components/chain"
-	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
-	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	luxWarp "github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/eth/tracers"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/params/extras"
@@ -121,7 +121,7 @@ func testSendWarpMessage(t *testing.T, scheme string) {
 	errs := tvm.vm.txPool.AddRemotesSync([]*types.Transaction{signedTx0})
 	require.NoError(errs[0])
 
-	require.Equal(commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
+	require.Equal(consensuscore.PendingTxs, tvm.WaitForEvent(context.Background()))
 
 	blk, err := tvm.vm.BuildBlock(context.Background())
 	require.NoError(err)
@@ -423,7 +423,7 @@ func testWarpVMTransaction(t *testing.T, scheme string, unsignedMessage *luxWarp
 		blockCtx.PChainHeight = minimumValidPChainHeight
 	}
 	tvm.vm.clock.Set(tvm.vm.clock.Time().Add(2 * time.Second))
-	require.Equal(commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
+	require.Equal(consensuscore.PendingTxs, tvm.WaitForEvent(context.Background()))
 
 	warpBlock, err := tvm.vm.BuildBlockWithContext(context.Background(), blockCtx)
 	require.NoError(err)
@@ -715,7 +715,7 @@ func testReceiveWarpMessage(
 	vm.clock.Set(blockTime)
 	msg, err := vm.WaitForEvent(context.Background())
 	require.NoError(err)
-	require.Equal(commonEng.PendingTxs, msg)
+	require.Equal(consensuscore.PendingTxs, msg)
 
 	block2, err := vm.BuildBlockWithContext(context.Background(), validProposerCtx)
 	require.NoError(err)
@@ -830,7 +830,7 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 		name             string
 		message          *luxWarp.UnsignedMessage
 		expectedResponse []byte
-		err              *commonEng.AppError
+		err              *consensuscore.AppError
 	}
 
 	tests := []testCase{
@@ -848,7 +848,7 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 				require.NoError(t, err)
 				return msg
 			}(),
-			err: &commonEng.AppError{Code: warp.ParseErrCode},
+			err: &consensuscore.AppError{Code: warp.ParseErrCode},
 		},
 		{
 			name: "known block",
@@ -870,7 +870,7 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 				require.NoError(t, err)
 				return msg
 			}(),
-			err: &commonEng.AppError{Code: warp.VerifyErrCode},
+			err: &consensuscore.AppError{Code: warp.VerifyErrCode},
 		},
 	}
 
@@ -925,7 +925,7 @@ func TestClearWarpDB(t *testing.T) {
 		genesisBytes,
 		[]byte{},
 		[]byte{},
-		[]*commonEng.Fx{},
+		[]*consensuscore.Fx{},
 		&enginetest.Sender{}))
 
 	// use multiple messages to test that all messages get cleared
@@ -957,7 +957,7 @@ func TestClearWarpDB(t *testing.T) {
 		genesisBytes,
 		[]byte{},
 		[]byte{},
-		[]*commonEng.Fx{},
+		[]*consensuscore.Fx{},
 		&enginetest.Sender{}))
 
 	// check messages are still present
@@ -981,7 +981,7 @@ func TestClearWarpDB(t *testing.T) {
 		genesisBytes,
 		[]byte{},
 		[]byte(config),
-		[]*commonEng.Fx{},
+		[]*consensuscore.Fx{},
 		&enginetest.Sender{}))
 
 	it := innerVM.warpDB.NewIterator()
@@ -991,6 +991,6 @@ func TestClearWarpDB(t *testing.T) {
 	// ensure all messages have been deleted
 	for _, message := range messages {
 		_, err := innerVM.warpBackend.GetMessageSignature(context.TODO(), message)
-		require.ErrorIs(t, err, &commonEng.AppError{Code: warp.ParseErrCode})
+		require.ErrorIs(t, err, &consensuscore.AppError{Code: warp.ParseErrCode})
 	}
 }

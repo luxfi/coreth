@@ -7,15 +7,15 @@ import (
 	"context"
 	"errors"
 
-	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/database/versiondb"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p"
-	"github.com/luxfi/node/quasar/consensus/quasarman"
-	luxcommon "github.com/luxfi/node/quasar/engine/common"
+	"github.com/luxfi/database"
+	"github.com/luxfi/database/versiondb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p"
+	"github.com/luxfi/consensus/engine/chain"
+	luxcommon "github.com/luxfi/consensus/core"
 	"github.com/luxfi/node/utils/timer/mockable"
 
-	"github.com/luxfi/node/quasar/engine/quasarman/block"
+	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/luxfi/coreth/consensus/dummy"
@@ -78,7 +78,7 @@ type InnerVM interface {
 
 // ExtendedBlock is a block that can be used by the extension
 type ExtendedBlock interface {
-	quasarman.Block
+	block.Block
 	GetEthBlock() *types.Block
 	GetBlockExtension() BlockExtension
 }

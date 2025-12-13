@@ -15,8 +15,8 @@ import (
 	"github.com/luxfi/log"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p/gossip"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p/gossip"
 
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"

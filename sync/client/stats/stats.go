@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/metrics"
+	"github.com/luxfi/geth/metrics"
 )
 
 var (

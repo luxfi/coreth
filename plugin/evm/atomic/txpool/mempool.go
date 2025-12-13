@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p/gossip"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p/gossip"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/config"
 	"github.com/luxfi/log"

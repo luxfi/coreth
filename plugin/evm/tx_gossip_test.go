@@ -15,19 +15,19 @@ import (
 	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/database/memdb"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p"
-	"github.com/luxfi/node/network/p2p/gossip"
+	"github.com/luxfi/database/memdb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p"
+	"github.com/luxfi/p2p/gossip"
 	"github.com/luxfi/node/proto/pb/sdk"
-	"github.com/luxfi/node/quasar"
-	"github.com/luxfi/node/quasar/engine/enginetest"
-	"github.com/luxfi/node/quasar/quasartest"
-	"github.com/luxfi/node/quasar/validators"
+	"github.com/luxfi/consensus"
+	"github.com/luxfi/consensus/engine/enginetest"
+	"github.com/luxfi/consensus/engine/chain/chaintest"
+	"github.com/luxfi/consensus/validator"
 	agoUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/crypto/secp256k1"
-	"github.com/luxfi/node/utils/logging"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/log"
+	"github.com/luxfi/math/set"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
@@ -45,7 +45,7 @@ import (
 func TestEthTxGossip(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 	validatorState := utils.NewTestValidatorState()
 	quasarCtx.ValidatorState = validatorState
 
@@ -172,7 +172,7 @@ func TestEthTxGossip(t *testing.T) {
 func TestAtomicTxGossip(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 	quasarCtx.LUXAssetID = ids.GenerateTestID()
 	validatorState := utils.NewTestValidatorState()
 	quasarCtx.ValidatorState = validatorState
@@ -309,7 +309,7 @@ func TestAtomicTxGossip(t *testing.T) {
 func TestEthTxPushGossipOutbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 	sender := &enginetest.SenderStub{
 		SentAppGossip: make(chan []byte, 1),
 	}
@@ -367,7 +367,7 @@ func TestEthTxPushGossipOutbound(t *testing.T) {
 func TestEthTxPushGossipInbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 
 	sender := &enginetest.Sender{}
 	innerVM := &VM{}
@@ -424,7 +424,7 @@ func TestEthTxPushGossipInbound(t *testing.T) {
 func TestAtomicTxPushGossipOutbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 	quasarCtx.LUXAssetID = ids.GenerateTestID()
 	validatorState := utils.NewTestValidatorState()
 	quasarCtx.ValidatorState = validatorState
@@ -493,7 +493,7 @@ func TestAtomicTxPushGossipOutbound(t *testing.T) {
 func TestAtomicTxPushGossipInbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
-	quasarCtx := quasartest.Context(t, quasartest.CChainID)
+	quasarCtx := consensustest.Context(t, consensustest.CChainID)
 	quasarCtx.LUXAssetID = ids.GenerateTestID()
 	validatorState := utils.NewTestValidatorState()
 	quasarCtx.ValidatorState = validatorState

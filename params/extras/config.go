@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/consensus"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	ethparams "github.com/luxfi/geth/params"
@@ -109,7 +109,7 @@ type UpgradeConfig struct {
 
 // LuxContext provides Lux specific context directly into the EVM.
 type LuxContext struct {
-	ConsensusCtx *quasar.Context
+	ConsensusCtx *consensusctx.Context
 }
 
 type ChainConfig struct {

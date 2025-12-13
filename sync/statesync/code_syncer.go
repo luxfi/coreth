@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/math/set"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	synccommon "github.com/luxfi/coreth/sync"

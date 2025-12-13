@@ -6,8 +6,8 @@ package vm
 import (
 	"fmt"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus"
 	"github.com/luxfi/node/utils/constants"
 	"github.com/luxfi/node/utils/formatting/address"
 )
@@ -15,7 +15,7 @@ import (
 // ParseServiceAddress get address ID from address string, being it either localized (using address manager,
 // doing also components validations), or not localized.
 // If both attempts fail, reports error from localized address parsing
-func ParseServiceAddress(ctx *quasar.Context, addrStr string) (ids.ShortID, error) {
+func ParseServiceAddress(ctx *consensusctx.Context, addrStr string) (ids.ShortID, error) {
 	addr, err := ids.ShortFromString(addrStr)
 	if err == nil {
 		return addr, nil
@@ -24,7 +24,7 @@ func ParseServiceAddress(ctx *quasar.Context, addrStr string) (ids.ShortID, erro
 }
 
 // ParseLocalAddress takes in an address for this chain and produces the ID
-func ParseLocalAddress(ctx *quasar.Context, addrStr string) (ids.ShortID, error) {
+func ParseLocalAddress(ctx *consensusctx.Context, addrStr string) (ids.ShortID, error) {
 	chainID, addr, err := ParseAddress(ctx, addrStr)
 	if err != nil {
 		return ids.ShortID{}, err
@@ -37,7 +37,7 @@ func ParseLocalAddress(ctx *quasar.Context, addrStr string) (ids.ShortID, error)
 }
 
 // FormatLocalAddress takes in a raw address and produces the formatted address
-func FormatLocalAddress(ctx *quasar.Context, addr ids.ShortID) (string, error) {
+func FormatLocalAddress(ctx *consensusctx.Context, addr ids.ShortID) (string, error) {
 	chainIDAlias, err := ctx.BCLookup.PrimaryAlias(ctx.ChainID)
 	if err != nil {
 		return "", err
@@ -48,7 +48,7 @@ func FormatLocalAddress(ctx *quasar.Context, addr ids.ShortID) (string, error) {
 
 // ParseAddress takes in an address and produces the ID of the chain it's for
 // the ID of the address
-func ParseAddress(ctx *quasar.Context, addrStr string) (ids.ID, ids.ShortID, error) {
+func ParseAddress(ctx *consensusctx.Context, addrStr string) (ids.ID, ids.ShortID, error) {
 	chainIDAlias, hrp, addrBytes, err := address.Parse(addrStr)
 	if err != nil {
 		return ids.ID{}, ids.ShortID{}, err

@@ -10,9 +10,9 @@ import (
 	"github.com/luxfi/log"
 
 	"github.com/luxfi/crypto/bls"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/utils/set"
-	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/math/set"
+	luxWarp "github.com/luxfi/warp"
 	"github.com/luxfi/coreth/precompile/contracts/warp"
 )
 

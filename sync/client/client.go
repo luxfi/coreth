@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 
 	"github.com/luxfi/coreth/network"
 	"github.com/luxfi/coreth/params"

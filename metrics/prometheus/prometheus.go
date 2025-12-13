@@ -11,7 +11,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/luxfi/metrics"
+	"github.com/luxfi/geth/metrics"
 
 	dto "github.com/prometheus/client_model/go"
 )

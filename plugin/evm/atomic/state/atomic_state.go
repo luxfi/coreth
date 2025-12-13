@@ -9,8 +9,8 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/database"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/log"
 )

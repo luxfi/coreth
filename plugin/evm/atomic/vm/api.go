@@ -9,10 +9,10 @@ import (
 	"net/http"
 
 	"github.com/luxfi/node/api"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/node/utils/formatting"
 	"github.com/luxfi/node/utils/json"
-	"github.com/luxfi/node/utils/set"
+	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/txpool"

@@ -12,10 +12,10 @@ import (
 	syncclient "github.com/luxfi/coreth/sync/client"
 	"github.com/luxfi/coreth/sync/statesync"
 
-	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/database/versiondb"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar/engine/quasarman/block"
+	"github.com/luxfi/database"
+	"github.com/luxfi/database/versiondb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/node/vms/components/chain"
 	"github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/coreth/eth"
@@ -148,7 +148,7 @@ func (client *client) ClearOngoingSummary() error {
 	return nil
 }
 
-// ParseStateSummary parses [summaryBytes] to [commonEng.Summary]
+// ParseStateSummary parses [summaryBytes] to [consensuscore.Summary]
 func (client *client) ParseStateSummary(_ context.Context, summaryBytes []byte) (block.StateSummary, error) {
 	return client.Parser.Parse(summaryBytes, client.acceptSyncSummary)
 }

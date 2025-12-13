@@ -9,7 +9,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/sync/handlers/stats/statstest"

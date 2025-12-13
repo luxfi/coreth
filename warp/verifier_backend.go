@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/quasar/engine/common"
-	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
-	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/database"
+	"github.com/luxfi/consensus/core"
+	luxWarp "github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 )
 
 const (

@@ -40,7 +40,7 @@ import (
 	"time"
 
 	"github.com/luxfi/log"
-	"github.com/luxfi/metrics"
+	"github.com/luxfi/geth/metrics"
 	"golang.org/x/time/rate"
 )
 
@@ -623,7 +623,7 @@ func (h *handler) handleCall(cp *callProc, msg *jsonrpcMessage) *jsonrpcMessage 
 			successfulRequestGauge.Inc(1)
 		}
 		rpcServingTimer.UpdateSince(start)
-		if metrics.EnabledExpensive {
+		if metrics.Enabled() {
 			updateServeTimeHistogram(msg.Method, answer.Error == nil, time.Since(start))
 		}
 	}

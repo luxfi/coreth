@@ -8,12 +8,12 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar/quasartest"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus/engine/chain/chaintest"
 	agoUtils "github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/set"
-	luxWarp "github.com/luxfi/node/vms/platformvm/warp"
-	"github.com/luxfi/node/vms/platformvm/warp/payload"
+	"github.com/luxfi/math/set"
+	luxWarp "github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/coreth/precompile/precompiletest"
 	"github.com/luxfi/coreth/predicate"
@@ -25,7 +25,7 @@ import (
 func TestGetBlockchainID(t *testing.T) {
 	callerAddr := common.HexToAddress("0x0123")
 
-	defaultConsensusCtx := quasartest.Context(t, quasartest.CChainID)
+	defaultConsensusCtx := consensustest.Context(t, consensustest.CChainID)
 	blockchainID := defaultConsensusCtx.ChainID
 
 	tests := map[string]precompiletest.PrecompileTest{
@@ -83,7 +83,7 @@ func TestGetBlockchainID(t *testing.T) {
 func TestSendWarpMessage(t *testing.T) {
 	callerAddr := common.HexToAddress("0x0123")
 
-	defaultConsensusCtx := quasartest.Context(t, quasartest.CChainID)
+	defaultConsensusCtx := consensustest.Context(t, consensustest.CChainID)
 	blockchainID := defaultConsensusCtx.ChainID
 	sendWarpMessagePayload := agoUtils.RandomBytes(100)
 

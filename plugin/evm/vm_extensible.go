@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/luxfi/node/database/versiondb"
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/network/p2p"
+	"github.com/luxfi/database/versiondb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/config"

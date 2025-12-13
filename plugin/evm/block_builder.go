@@ -11,8 +11,8 @@ import (
 	"github.com/holiman/uint256"
 	"go.uber.org/zap"
 
-	"github.com/luxfi/node/quasar"
-	commonEng "github.com/luxfi/node/quasar/engine/common"
+	"github.com/luxfi/consensus"
+	commonEng "github.com/luxfi/consensus/core"
 	"github.com/luxfi/node/utils/lock"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
@@ -27,7 +27,7 @@ const (
 )
 
 type blockBuilder struct {
-	ctx *quasar.Context
+	ctx *consensusctx.Context
 
 	txPool       *txpool.TxPool
 	extraMempool extension.BuilderMempool
@@ -116,7 +116,7 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 
 // waitForEvent waits until a block needs to be built.
 // It returns only after at least [minBlockBuildingRetryDelay] passed from the last time a block was built.
-func (b *blockBuilder) waitForEvent(ctx context.Context) (commonEng.Message, error) {
+func (b *blockBuilder) waitForEvent(ctx context.Context) (consensuscore.Message, error) {
 	lastBuildTime, err := b.waitForNeedToBuild(ctx)
 	if err != nil {
 		return 0, err
@@ -126,7 +126,7 @@ func (b *blockBuilder) waitForEvent(ctx context.Context) (commonEng.Message, err
 		b.ctx.Log.Debug("Last time we built a block was long enough ago, no need to wait",
 			zap.Duration("timeSinceLastBuildTime", timeSinceLastBuildTime),
 		)
-		return commonEng.PendingTxs, nil
+		return consensuscore.PendingTxs, nil
 	}
 	timeUntilNextBuild := minBlockBuildingRetryDelay - timeSinceLastBuildTime
 	b.ctx.Log.Debug("Last time we built a block was too recent, waiting",
@@ -136,7 +136,7 @@ func (b *blockBuilder) waitForEvent(ctx context.Context) (commonEng.Message, err
 	case <-ctx.Done():
 		return 0, ctx.Err()
 	case <-time.After(timeUntilNextBuild):
-		return commonEng.PendingTxs, nil
+		return consensuscore.PendingTxs, nil
 	}
 }
 

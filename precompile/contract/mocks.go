@@ -13,12 +13,12 @@ import (
 	big "math/big"
 	reflect "reflect"
 
-	quasar "github.com/luxfi/node/quasar"
+	quasar "github.com/luxfi/consensus"
 	precompileconfig "github.com/luxfi/coreth/precompile/precompileconfig"
 	common "github.com/luxfi/geth/common"
 	types "github.com/luxfi/geth/core/types"
 	vm "github.com/luxfi/geth/core/vm"
-	stateconf "github.com/luxfi/geth/geth/stateconf"
+	stateconf "github.com/luxfi/geth/core/stateconf"
 	uint256 "github.com/holiman/uint256"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -347,10 +347,10 @@ func (mr *MockAccessibleStateMockRecorder) GetPrecompileEnv() *gomock.Call {
 }
 
 // GetConsensusContext mocks base method.
-func (m *MockAccessibleState) GetConsensusContext() *quasar.Context {
+func (m *MockAccessibleState) GetConsensusContext() *consensusctx.Context {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetConsensusContext")
-	ret0, _ := ret[0].(*quasar.Context)
+	ret0, _ := ret[0].(*consensusctx.Context)
 	return ret0
 }
 

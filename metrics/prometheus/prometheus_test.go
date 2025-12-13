@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/luxfi/coreth/metrics/metricstest"
-	"github.com/luxfi/metrics"
+	"github.com/luxfi/geth/metrics"
 )
 
 func TestGatherer_Gather(t *testing.T) {

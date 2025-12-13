@@ -12,8 +12,8 @@ import (
 
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/database"
-	"github.com/luxfi/node/ids"
+	"github.com/luxfi/database"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/geth/common"

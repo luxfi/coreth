@@ -4,9 +4,9 @@
 package factory
 
 import (
-	"github.com/luxfi/node/ids"
-	"github.com/luxfi/node/quasar/engine/quasarman/block"
-	"github.com/luxfi/node/utils/logging"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/consensus/engine/chain/block"
+	"github.com/luxfi/log"
 	"github.com/luxfi/node/vms"
 	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"
 
