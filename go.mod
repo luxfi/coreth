@@ -107,7 +107,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/luxfi/cache v1.0.0 // indirect
-	github.com/luxfi/genesis v1.4.7 // indirect
+	github.com/luxfi/genesis v1.4.9 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
 	github.com/luxfi/trace v0.1.4 // indirect
 	github.com/luxfi/utils v1.0.0 // indirect
@@ -167,31 +167,13 @@ require (
 )
 
 require (
-	github.com/luxfi/consensus v1.22.26
+	github.com/google/go-cmp v0.7.0
+	github.com/luxfi/consensus v1.22.27
 	github.com/luxfi/constants v1.2.3
 	github.com/luxfi/database v1.2.12
 	github.com/luxfi/ids v1.2.4
 	github.com/luxfi/math v1.0.2
 	github.com/luxfi/migrate v1.2.7
-	github.com/luxfi/p2p v1.4.6
-	github.com/luxfi/warp v1.16.36
-)
-
-// Local replace directives for development (DO NOT COMMIT)
-replace (
-	github.com/luxfi/consensus => ../consensus
-	github.com/luxfi/constants => ../constants
-	github.com/luxfi/crypto => ../crypto
-	github.com/luxfi/database => ../database
-	github.com/luxfi/genesis => ../genesis
-	github.com/luxfi/geth => ../geth
-	github.com/luxfi/ids => ../ids
-	github.com/luxfi/log => ../log
-	github.com/luxfi/math => ../math
-	github.com/luxfi/metric => ../metric
-	github.com/luxfi/migrate => ../migrate
-	github.com/luxfi/node => ../node
-	github.com/luxfi/p2p => ../p2p
-	github.com/luxfi/trace => ../trace
-	github.com/luxfi/warp => ../warp
+	github.com/luxfi/p2p v1.4.7
+	github.com/luxfi/warp v1.16.37
 )

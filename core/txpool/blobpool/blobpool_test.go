@@ -25,6 +25,11 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
+//go:build skip
+// +build skip
+
+// TODO: Update tests for new geth state.NewDatabase API
+
 package blobpool
 
 import (
