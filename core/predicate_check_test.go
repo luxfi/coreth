@@ -298,10 +298,11 @@ func TestCheckPredicate(t *testing.T) {
 			// Create the rules from TestChainConfig and update the predicates based on the test params
 			rules := params.TestChainConfig.Rules(common.Big0, params.IsMergeTODO, 0)
 			if test.createPredicates != nil {
+				rulesExtra := params.GetRulesExtra(rules)
 				for address, predicater := range test.createPredicates(t) {
-					rules := params.GetRulesExtra(rules)
-					rules.Predicaters[address] = predicater
+					rulesExtra.Predicaters[address] = predicater
 				}
+				params.SetRulesExtra(&rules, rulesExtra)
 			}
 
 			// Specify only the access list, since this test should not depend on any other values
@@ -448,6 +449,7 @@ func TestCheckPredicatesOutput(t *testing.T) {
 			rulesExtra := params.GetRulesExtra(rules)
 			rulesExtra.Predicaters[addr1] = predicater
 			rulesExtra.Predicaters[addr2] = predicater
+			params.SetRulesExtra(&rules, rulesExtra)
 
 			// Specify only the access list, since this test should not depend on any other values
 			tx := types.NewTx(&types.DynamicFeeTx{

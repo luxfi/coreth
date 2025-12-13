@@ -194,6 +194,9 @@ func (b *BlockGen) Timestamp() uint64 {
 
 // BaseFee returns the EIP-1559 base fee of the block being generated.
 func (b *BlockGen) BaseFee() *big.Int {
+	if b.header.BaseFee == nil {
+		return nil
+	}
 	return new(big.Int).Set(b.header.BaseFee)
 }
 

@@ -158,6 +158,16 @@ func SetupGenesisBlock(
 		if hash != stored {
 			return genesis.Config, common.Hash{}, &GenesisMismatchError{stored, hash}
 		}
+		// For path scheme, if we can't access the genesis state via NodeReader,
+		// it means later blocks have been committed and the genesis state has been
+		// superseded. The genesis block data still exists in the raw database.
+		// We should NOT try to re-commit genesis because:
+		// 1. The genesis block is already stored
+		// 2. pathdb.Commit would fail (parent layer doesn't exist)
+		// 3. The state we need is already persisted in the disk layer
+		if triedb.Scheme() == rawdb.PathScheme {
+			return genesis.Config, stored, nil
+		}
 		_, err := genesis.Commit(db, triedb)
 		return genesis.Config, common.Hash{}, err
 	}

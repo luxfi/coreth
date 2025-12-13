@@ -1569,12 +1569,13 @@ var bindTests = []struct {
 		"github.com/luxfi/coreth/accounts/abi/bind"
 		"github.com/luxfi/coreth/accounts/abi/bind/backends"
 		"github.com/luxfi/crypto"
+		"github.com/luxfi/geth/common"
 		"github.com/luxfi/geth/core/types"
 		`,
 		`
 		// Initialize test accounts
 		key, _ := crypto.GenerateKey()
-		addr := crypto.PubkeyToAddress(key.PublicKey)
+		addr := common.Address(crypto.PubkeyToAddress(key.PublicKey))
 
 		// Deploy registrar contract
 		sim := backends.NewSimulatedBackend(types.GenesisAlloc{addr: {Balance: new(big.Int).Mul(big.NewInt(10000000000000000), big.NewInt(1000))}}, 10000000)
@@ -1632,11 +1633,12 @@ var bindTests = []struct {
 		"github.com/luxfi/coreth/accounts/abi/bind"
 		"github.com/luxfi/coreth/accounts/abi/bind/backends"
 		"github.com/luxfi/crypto"
+		"github.com/luxfi/geth/common"
 		"github.com/luxfi/geth/core/types"
         `,
 		`
 		key, _ := crypto.GenerateKey()
-		addr := crypto.PubkeyToAddress(key.PublicKey)
+		addr := common.Address(crypto.PubkeyToAddress(key.PublicKey))
 
 		// Deploy registrar contract
 		sim := backends.NewSimulatedBackend(types.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000000000)}}, 10000000)
@@ -1751,16 +1753,17 @@ var bindTests = []struct {
 		`
 			"bytes"
 			"math/big"
-	
+
 			"github.com/luxfi/coreth/accounts/abi/bind"
 			"github.com/luxfi/coreth/accounts/abi/bind/backends"
+			"github.com/luxfi/geth/common"
 			"github.com/luxfi/geth/core/types"
 			"github.com/luxfi/crypto"
 	   `,
 		`
 			key, _ := crypto.GenerateKey()
-			addr := crypto.PubkeyToAddress(key.PublicKey)
-	
+			addr := common.Address(crypto.PubkeyToAddress(key.PublicKey))
+
 			sim := backends.NewSimulatedBackend(types.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000000000)}}, 1000000)
 			defer sim.Close()
 	

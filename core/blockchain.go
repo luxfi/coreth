@@ -642,7 +642,8 @@ func (bc *BlockChain) addAcceptorQueue(b *types.Block) {
 }
 
 // DrainAcceptorQueue blocks until all items in [acceptorQueue] have been
-// processed.
+// processed. After draining, it commits any pending accepted roots for
+// path scheme to ensure state durability.
 func (bc *BlockChain) DrainAcceptorQueue() {
 	bc.acceptorClosingLock.RLock()
 	defer bc.acceptorClosingLock.RUnlock()
@@ -652,6 +653,13 @@ func (bc *BlockChain) DrainAcceptorQueue() {
 	}
 
 	bc.acceptorWg.Wait()
+
+	// Commit any pending accepted roots for path scheme.
+	// This is necessary because path scheme defers commits to avoid
+	// wiping layers for blocks that are still being processed.
+	if err := bc.stateManager.CommitAccepted(); err != nil {
+		log.Error("Failed to commit accepted state", "err", err)
+	}
 }
 
 // stopAcceptor sends a signal to the Acceptor to stop processing accepted
@@ -1738,22 +1746,19 @@ func (bc *BlockChain) commitWithSnap(
 	if err != nil {
 		return common.Hash{}, err
 	}
-	// Upstream does not perform a snapshot update if the root is the same as the
-	// parent root, however here the snapshots are based on the block hash, so
-	// this update is necessary. Note blockHashes are passed here as well.
-	if bc.snaps != nil && root == parentRoot {
+	// Update coreth's snapshot layer for this block. Since coreth uses its own
+	// snapshot package that is not integrated with geth's state database (we pass
+	// nil to state.NewDatabase), we must manually update the snapshot layer here.
+	// The account/storage data is passed as nil since geth's statedb.Commit
+	// handles the actual snapshot data updates internally (which are no-ops since
+	// we pass nil snapshots). This call creates the layer structure needed for
+	// block hash tracking and flattening during block acceptance.
+	if bc.snaps != nil {
 		if err := bc.snaps.Update(root, parentRoot, nil, nil, nil, snapshotOpt); err != nil {
 			return common.Hash{}, err
 		}
 	}
 
-	// Because Database relies on tracking block hashes in a tree, we need to notify the
-	// database that this block is empty.
-	if bc.CacheConfig().StateScheme == customrawdb.DatabaseScheme && root == parentRoot {
-		if err := bc.triedb.Update(root, parentRoot, current.NumberU64(), nil, nil); err != nil {
-			return common.Hash{}, fmt.Errorf("failed to update trie for block %s: %w", current.Hash(), err)
-		}
-	}
 	return root, nil
 }
 

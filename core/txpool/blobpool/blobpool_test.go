@@ -44,6 +44,7 @@ import (
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/header"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/geth/common"
@@ -88,7 +89,13 @@ var testChainConfig *params.ChainConfig
 
 func init() {
 	testChainConfig = new(params.ChainConfig)
-	*testChainConfig = params.Copy(params.TestChainConfig)
+	// Copy the base ChainConfig
+	*testChainConfig = *params.TestChainConfig
+	// params.Copy returns a value with extras associated with a local stack address,
+	// so we need to properly set up extras on our heap-allocated testChainConfig
+	extraCfg := new(extras.ChainConfig)
+	*extraCfg = *params.GetExtra(params.TestChainConfig)
+	params.WithExtra(testChainConfig, extraCfg)
 
 	testChainConfig.CancunTime = new(uint64)
 	*testChainConfig.CancunTime = uint64(time.Now().Unix())

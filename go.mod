@@ -167,7 +167,6 @@ require (
 )
 
 require (
-	github.com/google/go-cmp v0.7.0
 	github.com/luxfi/consensus v1.22.27
 	github.com/luxfi/constants v1.2.3
 	github.com/luxfi/database v1.2.12
@@ -177,3 +176,5 @@ require (
 	github.com/luxfi/p2p v1.4.7
 	github.com/luxfi/warp v1.16.37
 )
+
+replace github.com/luxfi/geth => ../geth

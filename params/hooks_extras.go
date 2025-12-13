@@ -22,15 +22,23 @@ import (
 type RulesExtra extras.Rules
 
 func GetRulesExtra(r Rules) *extras.Rules {
+	// If Payload is set and is an *extras.Rules, return it
+	if extra, ok := r.Payload.(*extras.Rules); ok && extra != nil {
+		return extra
+	}
 	// Return an empty Rules struct to prevent nil pointer dereference.
 	// This means Lux-specific features (Apricot phases, Durango, etc.) won't be enabled
 	// unless properly configured via chain config.
-	// TODO: Implement proper rules payload mechanism to store/retrieve extra rules data
 	return &extras.Rules{
 		Precompiles:         make(map[common.Address]precompileconfig.Config),
 		Predicaters:         make(map[common.Address]precompileconfig.Predicater),
 		AccepterPrecompiles: make(map[common.Address]precompileconfig.Accepter),
 	}
+}
+
+// SetRulesExtra sets the extra rules data in the Payload field
+func SetRulesExtra(r *Rules, extra *extras.Rules) {
+	r.Payload = extra
 }
 
 // Temporarily commented out geth hooks
