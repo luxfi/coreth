@@ -11,6 +11,7 @@ import (
 	"sort"
 
 	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/tracing"
 	"github.com/holiman/uint256"
 
 	"github.com/luxfi/coreth/params/extras"
@@ -139,17 +140,17 @@ type UnsignedTx interface {
 }
 
 type StateDB interface {
-	AddBalance(common.Address, *uint256.Int)
+	AddBalance(common.Address, *uint256.Int, tracing.BalanceChangeReason) uint256.Int
 	AddBalanceMultiCoin(common.Address, common.Hash, *big.Int)
 
-	SubBalance(common.Address, *uint256.Int)
+	SubBalance(common.Address, *uint256.Int, tracing.BalanceChangeReason) uint256.Int
 	SubBalanceMultiCoin(common.Address, common.Hash, *big.Int)
 
 	GetBalance(common.Address) *uint256.Int
 	GetBalanceMultiCoin(common.Address, common.Hash) *big.Int
 
 	GetNonce(common.Address) uint64
-	SetNonce(common.Address, uint64)
+	SetNonce(common.Address, uint64, tracing.NonceChangeReason)
 }
 
 // UnsignedAtomicTx is an unsigned operation that can be atomically accepted

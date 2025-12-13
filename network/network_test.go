@@ -14,10 +14,8 @@ import (
 
 	"github.com/luxfi/p2p"
 	"github.com/luxfi/consensus/core"
-	"github.com/luxfi/consensus/engine/enginetest"
 	consensustest "github.com/luxfi/consensus/test/helpers"
 	consensusversion "github.com/luxfi/consensus/version"
-	"github.com/luxfi/math/set"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/stretchr/testify/assert"
@@ -56,7 +54,7 @@ var (
 	_ message.RequestHandler = (*HelloGreetingRequestHandler)(nil)
 	_ message.RequestHandler = (*testRequestHandler)(nil)
 
-	_ core.AppSender = (*testAppSender)(nil)
+	_ AppSender = (*testAppSender)(nil)
 
 	_ p2p.Handler = (*testSDKHandler)(nil)
 )
@@ -630,25 +628,38 @@ func marshalStruct(codec codec.Manager, obj interface{}) ([]byte, error) {
 }
 
 type testAppSender struct {
-	sendAppRequestFn  func(context.Context, set.Set[ids.NodeID], uint32, []byte) error
-	sendAppResponseFn func(ids.NodeID, uint32, []byte) error
-	sendAppGossipFn   func(core.SendConfig, []byte) error
+	sendAppRequestFn            func(ids.NodeID, uint32, []byte) error
+	sendAppResponseFn           func(ids.NodeID, uint32, []byte) error
+	sendCrossChainAppRequestFn  func(ids.ID, uint32, []byte) error
+	sendCrossChainAppResponseFn func(ids.ID, uint32, []byte) error
 }
 
-func (t testAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.NodeID], requestID uint32, message []byte) error {
-	return t.sendAppRequestFn(ctx, nodeIDs, requestID, message)
+func (t testAppSender) SendAppRequest(nodeID ids.NodeID, requestID uint32, message []byte) error {
+	if t.sendAppRequestFn != nil {
+		return t.sendAppRequestFn(nodeID, requestID, message)
+	}
+	return nil
 }
 
-func (t testAppSender) SendAppResponse(_ context.Context, nodeID ids.NodeID, requestID uint32, message []byte) error {
-	return t.sendAppResponseFn(nodeID, requestID, message)
+func (t testAppSender) SendAppResponse(nodeID ids.NodeID, requestID uint32, message []byte) error {
+	if t.sendAppResponseFn != nil {
+		return t.sendAppResponseFn(nodeID, requestID, message)
+	}
+	return nil
 }
 
-func (t testAppSender) SendAppGossip(_ context.Context, config core.SendConfig, message []byte) error {
-	return t.sendAppGossipFn(config, message)
+func (t testAppSender) SendCrossChainAppRequest(chainID ids.ID, requestID uint32, message []byte) error {
+	if t.sendCrossChainAppRequestFn != nil {
+		return t.sendCrossChainAppRequestFn(chainID, requestID, message)
+	}
+	return nil
 }
 
-func (t testAppSender) SendAppError(ctx context.Context, nodeID ids.NodeID, requestID uint32, errorCode int32, errorMessage string) error {
-	panic("not implemented")
+func (t testAppSender) SendCrossChainAppResponse(chainID ids.ID, requestID uint32, message []byte) error {
+	if t.sendCrossChainAppResponseFn != nil {
+		return t.sendCrossChainAppResponseFn(chainID, requestID, message)
+	}
+	return nil
 }
 
 type HelloRequest struct {
@@ -760,12 +771,11 @@ type testSDKHandler struct {
 	appRequested bool
 }
 
-func (t *testSDKHandler) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) {
-	// TODO implement me
-	panic("implement me")
+func (t *testSDKHandler) Gossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) {
+	// No-op for tests
 }
 
-func (t *testSDKHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *p2p.Error) {
+func (t *testSDKHandler) Request(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *p2p.Error) {
 	t.appRequested = true
 	return nil, nil
 }

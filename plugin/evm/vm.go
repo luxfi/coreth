@@ -49,8 +49,8 @@ import (
 
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/ethdb/pebble"
 	"github.com/luxfi/geth/metrics"
-	ethparams "github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/triedb"
 	luxlog "github.com/luxfi/log"
 	luxmetric "github.com/luxfi/metric"
@@ -78,7 +78,6 @@ import (
 	"github.com/luxfi/ids"
 	luxdssip "github.com/luxfi/p2p/gossip"
 	"github.com/luxfi/consensus"
-	consensuschain "github.com/luxfi/consensus/engine/chain"
 	consensusctx "github.com/luxfi/consensus/context"
 	commonEng "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/chain/block"
@@ -248,7 +247,11 @@ type VM struct {
 	networkCodec codec.Manager
 
 	// Metrics
-	sdkMetrics *prometheus.Registry
+	sdkMetrics       *prometheus.Registry
+	metricsGatherer  luxmetric.MultiGatherer // Type-asserted from ctx.Metrics
+
+	// Type-asserted context interfaces
+	ctxLogger luxlog.Logger // Type-asserted from ctx.Log
 
 	bootstrapped luxUtils.Atomic[bool]
 	IsPlugin     bool
@@ -319,6 +322,18 @@ func (vm *VM) Initialize(
 		}
 	}
 	vm.ctx = vmCtx
+
+	// Type assert and store context interfaces for use throughout VM
+	if ctxLogger, ok := vm.ctx.Log.(luxlog.Logger); ok {
+		vm.ctxLogger = ctxLogger
+	} else {
+		return fmt.Errorf("expected luxlog.Logger for ctx.Log, got %T", vm.ctx.Log)
+	}
+	if metricsGatherer, ok := vm.ctx.Metrics.(luxmetric.MultiGatherer); ok {
+		vm.metricsGatherer = metricsGatherer
+	} else {
+		return fmt.Errorf("expected luxmetric.MultiGatherer for ctx.Metrics, got %T", vm.ctx.Metrics)
+	}
 
 	if err := vm.config.Validate(vm.ctx.NetworkID); err != nil {
 		return err
@@ -530,13 +545,8 @@ func (vm *VM) Initialize(
 		return err
 	}
 
-	// Type assert Log from context for RecoverAndPanic
-	if ctxLogger, ok := vm.ctx.Log.(luxlog.Logger); ok {
-		go ctxLogger.RecoverAndPanic(vm.startContinuousProfiler)
-	} else {
-		// Fallback: run without panic recovery
-		go vm.startContinuousProfiler()
-	}
+	// Use stored ctxLogger for RecoverAndPanic
+	go vm.ctxLogger.RecoverAndPanic(vm.startContinuousProfiler)
 
 	// Type assert WarpSigner to lp118.Signer for handler
 	lp118Signer, ok := vm.ctx.WarpSigner.(lp118.Signer)
@@ -594,13 +604,7 @@ func (vm *VM) initializeMetrics() error {
 	vm.sdkMetrics = prometheus.NewRegistry()
 	gatherer := corethprometheus.NewGatherer(metrics.DefaultRegistry)
 
-	// Type assert Metrics from context
-	metricsMultiGatherer, ok := vm.ctx.Metrics.(luxmetric.MultiGatherer)
-	if !ok {
-		return fmt.Errorf("expected luxmetric.MultiGatherer, got %T", vm.ctx.Metrics)
-	}
-
-	if err := metricsMultiGatherer.Register(ethMetricsPrefix, gatherer); err != nil {
+	if err := vm.metricsGatherer.Register(ethMetricsPrefix, gatherer); err != nil {
 		return err
 	}
 
@@ -608,11 +612,11 @@ func (vm *VM) initializeMetrics() error {
 	// 	if err := ffi.StartMetrics(); err != nil {
 	// 		return fmt.Errorf("failed to start database metrics collection: %w", err)
 	// 	}
-	// 	if err := metricsMultiGatherer.Register("database", ffi.Gatherer{}); err != nil {
+	// 	if err := vm.metricsGatherer.Register("database", ffi.Gatherer{}); err != nil {
 	// 		return fmt.Errorf("failed to register database metrics: %w", err)
 	// 	}
 	// }
-	return metricsMultiGatherer.Register(sdkMetricsPrefix, vm.sdkMetrics)
+	return vm.metricsGatherer.Register(sdkMetricsPrefix, vm.sdkMetrics)
 }
 
 func (vm *VM) initializeChain(lastAcceptedHash common.Hash) error {
@@ -800,12 +804,7 @@ func (vm *VM) initChainState(lastAcceptedBlock *types.Block) error {
 		return nil
 	}
 
-	// Type assert Metrics for chainState registration
-	metricsGatherer, ok := vm.ctx.Metrics.(luxmetric.MultiGatherer)
-	if !ok {
-		return fmt.Errorf("expected luxmetric.MultiGatherer, got %T", vm.ctx.Metrics)
-	}
-	return metricsGatherer.Register(chainStateMetricsPrefix, chainStateRegisterer)
+	return vm.metricsGatherer.Register(chainStateMetricsPrefix, chainStateRegisterer)
 }
 
 func (vm *VM) SetState(_ context.Context, state uint32) error {
@@ -851,12 +850,6 @@ func (vm *VM) onNormalOperationsStarted() error {
 
 // initBlockBuilding starts goroutines to manage block building
 func (vm *VM) initBlockBuilding() error {
-	// Type assert Log for gossip operations
-	gossipLogger, ok := vm.ctx.Log.(luxlog.Logger)
-	if !ok {
-		return fmt.Errorf("expected luxlog.Logger, got %T", vm.ctx.Log)
-	}
-
 	ctx, cancel := context.WithCancel(context.TODO())
 	vm.cancel = cancel
 
@@ -909,7 +902,7 @@ func (vm *VM) initBlockBuilding() error {
 	vm.builderLock.Unlock()
 
 	vm.ethTxGossipHandler = gossip.NewTxGossipHandler[*GossipEthTx](
-		gossipLogger,
+		vm.ctxLogger,
 		ethTxGossipMarshaller,
 		ethTxPool,
 		ethTxGossipMetrics,
@@ -925,7 +918,7 @@ func (vm *VM) initBlockBuilding() error {
 	}
 
 	ethTxPullGossiper := luxdssip.NewPullGossiper[*GossipEthTx](
-		gossipLogger,
+		vm.ctxLogger,
 		ethTxGossipMarshaller,
 		ethTxPool,
 		ethTxGossipClient,
@@ -941,23 +934,23 @@ func (vm *VM) initBlockBuilding() error {
 
 	vm.shutdownWg.Add(1)
 	go func() {
-		luxdssip.Every(ctx, vm.ctx.Log, ethTxPushGossiper, vm.config.PushGossipFrequency.Duration)
+		luxdssip.Every(ctx, vm.ctxLogger, ethTxPushGossiper, vm.config.PushGossipFrequency.Duration)
 		vm.shutdownWg.Done()
 	}()
 	vm.shutdownWg.Add(1)
 	go func() {
-		luxdssip.Every(ctx, vm.ctx.Log, vm.ethTxPullGossiper, vm.config.PullGossipFrequency.Duration)
+		luxdssip.Every(ctx, vm.ctxLogger, vm.ethTxPullGossiper, vm.config.PullGossipFrequency.Duration)
 		vm.shutdownWg.Done()
 	}()
 
 	vm.shutdownWg.Add(1)
 	go func() {
-		luxdssip.Every(ctx, vm.ctx.Log, ethTxPushGossiper, vm.config.PushGossipFrequency.Duration)
+		luxdssip.Every(ctx, vm.ctxLogger, ethTxPushGossiper, vm.config.PushGossipFrequency.Duration)
 		vm.shutdownWg.Done()
 	}()
 	vm.shutdownWg.Add(1)
 	go func() {
-		luxdssip.Every(ctx, vm.ctx.Log, vm.ethTxPullGossiper, vm.config.PullGossipFrequency.Duration)
+		luxdssip.Every(ctx, vm.ctxLogger, vm.ethTxPullGossiper, vm.config.PullGossipFrequency.Duration)
 		vm.shutdownWg.Done()
 	}()
 
@@ -1193,12 +1186,7 @@ func (vm *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 
 	if vm.config.WarpAPIEnabled {
 		warpSDKClient := vm.Network.NewClient(p2p.SignatureRequestHandlerID)
-		// Type assert Log to log.Logger for NewSignatureAggregator
-		logLogger, ok := vm.ctx.Log.(luxlog.Logger)
-		if !ok {
-			return nil, fmt.Errorf("expected luxlog.Logger for WarpAPI, got %T", vm.ctx.Log)
-		}
-		signatureAggregator := lp118.NewSignatureAggregator(logLogger, warpSDKClient)
+		signatureAggregator := lp118.NewSignatureAggregator(vm.ctxLogger, warpSDKClient)
 
 		if err := handler.RegisterName("warp", warp.NewAPI(vm.ctx, vm.warpBackend, signatureAggregator, vm.requirePrimaryNetworkSigners)); err != nil {
 			return nil, err
@@ -1296,11 +1284,11 @@ func (vm *VM) ReadLastAccepted() (common.Hash, uint64, error) {
 		return common.Hash{}, 0, fmt.Errorf("last accepted bytes should have been length %d, but found %d", common.HashLength, len(lastAcceptedBytes))
 	default:
 		lastAcceptedHash := common.BytesToHash(lastAcceptedBytes)
-		height := rawdb.ReadHeaderNumber(vm.chaindb, lastAcceptedHash)
-		if height == nil {
+		height, found := rawdb.ReadHeaderNumber(vm.chaindb, lastAcceptedHash)
+		if !found {
 			return common.Hash{}, 0, fmt.Errorf("failed to retrieve header number of last accepted block: %s", lastAcceptedHash)
 		}
-		return lastAcceptedHash, *height, nil
+		return lastAcceptedHash, height, nil
 	}
 }
 
@@ -1353,20 +1341,20 @@ func (vm *VM) stateSyncEnabled(lastAcceptedHeight uint64) bool {
 
 // importChainData imports blockchain data from a specified path
 func (vm *VM) importChainData(dataPath string) error {
-	// Open the source database
-	sourceDB, err := rawdb.Open(rawdb.OpenOptions{
-		Type:              "pebble",
-		Directory:         dataPath,
-		AncientsDirectory: "",
-		Namespace:         "",
-		Cache:             0,
-		Handles:           0,
-		ReadOnly:          true,
-		Ephemeral:         false,
-		DisableFreezer:    true,
-	})
+	// Open the source database using pebble directly
+	pebbleDB, err := pebble.New(dataPath, 16, 16, "", true)
 	if err != nil {
 		return fmt.Errorf("failed to open source database: %w", err)
+	}
+	defer pebbleDB.Close()
+
+	// Wrap with rawdb for higher-level access
+	sourceDB, err := rawdb.Open(pebbleDB, rawdb.OpenOptions{
+		ReadOnly: true,
+	})
+	if err != nil {
+		pebbleDB.Close()
+		return fmt.Errorf("failed to wrap database: %w", err)
 	}
 	defer sourceDB.Close()
 

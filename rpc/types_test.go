@@ -29,6 +29,7 @@ package rpc
 
 import (
 	"encoding/json"
+	stdmath "math"
 	"reflect"
 	"testing"
 

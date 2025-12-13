@@ -10,7 +10,6 @@ import (
 
 	"github.com/holiman/uint256"
 
-	"github.com/luxfi/consensus"
 	commonEng "github.com/luxfi/consensus/core"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/node/utils/lock"

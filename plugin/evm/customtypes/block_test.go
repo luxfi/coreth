@@ -344,7 +344,7 @@ func makeBenchBlock() *types.Block {
 			Extra:      []byte("benchmark uncle"),
 		}
 	}
-	return types.NewBlock(header, txs, uncles, receipts, blocktest.NewHasher())
+	return types.NewBlock(header, &types.Body{Transactions: txs, Uncles: uncles}, receipts, blocktest.NewHasher())
 }
 
 func TestAP4BlockEncoding(t *testing.T) {

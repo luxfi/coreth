@@ -4,10 +4,10 @@
 package ap3
 
 import (
+	"math"
 	"strconv"
 	"testing"
 
-	"github.com/luxfi/geth/common/math"
 	"github.com/stretchr/testify/require"
 )
 

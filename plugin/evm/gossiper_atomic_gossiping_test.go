@@ -16,6 +16,7 @@ import (
 	"github.com/luxfi/p2p"
 	"github.com/luxfi/node/proto/pb/sdk"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/warp"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 
@@ -39,15 +40,14 @@ func TestMempoolAtmTxsAppGossipHandling(t *testing.T) {
 		txGossipedLock sync.Mutex
 		txRequested    bool
 	)
-	tvm.appSender.CantSendAppGossip = false
-	tvm.appSender.SendAppGossipF = func(context.Context, consensuscore.SendConfig, []byte) error {
+	tvm.appSender.SendGossipF = func(context.Context, warp.SendConfig, []byte) error {
 		txGossipedLock.Lock()
 		defer txGossipedLock.Unlock()
 
 		txGossiped++
 		return nil
 	}
-	tvm.appSender.SendAppRequestF = func(context.Context, set.Set[ids.NodeID], uint32, []byte) error {
+	tvm.appSender.SendRequestF = func(context.Context, set.Set[ids.NodeID], uint32, []byte) error {
 		txRequested = true
 		return nil
 	}
@@ -123,15 +123,14 @@ func TestMempoolAtmTxsAppGossipHandlingDiscardedTx(t *testing.T) {
 		txGossipedLock sync.Mutex
 		txRequested    bool
 	)
-	tvm.appSender.CantSendAppGossip = false
-	tvm.appSender.SendAppGossipF = func(context.Context, consensuscore.SendConfig, []byte) error {
+	tvm.appSender.SendGossipF = func(context.Context, warp.SendConfig, []byte) error {
 		txGossipedLock.Lock()
 		defer txGossipedLock.Unlock()
 
 		txGossiped++
 		return nil
 	}
-	tvm.appSender.SendAppRequestF = func(context.Context, set.Set[ids.NodeID], uint32, []byte) error {
+	tvm.appSender.SendRequestF = func(context.Context, set.Set[ids.NodeID], uint32, []byte) error {
 		txRequested = true
 		return nil
 	}
