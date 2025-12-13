@@ -52,9 +52,10 @@ import (
 )
 
 var (
-	key, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	addr   = crypto.PubkeyToAddress(key.PublicKey)
-	bal, _ = new(big.Int).SetString("100000000000000000000000", 10)
+	key, _   = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	cryptoAddr = crypto.PubkeyToAddress(key.PublicKey)
+	addr     = common.BytesToAddress(cryptoAddr.Bytes()) // convert to geth common.Address
+	bal, _   = new(big.Int).SetString("100000000000000000000000", 10)
 )
 
 type testBackend struct {

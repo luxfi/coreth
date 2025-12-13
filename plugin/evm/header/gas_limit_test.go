@@ -91,7 +91,9 @@ func TestVerifyGasUsed(t *testing.T) {
 			name:     "fortuna_massive_extra_gas_used",
 			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
 			header: customtypes.WithHeaderExtra(
-				&types.Header{},
+				&types.Header{
+					Number: big.NewInt(300), // Unique number to ensure unique hash
+				},
 				&customtypes.HeaderExtra{
 					ExtDataGasUsed: new(big.Int).Lsh(common.Big1, 64),
 				},
@@ -103,6 +105,7 @@ func TestVerifyGasUsed(t *testing.T) {
 			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
+					Number:  big.NewInt(301), // Unique number to ensure unique hash
 					GasUsed: math.MaxUint[uint64](),
 				},
 				&customtypes.HeaderExtra{
@@ -115,10 +118,12 @@ func TestVerifyGasUsed(t *testing.T) {
 			name:     "fortuna_invalid_capacity",
 			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
 			parent: &types.Header{
-				Number: big.NewInt(1),
+				Number: big.NewInt(302), // Unique number to ensure unique hash
 			},
-			header: &types.Header{},
-			want:   lp176.ErrStateInsufficientLength,
+			header: &types.Header{
+				Number: big.NewInt(303), // Unique number to ensure unique hash
+			},
+			want: lp176.ErrStateInsufficientLength,
 		},
 		{
 			name:     "fortuna_invalid_usage",

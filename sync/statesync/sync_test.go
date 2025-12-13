@@ -133,7 +133,8 @@ func TestSimpleSyncCases(t *testing.T) {
 						_, err := rand.Read(codeBytes)
 						require.NoError(t, err, "error reading random code bytes")
 
-						codeHash := crypto.Keccak256Hash(codeBytes)
+						cryptoCodeHash := crypto.Keccak256Hash(codeBytes)
+						codeHash := common.BytesToHash(cryptoCodeHash.Bytes())
 						rawdb.WriteCode(serverDB, codeHash, codeBytes)
 						account.CodeHash = codeHash[:]
 					}
@@ -584,7 +585,8 @@ func fillAccountsWithStorage(t *testing.T, serverDB ethdb.Database, serverTrieDB
 		_, err := rand.Read(codeBytes)
 		require.NoError(t, err, "error reading random code bytes")
 
-		codeHash := crypto.Keccak256Hash(codeBytes)
+		cryptoCodeHash := crypto.Keccak256Hash(codeBytes)
+		codeHash := common.BytesToHash(cryptoCodeHash.Bytes())
 		rawdb.WriteCode(serverDB, codeHash, codeBytes)
 		account.CodeHash = codeHash[:]
 

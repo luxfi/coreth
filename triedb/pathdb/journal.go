@@ -122,11 +122,20 @@ func (db *Database) loadJournal(diskRoot common.Hash) (layer, error) {
 	return head, nil
 }
 
+// trieRootHash computes the hash of the given trie node blob.
+// It returns EmptyRootHash for empty blobs.
+func trieRootHash(blob []byte) common.Hash {
+	if len(blob) == 0 {
+		return types.EmptyRootHash
+	}
+	return common.Keccak256Hash(blob)
+}
+
 // loadLayers loads a pre-existing state layer backed by a key-value store.
 func (db *Database) loadLayers() layer {
 	// Retrieve the root node of persistent state.
 	rootBlob := rawdb.ReadAccountTrieNode(db.diskdb, nil)
-	root := types.TrieRootHash(rootBlob)
+	root := trieRootHash(rootBlob)
 
 	// Load the layers by resolving the journal
 	head, err := db.loadJournal(root)
@@ -376,7 +385,7 @@ func (db *Database) Journal(root common.Hash) error {
 	// The stored state in disk might be empty, convert the
 	// root to emptyRoot in this case.
 	diskrootBlob := rawdb.ReadAccountTrieNode(db.diskdb, nil)
-	diskroot := types.TrieRootHash(diskrootBlob)
+	diskroot := trieRootHash(diskrootBlob)
 
 	// Secondly write out the state root in disk, ensure all layers
 	// on top are continuous with disk.

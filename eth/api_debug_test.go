@@ -38,6 +38,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/triedb"
@@ -76,7 +77,7 @@ func TestAccountRange(t *testing.T) {
 
 	var (
 		statedb = extstate.NewDatabaseWithConfig(rawdb.NewMemoryDatabase(), &triedb.Config{Preimages: true})
-		sdb, _  = state.New(types.EmptyRootHash, statedb, nil)
+		sdb, _  = state.New(types.EmptyRootHash, statedb)
 		addrs   = [AccountRangeMaxResults * 2]common.Address{}
 		m       = map[common.Address]bool{}
 	)
@@ -85,15 +86,15 @@ func TestAccountRange(t *testing.T) {
 		hash := common.HexToHash(fmt.Sprintf("%x", i))
 		addr := common.BytesToAddress(crypto.Keccak256Hash(hash.Bytes()).Bytes())
 		addrs[i] = addr
-		sdb.SetBalance(addrs[i], uint256.NewInt(1))
+		sdb.SetBalance(addrs[i], uint256.NewInt(1), tracing.BalanceChangeUnspecified)
 		if _, ok := m[addr]; ok {
 			t.Fatalf("bad")
 		} else {
 			m[addr] = true
 		}
 	}
-	root, _ := sdb.Commit(0, true)
-	sdb, _ = state.New(root, statedb, nil)
+	root, _ := sdb.Commit(0, true, false)
+	sdb, _ = state.New(root, statedb)
 
 	trie, err := statedb.OpenTrie(root)
 	if err != nil {
@@ -114,7 +115,8 @@ func TestAccountRange(t *testing.T) {
 		if _, duplicate := secondResult.Accounts[addr1]; duplicate {
 			t.Fatalf("pagination test failed:  results should not overlap")
 		}
-		hList = append(hList, crypto.Keccak256Hash(acc.Address.Bytes()))
+		cryptoHash := crypto.Keccak256Hash(acc.Address.Bytes())
+		hList = append(hList, common.BytesToHash(cryptoHash.Bytes()))
 	}
 	// Test to see if it's possible to recover from the middle of the previous
 	// set and get an even split between the first and second sets.
@@ -146,12 +148,12 @@ func TestEmptyAccountRange(t *testing.T) {
 	t.Parallel()
 
 	var (
-		statedb = state.NewDatabase(rawdb.NewMemoryDatabase())
-		st, _   = state.New(types.EmptyRootHash, statedb, nil)
+		statedb = state.NewDatabaseForTesting()
+		st, _   = state.New(types.EmptyRootHash, statedb)
 	)
 	// Commit(although nothing to flush) and re-init the statedb
-	st.Commit(0, true)
-	st, _ = state.New(types.EmptyRootHash, statedb, nil)
+	st.Commit(0, true, false)
+	st, _ = state.New(types.EmptyRootHash, statedb)
 
 	results := st.RawDump(&state.DumpConfig{
 		SkipCode:          true,
@@ -173,7 +175,7 @@ func TestStorageRangeAt(t *testing.T) {
 	// Create a state where account 0x010000... has a few storage entries.
 	var (
 		db          = extstate.NewDatabaseWithConfig(rawdb.NewMemoryDatabase(), &triedb.Config{Preimages: true})
-		sdb, _      = state.New(types.EmptyRootHash, db, nil)
+		sdb, _      = state.New(types.EmptyRootHash, db)
 		addr        = common.Address{0x01}
 		keys        = []common.Hash{}
 		storage     = storageMap{}
@@ -188,7 +190,8 @@ func TestStorageRangeAt(t *testing.T) {
 	// state keys before storing them. This means the original values cannot be
 	// used, and the keys array and storage map must be re-calculated.
 	for _, entry := range storageList {
-		k := crypto.Keccak256Hash(entry.Key.Bytes())
+		cryptoK := crypto.Keccak256Hash(entry.Key.Bytes())
+		k := common.BytesToHash(cryptoK.Bytes())
 		keys = append(keys, k)
 		storage[k] = entry
 	}
@@ -196,8 +199,8 @@ func TestStorageRangeAt(t *testing.T) {
 	for _, entry := range storage {
 		sdb.SetState(addr, *entry.Key, entry.Value)
 	}
-	root, _ := sdb.Commit(0, false)
-	sdb, _ = state.New(root, db, nil)
+	root, _ := sdb.Commit(0, false, false)
+	sdb, _ = state.New(root, db)
 
 	// Check a few combinations of limit and start/end.
 	tests := []struct {

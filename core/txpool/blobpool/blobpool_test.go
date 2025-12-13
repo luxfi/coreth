@@ -25,11 +25,6 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-//go:build skip
-// +build skip
-
-// TODO: Update tests for new geth state.NewDatabase API
-
 package blobpool
 
 import (
@@ -54,12 +49,14 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/ethdb/memorydb"
 	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rlp"
+	"github.com/luxfi/geth/triedb"
 	"github.com/holiman/billy"
 	"github.com/holiman/uint256"
 )
@@ -70,6 +67,19 @@ var (
 	emptyBlobProof, _  = kzg4844.ComputeBlobProof(&emptyBlob, emptyBlobCommit)
 	emptyBlobVHash     = kzg4844.CalcBlobHashV1(sha256.New(), &emptyBlobCommit)
 )
+
+// newTestStateDB creates a new statedb for testing with the new geth API
+func newTestStateDB() *state.StateDB {
+	tdb := triedb.NewDatabase(rawdb.NewDatabase(memorydb.New()), nil)
+	db := state.NewDatabase(tdb, nil)
+	statedb, _ := state.New(types.EmptyRootHash, db)
+	return statedb
+}
+
+// toGethAddress converts crypto/common.Address to geth/common.Address
+func toGethAddress(cryptoAddr [20]byte) common.Address {
+	return common.BytesToAddress(cryptoAddr[:])
+}
 
 // Chain configuration with Cancun enabled.
 //
@@ -571,21 +581,21 @@ func TestOpenDrops(t *testing.T) {
 	store.Close()
 
 	// Create a blob pool out of the pre-seeded data
-	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewDatabase(memorydb.New())), nil)
-	statedb.AddBalance(crypto.PubkeyToAddress(gapper.PublicKey), uint256.NewInt(1000000))
-	statedb.AddBalance(crypto.PubkeyToAddress(dangler.PublicKey), uint256.NewInt(1000000))
-	statedb.AddBalance(crypto.PubkeyToAddress(filler.PublicKey), uint256.NewInt(1000000))
-	statedb.SetNonce(crypto.PubkeyToAddress(filler.PublicKey), 3)
-	statedb.AddBalance(crypto.PubkeyToAddress(overlapper.PublicKey), uint256.NewInt(1000000))
-	statedb.SetNonce(crypto.PubkeyToAddress(overlapper.PublicKey), 2)
-	statedb.AddBalance(crypto.PubkeyToAddress(underpayer.PublicKey), uint256.NewInt(1000000))
-	statedb.AddBalance(crypto.PubkeyToAddress(outpricer.PublicKey), uint256.NewInt(1000000))
-	statedb.AddBalance(crypto.PubkeyToAddress(exceeder.PublicKey), uint256.NewInt(1000000))
-	statedb.AddBalance(crypto.PubkeyToAddress(overdrafter.PublicKey), uint256.NewInt(1000000))
-	statedb.AddBalance(crypto.PubkeyToAddress(overcapper.PublicKey), uint256.NewInt(10000000))
-	statedb.AddBalance(crypto.PubkeyToAddress(duplicater.PublicKey), uint256.NewInt(1000000))
-	statedb.AddBalance(crypto.PubkeyToAddress(repeater.PublicKey), uint256.NewInt(1000000))
-	statedb.Commit(0, true)
+	statedb := newTestStateDB()
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(gapper.PublicKey)), uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(dangler.PublicKey)), uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(filler.PublicKey)), uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
+	statedb.SetNonce(common.Address(crypto.PubkeyToAddress(filler.PublicKey)), 3, tracing.NonceChangeUnspecified)
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(overlapper.PublicKey)), uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
+	statedb.SetNonce(common.Address(crypto.PubkeyToAddress(overlapper.PublicKey)), 2, tracing.NonceChangeUnspecified)
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(underpayer.PublicKey)), uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(outpricer.PublicKey)), uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(exceeder.PublicKey)), uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(overdrafter.PublicKey)), uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(overcapper.PublicKey)), uint256.NewInt(10000000), tracing.BalanceChangeUnspecified)
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(duplicater.PublicKey)), uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
+	statedb.AddBalance(common.Address(crypto.PubkeyToAddress(repeater.PublicKey)), uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
+	statedb.Commit(0, true, false)
 
 	chain := &testBlockChain{
 		config:  testChainConfig,
@@ -679,7 +689,7 @@ func TestOpenIndex(t *testing.T) {
 	// the cumulative minimum will be maintained.
 	var (
 		key, _ = crypto.GenerateKey()
-		addr   = crypto.PubkeyToAddress(key.PublicKey)
+		addr   = common.Address(crypto.PubkeyToAddress(key.PublicKey))
 
 		txExecTipCaps = []uint64{10, 25, 5, 7, 1, 100}
 		txExecFeeCaps = []uint64{100, 90, 200, 10, 80, 300}
@@ -702,9 +712,9 @@ func TestOpenIndex(t *testing.T) {
 	store.Close()
 
 	// Create a blob pool out of the pre-seeded data
-	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewDatabase(memorydb.New())), nil)
-	statedb.AddBalance(addr, uint256.NewInt(1_000_000_000))
-	statedb.Commit(0, true)
+	statedb := newTestStateDB()
+	statedb.AddBalance(addr, uint256.NewInt(1_000_000_000), tracing.BalanceChangeUnspecified)
+	statedb.Commit(0, true, false)
 
 	chain := &testBlockChain{
 		config:  testChainConfig,
@@ -771,9 +781,9 @@ func TestOpenHeap(t *testing.T) {
 		key2, _ = crypto.GenerateKey()
 		key3, _ = crypto.GenerateKey()
 
-		addr1 = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2 = crypto.PubkeyToAddress(key2.PublicKey)
-		addr3 = crypto.PubkeyToAddress(key3.PublicKey)
+		addr1 = common.Address(crypto.PubkeyToAddress(key1.PublicKey))
+		addr2 = common.Address(crypto.PubkeyToAddress(key2.PublicKey))
+		addr3 = common.Address(crypto.PubkeyToAddress(key3.PublicKey))
 	)
 	if bytes.Compare(addr1[:], addr2[:]) > 0 {
 		key1, addr1, key2, addr2 = key2, addr2, key1, addr1
@@ -802,11 +812,11 @@ func TestOpenHeap(t *testing.T) {
 	store.Close()
 
 	// Create a blob pool out of the pre-seeded data
-	statedb, _ := state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewDatabase(memorydb.New())), nil)
-	statedb.AddBalance(addr1, uint256.NewInt(1_000_000_000))
-	statedb.AddBalance(addr2, uint256.NewInt(1_000_000_000))
-	statedb.AddBalance(addr3, uint256.NewInt(1_000_000_000))
-	statedb.Commit(0, true)
+	statedb := newTestStateDB()
+	statedb.AddBalance(addr1, uint256.NewInt(1_000_000_000), tracing.BalanceChangeUnspecified)
+	statedb.AddBalance(addr2, uint256.NewInt(1_000_000_000), tracing.BalanceChangeUnspecified)
+	statedb.AddBalance(addr3, uint256.NewInt(1_000_000_000), tracing.BalanceChangeUnspecified)
+	statedb.Commit(0, true, false)
 
 	chain := &testBlockChain{
 		config:  testChainConfig,
@@ -857,9 +867,9 @@ func TestOpenCap(t *testing.T) {
 		key2, _ = crypto.GenerateKey()
 		key3, _ = crypto.GenerateKey()
 
-		addr1 = crypto.PubkeyToAddress(key1.PublicKey)
-		addr2 = crypto.PubkeyToAddress(key2.PublicKey)
-		addr3 = crypto.PubkeyToAddress(key3.PublicKey)
+		addr1 = common.Address(crypto.PubkeyToAddress(key1.PublicKey))
+		addr2 = common.Address(crypto.PubkeyToAddress(key2.PublicKey))
+		addr3 = common.Address(crypto.PubkeyToAddress(key3.PublicKey))
 
 		tx1 = makeTx(0, 1, 1000, 100, key1)
 		tx2 = makeTx(0, 1, 800, 70, key2)
@@ -882,11 +892,11 @@ func TestOpenCap(t *testing.T) {
 	// with a high cap to ensure everything was persisted previously
 	for _, datacap := range []uint64{2 * (txAvgSize + blobSize), 100 * (txAvgSize + blobSize)} {
 		// Create a blob pool out of the pre-seeded data, but cap it to 2 blob transaction
-		statedb, _ := state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewDatabase(memorydb.New())), nil)
-		statedb.AddBalance(addr1, uint256.NewInt(1_000_000_000))
-		statedb.AddBalance(addr2, uint256.NewInt(1_000_000_000))
-		statedb.AddBalance(addr3, uint256.NewInt(1_000_000_000))
-		statedb.Commit(0, true)
+		statedb := newTestStateDB()
+		statedb.AddBalance(addr1, uint256.NewInt(1_000_000_000), tracing.BalanceChangeUnspecified)
+		statedb.AddBalance(addr2, uint256.NewInt(1_000_000_000), tracing.BalanceChangeUnspecified)
+		statedb.AddBalance(addr3, uint256.NewInt(1_000_000_000), tracing.BalanceChangeUnspecified)
+		statedb.Commit(0, true, false)
 
 		chain := &testBlockChain{
 			config:  testChainConfig,
@@ -1287,15 +1297,15 @@ func TestAdd(t *testing.T) {
 			keys  = make(map[string]*ecdsa.PrivateKey)
 			addrs = make(map[string]common.Address)
 		)
-		statedb, _ := state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewDatabase(memorydb.New())), nil)
+		statedb := newTestStateDB()
 		for acc, seed := range tt.seeds {
 			// Generate a new random key/address for the seed account
 			keys[acc], _ = crypto.GenerateKey()
-			addrs[acc] = crypto.PubkeyToAddress(keys[acc].PublicKey)
+			addrs[acc] = common.Address(crypto.PubkeyToAddress(keys[acc].PublicKey))
 
 			// Seed the state database with this account
-			statedb.AddBalance(addrs[acc], new(uint256.Int).SetUint64(seed.balance))
-			statedb.SetNonce(addrs[acc], seed.nonce)
+			statedb.AddBalance(addrs[acc], new(uint256.Int).SetUint64(seed.balance), tracing.BalanceChangeUnspecified)
+			statedb.SetNonce(addrs[acc], seed.nonce, tracing.NonceChangeUnspecified)
 
 			// Sign the seed transactions and store them in the data store
 			for _, tx := range seed.txs {
@@ -1304,7 +1314,7 @@ func TestAdd(t *testing.T) {
 				store.Put(blob)
 			}
 		}
-		statedb.Commit(0, true)
+		statedb.Commit(0, true, false)
 		store.Close()
 
 		// Create a blob pool out of the pre-seeded dats
@@ -1346,11 +1356,11 @@ func benchmarkPoolPending(b *testing.B, datacap uint64) {
 	capacity := datacap / params.BlobTxBlobGasPerBlob
 
 	var (
-		basefee    = uint64(1050)
-		blobfee    = uint64(105)
-		signer     = types.LatestSigner(testChainConfig)
-		statedb, _ = state.New(types.EmptyRootHash, state.NewDatabase(rawdb.NewDatabase(memorydb.New())), nil)
-		chain      = &testBlockChain{
+		basefee = uint64(1050)
+		blobfee = uint64(105)
+		signer  = types.LatestSigner(testChainConfig)
+		statedb = newTestStateDB()
+		chain   = &testBlockChain{
 			config:  testChainConfig,
 			basefee: uint256.NewInt(basefee),
 			blobfee: uint256.NewInt(blobfee),
@@ -1374,10 +1384,10 @@ func benchmarkPoolPending(b *testing.B, datacap uint64) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		statedb.AddBalance(addr, uint256.NewInt(1_000_000_000))
+		statedb.AddBalance(addr, uint256.NewInt(1_000_000_000), tracing.BalanceChangeUnspecified)
 		pool.add(tx)
 	}
-	statedb.Commit(0, true)
+	statedb.Commit(0, true, false)
 	defer pool.Close()
 
 	// Benchmark assembling the pending

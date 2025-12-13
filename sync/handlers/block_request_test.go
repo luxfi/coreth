@@ -155,10 +155,11 @@ func TestBlockRequestHandler(t *testing.T) {
 
 func TestBlockRequestHandlerLargeBlocks(t *testing.T) {
 	var (
-		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-		funds   = big.NewInt(1000000000000000000)
-		gspec   = &core.Genesis{
+		key1, _     = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+		cryptoAddr1 = crypto.PubkeyToAddress(key1.PublicKey)
+		addr1       = common.BytesToAddress(cryptoAddr1.Bytes())
+		funds       = big.NewInt(1000000000000000000)
+		gspec       = &core.Genesis{
 			Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
 			Alloc:  types.GenesisAlloc{addr1: {Balance: funds}},
 		}

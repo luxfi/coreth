@@ -440,7 +440,7 @@ func TestDisable(t *testing.T) {
 	defer tester.release()
 
 	storedBlob := rawdb.ReadAccountTrieNode(tester.db.diskdb, nil)
-	stored := types.TrieRootHash(storedBlob)
+	stored := trieRootHash(storedBlob)
 	if err := tester.db.Disable(); err != nil {
 		t.Fatal("Failed to deactivate database")
 	}
@@ -531,7 +531,7 @@ func TestCorruptedJournal(t *testing.T) {
 	}
 	tester.db.Close()
 	rootBlob := rawdb.ReadAccountTrieNode(tester.db.diskdb, nil)
-	root := types.TrieRootHash(rootBlob)
+	root := trieRootHash(rootBlob)
 
 	// Mutate the journal in disk, it should be regarded as invalid
 	blob := rawdb.ReadTrieJournal(tester.db.diskdb)
