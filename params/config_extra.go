@@ -98,10 +98,17 @@ func GetExtra(c *ChainConfig) *extras.ChainConfig {
 	return ex
 }
 
-func Copy(c *ChainConfig) ChainConfig {
+func Copy(c *ChainConfig) *ChainConfig {
 	cpy := *c
+	cpyPtr := &cpy
 	extraCpy := *GetExtra(c)
-	return *WithExtra(&cpy, &extraCpy)
+	// Note: We need to heap-allocate the copy so the pointer remains valid
+	// after this function returns, as extras are keyed by pointer.
+	heapCpy := new(ChainConfig)
+	*heapCpy = *cpyPtr
+	heapExtraCpy := new(extras.ChainConfig)
+	*heapExtraCpy = extraCpy
+	return WithExtra(heapCpy, heapExtraCpy)
 }
 
 // WithExtra sets the extra payload on `c` and returns the modified argument.
