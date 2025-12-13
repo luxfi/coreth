@@ -121,13 +121,20 @@ func TestWaitDeployedCornerCases(t *testing.T) {
 	)
 	defer backend.Close()
 
-	head, _ := backend.Client().HeaderByNumber(context.Background(), nil) // Should be child's, good enough
-	gasPrice := new(big.Int).Add(head.BaseFee, big.NewInt(1))
+	head, err := backend.Client().HeaderByNumber(context.Background(), nil) // Should be child's, good enough
+	if err != nil {
+		t.Fatalf("Failed to get header: %v", err)
+	}
+	baseFee := head.BaseFee
+	if baseFee == nil {
+		baseFee = big.NewInt(params.GWei) // Fallback for pre-London or test environments
+	}
+	gasPrice := new(big.Int).Add(baseFee, big.NewInt(1))
 
 	// Create a transaction to an account.
 	code := "6060604052600a8060106000396000f360606040526008565b00"
 	tx := types.NewTransaction(0, common.HexToAddress("0x01"), big.NewInt(0), 3000000, gasPrice, common.FromHex(code))
-	tx, err := types.SignTx(tx, types.LatestSignerForChainID(big.NewInt(1337)), testKey)
+	tx, err = types.SignTx(tx, types.LatestSignerForChainID(big.NewInt(1337)), testKey)
 	require.NoError(t, err, "types.SignTx")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

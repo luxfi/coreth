@@ -34,6 +34,7 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
 )
@@ -51,9 +52,10 @@ func init() {
 const flushWindow = 768
 
 type TrieWriter interface {
-	InsertTrie(block *types.Block) error // Handle inserted trie reference of [root]
-	AcceptTrie(block *types.Block) error // Mark [root] as part of an accepted block
-	RejectTrie(block *types.Block) error // Notify TrieWriter that the block containing [root] has been rejected
+	InsertTrie(block *types.Block) error  // Handle inserted trie reference of [root]
+	AcceptTrie(block *types.Block) error  // Mark [root] as part of an accepted block
+	RejectTrie(block *types.Block) error  // Notify TrieWriter that the block containing [root] has been rejected
+	CommitAccepted() error                // Commit pending accepted roots (for path scheme)
 	Shutdown() error
 }
 
@@ -79,13 +81,16 @@ func NewTrieWriter(db TrieDB, config *CacheConfig) TrieWriter {
 		return cm
 	} else {
 		return &noPruningTrieWriter{
-			TrieDB: db,
+			TrieDB:      db,
+			stateScheme: config.StateScheme,
 		}
 	}
 }
 
 type noPruningTrieWriter struct {
 	TrieDB
+	stateScheme      string
+	lastAcceptedRoot common.Hash // Track last accepted root for path scheme deferred commit
 }
 
 func (np *noPruningTrieWriter) InsertTrie(block *types.Block) error {
@@ -95,16 +100,59 @@ func (np *noPruningTrieWriter) InsertTrie(block *types.Block) error {
 }
 
 func (np *noPruningTrieWriter) AcceptTrie(block *types.Block) error {
+	root := block.Root()
+
+	// For path scheme, we should NOT call Commit for every block because pathdb's
+	// Commit(root, false) wipes ALL other layers in the tree (via tree.cap(root, 0)).
+	// This breaks when accepting blocks in order because block N's commit removes
+	// the layers for blocks N+1, N+2, etc.
+	//
+	// Instead, we defer the commit until all pending accepted blocks are processed.
+	// The commit is triggered by calling CommitAccepted() after DrainAcceptorQueue.
+	// This ensures that:
+	// 1. All accepted blocks' layers are processed before any are committed
+	// 2. Only the last accepted root is committed (persists all accepted state)
+	// 3. Layers for non-accepted blocks (which are children) remain available
+	if np.stateScheme == rawdb.PathScheme {
+		np.lastAcceptedRoot = root
+		return nil
+	}
+	// For hash scheme and database scheme, we commit each block's trie.
 	// We don't need to call [Dereference] on the block root at the end of this
 	// function because it is removed from the [TrieDB.Dirties] map in [Commit].
-	return np.TrieDB.Commit(block.Root(), false)
+	return np.TrieDB.Commit(root, false)
+}
+
+// CommitAccepted commits the last accepted root for path scheme.
+// This should be called after DrainAcceptorQueue to persist the accepted state.
+func (np *noPruningTrieWriter) CommitAccepted() error {
+	if np.stateScheme == rawdb.PathScheme && np.lastAcceptedRoot != (common.Hash{}) {
+		if err := np.TrieDB.Commit(np.lastAcceptedRoot, false); err != nil {
+			return fmt.Errorf("failed to commit accepted trie: %w", err)
+		}
+	}
+	return nil
 }
 
 func (np *noPruningTrieWriter) RejectTrie(block *types.Block) error {
-	return np.TrieDB.Dereference(block.Root())
+	// In archive mode (no pruning), we don't dereference rejected roots because:
+	// 1. The state is either already committed to disk (for accepted blocks), or
+	// 2. The nodes might be shared with other blocks that haven't been committed yet.
+	//
+	// For case 2, dereferencing could remove nodes from the dirty cache that are
+	// still needed by other blocks with the same state root. This is particularly
+	// problematic with blocks that have identical state roots.
+	//
+	// Since we're in archive mode and not trying to save memory, skipping
+	// dereference is safe. The dirty cache will be cleared when nodes are
+	// committed or when the blockchain shuts down.
+	return nil
 }
 
-func (np *noPruningTrieWriter) Shutdown() error { return nil }
+func (np *noPruningTrieWriter) Shutdown() error {
+	// Commit any pending accepted root on shutdown
+	return np.CommitAccepted()
+}
 
 type cappedMemoryTrieWriter struct {
 	TrieDB
@@ -180,7 +228,22 @@ func (cm *cappedMemoryTrieWriter) AcceptTrie(block *types.Block) error {
 }
 
 func (cm *cappedMemoryTrieWriter) RejectTrie(block *types.Block) error {
-	cm.TrieDB.Dereference(block.Root())
+	// We don't dereference immediately because the rejected block's root might
+	// be shared with other blocks that haven't been accepted yet. This is
+	// particularly problematic with blocks that have identical state roots.
+	//
+	// Instead, we let the tipBuffer handle dereferencing for accepted blocks,
+	// and rely on the Cap mechanism to limit memory usage. The memory impact
+	// of not dereferencing rejected blocks is minimal since rejections are rare.
+	//
+	// Note: The original behavior was to call cm.TrieDB.Dereference(block.Root())
+	// but this caused issues when two blocks had the same root.
+	return nil
+}
+
+// CommitAccepted is a no-op for cappedMemoryTrieWriter since it handles
+// commits at commitInterval rather than after DrainAcceptorQueue.
+func (cm *cappedMemoryTrieWriter) CommitAccepted() error {
 	return nil
 }
 

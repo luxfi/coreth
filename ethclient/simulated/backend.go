@@ -85,7 +85,10 @@ type Backend struct {
 //
 // A simulated backend always uses chainID 1337.
 func NewBackend(alloc types.GenesisAlloc, options ...func(nodeConf *node.Config, ethConf *ethconfig.Config)) *Backend {
-	chainConfig := *params.TestChainConfig
+	// Copy TestChainConfig properly, preserving extras from the original config
+	chainConfigCopy := params.Copy(params.TestChainConfig)
+	// Re-associate extras with the new pointer (Copy loses the association)
+	chainConfig := params.WithExtra(&chainConfigCopy, params.GetExtra(params.TestChainConfig))
 	chainConfig.ChainID = big.NewInt(1337)
 
 	// Create the default configurations for the outer node shell and the Ethereum
@@ -94,7 +97,7 @@ func NewBackend(alloc types.GenesisAlloc, options ...func(nodeConf *node.Config,
 
 	ethConf := ethconfig.DefaultConfig
 	ethConf.Genesis = &core.Genesis{
-		Config: &chainConfig,
+		Config: chainConfig,
 		Alloc:  alloc,
 	}
 	ethConf.AllowUnfinalizedQueries = true

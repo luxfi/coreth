@@ -467,6 +467,10 @@ func (eng *DummyEngine) FinalizeAndAssemble(chain consensus.ChainHeaderReader, h
 	// commit the final state root
 	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
 
+	// Store header extras now that the header hash is finalized
+	// (header.Extra and header.Root are set, so hash is stable)
+	customtypes.SetHeaderExtra(header, headerExtra)
+
 	// Header seems complete, assemble into a block and return
 	return customtypes.NewBlockWithExtData(
 		header, txs, uncles, receipts, trie.NewStackTrie(nil),

@@ -368,19 +368,27 @@ func TestBlockChainOfflinePruningUngracefulShutdown(t *testing.T) {
 			return nil, err
 		}
 
-		// Overwrite state manager, so that Shutdown is not called.
-		// This tests to ensure that the state manager handles an ungraceful shutdown correctly.
-		blockchain.stateManager = &wrappedStateManager{TrieWriter: blockchain.stateManager}
-
 		if lastAcceptedHash == (common.Hash{}) {
+			// For initial creation, just wrap the state manager
+			blockchain.stateManager = &wrappedStateManager{TrieWriter: blockchain.stateManager}
 			return blockchain, nil
 		}
 
 		if err := blockchain.CleanBlockRootsAboveLastAccepted(); err != nil {
 			return nil, err
 		}
-		// get the target root to prune to before stopping the blockchain
+		// Get the target root to prune to before stopping the blockchain
 		targetRoot := blockchain.LastAcceptedBlock().Root()
+
+		// Commit the state BEFORE simulating ungraceful shutdown.
+		// This is required because offline pruning needs the state to be on disk.
+		// The cappedMemoryTrieWriter only commits at intervals, so we force a commit here.
+		if err := blockchain.triedb.Commit(targetRoot, true); err != nil {
+			return nil, fmt.Errorf("failed to commit state before pruning: %w", err)
+		}
+
+		// Now wrap the state manager to simulate ungraceful shutdown (Shutdown becomes no-op)
+		blockchain.stateManager = &wrappedStateManager{TrieWriter: blockchain.stateManager}
 		blockchain.Stop()
 
 		tempDir := t.TempDir()

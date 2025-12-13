@@ -152,13 +152,19 @@ func NewBlockWithExtData(
 	}
 	block := ethtypes.NewBlock(header, body, receipts, hasher)
 
-	// Set ExtDataHash on the block's internal header (not the original header)
-	// because NewBlock creates a copy of the header
-	if recalc {
-		headerExtra := GetHeaderExtra(block.Header())
-		headerExtra.ExtDataHash = CalcExtDataHash(extdata)
-		SetHeaderExtra(block.Header(), headerExtra)
+	// Copy all header extras from original header to block's internal header
+	// because NewBlock creates a copy of the header and extras are stored by pointer
+	origExtra := GetHeaderExtra(header)
+	blockHeaderExtra := &HeaderExtra{
+		ExtDataHash:    origExtra.ExtDataHash,
+		ExtDataGasUsed: origExtra.ExtDataGasUsed,
+		BlockGasCost:   origExtra.BlockGasCost,
 	}
+	// Recalculate ExtDataHash if requested
+	if recalc {
+		blockHeaderExtra.ExtDataHash = CalcExtDataHash(extdata)
+	}
+	SetHeaderExtra(block.Header(), blockHeaderExtra)
 
 	extdataCopy := make([]byte, len(extdata))
 	copy(extdataCopy, extdata)
