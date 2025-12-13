@@ -24,14 +24,16 @@ func TestCodeRequestHandler(t *testing.T) {
 	database := memorydb.New()
 
 	codeBytes := []byte("some code goes here")
-	codeHash := crypto.Keccak256Hash(codeBytes)
+	cryptoCodeHash := crypto.Keccak256Hash(codeBytes)
+	codeHash := common.BytesToHash(cryptoCodeHash.Bytes())
 	rawdb.WriteCode(database, codeHash, codeBytes)
 
 	maxSizeCodeBytes := make([]byte, params.MaxCodeSize)
 	n, err := rand.Read(maxSizeCodeBytes)
 	assert.NoError(t, err)
 	assert.Equal(t, params.MaxCodeSize, n)
-	maxSizeCodeHash := crypto.Keccak256Hash(maxSizeCodeBytes)
+	cryptoMaxSizeCodeHash := crypto.Keccak256Hash(maxSizeCodeBytes)
+	maxSizeCodeHash := common.BytesToHash(cryptoMaxSizeCodeHash.Bytes())
 	rawdb.WriteCode(database, maxSizeCodeHash, maxSizeCodeBytes)
 
 	testHandlerStats := &statstest.TestHandlerStats{}

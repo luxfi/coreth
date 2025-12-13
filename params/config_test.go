@@ -139,7 +139,7 @@ func TestCheckCompatible(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := test.stored.CheckCompatible(test.new, test.headBlock, test.headTimestamp)
+		err := CheckCompatible(test.stored, test.new, test.headBlock, test.headTimestamp)
 		if !reflect.DeepEqual(err, test.wantErr) {
 			t.Errorf("error mismatch:\nstored: %v\nnew: %v\nblockHeight: %v\nerr: %v\nwant: %v", test.stored, test.new, test.headBlock, err, test.wantErr)
 		}
@@ -156,15 +156,15 @@ func TestConfigRules(t *testing.T) {
 		},
 	)
 	var stamp uint64
-	if r := c.Rules(big.NewInt(0), IsMergeTODO, stamp); GetRulesExtra(r).IsCortina {
+	if _, rulesEx := GetRules(c, big.NewInt(0), IsMergeTODO, stamp); rulesEx.IsCortina {
 		t.Errorf("expected %v to not be cortina", stamp)
 	}
 	stamp = 500
-	if r := c.Rules(big.NewInt(0), IsMergeTODO, stamp); !GetRulesExtra(r).IsCortina {
+	if _, rulesEx := GetRules(c, big.NewInt(0), IsMergeTODO, stamp); !rulesEx.IsCortina {
 		t.Errorf("expected %v to be cortina", stamp)
 	}
 	stamp = math.MaxInt64
-	if r := c.Rules(big.NewInt(0), IsMergeTODO, stamp); !GetRulesExtra(r).IsCortina {
+	if _, rulesEx := GetRules(c, big.NewInt(0), IsMergeTODO, stamp); !rulesEx.IsCortina {
 		t.Errorf("expected %v to be cortina", stamp)
 	}
 }

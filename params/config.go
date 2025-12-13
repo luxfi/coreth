@@ -69,6 +69,7 @@ var (
 			LondonBlock:         big.NewInt(0),
 			ShanghaiTime:        utils.TimeToNewUint64(upgrade.GetConfig(constants.UnitTestID).DurangoTime),
 			CancunTime:          utils.TimeToNewUint64(upgrade.GetConfig(constants.UnitTestID).EtnaTime),
+			BlobScheduleConfig:  ethparams.DefaultBlobSchedule,
 		},
 		extras.TestChainConfig,
 	)
@@ -327,6 +328,7 @@ var (
 			LondonBlock:         big.NewInt(0),
 			ShanghaiTime:        utils.NewUint64(0),
 			CancunTime:          utils.NewUint64(0),
+			BlobScheduleConfig:  ethparams.DefaultBlobSchedule,
 		},
 		extras.TestEtnaChainConfig,
 	)
@@ -349,6 +351,7 @@ var (
 			LondonBlock:         big.NewInt(0),
 			ShanghaiTime:        utils.NewUint64(0),
 			CancunTime:          utils.NewUint64(0),
+			BlobScheduleConfig:  ethparams.DefaultBlobSchedule,
 		},
 		extras.TestFortunaChainConfig,
 	)
@@ -371,6 +374,7 @@ var (
 			LondonBlock:         big.NewInt(0),
 			ShanghaiTime:        utils.NewUint64(0),
 			CancunTime:          utils.NewUint64(0),
+			BlobScheduleConfig:  ethparams.DefaultBlobSchedule,
 		},
 		extras.TestGraniteChainConfig,
 	)

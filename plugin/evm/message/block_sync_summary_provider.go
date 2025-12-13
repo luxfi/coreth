@@ -3,13 +3,13 @@
 package message
 
 import (
+	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/geth/core/types"
 )
 
 type BlockSyncSummaryProvider struct{}
 
 // StateSummaryAtBlock returns the block state summary at [block] if valid.
-// TODO: Temporarily disabled - needs block.StateSummary from node
-func (a *BlockSyncSummaryProvider) StateSummaryAtBlock(blk *types.Block) (Syncable, error) {
+func (a *BlockSyncSummaryProvider) StateSummaryAtBlock(blk *types.Block) (block.StateSummary, error) {
 	return NewBlockSyncSummary(blk.Hash(), blk.NumberU64(), blk.Root())
 }

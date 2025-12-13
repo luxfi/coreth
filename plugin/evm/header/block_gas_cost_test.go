@@ -192,7 +192,9 @@ func TestEstimateRequiredTip(t *testing.T) {
 			name:         "nil_base_fee",
 			ap4Timestamp: utils.NewUint64(0),
 			header: customtypes.WithHeaderExtra(
-				&types.Header{},
+				&types.Header{
+					Number: big.NewInt(100), // Unique number to ensure unique hash
+				},
 				&customtypes.HeaderExtra{
 					ExtDataGasUsed: big.NewInt(1),
 					BlockGasCost:   big.NewInt(1),
@@ -205,6 +207,7 @@ func TestEstimateRequiredTip(t *testing.T) {
 			ap4Timestamp: utils.NewUint64(0),
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
+					Number:  big.NewInt(101), // Unique number to ensure unique hash
 					BaseFee: big.NewInt(1),
 				},
 				&customtypes.HeaderExtra{
@@ -218,6 +221,7 @@ func TestEstimateRequiredTip(t *testing.T) {
 			ap4Timestamp: utils.NewUint64(0),
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
+					Number:  big.NewInt(102), // Unique number to ensure unique hash
 					BaseFee: big.NewInt(1),
 				},
 				&customtypes.HeaderExtra{
@@ -231,6 +235,7 @@ func TestEstimateRequiredTip(t *testing.T) {
 			ap4Timestamp: utils.NewUint64(0),
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
+					Number:  big.NewInt(103), // Unique number to ensure unique hash
 					GasUsed: 0,
 					BaseFee: big.NewInt(1),
 				},
@@ -246,6 +251,7 @@ func TestEstimateRequiredTip(t *testing.T) {
 			ap4Timestamp: utils.NewUint64(0),
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
+					Number:  big.NewInt(104), // Unique number to ensure unique hash
 					GasUsed: 123,
 					BaseFee: big.NewInt(456),
 				},
@@ -264,6 +270,7 @@ func TestEstimateRequiredTip(t *testing.T) {
 			ap4Timestamp: utils.NewUint64(0),
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
+					Number:  big.NewInt(105), // Unique number to ensure unique hash
 					GasUsed: 124,
 					BaseFee: big.NewInt(456),
 				},

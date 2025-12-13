@@ -25,11 +25,6 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-//go:build skip
-// +build skip
-
-// TODO: Update tests for new geth state API (AddBalance, SetNonce, SetCode, etc.)
-
 package legacypool
 
 import (
@@ -280,7 +275,7 @@ func (c *testChain) State() (*state.StateDB, error) {
 	if *c.trigger {
 		c.statedb, _ = state.New(types.EmptyRootHash, state.NewDatabaseForTesting())
 		// simulate that the new head block included tx0 and tx1
-		c.statedb.SetNonce(c.address, 2)
+		c.statedb.SetNonce(c.address, 2, tracing.NonceChangeUnspecified)
 		c.statedb.SetBalance(c.address, new(uint256.Int).SetUint64(params.Ether), tracing.BalanceChangeUnspecified)
 		*c.trigger = false
 	}
@@ -335,13 +330,13 @@ func TestStateChangeDuringReset(t *testing.T) {
 
 func testAddBalance(pool *LegacyPool, addr common.Address, amount *big.Int) {
 	pool.mu.Lock()
-	pool.currentState.AddBalance(addr, uint256.MustFromBig(amount))
+	pool.currentState.AddBalance(addr, uint256.MustFromBig(amount), tracing.BalanceChangeUnspecified)
 	pool.mu.Unlock()
 }
 
 func testSetNonce(pool *LegacyPool, addr common.Address, nonce uint64) {
 	pool.mu.Lock()
-	pool.currentState.SetNonce(addr, nonce)
+	pool.currentState.SetNonce(addr, nonce, tracing.NonceChangeUnspecified)
 	pool.mu.Unlock()
 }
 
@@ -496,7 +491,7 @@ func TestChainFork(t *testing.T) {
 	addr := common.PubkeyToAddress(key.PublicKey)
 	resetState := func() {
 		statedb, _ := state.New(types.EmptyRootHash, state.NewDatabaseForTesting())
-		statedb.AddBalance(addr, uint256.NewInt(100000000000000))
+		statedb.AddBalance(addr, uint256.NewInt(100000000000000), tracing.BalanceChangeUnspecified)
 
 		pool.chain = newTestBlockChain(pool.chainconfig, 1000000, statedb, new(event.Feed))
 		<-pool.requestReset(nil, nil)
@@ -525,7 +520,7 @@ func TestDoubleNonce(t *testing.T) {
 	addr := common.PubkeyToAddress(key.PublicKey)
 	resetState := func() {
 		statedb, _ := state.New(types.EmptyRootHash, state.NewDatabaseForTesting())
-		statedb.AddBalance(addr, uint256.NewInt(100000000000000))
+		statedb.AddBalance(addr, uint256.NewInt(100000000000000), tracing.BalanceChangeUnspecified)
 
 		pool.chain = newTestBlockChain(pool.chainconfig, 1000000, statedb, new(event.Feed))
 		<-pool.requestReset(nil, nil)
@@ -1102,8 +1097,8 @@ func testQueueTimeLimiting(t *testing.T, nolocals bool) {
 	}
 
 	// remove current transactions and increase nonce to prepare for a reset and cleanup
-	statedb.SetNonce(common.PubkeyToAddress(remote.PublicKey), 2)
-	statedb.SetNonce(common.PubkeyToAddress(local.PublicKey), 2)
+	statedb.SetNonce(common.PubkeyToAddress(remote.PublicKey), 2, tracing.NonceChangeUnspecified)
+	statedb.SetNonce(common.PubkeyToAddress(local.PublicKey), 2, tracing.NonceChangeUnspecified)
 	<-pool.requestReset(nil, nil)
 
 	// make sure queue, pending are cleared
@@ -2690,7 +2685,7 @@ func BenchmarkMultiAccountBatchInsert(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		key, _ := crypto.GenerateKey()
 		account := common.PubkeyToAddress(key.PublicKey)
-		pool.currentState.AddBalance(account, uint256.NewInt(1000000))
+		pool.currentState.AddBalance(account, uint256.NewInt(1000000), tracing.BalanceChangeUnspecified)
 		tx := transaction(uint64(0), 100000, key)
 		batches[i] = tx
 	}

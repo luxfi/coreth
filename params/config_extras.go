@@ -75,3 +75,13 @@ func constructRulesExtra(c *ethparams.ChainConfig, r *ethparams.Rules, cEx *extr
 
 	return rules
 }
+
+// GetRules returns the chain rules at the given block and timestamp,
+// including Lux-specific rules in the extras.Rules.
+// This is the preferred way to get rules when Lux-specific features are needed.
+func GetRules(c *ethparams.ChainConfig, blockNum *big.Int, isMerge bool, timestamp uint64) (ethparams.Rules, *extras.Rules) {
+	r := c.Rules(blockNum, isMerge, timestamp)
+	cEx := GetExtra(c)
+	rulesEx := constructRulesExtra(c, &r, cEx, blockNum, isMerge, timestamp)
+	return r, (*extras.Rules)(&rulesEx)
+}

@@ -116,7 +116,7 @@ func TestExtraPrefix(t *testing.T) {
 			name:     "ap4_no_block_gas_cost",
 			upgrades: extras.TestApricotPhase4Config.NetworkUpgrades,
 			parent: &types.Header{
-				Number:  big.NewInt(1),
+				Number:  big.NewInt(100), // Unique number to ensure unique hash
 				GasUsed: ap3.TargetGas,
 				Extra:   (&ap3.Window{}).Bytes(),
 			},
@@ -135,7 +135,7 @@ func TestExtraPrefix(t *testing.T) {
 			upgrades: extras.TestApricotPhase4Config.NetworkUpgrades,
 			parent: customtypes.WithHeaderExtra(
 				&types.Header{
-					Number:  big.NewInt(1),
+					Number:  big.NewInt(101), // Unique number to ensure unique hash
 					GasUsed: ap3.TargetGas,
 					Extra:   (&ap3.Window{}).Bytes(),
 				},
@@ -161,7 +161,7 @@ func TestExtraPrefix(t *testing.T) {
 			upgrades: extras.TestApricotPhase4Config.NetworkUpgrades,
 			parent: customtypes.WithHeaderExtra(
 				&types.Header{
-					Number:  big.NewInt(1),
+					Number:  big.NewInt(102), // Unique number to ensure unique hash
 					GasUsed: ap3.TargetGas,
 					Extra:   (&ap3.Window{}).Bytes(),
 				},
@@ -187,7 +187,7 @@ func TestExtraPrefix(t *testing.T) {
 			upgrades: extras.TestApricotPhase4Config.NetworkUpgrades,
 			parent: customtypes.WithHeaderExtra(
 				&types.Header{
-					Number:  big.NewInt(1),
+					Number:  big.NewInt(103), // Unique number to ensure unique hash
 					GasUsed: ap3.TargetGas,
 					Extra: (&ap3.Window{
 						1, 2, 3, 4,
@@ -219,7 +219,7 @@ func TestExtraPrefix(t *testing.T) {
 			upgrades: extras.TestApricotPhase5Config.NetworkUpgrades,
 			parent: customtypes.WithHeaderExtra(
 				&types.Header{
-					Number:  big.NewInt(1),
+					Number:  big.NewInt(200), // Unique number to ensure unique hash
 					GasUsed: ap5.TargetGas,
 					Extra:   (&ap3.Window{}).Bytes(),
 				},
@@ -242,7 +242,7 @@ func TestExtraPrefix(t *testing.T) {
 			upgrades: extras.TestApricotPhase5Config.NetworkUpgrades,
 			parent: customtypes.WithHeaderExtra(
 				&types.Header{
-					Number:  big.NewInt(1),
+					Number:  big.NewInt(201), // Unique number to ensure unique hash
 					GasUsed: ap5.TargetGas,
 					Extra: (&ap3.Window{
 						1, 2, 3, 4,

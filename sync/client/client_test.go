@@ -40,7 +40,8 @@ func TestGetCode(t *testing.T) {
 		"normal": {
 			setupRequest: func() ([]common.Hash, message.CodeResponse, [][]byte) {
 				code := []byte("this is the code")
-				codeHash := crypto.Keccak256Hash(code)
+				cryptoCodeHash := crypto.Keccak256Hash(code)
+				codeHash := common.BytesToHash(cryptoCodeHash.Bytes())
 				codeSlices := [][]byte{code}
 				return []common.Hash{codeHash}, message.CodeResponse{
 					Data: codeSlices,
@@ -75,7 +76,8 @@ func TestGetCode(t *testing.T) {
 		"code size is too large": {
 			setupRequest: func() (requestHashes []common.Hash, testResponse message.CodeResponse, expectedCode [][]byte) {
 				oversizedCode := make([]byte, params.MaxCodeSize+1)
-				codeHash := crypto.Keccak256Hash(oversizedCode)
+				cryptoCodeHash := crypto.Keccak256Hash(oversizedCode)
+				codeHash := common.BytesToHash(cryptoCodeHash.Bytes())
 				return []common.Hash{codeHash}, message.CodeResponse{
 					Data: [][]byte{oversizedCode},
 				}, nil

@@ -11,8 +11,8 @@ import (
 	. "github.com/luxfi/coreth/nativeasset"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/tracing"
 	ethtypes "github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/holiman/uint256"
@@ -31,8 +31,8 @@ func CanTransfer(db vm.StateDB, addr common.Address, amount *uint256.Int) bool {
 
 // Transfer subtracts amount from sender and adds amount to recipient using the given Db
 func Transfer(db vm.StateDB, sender, recipient common.Address, amount *uint256.Int) {
-	db.SubBalance(sender, amount)
-	db.AddBalance(recipient, amount)
+	db.SubBalance(sender, amount, tracing.BalanceChangeTransfer)
+	db.AddBalance(recipient, amount, tracing.BalanceChangeTransfer)
 }
 
 func TestPackNativeAssetCallInput(t *testing.T) {
@@ -57,9 +57,6 @@ func TestStatefulPrecompile(t *testing.T) {
 		Time:        0,
 		CanTransfer: CanTransfer,
 		Transfer:    Transfer,
-		Header: &ethtypes.Header{
-			Number: big.NewInt(0),
-		},
 	}
 
 	type statefulContractTest struct {
@@ -92,14 +89,14 @@ func TestStatefulPrecompile(t *testing.T) {
 	tests := []statefulContractTest{
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
 				// Create account
 				statedb.CreateAccount(userAddr1)
 				// Set balance to pay for gas fee
-				statedb.SetBalance(userAddr1, u256Hundred)
+				statedb.SetBalance(userAddr1, u256Hundred, tracing.BalanceChangeUnspecified)
 				// Set MultiCoin balance
 				statedb.Finalise(true)
 				return statedb
@@ -116,14 +113,14 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
 				// Create account
 				statedb.CreateAccount(userAddr1)
 				// Set balance to pay for gas fee
-				statedb.SetBalance(userAddr1, u256Hundred)
+				statedb.SetBalance(userAddr1, u256Hundred, tracing.BalanceChangeUnspecified)
 				// Initialize multicoin balance and set it back to 0
 				wrappedStateDB := extstate.New(statedb)
 				wrappedStateDB.AddBalanceMultiCoin(userAddr1, assetID, bigHundred)
@@ -143,14 +140,14 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
 				// Create account
 				statedb.CreateAccount(userAddr1)
 				// Set balance to pay for gas fee
-				statedb.SetBalance(userAddr1, u256Hundred)
+				statedb.SetBalance(userAddr1, u256Hundred, tracing.BalanceChangeUnspecified)
 				// Initialize multicoin balance to 100
 				wrappedStateDB := extstate.New(statedb)
 				wrappedStateDB.AddBalanceMultiCoin(userAddr1, assetID, bigHundred)
@@ -169,7 +166,7 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -187,7 +184,7 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -205,7 +202,7 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -223,11 +220,11 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
-				statedb.SetBalance(userAddr1, u256Hundred)
+				statedb.SetBalance(userAddr1, u256Hundred, tracing.BalanceChangeUnspecified)
 				wrappedStateDB := extstate.New(statedb)
 				wrappedStateDB.AddBalanceMultiCoin(userAddr1, assetID, bigHundred)
 				wrappedStateDB.Finalise(true)
@@ -258,11 +255,11 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
-				statedb.SetBalance(userAddr1, u256Hundred)
+				statedb.SetBalance(userAddr1, u256Hundred, tracing.BalanceChangeUnspecified)
 				wrappedStateDB := extstate.New(statedb)
 				wrappedStateDB.AddBalanceMultiCoin(userAddr1, assetID, bigHundred)
 				wrappedStateDB.Finalise(true)
@@ -295,11 +292,11 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
-				statedb.SetBalance(userAddr1, u256Hundred)
+				statedb.SetBalance(userAddr1, u256Hundred, tracing.BalanceChangeUnspecified)
 				wrappedStateDB := extstate.New(statedb)
 				wrappedStateDB.AddBalanceMultiCoin(userAddr1, assetID, big.NewInt(50))
 				wrappedStateDB.Finalise(true)
@@ -329,11 +326,11 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
-				statedb.SetBalance(userAddr1, uint256.NewInt(50))
+				statedb.SetBalance(userAddr1, uint256.NewInt(50), tracing.BalanceChangeUnspecified)
 				wrappedStateDB := extstate.New(statedb)
 				wrappedStateDB.AddBalanceMultiCoin(userAddr1, assetID, big.NewInt(50))
 				wrappedStateDB.Finalise(true)
@@ -363,11 +360,11 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
-				statedb.SetBalance(userAddr1, u256Hundred)
+				statedb.SetBalance(userAddr1, u256Hundred, tracing.BalanceChangeUnspecified)
 				wrappedStateDB := extstate.New(statedb)
 				wrappedStateDB.AddBalanceMultiCoin(userAddr1, assetID, bigHundred)
 				wrappedStateDB.Finalise(true)
@@ -385,11 +382,11 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
-				statedb.SetBalance(userAddr1, u256Hundred)
+				statedb.SetBalance(userAddr1, u256Hundred, tracing.BalanceChangeUnspecified)
 				wrappedStateDB := extstate.New(statedb)
 				wrappedStateDB.AddBalanceMultiCoin(userAddr1, assetID, bigHundred)
 				wrappedStateDB.Finalise(true)
@@ -419,11 +416,11 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
-				statedb.SetBalance(userAddr1, u256Hundred)
+				statedb.SetBalance(userAddr1, u256Hundred, tracing.BalanceChangeUnspecified)
 				wrappedStateDB := extstate.New(statedb)
 				wrappedStateDB.AddBalanceMultiCoin(userAddr1, assetID, bigHundred)
 				wrappedStateDB.Finalise(true)
@@ -441,11 +438,11 @@ func TestStatefulPrecompile(t *testing.T) {
 		},
 		{
 			setupStateDB: func() *state.StateDB {
-				statedb, err := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
+				statedb, err := state.New(ethtypes.EmptyRootHash, state.NewDatabaseForTesting())
 				if err != nil {
 					t.Fatal(err)
 				}
-				statedb.SetBalance(userAddr1, u256Hundred)
+				statedb.SetBalance(userAddr1, u256Hundred, tracing.BalanceChangeUnspecified)
 				wrappedStateDB := extstate.New(statedb)
 				wrappedStateDB.AddBalanceMultiCoin(userAddr1, assetID, bigHundred)
 				wrappedStateDB.Finalise(true)
@@ -466,8 +463,8 @@ func TestStatefulPrecompile(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			stateDB := test.setupStateDB()
 			// Create EVM with BlockNumber and Time initialized to 0 to enable Apricot Rules.
-			evm := vm.NewEVM(vmCtx, vm.TxContext{}, stateDB, params.TestApricotPhase5Config, vm.Config{}) // Use ApricotPhase5Config because these precompiles are deprecated in ApricotPhase6.
-			ret, gasRemaining, err := evm.Call(vm.AccountRef(test.from), test.precompileAddr, test.input, test.gasInput, test.value)
+			evm := vm.NewEVM(vmCtx, stateDB, params.TestApricotPhase5Config, vm.Config{}) // Use ApricotPhase5Config because these precompiles are deprecated in ApricotPhase6.
+			ret, gasRemaining, err := evm.Call(test.from, test.precompileAddr, test.input, test.gasInput, test.value)
 			// Place gas remaining check before error check, so that it is not skipped when there is an error
 			assert.Equalf(t, test.expectedGasRemaining, gasRemaining, "unexpected gas remaining (%d of %d)", gasRemaining, test.gasInput)
 

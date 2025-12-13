@@ -1,28 +1,20 @@
 // Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
-//go:build skip
-// +build skip
-
-// TODO: Update tests for new geth triedb API changes
-
 package extstate
 
 import (
 	"encoding/binary"
 	"math/rand"
-	"path/filepath"
 	"slices"
 	"testing"
 
-	"github.com/luxfi/geth/triedb/database"
 	"github.com/luxfi/geth/triedb/hashdb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/crypto"
-	"github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/triedb"
 	"github.com/holiman/uint256"
@@ -87,9 +79,6 @@ func newFuzzState(t *testing.T) *fuzzState {
 		r.NoError(hashState.TrieDB().Close())
 	})
 
-	// Skip database backend test - not supported with new triedb config
-	_ = database.Defaults
-	_ = filepath.Join(t.TempDir(), "database")
 
 	return &fuzzState{
 		merkleTries: []*merkleTrie{
@@ -111,8 +100,7 @@ func (fs *fuzzState) commit() {
 	for _, tr := range fs.merkleTries {
 		mergedNodeSet := trienode.NewMergedNodeSet()
 		for addr, str := range tr.openStorageTries {
-			accountStateRoot, set, err := str.Commit(false)
-			fs.require.NoError(err, "failed to commit storage trie for account %s in %s", addr.Hex(), tr.name)
+			accountStateRoot, set := str.Commit(false)
 			// A no-op change returns a nil set, which will cause merge to panic.
 			if set != nil {
 				fs.require.NoError(mergedNodeSet.Merge(set), "failed to merge storage trie nodeset for account %s in %s", addr.Hex(), tr.name)
@@ -125,31 +113,27 @@ func (fs *fuzzState) commit() {
 			fs.require.NotNil(acc, "account %s is nil in %s", addr.Hex(), tr.name)
 
 			acc.Root = accountStateRoot
-			fs.require.NoError(tr.accountTrie.UpdateAccount(addr, acc), "failed to update account %s in %s", addr.Hex(), tr.name)
+			fs.require.NoError(tr.accountTrie.UpdateAccount(addr, acc, 0), "failed to update account %s in %s", addr.Hex(), tr.name)
 		}
 
-		updatedRoot, set, err := tr.accountTrie.Commit(true)
-		fs.require.NoError(err, "failed to commit account trie in %s", tr.name)
+		updatedRoot, set := tr.accountTrie.Commit(true)
 
 		// A no-op change returns a nil set, which will cause merge to panic.
 		if set != nil {
 			fs.require.NoError(mergedNodeSet.Merge(set), "failed to merge account trie nodeset in %s", tr.name)
 		}
 
-		// HashDB/PathDB only allows updating the triedb if there have been changes.
-		if _, ok := tr.ethDatabase.TrieDB().Backend().(*database.Database); ok {
-			triedbopt := stateconf.WithTrieDBUpdatePayload(common.Hash{byte(int64(fs.blockNumber - 1))}, common.Hash{byte(int64(fs.blockNumber))})
-			fs.require.NoError(tr.ethDatabase.TrieDB().Update(updatedRoot, tr.lastRoot, fs.blockNumber, mergedNodeSet, nil, triedbopt), "failed to update triedb in %s", tr.name)
-			tr.lastRoot = updatedRoot
-		} else if updatedRoot != tr.lastRoot {
+		// Update triedb if there have been changes.
+		if updatedRoot != tr.lastRoot {
 			fs.require.NoError(tr.ethDatabase.TrieDB().Update(updatedRoot, tr.lastRoot, fs.blockNumber, mergedNodeSet, nil), "failed to update triedb in %s", tr.name)
 			tr.lastRoot = updatedRoot
 		}
 		tr.openStorageTries = make(map[common.Address]state.Trie)
 		fs.require.NoError(tr.ethDatabase.TrieDB().Commit(updatedRoot, true),
 			"failed to commit %s: expected hashdb root %s", tr.name, fs.merkleTries[0].lastRoot.Hex())
-		tr.accountTrie, err = tr.ethDatabase.OpenTrie(tr.lastRoot)
-		fs.require.NoError(err, "failed to reopen account trie for %s", tr.name)
+		var openErr error
+		tr.accountTrie, openErr = tr.ethDatabase.OpenTrie(tr.lastRoot)
+		fs.require.NoError(openErr, "failed to reopen account trie for %s", tr.name)
 	}
 	fs.blockNumber++
 
@@ -177,7 +161,7 @@ func (fs *fuzzState) createAccount() {
 	fs.currentAddrs = append(fs.currentAddrs, addr)
 
 	for _, tr := range fs.merkleTries {
-		fs.require.NoError(tr.accountTrie.UpdateAccount(addr, acc), "failed to create account %s in %s", addr.Hex(), tr.name)
+		fs.require.NoError(tr.accountTrie.UpdateAccount(addr, acc, 0), "failed to create account %s in %s", addr.Hex(), tr.name)
 	}
 }
 
@@ -199,7 +183,7 @@ func (fs *fuzzState) updateAccount(addrIndex int) {
 		acc.Nonce++
 		acc.CodeHash = crypto.Keccak256Hash(acc.CodeHash[:]).Bytes()
 		acc.Balance.Add(acc.Balance, uint256.NewInt(3))
-		fs.require.NoError(tr.accountTrie.UpdateAccount(addr, acc), "failed to update account %s in %s", addr.Hex(), tr.name)
+		fs.require.NoError(tr.accountTrie.UpdateAccount(addr, acc, 0), "failed to update account %s in %s", addr.Hex(), tr.name)
 	}
 }
 
