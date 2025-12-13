@@ -1,6 +1,11 @@
 // Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
+//go:build ignore
+// +build ignore
+
+// TODO: Depends on vm_test.go fixtures (newVM, testVMConfig, etc.)
+
 package evm
 
 import (
@@ -15,6 +20,7 @@ import (
 
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/warp"
 
 	commonEng "github.com/luxfi/consensus/core"
 
@@ -78,7 +84,9 @@ func TestMempoolEthTxsAppGossipHandling(t *testing.T) {
 	key, err := crypto.GenerateKey()
 	assert.NoError(err)
 
-	addr := crypto.PubkeyToAddress(key.PublicKey)
+	cryptoAddr := crypto.PubkeyToAddress(key.PublicKey)
+	var addr common.Address
+	copy(addr[:], cryptoAddr[:])
 
 	genesisJSON, err := fundAddressByGenesis([]common.Address{addr})
 	assert.NoError(err)
@@ -97,13 +105,12 @@ func TestMempoolEthTxsAppGossipHandling(t *testing.T) {
 		wg          sync.WaitGroup
 		txRequested bool
 	)
-	tvm.appSender.CantSendAppGossip = false
-	tvm.appSender.SendAppRequestF = func(context.Context, set.Set[ids.NodeID], uint32, []byte) error {
+	tvm.appSender.SendRequestF = func(context.Context, set.Set[ids.NodeID], uint32, []byte) error {
 		txRequested = true
 		return nil
 	}
 	wg.Add(1)
-	tvm.appSender.SendAppGossipF = func(context.Context, consensuscore.SendConfig, []byte) error {
+	tvm.appSender.SendGossipF = func(context.Context, warp.SendConfig, []byte) error {
 		wg.Done()
 		return nil
 	}

@@ -7,14 +7,15 @@ import (
 	"context"
 	"testing"
 
-	"github.com/luxfi/node/cache/lru"
+	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/ids"
+	"github.com/luxfi/node/cache/lru"
 	"github.com/luxfi/node/utils"
-	"github.com/luxfi/crypto/bls/signer/localsigner"
 	luxWarp "github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
+
 	"github.com/luxfi/coreth/warp/warptest"
 	"github.com/stretchr/testify/require"
 )
@@ -41,7 +42,7 @@ func init() {
 func TestAddAndGetValidMessage(t *testing.T) {
 	db := memdb.New()
 
-	sk, err := localsigner.New()
+	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
 	warpSigner := luxWarp.NewSigner(sk, networkID, sourceChainID)
 	messageSignatureCache := lru.NewCache[ids.ID, []byte](500)
@@ -63,7 +64,7 @@ func TestAddAndGetValidMessage(t *testing.T) {
 func TestAddAndGetUnknownMessage(t *testing.T) {
 	db := memdb.New()
 
-	sk, err := localsigner.New()
+	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
 	warpSigner := luxWarp.NewSigner(sk, networkID, sourceChainID)
 	messageSignatureCache := lru.NewCache[ids.ID, []byte](500)
@@ -82,14 +83,14 @@ func TestGetBlockSignature(t *testing.T) {
 	blockClient := warptest.MakeBlockClient(blkID)
 	db := memdb.New()
 
-	sk, err := localsigner.New()
+	sk, err := bls.NewSecretKey()
 	require.NoError(err)
 	warpSigner := luxWarp.NewSigner(sk, networkID, sourceChainID)
 	messageSignatureCache := lru.NewCache[ids.ID, []byte](500)
 	backend, err := NewBackend(networkID, sourceChainID, warpSigner, blockClient, db, messageSignatureCache, nil)
 	require.NoError(err)
 
-	blockHashPayload, err := payload.NewHash(blkID)
+	blockHashPayload, err := payload.NewHash(blkID[:])
 	require.NoError(err)
 	unsignedMessage, err := luxWarp.NewUnsignedMessage(networkID, sourceChainID, blockHashPayload.Bytes())
 	require.NoError(err)
@@ -107,7 +108,7 @@ func TestGetBlockSignature(t *testing.T) {
 func TestZeroSizedCache(t *testing.T) {
 	db := memdb.New()
 
-	sk, err := localsigner.New()
+	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
 	warpSigner := luxWarp.NewSigner(sk, networkID, sourceChainID)
 
@@ -134,7 +135,7 @@ func TestOffChainMessages(t *testing.T) {
 		check            func(require *require.Assertions, b Backend)
 		err              error
 	}
-	sk, err := localsigner.New()
+	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
 	warpSigner := luxWarp.NewSigner(sk, networkID, sourceChainID)
 

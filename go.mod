@@ -8,7 +8,6 @@ require (
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/fjl/gencodec v0.1.1
 	github.com/go-cmd/cmd v1.4.3
-	github.com/google/go-cmp v0.7.0
 	github.com/gorilla/rpc v1.2.1
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674
 	github.com/hashicorp/go-bexpr v0.1.14
@@ -16,12 +15,12 @@ require (
 	github.com/holiman/billy v0.0.0-20250707135307-f2f9b9aae7db
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.3.2
-	github.com/luxfi/crypto v1.17.22
-	github.com/luxfi/geth v1.16.52
+	github.com/luxfi/crypto v1.17.23
+	github.com/luxfi/geth v1.16.53
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/log v1.1.26
 	github.com/luxfi/metric v1.4.8
-	github.com/luxfi/node v1.22.13
+	github.com/luxfi/node v1.22.14
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.25.1
@@ -55,7 +54,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.24.4 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.6 // indirect
-	github.com/btcsuite/btcutil v1.0.2 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.2-0.20251204010831-23491bd573cf // indirect
@@ -170,10 +168,10 @@ require (
 
 require (
 	github.com/luxfi/consensus v1.22.26
-	github.com/luxfi/constants v1.2.2
-	github.com/luxfi/database v1.2.11
-	github.com/luxfi/ids v1.2.3
-	github.com/luxfi/math v1.0.1
+	github.com/luxfi/constants v1.2.3
+	github.com/luxfi/database v1.2.12
+	github.com/luxfi/ids v1.2.4
+	github.com/luxfi/math v1.0.2
 	github.com/luxfi/migrate v1.2.7
 	github.com/luxfi/p2p v1.4.6
 	github.com/luxfi/warp v1.16.36

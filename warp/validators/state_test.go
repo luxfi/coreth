@@ -7,11 +7,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/luxfi/ids"
-	consensustest "github.com/luxfi/consensus/test/helpers"
-	"github.com/luxfi/consensus/validator"
-	"github.com/luxfi/consensus/validator/validatorsmock"
 	"github.com/luxfi/constants"
+	"github.com/luxfi/ids"
+
+	validators "github.com/luxfi/consensus/validator"
+	"github.com/luxfi/consensus/validator/validatorsmock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -22,26 +22,25 @@ func TestGetValidatorSetPrimaryNetwork(t *testing.T) {
 
 	mySubnetID := ids.GenerateTestID()
 	otherSubnetID := ids.GenerateTestID()
+	chainID := ids.GenerateTestID()
 
 	mockState := validatorsmock.NewState(ctrl)
-	quasarCtx := consensustest.Context(t, consensustest.CChainID)
-	quasarCtx.SubnetID = mySubnetID
-	quasarCtx.ValidatorState = mockState
-	state := NewState(quasarCtx.ValidatorState, quasarCtx.SubnetID, quasarCtx.ChainID, false)
+	state := NewState(mockState, mySubnetID, chainID, false)
+
 	// Expect that requesting my validator set returns my validator set
-	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), mySubnetID).Return(make(map[ids.NodeID]*validator.GetValidatorOutput), nil)
+	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), mySubnetID).Return(make(map[ids.NodeID]*validators.GetValidatorOutput), nil)
 	output, err := state.GetValidatorSet(context.Background(), 10, mySubnetID)
 	require.NoError(err)
 	require.Len(output, 0)
 
 	// Expect that requesting the Primary Network validator set overrides and returns my validator set
-	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), mySubnetID).Return(make(map[ids.NodeID]*validator.GetValidatorOutput), nil)
+	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), mySubnetID).Return(make(map[ids.NodeID]*validators.GetValidatorOutput), nil)
 	output, err = state.GetValidatorSet(context.Background(), 10, constants.PrimaryNetworkID)
 	require.NoError(err)
 	require.Len(output, 0)
 
 	// Expect that requesting other validator set returns that validator set
-	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), otherSubnetID).Return(make(map[ids.NodeID]*validator.GetValidatorOutput), nil)
+	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), otherSubnetID).Return(make(map[ids.NodeID]*validators.GetValidatorOutput), nil)
 	output, err = state.GetValidatorSet(context.Background(), 10, otherSubnetID)
 	require.NoError(err)
 	require.Len(output, 0)

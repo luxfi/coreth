@@ -4,16 +4,19 @@
 package customtypes
 
 import (
+	"sync"
+
 	ethtypes "github.com/luxfi/geth/core/types"
 )
 
-// TODO: Temporarily disabled - needs geth support
-// var extras = ethtypes.RegisterExtras[
-// 	HeaderExtra, *HeaderExtra,
-// 	BlockBodyExtra, *BlockBodyExtra,
-// ]()
+// Extra data storage using sync.Map for thread-safe access
+var (
+	headerExtras sync.Map // map[*ethtypes.Header]*HeaderExtra
+	blockExtras  sync.Map // map[*ethtypes.Block]*BlockBodyExtra
+	bodyExtras   sync.Map // map[*ethtypes.Body]*BlockBodyExtra
+)
 
-// Temporary workaround to provide extras functionality
+// extrasType provides access methods for attaching extra data to geth types
 type extrasType struct {
 	Block struct {
 		Get func(*ethtypes.Block) *BlockBodyExtra
@@ -35,11 +38,13 @@ var extras = extrasType{
 		Set func(*ethtypes.Block, *BlockBodyExtra)
 	}{
 		Get: func(b *ethtypes.Block) *BlockBodyExtra {
-			// Return default empty extra for now
+			if v, ok := blockExtras.Load(b); ok {
+				return v.(*BlockBodyExtra)
+			}
 			return &BlockBodyExtra{}
 		},
 		Set: func(b *ethtypes.Block, extra *BlockBodyExtra) {
-			// No-op for now
+			blockExtras.Store(b, extra)
 		},
 	},
 	Header: struct {
@@ -47,11 +52,13 @@ var extras = extrasType{
 		Set func(*ethtypes.Header, *HeaderExtra)
 	}{
 		Get: func(h *ethtypes.Header) *HeaderExtra {
-			// Return default empty extra for now
+			if v, ok := headerExtras.Load(h); ok {
+				return v.(*HeaderExtra)
+			}
 			return &HeaderExtra{}
 		},
 		Set: func(h *ethtypes.Header, extra *HeaderExtra) {
-			// No-op for now
+			headerExtras.Store(h, extra)
 		},
 	},
 	Body: struct {
@@ -59,11 +66,13 @@ var extras = extrasType{
 		Set func(*ethtypes.Body, *BlockBodyExtra)
 	}{
 		Get: func(b *ethtypes.Body) *BlockBodyExtra {
-			// Return default empty extra for now
+			if v, ok := bodyExtras.Load(b); ok {
+				return v.(*BlockBodyExtra)
+			}
 			return &BlockBodyExtra{}
 		},
 		Set: func(b *ethtypes.Body, extra *BlockBodyExtra) {
-			// No-op for now
+			bodyExtras.Store(b, extra)
 		},
 	},
 }

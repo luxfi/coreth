@@ -12,20 +12,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/p2p"
 	"github.com/luxfi/consensus/core"
 	consensustest "github.com/luxfi/consensus/test/helpers"
 	consensusversion "github.com/luxfi/consensus/version"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/codec/linearcodec"
+	"github.com/luxfi/p2p"
 	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/luxfi/coreth/plugin/evm/message"
-
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/codec/linearcodec"
-	"github.com/luxfi/ids"
 )
 
 const (
@@ -72,8 +70,7 @@ func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
 	senderWg := &sync.WaitGroup{}
 	var net Network
 	sender := testAppSender{
-		sendAppRequestFn: func(_ context.Context, nodes set.Set[ids.NodeID], requestID uint32, requestBytes []byte) error {
-			nodeID, _ := nodes.Pop()
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
 			senderWg.Add(1)
 			go func() {
 				defer senderWg.Done()
@@ -140,7 +137,7 @@ func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
 func TestAppRequestOnCtxCancellation(t *testing.T) {
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
 	sender := testAppSender{
-		sendAppRequestFn: func(_ context.Context, nodes set.Set[ids.NodeID], requestID uint32, requestBytes []byte) error {
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
 			return nil
 		},
 		sendAppResponseFn: func(nodeID ids.NodeID, requestID uint32, responseBytes []byte) error {
@@ -173,8 +170,7 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 	var lock sync.Mutex
 	contactedNodes := make(map[ids.NodeID]struct{})
 	sender := testAppSender{
-		sendAppRequestFn: func(_ context.Context, nodes set.Set[ids.NodeID], requestID uint32, requestBytes []byte) error {
-			nodeID, _ := nodes.Pop()
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
 			lock.Lock()
 			contactedNodes[nodeID] = struct{}{}
 			lock.Unlock()
@@ -269,7 +265,7 @@ func TestAppRequestOnShutdown(t *testing.T) {
 		called bool
 	)
 	sender := testAppSender{
-		sendAppRequestFn: func(_ context.Context, nodes set.Set[ids.NodeID], requestID uint32, requestBytes []byte) error {
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
 			wg.Add(1)
 			go func() {
 				called = true
@@ -313,14 +309,9 @@ func TestSyncedAppRequestAnyOnCtxCancellation(t *testing.T) {
 	sentAppRequest := make(chan reqInfo, 1)
 
 	sender := testAppSender{
-		sendAppRequestFn: func(ctx context.Context, nodes set.Set[ids.NodeID], requestID uint32, requestBytes []byte) error {
-			if err := ctx.Err(); err != nil {
-				return err
-			}
-
-			assert.Len(t, nodes, 1)
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
 			sentAppRequest <- reqInfo{
-				nodeID:    nodes.List()[0],
+				nodeID:    nodeID,
 				requestID: requestID,
 			}
 			return nil
@@ -390,10 +381,9 @@ func TestRequestMinVersion(t *testing.T) {
 
 	var net Network
 	sender := testAppSender{
-		sendAppRequestFn: func(_ context.Context, nodes set.Set[ids.NodeID], reqID uint32, messageBytes []byte) error {
+		sendAppRequestFn: func(requestNodeID ids.NodeID, reqID uint32, messageBytes []byte) error {
 			atomic.AddUint32(&callNum, 1)
-			assert.True(t, nodes.Contains(nodeID), "request nodes should contain expected nodeID")
-			assert.Len(t, nodes, 1, "request nodes should contain exactly one node")
+			assert.Equal(t, nodeID, requestNodeID, "request node should be expected nodeID")
 
 			go func() {
 				time.Sleep(200 * time.Millisecond)
@@ -439,7 +429,7 @@ func TestRequestMinVersion(t *testing.T) {
 		},
 		requestBytes,
 	)
-	assert.Equal(t, err.Error(), "no peers found matching version luxd/2.0.0 out of 1 peers")
+	assert.Equal(t, "no peers found matching version luxd-2.0.0 out of 1 peers", err.Error())
 	assert.Nil(t, responseBytes)
 
 	// ensure version matches and the request goes through
@@ -457,7 +447,7 @@ func TestOnRequestHonoursDeadline(t *testing.T) {
 	var net Network
 	responded := false
 	sender := testAppSender{
-		sendAppRequestFn: func(_ context.Context, nodes set.Set[ids.NodeID], reqID uint32, message []byte) error {
+		sendAppRequestFn: func(nodeID ids.NodeID, reqID uint32, message []byte) error {
 			return nil
 		},
 		sendAppResponseFn: func(nodeID ids.NodeID, reqID uint32, message []byte) error {
@@ -496,11 +486,7 @@ func TestHandleInvalidMessages(t *testing.T) {
 	codecManager := buildCodec(t, HelloGossip{}, TestMessage{})
 	nodeID := ids.GenerateTestNodeID()
 	requestID := uint32(1)
-	sender := &enginetest.Sender{
-		SendAppErrorF: func(context.Context, ids.NodeID, uint32, int32, string) error {
-			return nil
-		},
-	}
+	sender := testAppSender{}
 	ctx := consensustest.Context(t, consensustest.CChainID)
 	clientNetwork, err := NewNetwork(ctx, sender, codecManager, 1, prometheus.NewRegistry())
 	require.NoError(t, err)
@@ -582,7 +568,7 @@ func TestNetworkAppRequestAfterShutdown(t *testing.T) {
 func TestNetworkRouting(t *testing.T) {
 	require := require.New(t)
 	sender := &testAppSender{
-		sendAppRequestFn: func(_ context.Context, s set.Set[ids.NodeID], u uint32, bytes []byte) error {
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
 			return nil
 		},
 		sendAppResponseFn: func(id ids.NodeID, u uint32, bytes []byte) error {
