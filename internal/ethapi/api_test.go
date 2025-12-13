@@ -118,9 +118,9 @@ func TestTransactionBlobTx(t *testing.T) {
 	config := params.Copy(params.TestChainConfig)
 	// config.ShanghaiTime = new(uint64)
 	config.CancunTime = new(uint64)
-	tests := allBlobTxs(common.Address{0xde, 0xad}, &config)
+	tests := allBlobTxs(common.Address{0xde, 0xad}, config)
 
-	testTransactionMarshal(t, tests, &config)
+	testTransactionMarshal(t, tests, config)
 }
 
 type txData struct {
@@ -807,7 +807,7 @@ func TestCall(t *testing.T) {
 	var (
 		accounts = newAccounts(3)
 		genesis  = &core.Genesis{
-			Config:  &cfg,
+			Config:  cfg,
 			BaseFee: big.NewInt(gethparams.InitialBaseFee),
 			Alloc: types.GenesisAlloc{
 				accounts[0].addr: {Balance: big.NewInt(params.Ether)},
@@ -1831,7 +1831,7 @@ func setupReceiptBackend(t *testing.T, genBlocks int) (*testBackend, []common.Ha
 		acc2Addr         = common.BytesToAddress(acc2CryptoAddr[:])
 		contract         = common.HexToAddress("0000000000000000000000000000000000031ec7")
 		genesis          = &core.Genesis{
-			Config:        &config,
+			Config:        config,
 			BaseFee:       big.NewInt(gethparams.InitialBaseFee),
 			ExcessBlobGas: new(uint64),
 			BlobGasUsed:   new(uint64),
