@@ -1,0 +1,211 @@
+---
+title: EVM Compatibility
+description: Ethereum Virtual Machine compatibility, opcodes, and precompiles
+---
+
+# EVM Compatibility
+
+Coreth implements a fully compatible Ethereum Virtual Machine, supporting all standard opcodes and precompiled contracts through the Cancun upgrade.
+
+## Supported EIPs
+
+### Homestead to Istanbul
+
+| EIP | Name | Status |
+|-----|------|--------|
+| EIP-2 | Homestead | Active |
+| EIP-7 | DELEGATECALL | Active |
+| EIP-100 | Difficulty adjustment | N/A (no PoW) |
+| EIP-140 | REVERT opcode | Active |
+| EIP-141 | INVALID opcode | Active |
+| EIP-145 | Bitwise shifting | Active |
+| EIP-150 | Gas repricing | Active |
+| EIP-155 | Replay protection | Active |
+| EIP-160 | EXP repricing | Active |
+| EIP-161 | State clearing | Active |
+| EIP-170 | Contract size limit | Active |
+| EIP-211 | RETURNDATASIZE/COPY | Active |
+| EIP-214 | STATICCALL | Active |
+| EIP-658 | Status in receipts | Active |
+| EIP-1014 | CREATE2 | Active |
+| EIP-1052 | EXTCODEHASH | Active |
+| EIP-1283 | Net gas metering | Active |
+| EIP-1344 | CHAINID opcode | Active |
+| EIP-1884 | Opcode repricing | Active |
+| EIP-2028 | Calldata repricing | Active |
+| EIP-2200 | Net gas metering v2 | Active |
+
+### Berlin and London
+
+| EIP | Name | Status |
+|-----|------|--------|
+| EIP-2565 | ModExp repricing | Active |
+| EIP-2718 | Typed transactions | Active |
+| EIP-2929 | State access gas | Active |
+| EIP-2930 | Access lists | Active |
+| EIP-1559 | Fee market | Active |
+| EIP-3198 | BASEFEE opcode | Active |
+| EIP-3529 | Gas refund reduction | Active |
+| EIP-3541 | Reject 0xEF contracts | Active |
+
+### Shanghai and Cancun
+
+| EIP | Name | Status |
+|-----|------|--------|
+| EIP-3651 | COINBASE warm | Active |
+| EIP-3855 | PUSH0 | Active |
+| EIP-3860 | Initcode limit | Active |
+| EIP-4895 | Beacon withdrawals | N/A |
+| EIP-1153 | Transient storage | Active |
+| EIP-4844 | Blob transactions | Active (Etna) |
+| EIP-5656 | MCOPY | Active |
+| EIP-6780 | SELFDESTRUCT limit | Active |
+| EIP-7516 | BLOBBASEFEE | Active (Etna) |
+
+## Precompiled Contracts
+
+Standard Ethereum precompiles at their canonical addresses:
+
+| Address | Name | Gas |
+|---------|------|-----|
+| `0x01` | ecRecover | 3000 |
+| `0x02` | SHA256 | 60 + 12/word |
+| `0x03` | RIPEMD160 | 600 + 120/word |
+| `0x04` | identity | 15 + 3/word |
+| `0x05` | modexp | Dynamic |
+| `0x06` | ecAdd | 150 |
+| `0x07` | ecMul | 6000 |
+| `0x08` | ecPairing | 45000 + 34000/pair |
+| `0x09` | blake2f | 1/round |
+| `0x0a` | kzgPointEval | 50000 |
+
+### Lux-Specific Precompiles
+
+Coreth adds precompiles for cross-chain operations:
+
+#### Warp Precompile (0x0200...0005)
+
+The Warp precompile enables cross-subnet messaging:
+
+```solidity
+interface IWarpMessenger {
+    // Send a message to another subnet
+    function sendWarpMessage(bytes calldata payload) external returns (bytes32 messageID);
+
+    // Get the blockchain ID
+    function getBlockchainID() external view returns (bytes32 blockchainID);
+}
+```
+
+Address: `0x0200000000000000000000000000000000000005`
+
+#### Native Asset Precompiles
+
+For atomic transaction operations with native assets:
+
+| Address | Function |
+|---------|----------|
+| `0x0100...0001` | Native minter |
+| `0x0100...0002` | Contract deployer allowlist |
+| `0x0100...0003` | Transaction allowlist |
+| `0x0100...0004` | Fee config manager |
+| `0x0100...0005` | Reward manager |
+
+## Opcode Differences
+
+### DIFFICULTY / PREVRANDAO
+
+The `DIFFICULTY` opcode (0x44) always returns `1` on C-Chain. Lux does not use proof-of-work, so there is no meaningful difficulty value.
+
+After the merge-equivalent upgrade, this opcode is renamed to `PREVRANDAO` per EIP-4399. However, since Lux does not have a beacon chain randomness source, it continues to return `1`.
+
+**Warning**: Do not use this opcode as a source of randomness.
+
+### COINBASE
+
+Returns the block producer's address. On C-Chain, this is the fee recipient address configured by the validator.
+
+### TIMESTAMP
+
+Returns the block timestamp in Unix seconds. Unlike Ethereum:
+
+- Blocks may share timestamps with their parents
+- No guaranteed minimum time between blocks
+- Use timestamps, not block numbers, for time-based logic
+
+## Gas Costs
+
+Coreth uses standard Ethereum gas costs with some modifications:
+
+### Dynamic Fee Transactions (EIP-1559)
+
+```
+effectiveGasPrice = min(maxFeePerGas, baseFee + maxPriorityFeePerGas)
+```
+
+The base fee adjusts based on block utilization:
+
+- Target: 15M gas per block
+- Maximum: 30M gas per block
+- Adjustment: +/- 12.5% per block
+
+### Atomic Transaction Gas
+
+Atomic operations (imports/exports) consume additional gas:
+
+| Operation | Gas Cost |
+|-----------|----------|
+| Import UTXO | 1000 per UTXO |
+| Export UTXO | 1000 per UTXO |
+| Signature verification | 1000 per signature |
+
+## Contract Deployment
+
+### Size Limits
+
+- Maximum contract size: 24,576 bytes (EIP-170)
+- Maximum initcode size: 49,152 bytes (EIP-3860)
+
+### CREATE2 Addresses
+
+```
+address = keccak256(0xff ++ deployer ++ salt ++ keccak256(initcode))[12:]
+```
+
+### Contract Verification
+
+Contracts can be verified on the Lux block explorer:
+- Mainnet: https://explorer.lux.network
+- Testnet: https://testnet.explorer.lux.network
+
+## Testing Compatibility
+
+### Hardhat Configuration
+
+```javascript
+module.exports = {
+  networks: {
+    lux: {
+      url: "https://api.lux.network/ext/bc/C/rpc",
+      chainId: 43114,
+      accounts: [PRIVATE_KEY],
+    },
+    luxTestnet: {
+      url: "https://api.testnet.lux.network/ext/bc/C/rpc",
+      chainId: 43113,
+      accounts: [PRIVATE_KEY],
+    },
+  },
+};
+```
+
+### Foundry Configuration
+
+```toml
+[rpc_endpoints]
+lux = "https://api.lux.network/ext/bc/C/rpc"
+lux_testnet = "https://api.testnet.lux.network/ext/bc/C/rpc"
+
+[etherscan]
+lux = { key = "${EXPLORER_API_KEY}", url = "https://api.explorer.lux.network/api" }
+```

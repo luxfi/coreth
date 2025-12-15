@@ -150,6 +150,9 @@ func SetupGenesisBlock(
 	// is initialized with an external ancient store. Commit genesis state
 	// in this case.
 	header := rawdb.ReadHeader(db, stored, 0)
+	if header == nil {
+		return genesis.Config, common.Hash{}, fmt.Errorf("genesis block header not found in database for hash %s", stored)
+	}
 	// Check if the state is initialized by attempting to get a node reader
 	_, nodeReaderErr := triedb.NodeReader(header.Root)
 	if header.Root != types.EmptyRootHash && nodeReaderErr != nil {

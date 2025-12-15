@@ -1,0 +1,383 @@
+---
+title: Configuration
+description: Coreth configuration options and genesis settings
+---
+
+# Configuration
+
+Coreth can be configured through command-line flags, configuration files, and genesis parameters.
+
+## Chain Configuration
+
+### Configuration File
+
+Create a JSON configuration file for the C-Chain:
+
+```json
+{
+  "snowman-api-enabled": false,
+  "coreth-admin-api-enabled": false,
+  "eth-apis": ["eth", "eth-filter", "net", "web3"],
+  "continuous-profiler-dir": "",
+  "continuous-profiler-frequency": 900000000000,
+  "continuous-profiler-max-files": 5,
+  "rpc-gas-cap": 50000000,
+  "rpc-tx-fee-cap": 100,
+  "preimages-enabled": false,
+  "pruning-enabled": true,
+  "snapshot-async": true,
+  "snapshot-verification-enabled": false,
+  "metrics-enabled": true,
+  "metrics-expensive-enabled": false,
+  "local-txs-enabled": false,
+  "api-max-duration": 0,
+  "ws-cpu-refill-rate": 0,
+  "ws-cpu-max-stored": 0,
+  "api-max-blocks-per-request": 0,
+  "allow-unfinalized-queries": false,
+  "allow-unprotected-txs": false,
+  "keystore-directory": "",
+  "keystore-external-signer": "",
+  "keystore-insecure-unlock-allowed": false,
+  "remote-tx-gossip-only-enabled": false,
+  "tx-regossip-frequency": 60000000000,
+  "tx-regossip-max-size": 15,
+  "log-level": "info",
+  "offline-pruning-enabled": false,
+  "offline-pruning-bloom-filter-size": 512,
+  "offline-pruning-data-directory": ""
+}
+```
+
+### Loading Configuration
+
+Pass the configuration to Luxd:
+
+```bash
+./luxd --chain-config-dir=/path/to/configs
+```
+
+Place the file at:
+```
+/path/to/configs/C/config.json
+```
+
+## API Configuration
+
+### Enabling APIs
+
+Enable specific API namespaces:
+
+```json
+{
+  "eth-apis": [
+    "eth",
+    "eth-filter",
+    "net",
+    "web3",
+    "debug",
+    "personal",
+    "txpool"
+  ]
+}
+```
+
+### API Namespaces
+
+| Namespace | Description | Default |
+|-----------|-------------|---------|
+| `eth` | Standard Ethereum methods | Enabled |
+| `eth-filter` | Filter and subscription methods | Enabled |
+| `net` | Network information | Enabled |
+| `web3` | Client utilities | Enabled |
+| `debug` | Debugging and tracing | Disabled |
+| `personal` | Account management | Disabled |
+| `txpool` | Transaction pool | Disabled |
+| `admin` | Node administration | Disabled |
+
+### Rate Limiting
+
+Configure API rate limits:
+
+```json
+{
+  "api-max-duration": 30000000000,
+  "ws-cpu-refill-rate": 100000000,
+  "ws-cpu-max-stored": 500000000,
+  "api-max-blocks-per-request": 1000
+}
+```
+
+## State Configuration
+
+### Pruning
+
+Enable state pruning to reduce disk usage:
+
+```json
+{
+  "pruning-enabled": true,
+  "offline-pruning-enabled": false,
+  "offline-pruning-bloom-filter-size": 512,
+  "offline-pruning-data-directory": "/path/to/temp"
+}
+```
+
+**Online Pruning**: Removes old state during normal operation. Reduces disk usage but cannot serve historical state queries.
+
+**Offline Pruning**: Compacts the database while the node is stopped. More thorough but requires downtime.
+
+### Archive Mode
+
+Disable pruning for full historical access:
+
+```json
+{
+  "pruning-enabled": false,
+  "preimages-enabled": true
+}
+```
+
+Archive nodes can:
+- Serve `eth_call` at any historical block
+- Provide `debug_traceTransaction` for old transactions
+- Support state diffs and proofs
+
+### Snapshots
+
+Configure state snapshots:
+
+```json
+{
+  "snapshot-async": true,
+  "snapshot-verification-enabled": false
+}
+```
+
+## Gas Configuration
+
+### RPC Gas Limits
+
+```json
+{
+  "rpc-gas-cap": 50000000,
+  "rpc-tx-fee-cap": 100
+}
+```
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `rpc-gas-cap` | Max gas for eth_call/estimateGas | 50M |
+| `rpc-tx-fee-cap` | Max fee in LUX for tx submission | 100 |
+
+## Transaction Pool
+
+### Local Transactions
+
+```json
+{
+  "local-txs-enabled": false,
+  "remote-tx-gossip-only-enabled": false
+}
+```
+
+### Regossip
+
+```json
+{
+  "tx-regossip-frequency": 60000000000,
+  "tx-regossip-max-size": 15
+}
+```
+
+## Genesis Configuration
+
+The genesis block defines initial chain state.
+
+### Genesis Structure
+
+```json
+{
+  "config": {
+    "chainId": 43114,
+    "homesteadBlock": 0,
+    "eip150Block": 0,
+    "eip155Block": 0,
+    "eip158Block": 0,
+    "byzantiumBlock": 0,
+    "constantinopleBlock": 0,
+    "petersburgBlock": 0,
+    "istanbulBlock": 0,
+    "muirGlacierBlock": 0,
+    "apricotPhase1BlockTimestamp": 0,
+    "apricotPhase2BlockTimestamp": 0,
+    "apricotPhase3BlockTimestamp": 0,
+    "apricotPhase4BlockTimestamp": 0,
+    "apricotPhase5BlockTimestamp": 0,
+    "banffBlockTimestamp": 0,
+    "cortinaBlockTimestamp": 0,
+    "durangoBlockTimestamp": 0,
+    "etnaBlockTimestamp": 0
+  },
+  "nonce": "0x0",
+  "timestamp": "0x0",
+  "extraData": "0x",
+  "gasLimit": "0x1312D00",
+  "difficulty": "0x1",
+  "mixHash": "0x0",
+  "coinbase": "0x0000000000000000000000000000000000000000",
+  "alloc": {
+    "0x...": {
+      "balance": "0x..."
+    }
+  }
+}
+```
+
+### Network Upgrades
+
+Upgrade timestamps in the config:
+
+| Upgrade | Description |
+|---------|-------------|
+| `apricotPhase1` | Fee burn, gas limit changes |
+| `apricotPhase2` | Atomic tx changes |
+| `apricotPhase3` | EIP-1559 dynamic fees |
+| `apricotPhase4` | Atomic tx fees |
+| `apricotPhase5` | Gas cost optimizations |
+| `banff` | Cross-chain improvements |
+| `cortina` | Shanghai EIPs |
+| `durango` | Warp messaging |
+| `etna` | Cancun EIPs, blobs |
+
+### Fee Configuration
+
+Configure dynamic fees in genesis:
+
+```json
+{
+  "config": {
+    "feeConfig": {
+      "gasLimit": 20000000,
+      "targetBlockRate": 2,
+      "minBaseFee": 25000000000,
+      "targetGas": 15000000,
+      "baseFeeChangeDenominator": 36,
+      "minBlockGasCost": 0,
+      "maxBlockGasCost": 1000000,
+      "blockGasCostStep": 200000
+    }
+  }
+}
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| `gasLimit` | Maximum gas per block |
+| `targetBlockRate` | Target seconds between blocks |
+| `minBaseFee` | Minimum base fee (wei) |
+| `targetGas` | Target gas utilization |
+| `baseFeeChangeDenominator` | Fee adjustment rate |
+
+### Initial Allocations
+
+Pre-fund addresses in genesis:
+
+```json
+{
+  "alloc": {
+    "0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC": {
+      "balance": "0x295BE96E64066972000000"
+    }
+  }
+}
+```
+
+### Precompile Configuration
+
+Enable/configure precompiles:
+
+```json
+{
+  "config": {
+    "warpConfig": {
+      "blockTimestamp": 0,
+      "quorumNumerator": 67
+    },
+    "contractDeployerAllowListConfig": {
+      "blockTimestamp": null,
+      "adminAddresses": []
+    },
+    "contractNativeMinterConfig": {
+      "blockTimestamp": null,
+      "adminAddresses": []
+    },
+    "txAllowListConfig": {
+      "blockTimestamp": null,
+      "adminAddresses": []
+    },
+    "feeManagerConfig": {
+      "blockTimestamp": null,
+      "adminAddresses": []
+    },
+    "rewardManagerConfig": {
+      "blockTimestamp": null,
+      "adminAddresses": []
+    }
+  }
+}
+```
+
+## Logging
+
+### Log Levels
+
+```json
+{
+  "log-level": "info"
+}
+```
+
+Available levels: `trace`, `debug`, `info`, `warn`, `error`, `crit`
+
+### Log Format
+
+Coreth uses structured JSON logging compatible with standard log aggregators.
+
+## Profiling
+
+### Continuous Profiler
+
+```json
+{
+  "continuous-profiler-dir": "/path/to/profiles",
+  "continuous-profiler-frequency": 900000000000,
+  "continuous-profiler-max-files": 5
+}
+```
+
+Profiles are written in Go pprof format.
+
+## Metrics
+
+### Enabling Metrics
+
+```json
+{
+  "metrics-enabled": true,
+  "metrics-expensive-enabled": false
+}
+```
+
+Metrics are exposed via the Luxd metrics endpoint in Prometheus format.
+
+### Key Metrics
+
+| Metric | Description |
+|--------|-------------|
+| `chain_head_block` | Current block number |
+| `chain_head_gas` | Gas used in head block |
+| `txpool_pending` | Pending transactions |
+| `txpool_queued` | Queued transactions |
+| `rpc_requests_total` | Total RPC requests |
+| `rpc_duration_seconds` | RPC latency histogram |

@@ -88,7 +88,7 @@ func NewBackend(alloc types.GenesisAlloc, options ...func(nodeConf *node.Config,
 	// Copy TestChainConfig properly, preserving extras from the original config
 	chainConfigCopy := params.Copy(params.TestChainConfig)
 	// Re-associate extras with the new pointer (Copy loses the association)
-	chainConfig := params.WithExtra(&chainConfigCopy, params.GetExtra(params.TestChainConfig))
+	chainConfig := params.WithExtra(chainConfigCopy, params.GetExtra(params.TestChainConfig))
 	chainConfig.ChainID = big.NewInt(1337)
 
 	// Create the default configurations for the outer node shell and the Ethereum

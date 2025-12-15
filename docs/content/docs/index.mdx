@@ -1,0 +1,142 @@
+---
+title: Coreth Overview
+description: Introduction to Coreth - the EVM implementation for Lux C-Chain
+---
+
+# Coreth and the C-Chain
+
+Coreth (from "core Ethereum") is the Virtual Machine (VM) that powers the Lux Contract Chain (C-Chain). It implements the Ethereum Virtual Machine and provides full compatibility with Solidity smart contracts and standard Ethereum tooling.
+
+## Architecture
+
+Coreth operates as a VM plugin within the Lux node architecture:
+
+```
++------------------+
+|    Lux Node      |
+|  +------------+  |
+|  | Consensus  |  |
+|  +------------+  |
+|        |         |
+|  +------------+  |
+|  |   Coreth   |  |
+|  |   (C-VM)   |  |
+|  +------------+  |
+|        |         |
+|  +------------+  |
+|  |   State    |  |
+|  |  Database  |  |
+|  +------------+  |
++------------------+
+```
+
+### Key Components
+
+- **EVM Engine**: Full Ethereum Virtual Machine implementation based on geth
+- **Consensus Integration**: Interfaces with Lux consensus via the VM plugin interface
+- **State Management**: Merkle Patricia Trie for state storage with pruning support
+- **Transaction Pool**: Memory pool with gas price ordering and replacement logic
+- **RPC Server**: JSON-RPC API compatible with Ethereum tooling
+
+## Features
+
+### Ethereum Compatibility
+
+Coreth provides near-complete Ethereum compatibility:
+
+- All EVM opcodes through the Cancun upgrade
+- Standard precompiled contracts (ecrecover, sha256, etc.)
+- EIP-1559 dynamic fee transactions
+- EIP-2930 access lists
+- EIP-4844 blob transactions (after Etna upgrade)
+
+### Cross-Chain Capabilities
+
+Unique to Lux, Coreth supports:
+
+- **Atomic Transactions**: Move assets between C-Chain, X-Chain, and P-Chain
+- **Warp Messaging**: Cross-subnet communication with BLS signature aggregation
+- **Native Asset Operations**: Import/export LUX and other assets
+
+### Performance Optimizations
+
+- Block production tuned for sub-second finality
+- State sync for fast node bootstrapping
+- Configurable pruning and archival modes
+- Parallel transaction execution (experimental)
+
+## Chain IDs
+
+| Network | Chain ID |
+|---------|----------|
+| Mainnet | 43114    |
+| Testnet | 43113    |
+| Local   | 43112    |
+
+## API Namespaces
+
+The C-Chain exposes several JSON-RPC namespaces:
+
+| Namespace | Default | Description |
+|-----------|---------|-------------|
+| `eth`     | Enabled | Standard Ethereum methods |
+| `net`     | Enabled | Network information |
+| `web3`    | Enabled | Client utilities |
+| `debug`   | Disabled | Debugging and tracing |
+| `personal`| Disabled | Account management |
+| `txpool`  | Disabled | Transaction pool inspection |
+| `admin`   | Disabled | Node administration |
+
+## Getting Started
+
+### Building from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/luxfi/coreth
+cd coreth
+
+# Build with the Lux node
+cd $GOPATH/src/github.com/luxfi/node
+go mod edit -replace github.com/luxfi/coreth=../coreth
+./scripts/build.sh
+```
+
+### Running with Luxd
+
+Coreth runs as an integrated VM within Luxd:
+
+```bash
+./build/luxd --network-id=mainnet
+```
+
+The C-Chain RPC endpoint is available at:
+- HTTP: `http://localhost:9650/ext/bc/C/rpc`
+- WebSocket: `ws://localhost:9650/ext/bc/C/ws`
+
+## Differences from Ethereum
+
+### Block Timing
+
+Blocks are produced asynchronously based on transaction demand rather than fixed intervals. A block may have the same timestamp as its parent. Smart contracts should use block timestamps, not block numbers, for time-based logic.
+
+### Difficulty
+
+Lux consensus does not use proof-of-work difficulty. The `DIFFICULTY` opcode always returns 1. Do not use it as a source of randomness.
+
+### Block Format Extensions
+
+Coreth extends the Ethereum block format:
+
+- `ExtData`: Contains atomic transaction bytes
+- `ExtDataHash`: Hash of atomic transaction data
+- `ExtDataGasUsed`: Gas consumed by atomic operations
+- `BlockGasCost`: Surcharge for fast block production
+
+## Next Steps
+
+- [EVM Compatibility](/docs/evm) - Opcodes, precompiles, and EIPs
+- [JSON-RPC API](/docs/rpc) - Available RPC methods
+- [Configuration](/docs/config) - Node and chain configuration
+- [Atomic Transactions](/docs/atomic) - Cross-chain asset transfers
+- [Warp Messaging](/docs/warp) - Cross-subnet communication
