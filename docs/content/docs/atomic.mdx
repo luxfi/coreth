@@ -1,0 +1,361 @@
+---
+title: Atomic Transactions
+description: Cross-chain atomic transactions and asset transfers
+---
+
+# Atomic Transactions
+
+Atomic transactions enable seamless asset movement between the C-Chain and other Lux chains (X-Chain, P-Chain). They are atomic in the sense that the full transfer either completes successfully or fails entirely.
+
+## Overview
+
+Lux is a multi-chain network. Assets can exist on multiple chains:
+
+- **X-Chain**: Exchange chain for creating and trading assets
+- **P-Chain**: Platform chain for staking and subnet management
+- **C-Chain**: Contract chain for smart contracts (EVM)
+
+Atomic transactions bridge these chains without external bridges or wrapped tokens.
+
+## How It Works
+
+### Export Transaction
+
+Export moves assets from C-Chain to another chain:
+
+```
+C-Chain                    Target Chain
+   |                            |
+   |  1. Lock on C-Chain        |
+   |  2. Create export tx       |
+   |------------------------->  |
+   |  3. Atomic commit          |
+   |                            |
+   |                      4. Available on target
+```
+
+### Import Transaction
+
+Import brings assets from another chain to C-Chain:
+
+```
+Source Chain               C-Chain
+   |                            |
+   |  1. Export from source     |
+   |------------------------->  |
+   |                      2. Create import tx
+   |                      3. Atomic commit
+   |                            |
+   |                      4. Funds available
+```
+
+## Block Format Extensions
+
+Atomic transactions are stored in the block's `ExtData` field:
+
+```go
+type Block struct {
+    Header
+    Transactions []Transaction
+    Uncles       []*Header
+
+    // Lux extensions
+    Version  uint32
+    ExtData  []byte  // Atomic transaction bytes
+}
+```
+
+Header extensions:
+
+```go
+type Header struct {
+    // Standard Ethereum fields...
+
+    // Lux extensions
+    ExtDataHash    common.Hash  // Hash of ExtData
+    ExtDataGasUsed uint64       // Gas used by atomic ops
+    BlockGasCost   uint64       // Block production surcharge
+}
+```
+
+## Using Atomic Transactions
+
+### Export from C-Chain
+
+Using the Lux wallet SDK:
+
+```typescript
+import { Wallet } from '@luxfi/wallet-sdk';
+
+const wallet = new Wallet(privateKey);
+
+// Export LUX from C-Chain to X-Chain
+const exportTx = await wallet.C.export({
+  amount: BigInt(1e18),  // 1 LUX in wei
+  destination: 'X',
+  to: xChainAddress,
+});
+
+console.log('Export TX:', exportTx.txID);
+```
+
+### Import to C-Chain
+
+```typescript
+// Import pending UTXOs to C-Chain
+const importTx = await wallet.C.import({
+  source: 'X',
+});
+
+console.log('Import TX:', importTx.txID);
+```
+
+### Using JSON-RPC
+
+Export via RPC (requires wallet API):
+
+```bash
+curl -X POST -H "Content-Type: application/json" --data '{
+  "jsonrpc": "2.0",
+  "method": "lux.export",
+  "params": {
+    "to": "X-lux1...",
+    "amount": 1000000000,
+    "assetID": "LUX",
+    "username": "user",
+    "password": "pass"
+  },
+  "id": 1
+}' http://localhost:9650/ext/bc/C/lux
+```
+
+## Gas Costs
+
+Atomic operations consume gas beyond normal EVM execution:
+
+| Operation | Base Cost | Per UTXO | Per Signature |
+|-----------|-----------|----------|---------------|
+| Import | 10,000 | 1,000 | 1,000 |
+| Export | 10,000 | 1,000 | - |
+
+### Example Calculation
+
+Import with 5 UTXOs and 3 signatures:
+```
+Gas = 10,000 + (5 * 1,000) + (3 * 1,000) = 18,000
+```
+
+The gas is charged at the current base fee and deducted from the imported amount.
+
+## Asset Types
+
+### LUX
+
+The native token can be transferred atomically:
+
+```typescript
+// Export native LUX
+await wallet.C.export({
+  amount: BigInt(1e18),
+  assetID: 'LUX',  // or omit for native
+  destination: 'P',
+});
+```
+
+### ANTs (Lux Native Tokens)
+
+Custom assets created on X-Chain can be imported to C-Chain:
+
+```typescript
+// Import custom asset
+await wallet.C.import({
+  source: 'X',
+  assetID: 'asset123...',
+});
+```
+
+On C-Chain, ANTs are represented as ERC-20-like balances accessible via the native asset precompile.
+
+### Wrapped Assets
+
+Imported assets can be accessed via special addresses:
+
+```solidity
+interface INativeAssets {
+    function balanceOf(
+        address account,
+        bytes32 assetID
+    ) external view returns (uint256);
+
+    function transfer(
+        address to,
+        bytes32 assetID,
+        uint256 amount
+    ) external;
+}
+```
+
+## UTXO Model
+
+Atomic transactions use a UTXO (Unspent Transaction Output) model:
+
+### Export Creates UTXOs
+
+```
+C-Chain State          UTXOs
++-------------+       +----------------+
+| Balance: 10 | --->  | UTXO(5, addr1) |
++-------------+       | UTXO(5, addr2) |
+                      +----------------+
+```
+
+### Import Consumes UTXOs
+
+```
+UTXOs                  C-Chain State
++----------------+    +-------------+
+| UTXO(5, addr)  | -> | Balance: 5  |
++----------------+    +-------------+
+```
+
+## Transaction Lifecycle
+
+### 1. Create Export
+
+```typescript
+const exportTx = await buildExportTx({
+  amount,
+  destinationChain: 'X',
+  destinationAddress: xAddr,
+});
+```
+
+### 2. Sign Export
+
+```typescript
+const signedExport = await signTx(exportTx, privateKey);
+```
+
+### 3. Submit Export
+
+```typescript
+const txID = await submitTx(signedExport);
+```
+
+### 4. Wait for Acceptance
+
+```typescript
+await waitForAcceptance(txID);
+// Export is now committed
+```
+
+### 5. Create Import (on destination)
+
+```typescript
+const importTx = await buildImportTx({
+  sourceChain: 'C',
+  utxos: await getUTXOs(address),
+});
+```
+
+### 6. Sign and Submit Import
+
+```typescript
+const signedImport = await signTx(importTx, privateKey);
+await submitTx(signedImport);
+```
+
+## Error Handling
+
+### Common Errors
+
+| Error | Cause | Resolution |
+|-------|-------|------------|
+| `insufficient funds` | Not enough balance | Check balance includes gas |
+| `utxo not found` | UTXO already spent | Query fresh UTXOs |
+| `signature verification failed` | Wrong key | Verify signing key |
+| `atomic tx not allowed` | Wrong block state | Wait for finality |
+
+### Retry Logic
+
+```typescript
+async function importWithRetry(maxAttempts = 3) {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const utxos = await getUTXOs(address);
+      if (utxos.length === 0) {
+        await sleep(2000);
+        continue;
+      }
+      return await importUTXOs(utxos);
+    } catch (err) {
+      if (i === maxAttempts - 1) throw err;
+      await sleep(2000);
+    }
+  }
+}
+```
+
+## Security Considerations
+
+### Finality
+
+Wait for transaction finality before considering transfers complete:
+
+- C-Chain: ~1-2 seconds to finality
+- Cross-chain: Wait for both chains to finalize
+
+### Address Validation
+
+Always validate destination addresses match the target chain format:
+
+- X-Chain: `X-lux1...` (Bech32)
+- P-Chain: `P-lux1...` (Bech32)
+- C-Chain: `0x...` (Ethereum hex)
+
+### Amount Precision
+
+Different chains use different decimals:
+
+| Chain | Decimals | Unit |
+|-------|----------|------|
+| C-Chain | 18 | wei |
+| X/P-Chain | 9 | nLUX |
+
+Convert appropriately:
+```typescript
+// C to X: divide by 1e9
+const xAmount = cAmount / BigInt(1e9);
+
+// X to C: multiply by 1e9
+const cAmount = xAmount * BigInt(1e9);
+```
+
+## Monitoring
+
+### Query Export Status
+
+```bash
+curl -X POST -H "Content-Type: application/json" --data '{
+  "jsonrpc": "2.0",
+  "method": "lux.getAtomicTxStatus",
+  "params": {
+    "txID": "..."
+  },
+  "id": 1
+}' http://localhost:9650/ext/bc/C/lux
+```
+
+### Query Pending Imports
+
+```bash
+curl -X POST -H "Content-Type: application/json" --data '{
+  "jsonrpc": "2.0",
+  "method": "lux.getUTXOs",
+  "params": {
+    "addresses": ["C-lux1..."],
+    "sourceChain": "X"
+  },
+  "id": 1
+}' http://localhost:9650/ext/bc/C/lux
+```
