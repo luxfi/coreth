@@ -36,7 +36,7 @@ func New(vm *state.StateDB) *StateDB {
 }
 
 func (s *StateDB) Prepare(rules params.Rules, sender, coinbase common.Address, dst *common.Address, precompiles []common.Address, list types.AccessList) {
-	rulesExtra := corethparams.GetRulesExtra(rules)
+	rulesExtra := corethparams.GetRulesExtra(&rules)
 	s.predicateStorageSlots = predicate.PreparePredicateStorageSlots(rulesExtra, list)
 	s.StateDB.Prepare(rules, sender, coinbase, dst, precompiles, list)
 }

@@ -7,6 +7,7 @@ import (
 	"maps"
 	"math/big"
 	"slices"
+	"sync"
 
 	"github.com/holiman/uint256"
 	consensusctx "github.com/luxfi/consensus/context"
@@ -24,13 +25,22 @@ import (
 
 type RulesExtra extras.Rules
 
-func GetRulesExtra(r Rules) *extras.Rules {
-	// If Payload is set and is a RulesExtra (which is an alias for extras.Rules), convert and return it
-	if extra, ok := r.Payload.(RulesExtra); ok {
-		return (*extras.Rules)(&extra)
-	}
-	// Also check for *extras.Rules for backwards compatibility
-	if extra, ok := r.Payload.(*extras.Rules); ok && extra != nil {
+// rulesExtraStore stores rules extras keyed by ChainID pointer.
+// Using ChainID pointer as key because it's a *big.Int that doesn't change
+// when Rules is passed by value (the pointer is copied, not the big.Int).
+var rulesExtraStore = struct {
+	sync.RWMutex
+	store map[*big.Int]*extras.Rules
+}{store: make(map[*big.Int]*extras.Rules)}
+
+// GetRulesExtra retrieves the extra rules data associated with the given Rules.
+// If no extra exists for this Rules, it returns an empty Rules struct with initialized maps.
+func GetRulesExtra(r *Rules) *extras.Rules {
+	// Use ChainID pointer as key (it's stable across value copies)
+	rulesExtraStore.RLock()
+	extra, ok := rulesExtraStore.store[r.ChainID]
+	rulesExtraStore.RUnlock()
+	if ok && extra != nil {
 		return extra
 	}
 	// Return an empty Rules struct to prevent nil pointer dereference.
@@ -43,9 +53,11 @@ func GetRulesExtra(r Rules) *extras.Rules {
 	}
 }
 
-// SetRulesExtra sets the extra rules data in the Payload field
+// SetRulesExtra sets the extra rules data using the ChainID as key
 func SetRulesExtra(r *Rules, extra *extras.Rules) {
-	r.Payload = extra
+	rulesExtraStore.Lock()
+	rulesExtraStore.store[r.ChainID] = extra
+	rulesExtraStore.Unlock()
 }
 
 // Temporarily commented out geth hooks
@@ -283,7 +295,11 @@ func (w *stateDBWrapper) AddLog(log *types.Log) {
 }
 
 func (w *stateDBWrapper) Logs() []*types.Log {
-	return w.state.Logs()
+	// vm.StateDB doesn't have Logs() method, use type assertion
+	if ls, ok := w.state.(interface{ Logs() []*types.Log }); ok {
+		return ls.Logs()
+	}
+	return nil
 }
 
 func (w *stateDBWrapper) GetPredicateStorageSlots(address common.Address, index int) ([]byte, bool) {
@@ -297,7 +313,11 @@ func (w *stateDBWrapper) GetPredicateStorageSlots(address common.Address, index 
 }
 
 func (w *stateDBWrapper) TxHash() common.Hash {
-	return w.state.TxHash()
+	// vm.StateDB doesn't have TxHash() method, use type assertion
+	if th, ok := w.state.(interface{ TxHash() common.Hash }); ok {
+		return th.TxHash()
+	}
+	return common.Hash{}
 }
 
 func (w *stateDBWrapper) Snapshot() int {

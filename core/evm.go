@@ -50,7 +50,7 @@ import (
 // Callers should use this when creating a new EVM to ensure proper state handling.
 func WrapStateDB(rules params.Rules, statedb *state.StateDB) vm.StateDB {
 	wrappedStateDB := extstate.New(statedb)
-	if corethparams.GetRulesExtra(rules).IsApricotPhase1 {
+	if corethparams.GetRulesExtra(&rules).IsApricotPhase1 {
 		return wrappedStateDB
 	}
 	return &StateDBAP0{wrappedStateDB}
