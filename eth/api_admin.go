@@ -101,6 +101,7 @@ func hasAllBlocks(chain *core.BlockChain, bs []*types.Block) bool {
 }
 
 // ImportChain imports a blockchain from a local file.
+// Supports both modern and legacy (pre-Shanghai) block formats for disaster recovery.
 func (api *AdminAPI) ImportChain(file string) (bool, error) {
 	// Make sure the can access the file to import
 	in, err := os.Open(file)
@@ -123,12 +124,20 @@ func (api *AdminAPI) ImportChain(file string) (bool, error) {
 	for batch := 0; ; batch++ {
 		// Load a batch of blocks from the input file
 		for len(blocks) < cap(blocks) {
-			block := new(types.Block)
-			if err := stream.Decode(block); err == io.EOF {
+			// Read raw block bytes first for legacy support
+			rawBlock, err := stream.Raw()
+			if err == io.EOF {
 				break
 			} else if err != nil {
+				return false, fmt.Errorf("block %d: failed to read: %v", index, err)
+			}
+
+			// Try to decode with legacy header support
+			block, err := types.DecodeBlockRLPWithLegacySupport(rawBlock)
+			if err != nil {
 				return false, fmt.Errorf("block %d: failed to parse: %v", index, err)
 			}
+
 			// ignore the genesis block when importing blocks
 			if block.NumberU64() == 0 {
 				continue

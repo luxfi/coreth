@@ -21,8 +21,8 @@ const (
 	AtomicTxFee = units.MilliLux
 
 	// Note: MaximumExtraDataSize has been reduced to 32 in Geth, but is kept the same in Coreth for
-	// backwards compatibility.
-	MaximumExtraDataSize = 64 // Maximum size extra data may be after Genesis.
+	// backwards compatibility. Increased to 256 for emergency recovery import.
+	MaximumExtraDataSize = 256 // Maximum size extra data may be after Genesis.
 
 	MinGasLimit          = 5000               // Minimum the gas limit may ever be.
 	MaxGasLimit          = 0x7fffffffffffffff // Maximum the gas limit (2^63-1).

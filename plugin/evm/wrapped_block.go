@@ -316,7 +316,7 @@ func (b *wrappedBlock) syntacticVerify() error {
 
 	ethHeader := b.ethBlock.Header()
 	rules := b.vm.chainConfig.Rules(ethHeader.Number, params.IsMergeTODO, ethHeader.Time)
-	rulesExtra := params.GetRulesExtra(rules)
+	rulesExtra := params.GetRulesExtra(&rules)
 	// Perform block and header sanity checks
 	if !ethHeader.Number.IsUint64() {
 		return fmt.Errorf("invalid block number: %v", ethHeader.Number)
@@ -445,7 +445,7 @@ func (b *wrappedBlock) syntacticVerify() error {
 // verifyPredicates verifies the predicates in the block are valid according to predicateContext.
 func (b *wrappedBlock) verifyPredicates(predicateContext *precompileconfig.PredicateContext) error {
 	rules := b.vm.chainConfig.Rules(b.ethBlock.Number(), params.IsMergeTODO, b.ethBlock.Time())
-	rulesExtra := params.GetRulesExtra(rules)
+	rulesExtra := params.GetRulesExtra(&rules)
 
 	switch {
 	case !rulesExtra.IsDurango && rulesExtra.PredicatersExist():
