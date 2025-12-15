@@ -1,8 +1,8 @@
 [
   {
-    "blobGasPrice": "0x1",
+    "blobGasPrice": null,
     "blobGasUsed": "0x20000",
-    "blockHash": "0x375e812d8e4a85fdb9ac517f51060c3a0cc4dab3f98decff0c9c7ca8af166928",
+    "blockHash": "0x2742b669001a83a0f1083103a3201b82466a454fa8c3b97f8d3cf2d7c424489d",
     "blockNumber": "0x6",
     "contractAddress": null,
     "cumulativeGasUsed": "0x5208",

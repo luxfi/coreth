@@ -71,6 +71,10 @@ func testHeaderEncodeDecode(
 	// Note: HeaderExtra is stored separately and doesn't survive RLP roundtrip
 	// because it's not part of the standard geth Header RLP encoding.
 	// The extra data is attached via sync.Map keyed by pointer, which changes on decode.
+	//
+	// Clear internal decode-only fields for comparison since they're set during decode
+	// but not in the original header.
+	gotHeader.ClearInternalFields()
 	assert.Equal(t, wantHeader, gotHeader)
 
 	return encoded
@@ -80,7 +84,8 @@ func TestHeaderWithNonZeroFields(t *testing.T) {
 	t.Parallel()
 
 	header, extra := headerWithNonZeroFields()
-	t.Run("Header", func(t *testing.T) { allFieldsSet(t, header, "extra") })
+	// Ignore internal fields: "extra" (stored separately), "rawRLP" and "rlpFormat" (decode-only)
+	t.Run("Header", func(t *testing.T) { allFieldsSet(t, header, "extra", "rawRLP", "rlpFormat") })
 	t.Run("HeaderExtra", func(t *testing.T) { allFieldsSet(t, extra) })
 }
 

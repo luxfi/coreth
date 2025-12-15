@@ -398,6 +398,7 @@ func patchWant(t *testing.T, want string, blocks []*types.Block) string {
 		blockIndex := log.BlockNumber - 1
 		log.BlockHash = blocks[blockIndex].Hash()
 		log.TxHash = blocks[blockIndex].Transactions()[log.TxIndex].Hash()
+		log.BlockTimestamp = blocks[blockIndex].Time()
 	}
 	result, err := json.Marshal(logs)
 	if err != nil {
