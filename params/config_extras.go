@@ -14,13 +14,14 @@ import (
 	ethparams "github.com/luxfi/geth/params"
 )
 
-// extraPayloads provides access to the extra chain config and rules payloads.
-// Using geth's RegisterExtras pattern for Rules, and our own sync.Map for ChainConfig.
-var extraPayloads = struct {
-	ChainConfig *typedPayloadStore[*ethparams.ChainConfig, *extras.ChainConfig]
-	Rules       ethparams.ExtraPayloads[*extras.ChainConfig, RulesExtra]
-}{
+// payloads provides access to the extra chain config and rules payloads.
+// This is a simplified implementation that stores extras in sync.Map.
+var payloads = &extraPayloads{
 	ChainConfig: &typedPayloadStore[*ethparams.ChainConfig, *extras.ChainConfig]{},
+}
+
+type extraPayloads struct {
+	ChainConfig *typedPayloadStore[*ethparams.ChainConfig, *extras.ChainConfig]
 }
 
 type typedPayloadStore[K comparable, V any] struct {
@@ -46,13 +47,14 @@ func gethInit() any {
 	return nil
 }
 
-// init registers the extras with geth so that RulesExtra is populated
-// when chainConfig.Rules() is called.
+// init registers the rules hook with geth so that Rules.Payload is populated
+// with Lux-specific rules when chainConfig.Rules() is called.
 func init() {
-	extraPayloads.Rules = ethparams.RegisterExtras(ethparams.Extras[*extras.ChainConfig, RulesExtra]{
-		NewRules: func(c *ethparams.ChainConfig, r *ethparams.Rules, cEx *extras.ChainConfig, num *big.Int, isMerge bool, timestamp uint64) RulesExtra {
-			return constructRulesExtra(c, r, cEx, num, isMerge, timestamp)
-		},
+	ethparams.SetRulesHook(func(c *ethparams.ChainConfig, rules *ethparams.Rules, num *big.Int, isMerge bool, timestamp uint64) {
+		cEx := GetExtra(c)
+		rulesEx := constructRulesExtra(c, rules, cEx, num, isMerge, timestamp)
+		// Store as RulesExtra so that PrecompileOverride method is available
+		rules.Payload = rulesEx
 	})
 }
 
@@ -88,13 +90,9 @@ func constructRulesExtra(c *ethparams.ChainConfig, r *ethparams.Rules, cEx *extr
 // GetRules returns the chain rules at the given block and timestamp,
 // including Lux-specific rules in the extras.Rules.
 // This is the preferred way to get rules when Lux-specific features are needed.
-// The rules extra is stored so it can be retrieved via GetRulesExtra using ChainID as key.
 func GetRules(c *ethparams.ChainConfig, blockNum *big.Int, isMerge bool, timestamp uint64) (ethparams.Rules, *extras.Rules) {
 	r := c.Rules(blockNum, isMerge, timestamp)
 	cEx := GetExtra(c)
 	rulesEx := constructRulesExtra(c, &r, cEx, blockNum, isMerge, timestamp)
-	// Store the rules extra so GetRulesExtra can find it using ChainID as key
-	extra := (*extras.Rules)(&rulesEx)
-	SetRulesExtra(&r, extra)
-	return r, extra
+	return r, (*extras.Rules)(&rulesEx)
 }

@@ -90,10 +90,10 @@ func SetEthUpgrades(c *ChainConfig) error {
 }
 
 func GetExtra(c *ChainConfig) *extras.ChainConfig {
-	ex := extraPayloads.ChainConfig.Get(c)
+	ex := payloads.ChainConfig.Get(c)
 	if ex == nil {
 		ex = &extras.ChainConfig{}
-		extraPayloads.ChainConfig.Set(c, ex)
+		payloads.ChainConfig.Set(c, ex)
 	}
 	return ex
 }
@@ -113,7 +113,7 @@ func Copy(c *ChainConfig) *ChainConfig {
 
 // WithExtra sets the extra payload on `c` and returns the modified argument.
 func WithExtra(c *ChainConfig, extra *extras.ChainConfig) *ChainConfig {
-	extraPayloads.ChainConfig.Set(c, extra)
+	payloads.ChainConfig.Set(c, extra)
 	return c
 }
 

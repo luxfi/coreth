@@ -147,19 +147,14 @@ var (
 
 	genesisJSONCancun = genesisJSON(activateCancun(params.TestChainConfig))
 
-	apricotRulesPhase0 = getRulesExtra(params.TestLaunchConfig)
-	apricotRulesPhase1 = getRulesExtra(params.TestApricotPhase1Config)
-	apricotRulesPhase2 = getRulesExtra(params.TestApricotPhase2Config)
-	apricotRulesPhase3 = getRulesExtra(params.TestApricotPhase3Config)
-	apricotRulesPhase5 = getRulesExtra(params.TestApricotPhase5Config)
-	apricotRulesPhase6 = getRulesExtra(params.TestApricotPhase6Config)
-	banffRules         = getRulesExtra(params.TestBanffChainConfig)
+	apricotRulesPhase0 = *params.GetRulesExtra(params.TestLaunchConfig.Rules(common.Big0, params.IsMergeTODO, 0))
+	apricotRulesPhase1 = *params.GetRulesExtra(params.TestApricotPhase1Config.Rules(common.Big0, params.IsMergeTODO, 0))
+	apricotRulesPhase2 = *params.GetRulesExtra(params.TestApricotPhase2Config.Rules(common.Big0, params.IsMergeTODO, 0))
+	apricotRulesPhase3 = *params.GetRulesExtra(params.TestApricotPhase3Config.Rules(common.Big0, params.IsMergeTODO, 0))
+	apricotRulesPhase5 = *params.GetRulesExtra(params.TestApricotPhase5Config.Rules(common.Big0, params.IsMergeTODO, 0))
+	apricotRulesPhase6 = *params.GetRulesExtra(params.TestApricotPhase6Config.Rules(common.Big0, params.IsMergeTODO, 0))
+	banffRules         = *params.GetRulesExtra(params.TestBanffChainConfig.Rules(common.Big0, params.IsMergeTODO, 0))
 )
-
-func getRulesExtra(cfg *params.ChainConfig) extras.Rules {
-	_, extra := params.GetRules(cfg, common.Big0, params.IsMergeTODO, 0)
-	return *extra
-}
 
 func init() {
 	for _, key := range testKeys {

@@ -83,12 +83,6 @@ type Genesis struct {
 	BaseFee       *big.Int    `json:"baseFeePerGas"` // EIP-1559
 	ExcessBlobGas *uint64     `json:"excessBlobGas"` // EIP-4844
 	BlobGasUsed   *uint64     `json:"blobGasUsed"`   // EIP-4844
-
-	// StateRoot allows specifying a pre-computed state root for disaster recovery.
-	// When set, this overrides the state root computed from Alloc.
-	// This is used when importing historical chain data where the original
-	// state cannot be reconstructed from allocations alone.
-	StateRoot *common.Hash `json:"stateRoot,omitempty"`
 }
 
 // GenesisAccount is an account in the state of the genesis block.
@@ -105,7 +99,6 @@ type genesisSpecMarshaling struct {
 	BaseFee       *math.HexOrDecimal256
 	ExcessBlobGas *math.HexOrDecimal64
 	BlobGasUsed   *math.HexOrDecimal64
-	StateRoot     *common.Hash
 }
 
 // GenesisMismatchError is raised when trying to overwrite an existing
@@ -286,14 +279,6 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 		}
 	}
 	root := statedb.IntermediateRoot(false)
-
-	// If StateRoot is explicitly specified (for disaster recovery), use it instead
-	// of the computed root. This allows importing historical chain data where the
-	// original state cannot be reconstructed from allocations alone.
-	if g.StateRoot != nil && *g.StateRoot != (common.Hash{}) {
-		log.Info("Using explicit state root for genesis", "computed", root.Hex(), "override", g.StateRoot.Hex())
-		root = *g.StateRoot
-	}
 	head.Root = root
 
 	if g.GasLimit == 0 {
@@ -311,10 +296,6 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 			} else {
 				head.BaseFee = big.NewInt(ap3.InitialBaseFee)
 			}
-		}
-		// Shanghai: set WithdrawalsHash to empty (no withdrawals on C-Chain)
-		if conf.IsShanghai(num, g.Timestamp) {
-			head.WithdrawalsHash = &types.EmptyWithdrawalsHash
 		}
 		if conf.IsCancun(num, g.Timestamp) {
 			// EIP-4788: The parentBeaconBlockRoot of the genesis block is always
@@ -334,13 +315,7 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 	}
 
 	// Create the genesis block to use the block hash
-	// For Shanghai+ we need to pass an empty body with empty withdrawals
-	// to ensure WithdrawalsHash is set correctly (NewBlock clears it if body is nil)
-	var body *types.Body
-	if head.WithdrawalsHash != nil {
-		body = &types.Body{Withdrawals: types.Withdrawals{}}
-	}
-	block := types.NewBlock(head, body, nil, trie.NewStackTrie(nil))
+	block := types.NewBlock(head, nil, nil, trie.NewStackTrie(nil))
 
 	if _, err := statedb.Commit(0, false, false); err != nil {
 		panic(fmt.Sprintf("unable to commit genesis block to statedb: %v", err))

@@ -767,39 +767,6 @@ func (bc *BlockChain) loadGenesisState() error {
 	return nil
 }
 
-// ReloadHeadFromDB updates the in-memory chain head from the database.
-// This is useful after raw block imports to make eth_blockNumber return
-// the correct value without requiring a node restart.
-//
-// WARNING: This only updates head pointers - it does NOT validate state
-// or reprocess blocks. Use only after trusted raw imports.
-func (bc *BlockChain) ReloadHeadFromDB() error {
-	// Read head block hash from database
-	head := rawdb.ReadHeadBlockHash(bc.db)
-	if head == (common.Hash{}) {
-		return errors.New("could not read head block hash from database")
-	}
-
-	// Load the head block
-	headBlock := bc.GetBlockByHash(head)
-	if headBlock == nil {
-		return fmt.Errorf("could not load head block %s", head.Hex())
-	}
-
-	// Update in-memory state
-	bc.currentBlock.Store(headBlock.Header())
-	bc.hc.SetCurrentHeader(headBlock.Header())
-	bc.lastAccepted = headBlock
-	bc.acceptorTip = headBlock
-
-	log.Info("Reloaded chain head from database",
-		"number", headBlock.Number(),
-		"hash", headBlock.Hash(),
-	)
-
-	return nil
-}
-
 // Export writes the active chain to the given writer.
 func (bc *BlockChain) Export(w io.Writer) error {
 	return bc.ExportN(w, uint64(0), bc.CurrentBlock().Number.Uint64())

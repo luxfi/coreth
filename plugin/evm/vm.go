@@ -1223,7 +1223,7 @@ func (vm *VM) chainConfigExtra() *extras.ChainConfig {
 
 func (vm *VM) rules(number *big.Int, time uint64) extras.Rules {
 	ethrules := vm.chainConfig.Rules(number, params.IsMergeTODO, time)
-	return *params.GetRulesExtra(&ethrules)
+	return *params.GetRulesExtra(ethrules)
 }
 
 // currentRules returns the chain rules for the current block.
