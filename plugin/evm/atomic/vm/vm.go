@@ -405,8 +405,7 @@ func (vm *VM) verifyTxAtTip(tx *atomic.Tx) error {
 		return fmt.Errorf("failed to retrieve block state at tip while verifying atomic tx: %w", err)
 	}
 	extraConfig := params.GetExtra(vm.InnerVM.ChainConfig())
-	rules := vm.InnerVM.ChainConfig().Rules(preferredBlock.Number, params.IsMergeTODO, preferredBlock.Time)
-	extraRules := params.GetRulesExtra(&rules)
+	extraRules := params.GetRulesExtra(vm.InnerVM.ChainConfig().Rules(preferredBlock.Number, params.IsMergeTODO, preferredBlock.Time))
 	parentHeader := preferredBlock
 	var nextBaseFee *big.Int
 	timestamp := uint64(vm.clock.Time().Unix())
@@ -673,7 +672,7 @@ func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, state
 		chainConfig                = vm.InnerVM.ChainConfig()
 		// We cannot use chain config from InnerVM since it's not available when this function is called for the first time (bc.loadLastState).
 		rules      = chainConfig.Rules(header.Number, params.IsMergeTODO, header.Time)
-		rulesExtra = *params.GetRulesExtra(&rules)
+		rulesExtra = *params.GetRulesExtra(rules)
 	)
 
 	txs, err := atomic.ExtractAtomicTxs(customtypes.BlockExtData(block), rulesExtra.IsApricotPhase5, atomic.Codec)
@@ -769,7 +768,7 @@ func (vm *VM) chainConfigExtra() *extras.ChainConfig {
 
 func (vm *VM) rules(number *big.Int, time uint64) extras.Rules {
 	ethrules := vm.InnerVM.ChainConfig().Rules(number, params.IsMergeTODO, time)
-	return *params.GetRulesExtra(&ethrules)
+	return *params.GetRulesExtra(ethrules)
 }
 
 // CurrentRules returns the chain rules for the current block.

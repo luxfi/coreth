@@ -30,7 +30,7 @@ func CheckPredicates(rules params.Rules, predicateContext *precompileconfig.Pred
 		return nil, fmt.Errorf("%w for predicate verification (%d) < intrinsic gas (%d)", ErrIntrinsicGas, tx.Gas(), intrinsicGas)
 	}
 
-	rulesExtra := params.GetRulesExtra(&rules)
+	rulesExtra := params.GetRulesExtra(rules)
 	predicateResults := make(map[common.Address][]byte)
 	// Short circuit early if there are no precompile predicates to verify
 	if !rulesExtra.PredicatersExist() {
@@ -53,7 +53,8 @@ func CheckPredicates(rules params.Rules, predicateContext *precompileconfig.Pred
 	for address, predicates := range predicateArguments {
 		// Since [address] is only added to [predicateArguments] when there's a valid predicate in the ruleset
 		// there's no need to check if the predicate exists here.
-		predicaterContract := rulesExtra.Predicaters[address]
+		rules := params.GetRulesExtra(rules)
+		predicaterContract := rules.Predicaters[address]
 		bitset := set.NewBits()
 		for i, predicate := range predicates {
 			if err := predicaterContract.VerifyPredicate(predicateContext, predicate); err != nil {
