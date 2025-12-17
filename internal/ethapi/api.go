@@ -1103,6 +1103,14 @@ func doCall(ctx context.Context, b Backend, args TransactionArgs, state *state.S
 	if err != nil {
 		return nil, err
 	}
+	// Lower the basefee to 0 to avoid breaking EVM invariants (basefee < feecap)
+	// when gas price is 0 (free call simulation).
+	if msg.GasPrice.Sign() == 0 {
+		blockCtx.BaseFee = new(big.Int)
+	}
+	if msg.BlobGasFeeCap != nil && msg.BlobGasFeeCap.BitLen() == 0 {
+		blockCtx.BlobBaseFee = new(big.Int)
+	}
 	evm := b.GetEVM(ctx, msg, state, header, &vm.Config{NoBaseFee: true}, &blockCtx)
 
 	// Wait for the context to be done and cancel the evm. Even if the

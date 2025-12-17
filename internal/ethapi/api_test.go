@@ -824,7 +824,8 @@ func TestCall(t *testing.T) {
 		//    fee:   0 wei
 		tx, _ := types.SignTx(types.NewTx(&types.LegacyTx{Nonce: uint64(i), To: &accounts[1].addr, Value: big.NewInt(1000), Gas: params.TxGas, GasPrice: b.BaseFee(), Data: nil}), signer, accounts[0].key)
 		b.AddTx(tx)
-		// b.SetPoS()
+		// Set difficulty to 0 to enable post-merge (for Cancun/BLOBHASH tests)
+		b.SetDifficulty(big.NewInt(0))
 	}))
 	randomAccounts := newAccounts(3)
 	var testSuite = []struct {

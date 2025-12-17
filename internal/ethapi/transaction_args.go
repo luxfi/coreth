@@ -436,7 +436,6 @@ func (args *TransactionArgs) ToMessage(globalGasCap uint64, baseFee *big.Int) (*
 			// Backfill the legacy gasPrice for EVM execution, unless we're all zeroes
 			gasPrice = new(big.Int)
 			if gasFeeCap.BitLen() > 0 || gasTipCap.BitLen() > 0 {
-				// Use min of (gasTipCap + baseFee) and gasFeeCap
 				sum := new(big.Int).Add(gasTipCap, baseFee)
 				if sum.Cmp(gasFeeCap) < 0 {
 					gasPrice = sum
