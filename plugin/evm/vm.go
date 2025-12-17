@@ -407,6 +407,8 @@ func (vm *VM) Initialize(
 	vm.ethConfig = ethconfig.NewDefaultConfig()
 	vm.ethConfig.Genesis = g
 	vm.ethConfig.NetworkId = vm.chainID.Uint64()
+	// Genesis hash is computed by geth's Header.Hash() which uses 16-field format
+	// for genesis blocks (Number == 0) to match original Lux mainnet genesis hash.
 	vm.genesisHash = vm.ethConfig.Genesis.ToBlock().Hash() // must create genesis hash before [vm.ReadLastAccepted]
 	lastAcceptedHash, lastAcceptedHeight, err := vm.ReadLastAccepted()
 	if err != nil {

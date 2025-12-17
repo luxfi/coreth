@@ -109,7 +109,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/luxfi/cache v1.0.0 // indirect
-	github.com/luxfi/genesis v1.5.4 // indirect
+	github.com/luxfi/genesis v1.5.5 // indirect
 	github.com/luxfi/go-bip32 v1.0.1 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
 	github.com/luxfi/trace v0.1.4 // indirect
