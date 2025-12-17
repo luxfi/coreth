@@ -48,6 +48,8 @@ require (
 
 require (
 	github.com/DataDog/zstd v1.5.7 // indirect
+	github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e // indirect
+	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20251001021608-1fe7b43fc4d6 // indirect
@@ -107,7 +109,8 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/luxfi/cache v1.0.0 // indirect
-	github.com/luxfi/genesis v1.4.9 // indirect
+	github.com/luxfi/genesis v1.5.4 // indirect
+	github.com/luxfi/go-bip32 v1.0.1 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
 	github.com/luxfi/trace v0.1.4 // indirect
 	github.com/luxfi/utils v1.0.0 // indirect
@@ -172,7 +175,6 @@ require (
 	github.com/luxfi/database v1.2.12
 	github.com/luxfi/ids v1.2.4
 	github.com/luxfi/math v1.0.2
-	github.com/luxfi/migrate v1.2.7
 	github.com/luxfi/p2p v1.4.7
 	github.com/luxfi/warp v1.16.37
 )
