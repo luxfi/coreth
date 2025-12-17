@@ -1041,9 +1041,35 @@ func (api *baseAPI) traceTx(ctx context.Context, message *core.Message, txctx *C
 
 	// Call Prepare to clear out the statedb access list
 	statedb.SetTxContext(txctx.TxHash, txctx.TxIndex)
-	if _, err = core.ApplyMessage(vmenv, message, new(core.GasPool).AddGas(message.GasLimit)); err != nil {
+
+	// Call OnTxStart to initialize tracer state before execution
+	if tracer.Hooks.OnTxStart != nil {
+		// Create a synthetic transaction from the message for the tracer
+		var to *common.Address
+		if message.To != nil {
+			to = message.To
+		}
+		syntheticTx := types.NewTx(&types.LegacyTx{
+			Nonce:    message.Nonce,
+			GasPrice: message.GasPrice,
+			Gas:      message.GasLimit,
+			To:       to,
+			Value:    message.Value,
+			Data:     message.Data,
+		})
+		tracer.Hooks.OnTxStart(vmenv.GetVMContext(), syntheticTx, message.From)
+	}
+
+	result, err := core.ApplyMessage(vmenv, message, new(core.GasPool).AddGas(message.GasLimit))
+	if err != nil {
 		return nil, fmt.Errorf("tracing failed: %w", err)
 	}
+
+	// Call OnTxEnd to finalize tracer state after execution
+	if tracer.Hooks.OnTxEnd != nil {
+		tracer.Hooks.OnTxEnd(&types.Receipt{GasUsed: result.UsedGas}, nil)
+	}
+
 	return tracer.GetResult()
 }
 

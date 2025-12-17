@@ -146,23 +146,38 @@ func NewBlockWithExtData(
 	header *ethtypes.Header, txs []*ethtypes.Transaction, uncles []*ethtypes.Header, receipts []*ethtypes.Receipt,
 	hasher ethtypes.ListHasher, extdata []byte, recalc bool,
 ) *ethtypes.Block {
+	// Get header extras from the original header (stored in sync.Map)
+	origExtra := GetHeaderExtra(header)
+
+	// Calculate ExtDataHash if recalc requested
+	extDataHash := origExtra.ExtDataHash
+	if recalc {
+		extDataHash = CalcExtDataHash(extdata)
+	}
+
+	// Copy the Lux fields to the geth Header struct BEFORE creating the block
+	// This ensures consistent hash computation after JSON roundtrip
+	if extDataHash != (common.Hash{}) {
+		header.ExtDataHash = &extDataHash
+	}
+	if origExtra.ExtDataGasUsed != nil {
+		header.ExtDataGasUsed = new(big.Int).Set(origExtra.ExtDataGasUsed)
+	}
+	if origExtra.BlockGasCost != nil {
+		header.BlockGasCost = new(big.Int).Set(origExtra.BlockGasCost)
+	}
+
 	body := &ethtypes.Body{
 		Transactions: txs,
 		Uncles:       uncles,
 	}
 	block := ethtypes.NewBlock(header, body, receipts, hasher)
 
-	// Copy all header extras from original header to block's internal header
-	// because NewBlock creates a copy of the header and extras are stored by pointer
-	origExtra := GetHeaderExtra(header)
+	// Also store in HeaderExtra sync.Map for backward compatibility
 	blockHeaderExtra := &HeaderExtra{
-		ExtDataHash:    origExtra.ExtDataHash,
+		ExtDataHash:    extDataHash,
 		ExtDataGasUsed: origExtra.ExtDataGasUsed,
 		BlockGasCost:   origExtra.BlockGasCost,
-	}
-	// Recalculate ExtDataHash if requested
-	if recalc {
-		blockHeaderExtra.ExtDataHash = CalcExtDataHash(extdata)
 	}
 	SetHeaderExtra(block.Header(), blockHeaderExtra)
 
