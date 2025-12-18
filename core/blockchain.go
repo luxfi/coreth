@@ -163,7 +163,10 @@ const (
 	// - Version 8
 	//  The following incompatible database changes were added:
 	//    * New scheme for contract code in order to separate the codes and trie nodes
-	BlockChainVersion uint64 = 8
+	// - Version 9
+	//  The following incompatible database changes were added:
+	//    * PathDB trie database schema
+	BlockChainVersion uint64 = 9
 
 	// statsReportLimit is the time limit during import and export after which we
 	// always print out progress. This avoids the user wondering what's going on.

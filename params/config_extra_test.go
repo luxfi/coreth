@@ -14,92 +14,15 @@ import (
 )
 
 func TestSetEthUpgrades(t *testing.T) {
+	// Since all Apricot phases (1-5) are always active on Lux mainnet,
+	// Berlin and London are always enabled at genesis.
+	// We only test the upgrades that have variable timestamps: Durango and Etna.
 	genesisBlock := big.NewInt(0)
 	genesisTimestamp := utils.NewUint64(initiallyActive)
 	tests := []struct {
 		fork     upgradetest.Fork
 		expected *ChainConfig
 	}{
-		{
-			fork: upgradetest.NoUpgrades,
-			expected: &ChainConfig{
-				HomesteadBlock:      genesisBlock,
-				DAOForkBlock:        genesisBlock,
-				DAOForkSupport:      true,
-				EIP150Block:         genesisBlock,
-				EIP155Block:         genesisBlock,
-				EIP158Block:         genesisBlock,
-				ByzantiumBlock:      genesisBlock,
-				ConstantinopleBlock: genesisBlock,
-				PetersburgBlock:     genesisBlock,
-				IstanbulBlock:       genesisBlock,
-				MuirGlacierBlock:    genesisBlock,
-				BerlinBlock:         nil,
-				LondonBlock:         nil,
-				ShanghaiTime:        nil,
-				CancunTime:          nil,
-			},
-		},
-		{
-			fork: upgradetest.ApricotPhase1,
-			expected: &ChainConfig{
-				HomesteadBlock:      genesisBlock,
-				DAOForkBlock:        genesisBlock,
-				DAOForkSupport:      true,
-				EIP150Block:         genesisBlock,
-				EIP155Block:         genesisBlock,
-				EIP158Block:         genesisBlock,
-				ByzantiumBlock:      genesisBlock,
-				ConstantinopleBlock: genesisBlock,
-				PetersburgBlock:     genesisBlock,
-				IstanbulBlock:       genesisBlock,
-				MuirGlacierBlock:    genesisBlock,
-				BerlinBlock:         nil,
-				LondonBlock:         nil,
-				ShanghaiTime:        nil,
-				CancunTime:          nil,
-			},
-		},
-		{
-			fork: upgradetest.ApricotPhase2,
-			expected: &ChainConfig{
-				HomesteadBlock:      genesisBlock,
-				DAOForkBlock:        genesisBlock,
-				DAOForkSupport:      true,
-				EIP150Block:         genesisBlock,
-				EIP155Block:         genesisBlock,
-				EIP158Block:         genesisBlock,
-				ByzantiumBlock:      genesisBlock,
-				ConstantinopleBlock: genesisBlock,
-				PetersburgBlock:     genesisBlock,
-				IstanbulBlock:       genesisBlock,
-				MuirGlacierBlock:    genesisBlock,
-				BerlinBlock:         genesisBlock,
-				LondonBlock:         nil,
-				ShanghaiTime:        nil,
-				CancunTime:          nil,
-			},
-		},
-		{
-			fork: upgradetest.ApricotPhase3,
-			expected: &ChainConfig{
-				HomesteadBlock:      genesisBlock,
-				DAOForkBlock:        genesisBlock,
-				DAOForkSupport:      true,
-				EIP150Block:         genesisBlock,
-				EIP155Block:         genesisBlock,
-				EIP158Block:         genesisBlock,
-				ByzantiumBlock:      genesisBlock,
-				ConstantinopleBlock: genesisBlock,
-				PetersburgBlock:     genesisBlock,
-				IstanbulBlock:       genesisBlock,
-				MuirGlacierBlock:    genesisBlock,
-				BerlinBlock:         genesisBlock,
-				LondonBlock:         genesisBlock,
-				ShanghaiTime:        nil,
-				CancunTime:          nil,
-			},
-		},
 		{
 			fork: upgradetest.Durango,
 			expected: &ChainConfig{
@@ -114,8 +37,8 @@ func TestSetEthUpgrades(t *testing.T) {
 				PetersburgBlock:     genesisBlock,
 				IstanbulBlock:       genesisBlock,
 				MuirGlacierBlock:    genesisBlock,
-				BerlinBlock:         genesisBlock,
-				LondonBlock:         genesisBlock,
+				BerlinBlock:         genesisBlock, // Always active (AP1-5 always on)
+				LondonBlock:         genesisBlock, // Always active (AP1-5 always on)
 				ShanghaiTime:        genesisTimestamp,
 				CancunTime:          nil,
 			},
@@ -134,8 +57,8 @@ func TestSetEthUpgrades(t *testing.T) {
 				PetersburgBlock:     genesisBlock,
 				IstanbulBlock:       genesisBlock,
 				MuirGlacierBlock:    genesisBlock,
-				BerlinBlock:         genesisBlock,
-				LondonBlock:         genesisBlock,
+				BerlinBlock:         genesisBlock, // Always active (AP1-5 always on)
+				LondonBlock:         genesisBlock, // Always active (AP1-5 always on)
 				ShanghaiTime:        genesisTimestamp,
 				CancunTime:          genesisTimestamp,
 			},

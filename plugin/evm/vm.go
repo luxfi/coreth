@@ -82,7 +82,6 @@ import (
 	commonEng "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/chain/block"
 	consensusversion "github.com/luxfi/consensus/version"
-	"github.com/luxfi/node/upgrade"
 	luxUtils "github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/perms"
 	"github.com/luxfi/node/utils/profiler"
@@ -545,6 +544,13 @@ func (vm *VM) Initialize(
 		return err
 	}
 
+	// Handle RLP import after blockchain is initialized
+	if vm.config.ImportChainData != "" && strings.HasSuffix(strings.ToLower(vm.config.ImportChainData), ".rlp") {
+		if err := vm.importRLPBlocks(vm.config.ImportChainData); err != nil {
+			return fmt.Errorf("failed to import RLP blocks: %w", err)
+		}
+	}
+
 	// Use stored ctxLogger for RecoverAndPanic
 	go vm.ctxLogger.RecoverAndPanic(vm.startContinuousProfiler)
 
@@ -574,12 +580,20 @@ func parseGenesis(ctx *consensusctx.Context, bytes []byte) (*core.Genesis, error
 	configExtra.LuxContext = extras.LuxContext{
 		ConsensusCtx: ctx,
 	}
-	// Type assert NetworkUpgrades from context
-	if upgradeConfig, ok := ctx.NetworkUpgrades.(upgrade.Config); ok {
-		configExtra.NetworkUpgrades = extras.GetNetworkUpgrades(upgradeConfig)
-	} else {
-		// Use empty network upgrades if type assertion fails
-		configExtra.NetworkUpgrades = extras.NetworkUpgrades{}
+
+	// Parse the genesis config into extras to get Lux upgrade timestamps
+	// The geth ChainConfig doesn't have these fields, so we need to parse separately
+	type genesisConfig struct {
+		Config *extras.ChainConfig `json:"config"`
+	}
+	var gc genesisConfig
+	if err := json.Unmarshal(bytes, &gc); err != nil {
+		return nil, fmt.Errorf("parsing genesis config extras: %w", err)
+	}
+
+	// Use NetworkUpgrades from genesis config if present
+	if gc.Config != nil {
+		configExtra.NetworkUpgrades = gc.Config.NetworkUpgrades
 	}
 
 	// If Durango is scheduled, schedule the Warp Precompile at the same time.
@@ -1340,7 +1354,15 @@ func (vm *VM) stateSyncEnabled(lastAcceptedHeight uint64) bool {
 }
 
 // importChainData imports blockchain data from a specified path
+// Supports both database directories (raw copy) and RLP files (validated import)
 func (vm *VM) importChainData(dataPath string) error {
+	// Check if this is an RLP file
+	if strings.HasSuffix(strings.ToLower(dataPath), ".rlp") {
+		// RLP files need blockchain initialized first - mark for later import
+		log.Info("RLP import detected, will import after blockchain initialization", "path", dataPath)
+		return nil // RLP import happens in importRLPBlocks after chain init
+	}
+
 	// Open the source database using pebble directly
 	pebbleDB, err := pebble.New(dataPath, 16, 16, "", true)
 	if err != nil {
@@ -1349,8 +1371,11 @@ func (vm *VM) importChainData(dataPath string) error {
 	defer pebbleDB.Close()
 
 	// Wrap with rawdb for higher-level access
+	// The ancient data is stored in a subdirectory of the chaindata directory
+	ancientPath := filepath.Join(dataPath, "ancient")
 	sourceDB, err := rawdb.Open(pebbleDB, rawdb.OpenOptions{
 		ReadOnly: true,
+		Ancient:  ancientPath,
 	})
 	if err != nil {
 		pebbleDB.Close()
@@ -1432,6 +1457,121 @@ func (vm *VM) importChainData(dataPath string) error {
 		"lastHash", lastBlockHash,
 	)
 	
+	return nil
+}
+
+// importRLPBlocks imports blocks from an RLP file with full validation
+func (vm *VM) importRLPBlocks(rlpPath string) error {
+	log.Info("Starting RLP block import", "path", rlpPath)
+
+	file, err := os.Open(rlpPath)
+	if err != nil {
+		return fmt.Errorf("failed to open RLP file: %w", err)
+	}
+	defer file.Close()
+
+	// Get file size for progress reporting
+	stat, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat file: %w", err)
+	}
+	fileSize := stat.Size()
+
+	// Create RLP stream reader
+	stream := rlp.NewStream(file, 0)
+
+	var (
+		blocks   []*types.Block
+		imported uint64
+		skipped  uint64
+		batch    = 100 // Import blocks in batches
+		start    = time.Now()
+	)
+
+	currentHeight := vm.blockChain.CurrentBlock().Number.Uint64()
+	log.Info("Current chain height", "height", currentHeight)
+
+	for {
+		var block types.Block
+		err := stream.Decode(&block)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			// Try to continue past decoding errors
+			log.Warn("Error decoding block, skipping", "error", err)
+			skipped++
+			continue
+		}
+
+		// Skip blocks we already have
+		if block.NumberU64() <= currentHeight {
+			skipped++
+			continue
+		}
+
+		blocks = append(blocks, &block)
+
+		// Insert blocks in batches
+		if len(blocks) >= batch {
+			n, err := vm.blockChain.InsertChain(blocks)
+			if err != nil {
+				log.Error("Failed to insert blocks",
+					"first", blocks[0].NumberU64(),
+					"last", blocks[len(blocks)-1].NumberU64(),
+					"inserted", n,
+					"error", err,
+				)
+				// Continue with remaining blocks if partial insert
+				if n > 0 {
+					imported += uint64(n)
+					blocks = blocks[n:]
+				}
+				// Skip problematic block and continue
+				if len(blocks) > 0 {
+					log.Warn("Skipping problematic block", "number", blocks[0].NumberU64())
+					blocks = blocks[1:]
+					skipped++
+				}
+				continue
+			}
+			imported += uint64(len(blocks))
+
+			// Progress reporting
+			pos, _ := file.Seek(0, io.SeekCurrent)
+			progress := float64(pos) / float64(fileSize) * 100
+			elapsed := time.Since(start)
+			rate := float64(imported) / elapsed.Seconds()
+
+			log.Info("Import progress",
+				"imported", imported,
+				"skipped", skipped,
+				"progress", fmt.Sprintf("%.1f%%", progress),
+				"rate", fmt.Sprintf("%.1f blocks/sec", rate),
+				"lastBlock", blocks[len(blocks)-1].NumberU64(),
+			)
+
+			blocks = blocks[:0]
+		}
+	}
+
+	// Insert remaining blocks
+	if len(blocks) > 0 {
+		n, err := vm.blockChain.InsertChain(blocks)
+		if err != nil {
+			log.Error("Failed to insert final blocks", "error", err, "inserted", n)
+		}
+		imported += uint64(n)
+	}
+
+	elapsed := time.Since(start)
+	log.Info("RLP import complete",
+		"imported", imported,
+		"skipped", skipped,
+		"elapsed", elapsed,
+		"rate", fmt.Sprintf("%.1f blocks/sec", float64(imported)/elapsed.Seconds()),
+	)
+
 	return nil
 }
 

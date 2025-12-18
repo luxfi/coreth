@@ -40,6 +40,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/crypto/kzg4844"
+	"github.com/luxfi/log"
 	"github.com/holiman/uint256"
 )
 
@@ -114,7 +115,10 @@ func IntrinsicGas(data []byte, accessList types.AccessList, isContractCreation b
 		}
 		gas += z * params.TxDataZeroGas
 
-		if isContractCreation && params.GetRulesExtra(rules).IsDurango {
+		// EIP-3860: Init code gas is charged when Shanghai is active.
+		// For Lux networks, Shanghai is enabled via shanghaiTime in chain config
+		// OR via Durango upgrade (which brings Shanghai EIPs to SubnetEVM chains).
+		if isContractCreation && rules.IsShanghai {
 			lenWords := toWordSize(dataLen)
 			if (math.MaxUint64-gas)/params.InitCodeWordGas < lenWords {
 				return 0, ErrGasUintOverflow
@@ -451,6 +455,26 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 		contractCreation = msg.To == nil
 	)
 
+	// Detect Genesis blocks: historic Lux mainnet blocks with dynamic fees (base fee of 25 GWei).
+	// Genesis blocks are identified by having a baseFee but Fortuna/Granite not being active.
+	// After Fortuna/Granite, base fee is removed, so blocks with baseFee must be Genesis blocks.
+	if st.evm.Context.BaseFee != nil && st.evm.Context.BaseFee.Sign() > 0 && !rulesExtra.IsFortuna && !rulesExtra.IsGranite {
+		rulesExtra.IsGenesis = true
+	}
+
+	// DEBUG: Log refund decision factors for first blocks
+	if st.evm.Context.BlockNumber != nil && st.evm.Context.BlockNumber.Uint64() <= 10 {
+		log.Debug("TransitionDb gas calculation",
+			"block", st.evm.Context.BlockNumber.Uint64(),
+			"baseFee", st.evm.Context.BaseFee,
+			"isApricotPhase1", rulesExtra.IsApricotPhase1,
+			"isGenesis", rulesExtra.IsGenesis,
+			"isShanghai", rules.IsShanghai,
+			"isDurango", rulesExtra.IsDurango,
+			"contractCreation", contractCreation,
+		)
+	}
+
 	// Check clauses 4-5, subtract intrinsic gas if everything is correct
 	gas, err := IntrinsicGas(msg.Data, msg.AccessList, contractCreation, rules)
 	if err != nil {
@@ -470,8 +494,9 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 		return nil, fmt.Errorf("%w: address %v", ErrInsufficientFundsForTransfer, msg.From.Hex())
 	}
 
-	// Check whether the init code size has been exceeded.
-	if rulesExtra.IsDurango && contractCreation && len(msg.Data) > params.MaxInitCodeSize {
+	// Check whether the init code size has been exceeded (EIP-3860).
+	// This applies when Shanghai is active (via shanghaiTime or Durango upgrade).
+	if rules.IsShanghai && contractCreation && len(msg.Data) > params.MaxInitCodeSize {
 		return nil, fmt.Errorf("%w: code size %v limit %v", vm.ErrMaxInitCodeSizeExceeded, len(msg.Data), params.MaxInitCodeSize)
 	}
 
@@ -495,7 +520,9 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 	if overflow {
 		return nil, ErrGasUintOverflow
 	}
-	gasRefund := st.refundGas(rulesExtra.IsApricotPhase1)
+	// Skip gas refunds for Genesis blocks (historic Lux mainnet) or post-ApricotPhase1 blocks.
+	// Genesis blocks never applied refunds, matching the original EVM behavior.
+	gasRefund := st.refundGas(rulesExtra.IsGenesis || rulesExtra.IsApricotPhase1)
 	fee := new(uint256.Int).SetUint64(st.gasUsed())
 	fee.Mul(fee, price)
 	st.state.AddBalance(st.evm.Context.Coinbase, fee, tracing.BalanceIncreaseRewardTransactionFee)
@@ -508,16 +535,29 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 	}, nil
 }
 
-func (st *StateTransition) refundGas(apricotPhase1 bool) uint64 {
+func (st *StateTransition) refundGas(skipRefund bool) uint64 {
 	var refund uint64
 	// Inspired by: https://gist.github.com/holiman/460f952716a74eeb9ab358bb1836d821#gistcomment-3642048
-	if !apricotPhase1 {
+	// skipRefund is true for Genesis blocks (historic imports) or post-ApricotPhase1 blocks
+	if !skipRefund {
 		// Apply refund counter, capped to half of the used gas.
 		refund = st.gasUsed() / 2
 		if refund > st.state.GetRefund() {
 			refund = st.state.GetRefund()
 		}
 		st.gasRemaining += refund
+	}
+
+	// DEBUG: Log refund calculation
+	if st.evm.Context.BlockNumber != nil && st.evm.Context.BlockNumber.Uint64() <= 10 {
+		log.Debug("refundGas calculation",
+			"block", st.evm.Context.BlockNumber.Uint64(),
+			"skipRefund", skipRefund,
+			"stateRefund", st.state.GetRefund(),
+			"appliedRefund", refund,
+			"gasRemaining", st.gasRemaining,
+			"gasUsed", st.gasUsed(),
+		)
 	}
 
 	// Return ETH for remaining gas, exchanged at the original rate.

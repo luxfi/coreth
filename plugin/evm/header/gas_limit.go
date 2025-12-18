@@ -114,22 +114,61 @@ func VerifyGasLimit(
 			)
 		}
 	case config.IsCortina(header.Time):
-		if header.GasLimit != cortina.GasLimit {
-			return fmt.Errorf("%w: expected to be %d in Cortina, but found %d",
+		// Accept both Cortina gas limit (15M) and legacy SubnetEVM gas limits (8M, 12M)
+		// to support importing historic blocks from SubnetEVM-based networks.
+		validGasLimits := []uint64{cortina.GasLimit, ap1.GasLimit, 12_000_000}
+		isValid := false
+		for _, limit := range validGasLimits {
+			if header.GasLimit == limit {
+				isValid = true
+				break
+			}
+		}
+		if !isValid {
+			return fmt.Errorf("%w: expected to be %d in Cortina (or %d/%d for legacy SubnetEVM), but found %d",
 				errInvalidGasLimit,
 				cortina.GasLimit,
+				ap1.GasLimit,
+				12_000_000,
 				header.GasLimit,
 			)
 		}
 	case config.IsApricotPhase1(header.Time):
-		if header.GasLimit != ap1.GasLimit {
-			return fmt.Errorf("%w: expected to be %d in ApricotPhase1, but found %d",
+		// Accept both ApricotPhase1 gas limit (8M) and Genesis EVM gas limit (12M)
+		// to support importing historic blocks from SubnetEVM-based Genesis networks.
+		validGasLimits := []uint64{ap1.GasLimit, 12_000_000}
+		isValid := false
+		for _, limit := range validGasLimits {
+			if header.GasLimit == limit {
+				isValid = true
+				break
+			}
+		}
+		if !isValid {
+			return fmt.Errorf("%w: expected to be %d in ApricotPhase1 (or %d for Genesis EVM), but found %d",
 				errInvalidGasLimit,
 				ap1.GasLimit,
+				12_000_000,
 				header.GasLimit,
 			)
 		}
 	default:
+		// For historic SubnetEVM blocks, accept common gas limits (8M, 12M) without
+		// requiring the gas limit bound check. This allows importing historic blocks
+		// that were created before Lux upgrades were active.
+		commonSubnetEVMGasLimits := []uint64{ap1.GasLimit, 12_000_000}
+		isCommonLimit := false
+		for _, limit := range commonSubnetEVMGasLimits {
+			if header.GasLimit == limit {
+				isCommonLimit = true
+				break
+			}
+		}
+		if isCommonLimit {
+			// Accept common SubnetEVM gas limits without bound check
+			return nil
+		}
+
 		if header.GasLimit < ap0.MinGasLimit || header.GasLimit > ap0.MaxGasLimit {
 			return fmt.Errorf("%w: %d not in range [%d, %d]",
 				errInvalidGasLimit,

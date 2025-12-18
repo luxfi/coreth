@@ -1096,37 +1096,9 @@ func overrideConfig(original *params.ChainConfig, override *params.ChainConfig) 
 	copy := params.Copy(original)
 	canon := true
 
-	// Apply network upgrades (after Berlin) to the copy.
-	// Note in coreth, ApricotPhase2 is the "equivalent" to Berlin.
+	// Apply network upgrades to the copy.
+	// Note: All legacy Apricot phases (1-6) are always active on mainnet.
 	overrideExtra := params.GetExtra(override)
-	if timestamp := overrideExtra.ApricotPhase2BlockTimestamp; timestamp != nil {
-		params.GetExtra(copy).ApricotPhase2BlockTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.ApricotPhase3BlockTimestamp; timestamp != nil {
-		params.GetExtra(copy).ApricotPhase3BlockTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.ApricotPhase4BlockTimestamp; timestamp != nil {
-		params.GetExtra(copy).ApricotPhase4BlockTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.ApricotPhase5BlockTimestamp; timestamp != nil {
-		params.GetExtra(copy).ApricotPhase5BlockTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.ApricotPhasePre6BlockTimestamp; timestamp != nil {
-		params.GetExtra(copy).ApricotPhasePre6BlockTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.ApricotPhase6BlockTimestamp; timestamp != nil {
-		params.GetExtra(copy).ApricotPhase6BlockTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.ApricotPhasePost6BlockTimestamp; timestamp != nil {
-		params.GetExtra(copy).ApricotPhasePost6BlockTimestamp = timestamp
-		canon = false
-	}
 	if timestamp := overrideExtra.BanffBlockTimestamp; timestamp != nil {
 		params.GetExtra(copy).BanffBlockTimestamp = timestamp
 		canon = false
