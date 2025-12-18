@@ -33,7 +33,8 @@ const (
 
 	// InitialBaseFee is the base fee that is used for the first Apricot Phase 3
 	// block.
-	InitialBaseFee = MaxBaseFee
+	// Note: SubnetEVM historic blocks used 25 GWei as initial base fee.
+	InitialBaseFee = 25 * utils.GWei
 
 	// TargetGas is the target amount of gas to be included in the window. The
 	// target amount of gas per second equals [TargetGas] / [WindowLen].

@@ -39,12 +39,12 @@ import (
 
 // Lux ChainIDs
 var (
-	// LuxMainnetChainID ...
-	LuxMainnetChainID = big.NewInt(43114)
-	// LuxTestnetChainID ...
-	LuxTestnetChainID = big.NewInt(43113)
-	// LuxLocalChainID ...
-	LuxLocalChainID = big.NewInt(43112)
+	// LuxMainnetChainID is the C-Chain mainnet chain ID
+	LuxMainnetChainID = big.NewInt(96369)
+	// LuxTestnetChainID is the C-Chain testnet chain ID
+	LuxTestnetChainID = big.NewInt(96368)
+	// LuxLocalChainID is the C-Chain local network chain ID
+	LuxLocalChainID = big.NewInt(1337)
 )
 
 // Guarantees extras initialisation before a call to [params.ChainConfig.Rules].
@@ -74,62 +74,21 @@ var (
 		extras.TestChainConfig,
 	)
 
-	TestLaunchConfig = WithExtra(
-		&ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			DAOForkBlock:        big.NewInt(0),
-			DAOForkSupport:      true,
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-		},
-		extras.TestLaunchConfig,
-	)
+	// Legacy test configs - all phases are now always active on mainnet,
+	// so they all point to the same TestChainConfig for backward compatibility.
+	TestLaunchConfig            = TestChainConfig
+	TestApricotPhase1Config     = TestChainConfig
+	TestApricotPhase2Config     = TestChainConfig
+	TestApricotPhase3Config     = TestChainConfig
+	TestApricotPhase4Config     = TestChainConfig
+	TestApricotPhase5Config     = TestChainConfig
+	TestApricotPhasePre6Config  = TestChainConfig
+	TestApricotPhase6Config     = TestChainConfig
+	TestApricotPhasePost6Config = TestChainConfig
 
-	TestApricotPhase1Config = WithExtra(
-		&ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			DAOForkBlock:        big.NewInt(0),
-			DAOForkSupport:      true,
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-		},
-		extras.TestApricotPhase1Config,
-	)
-
-	TestApricotPhase2Config = WithExtra(
-		&ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			DAOForkBlock:        big.NewInt(0),
-			DAOForkSupport:      true,
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-		},
-		extras.TestApricotPhase2Config,
-	)
-
-	TestApricotPhase3Config = WithExtra(
+	// TestPreBanffChainConfig is for testing legacy behavior before Banff.
+	// Native asset precompiles are active (not deprecated) with this config.
+	TestPreBanffChainConfig = WithExtra(
 		&ChainConfig{
 			ChainID:             big.NewInt(1),
 			HomesteadBlock:      big.NewInt(0),
@@ -146,107 +105,7 @@ var (
 			BerlinBlock:         big.NewInt(0),
 			LondonBlock:         big.NewInt(0),
 		},
-		extras.TestApricotPhase3Config,
-	)
-
-	TestApricotPhase4Config = WithExtra(
-		&ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			DAOForkBlock:        big.NewInt(0),
-			DAOForkSupport:      true,
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		extras.TestApricotPhase4Config,
-	)
-
-	TestApricotPhase5Config = WithExtra(
-		&ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			DAOForkBlock:        big.NewInt(0),
-			DAOForkSupport:      true,
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		extras.TestApricotPhase5Config,
-	)
-
-	TestApricotPhasePre6Config = WithExtra(
-		&ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			DAOForkBlock:        big.NewInt(0),
-			DAOForkSupport:      true,
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		extras.TestApricotPhasePre6Config,
-	)
-
-	TestApricotPhase6Config = WithExtra(
-		&ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			DAOForkBlock:        big.NewInt(0),
-			DAOForkSupport:      true,
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		extras.TestApricotPhase6Config,
-	)
-
-	TestApricotPhasePost6Config = WithExtra(
-		&ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			DAOForkBlock:        big.NewInt(0),
-			DAOForkSupport:      true,
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		extras.TestApricotPhasePost6Config,
+		extras.TestPreBanffChainConfig,
 	)
 
 	TestBanffChainConfig = WithExtra(

@@ -89,14 +89,8 @@ func setDefaults(cfg *Config) {
 				LondonBlock:         new(big.Int),
 				BerlinBlock:         new(big.Int),
 			},
-			&extras.ChainConfig{
-				NetworkUpgrades: extras.NetworkUpgrades{
-					ApricotPhase1BlockTimestamp: new(uint64),
-					ApricotPhase2BlockTimestamp: new(uint64),
-					ApricotPhase3BlockTimestamp: new(uint64),
-					ApricotPhase4BlockTimestamp: new(uint64),
-				},
-			},
+			// All Apricot phases are always active on mainnet
+			extras.TestChainConfig,
 		)
 	}
 

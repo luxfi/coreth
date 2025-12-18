@@ -42,7 +42,6 @@ import (
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/prque"
 	"github.com/luxfi/geth/core/state"
@@ -1779,16 +1778,10 @@ func (pool *LegacyPool) demoteUnexecutables() {
 }
 
 func (pool *LegacyPool) startPeriodicFeeUpdate() {
-	ap3Timestamp := params.GetExtra(pool.chainconfig).ApricotPhase3BlockTimestamp
-	if ap3Timestamp == nil {
-		return
-	}
-
+	// Dynamic fees (AP3+) are always active on Lux mainnet.
 	// Call updateBaseFee here to ensure that there is not a [baseFeeUpdateInterval] delay
-	// when starting up in ApricotPhase3 before the base fee is updated.
-	if time.Now().After(utils.Uint64ToTime(ap3Timestamp)) {
-		pool.updateBaseFee()
-	}
+	// before the base fee is updated.
+	pool.updateBaseFee()
 
 	pool.wg.Add(1)
 	go pool.periodicBaseFeeUpdate()
@@ -1797,14 +1790,7 @@ func (pool *LegacyPool) startPeriodicFeeUpdate() {
 func (pool *LegacyPool) periodicBaseFeeUpdate() {
 	defer pool.wg.Done()
 
-	// Sleep until its time to start the periodic base fee update or the tx pool is shutting down
-	ap3Time := utils.Uint64ToTime(params.GetExtra(pool.chainconfig).ApricotPhase3BlockTimestamp)
-	select {
-	case <-time.After(time.Until(ap3Time)):
-	case <-pool.generalShutdownChan:
-		return // Return early if shutting down
-	}
-
+	// Dynamic fees (AP3+) are always active on Lux mainnet.
 	// Update the base fee every [baseFeeUpdateInterval]
 	// and shutdown when [generalShutdownChan] is closed by Stop()
 	for {

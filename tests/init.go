@@ -169,116 +169,7 @@ var Forks = map[string]*params.ChainConfig{
 		PetersburgBlock:     big.NewInt(0),
 		IstanbulBlock:       big.NewInt(5),
 	},
-	"ApricotPhase1": params.WithExtra(
-		&params.ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-		},
-		&extras.ChainConfig{
-			NetworkUpgrades: extras.NetworkUpgrades{
-				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
-			},
-		},
-	),
-	"ApricotPhase2": params.WithExtra(
-		&params.ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-		},
-		&extras.ChainConfig{
-			NetworkUpgrades: extras.NetworkUpgrades{
-				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
-			},
-		},
-	),
-	"ApricotPhase3": params.WithExtra(
-		&params.ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		&extras.ChainConfig{
-			NetworkUpgrades: extras.NetworkUpgrades{
-				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
-			},
-		},
-	),
-	"ApricotPhase4": params.WithExtra(
-		&params.ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		&extras.ChainConfig{
-			NetworkUpgrades: extras.NetworkUpgrades{
-				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
-			},
-		},
-	),
-	"ApricotPhase5": params.WithExtra(
-		&params.ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		&extras.ChainConfig{
-			NetworkUpgrades: extras.NetworkUpgrades{
-				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase5BlockTimestamp: utils.NewUint64(0),
-			},
-		},
-	),
+	// Lux mainnet configs - all legacy Apricot phases are always active
 	"Banff": params.WithExtra(
 		&params.ChainConfig{
 			ChainID:             big.NewInt(1),
@@ -295,12 +186,7 @@ var Forks = map[string]*params.ChainConfig{
 		},
 		&extras.ChainConfig{
 			NetworkUpgrades: extras.NetworkUpgrades{
-				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase5BlockTimestamp: utils.NewUint64(0),
-				BanffBlockTimestamp:         utils.NewUint64(0),
+				BanffBlockTimestamp: utils.NewUint64(0),
 			},
 		},
 	),
@@ -320,13 +206,8 @@ var Forks = map[string]*params.ChainConfig{
 		},
 		&extras.ChainConfig{
 			NetworkUpgrades: extras.NetworkUpgrades{
-				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase5BlockTimestamp: utils.NewUint64(0),
-				BanffBlockTimestamp:         utils.NewUint64(0),
-				CortinaBlockTimestamp:       utils.NewUint64(0),
+				BanffBlockTimestamp:   utils.NewUint64(0),
+				CortinaBlockTimestamp: utils.NewUint64(0),
 			},
 		},
 	),
@@ -346,14 +227,9 @@ var Forks = map[string]*params.ChainConfig{
 		},
 		&extras.ChainConfig{
 			NetworkUpgrades: extras.NetworkUpgrades{
-				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase5BlockTimestamp: utils.NewUint64(0),
-				BanffBlockTimestamp:         utils.NewUint64(0),
-				CortinaBlockTimestamp:       utils.NewUint64(0),
-				DurangoBlockTimestamp:       utils.NewUint64(0),
+				BanffBlockTimestamp:   utils.NewUint64(0),
+				CortinaBlockTimestamp: utils.NewUint64(0),
+				DurangoBlockTimestamp: utils.NewUint64(0),
 			},
 		},
 	),
@@ -375,14 +251,9 @@ var Forks = map[string]*params.ChainConfig{
 		},
 		&extras.ChainConfig{
 			NetworkUpgrades: extras.NetworkUpgrades{
-				ApricotPhase1BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase2BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase3BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase4BlockTimestamp: utils.NewUint64(0),
-				ApricotPhase5BlockTimestamp: utils.NewUint64(0),
-				BanffBlockTimestamp:         utils.NewUint64(0),
-				CortinaBlockTimestamp:       utils.NewUint64(0),
-				DurangoBlockTimestamp:       utils.NewUint64(0),
+				BanffBlockTimestamp:   utils.NewUint64(0),
+				CortinaBlockTimestamp: utils.NewUint64(0),
+				DurangoBlockTimestamp: utils.NewUint64(0),
 			},
 		},
 	),

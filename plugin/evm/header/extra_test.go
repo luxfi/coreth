@@ -11,10 +11,6 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/core/types"
 	"github.com/stretchr/testify/require"
@@ -31,271 +27,8 @@ func TestExtraPrefix(t *testing.T) {
 		wantErr             error
 	}{
 		{
-			name:     "ap2",
-			upgrades: extras.TestApricotPhase2Config.NetworkUpgrades,
-			header:   &types.Header{},
-			want:     nil,
-			wantErr:  nil,
-		},
-		{
-			name: "ap3_first_block",
-			upgrades: extras.NetworkUpgrades{
-				ApricotPhase3BlockTimestamp: utils.NewUint64(1),
-			},
-			parent: &types.Header{
-				Number: big.NewInt(1),
-			},
-			header: &types.Header{
-				Time: 1,
-			},
-			want: (&ap3.Window{}).Bytes(),
-		},
-		{
-			name:     "ap3_genesis_block",
-			upgrades: extras.TestApricotPhase3Config.NetworkUpgrades,
-			parent: &types.Header{
-				Number: big.NewInt(0),
-			},
-			header: &types.Header{},
-			want:   (&ap3.Window{}).Bytes(),
-		},
-		{
-			name:     "ap3_invalid_fee_window",
-			upgrades: extras.TestApricotPhase3Config.NetworkUpgrades,
-			parent: &types.Header{
-				Number: big.NewInt(1),
-			},
-			header:  &types.Header{},
-			wantErr: ap3.ErrWindowInsufficientLength,
-		},
-		{
-			name:     "ap3_invalid_timestamp",
-			upgrades: extras.TestApricotPhase3Config.NetworkUpgrades,
-			parent: &types.Header{
-				Number: big.NewInt(1),
-				Time:   1,
-				Extra:  (&ap3.Window{}).Bytes(),
-			},
-			header: &types.Header{
-				Time: 0,
-			},
-			wantErr: errInvalidTimestamp,
-		},
-		{
-			name:     "ap3_normal",
-			upgrades: extras.TestApricotPhase3Config.NetworkUpgrades,
-			parent: &types.Header{
-				Number:  big.NewInt(1),
-				GasUsed: ap3.TargetGas,
-				Extra: (&ap3.Window{
-					1, 2, 3, 4,
-				}).Bytes(),
-			},
-			header: &types.Header{
-				Time: 1,
-			},
-			want: func() []byte {
-				window := ap3.Window{
-					1, 2, 3, 4,
-				}
-				window.Add(ap3.TargetGas, ap3.IntrinsicBlockGas)
-				window.Shift(1)
-				return window.Bytes()
-			}(),
-		},
-		{
-			name:     "ap4_genesis_block",
-			upgrades: extras.TestApricotPhase4Config.NetworkUpgrades,
-			parent: &types.Header{
-				Number: big.NewInt(0),
-			},
-			header: &types.Header{},
-			want:   (&ap3.Window{}).Bytes(),
-		},
-		{
-			name:     "ap4_no_block_gas_cost",
-			upgrades: extras.TestApricotPhase4Config.NetworkUpgrades,
-			parent: &types.Header{
-				Number:  big.NewInt(100), // Unique number to ensure unique hash
-				GasUsed: ap3.TargetGas,
-				Extra:   (&ap3.Window{}).Bytes(),
-			},
-			header: &types.Header{
-				Time: 2,
-			},
-			want: func() []byte {
-				var window ap3.Window
-				window.Add(ap3.TargetGas)
-				window.Shift(2)
-				return window.Bytes()
-			}(),
-		},
-		{
-			name:     "ap4_with_block_gas_cost",
-			upgrades: extras.TestApricotPhase4Config.NetworkUpgrades,
-			parent: customtypes.WithHeaderExtra(
-				&types.Header{
-					Number:  big.NewInt(101), // Unique number to ensure unique hash
-					GasUsed: ap3.TargetGas,
-					Extra:   (&ap3.Window{}).Bytes(),
-				},
-				&customtypes.HeaderExtra{
-					BlockGasCost: big.NewInt(ap4.MinBlockGasCost),
-				},
-			),
-			header: &types.Header{
-				Time: 1,
-			},
-			want: func() []byte {
-				var window ap3.Window
-				window.Add(
-					ap3.TargetGas,
-					(ap4.TargetBlockRate-1)*ap4.BlockGasCostStep,
-				)
-				window.Shift(1)
-				return window.Bytes()
-			}(),
-		},
-		{
-			name:     "ap4_with_extra_data_gas",
-			upgrades: extras.TestApricotPhase4Config.NetworkUpgrades,
-			parent: customtypes.WithHeaderExtra(
-				&types.Header{
-					Number:  big.NewInt(102), // Unique number to ensure unique hash
-					GasUsed: ap3.TargetGas,
-					Extra:   (&ap3.Window{}).Bytes(),
-				},
-				&customtypes.HeaderExtra{
-					ExtDataGasUsed: big.NewInt(5),
-				},
-			),
-			header: &types.Header{
-				Time: 1,
-			},
-			want: func() []byte {
-				var window ap3.Window
-				window.Add(
-					ap3.TargetGas,
-					5,
-				)
-				window.Shift(1)
-				return window.Bytes()
-			}(),
-		},
-		{
-			name:     "ap4_normal",
-			upgrades: extras.TestApricotPhase4Config.NetworkUpgrades,
-			parent: customtypes.WithHeaderExtra(
-				&types.Header{
-					Number:  big.NewInt(103), // Unique number to ensure unique hash
-					GasUsed: ap3.TargetGas,
-					Extra: (&ap3.Window{
-						1, 2, 3, 4,
-					}).Bytes(),
-				},
-				&customtypes.HeaderExtra{
-					ExtDataGasUsed: big.NewInt(5),
-					BlockGasCost:   big.NewInt(ap4.MinBlockGasCost),
-				},
-			),
-			header: &types.Header{
-				Time: 1,
-			},
-			want: func() []byte {
-				window := ap3.Window{
-					1, 2, 3, 4,
-				}
-				window.Add(
-					ap3.TargetGas,
-					5,
-					(ap4.TargetBlockRate-1)*ap4.BlockGasCostStep,
-				)
-				window.Shift(1)
-				return window.Bytes()
-			}(),
-		},
-		{
-			name:     "ap5_no_extra_data_gas",
-			upgrades: extras.TestApricotPhase5Config.NetworkUpgrades,
-			parent: customtypes.WithHeaderExtra(
-				&types.Header{
-					Number:  big.NewInt(200), // Unique number to ensure unique hash
-					GasUsed: ap5.TargetGas,
-					Extra:   (&ap3.Window{}).Bytes(),
-				},
-				&customtypes.HeaderExtra{
-					BlockGasCost: big.NewInt(ap4.MinBlockGasCost),
-				},
-			),
-			header: &types.Header{
-				Time: 1,
-			},
-			want: func() []byte {
-				var window ap3.Window
-				window.Add(ap5.TargetGas)
-				window.Shift(1)
-				return window.Bytes()
-			}(),
-		},
-		{
-			name:     "ap5_normal",
-			upgrades: extras.TestApricotPhase5Config.NetworkUpgrades,
-			parent: customtypes.WithHeaderExtra(
-				&types.Header{
-					Number:  big.NewInt(201), // Unique number to ensure unique hash
-					GasUsed: ap5.TargetGas,
-					Extra: (&ap3.Window{
-						1, 2, 3, 4,
-					}).Bytes(),
-				},
-				&customtypes.HeaderExtra{
-					ExtDataGasUsed: big.NewInt(5),
-					BlockGasCost:   big.NewInt(ap4.MinBlockGasCost),
-				},
-			),
-			header: &types.Header{
-				Time: 1,
-			},
-			want: func() []byte {
-				window := ap3.Window{
-					1, 2, 3, 4,
-				}
-				window.Add(
-					ap5.TargetGas,
-					5,
-				)
-				window.Shift(1)
-				return window.Bytes()
-			}(),
-		},
-		{
-			name: "fortuna_first_block",
-			upgrades: extras.NetworkUpgrades{
-				FortunaTimestamp: utils.NewUint64(1),
-			},
-			parent: &types.Header{
-				Number: big.NewInt(1),
-			},
-			header: customtypes.WithHeaderExtra(
-				&types.Header{
-					Time:    1,
-					GasUsed: 1,
-				},
-				&customtypes.HeaderExtra{
-					ExtDataGasUsed: big.NewInt(5),
-				},
-			),
-			want: (&lp176.State{
-				Gas: gas.State{
-					Capacity: lp176.MinMaxPerSecond - 6,
-					Excess:   6,
-				},
-				TargetExcess: 0,
-			}).Bytes(),
-		},
-		{
-			name:     "fortuna_genesis_block",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "genesis_block",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -318,8 +51,8 @@ func TestExtraPrefix(t *testing.T) {
 			}).Bytes(),
 		},
 		{
-			name:     "fortuna_invalid_fee_state",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid_fee_state",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
@@ -327,8 +60,8 @@ func TestExtraPrefix(t *testing.T) {
 			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "fortuna_invalid_gas_used",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid_gas_used",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
 				Extra:  (&lp176.State{}).Bytes(),
@@ -339,33 +72,30 @@ func TestExtraPrefix(t *testing.T) {
 			wantErr: gas.ErrInsufficientCapacity,
 		},
 		{
-			name:     "fortuna_reduce_capacity",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_valid",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
 				Extra: (&lp176.State{
 					Gas: gas.State{
-						Capacity: 10_019_550, // [lp176.MinMaxCapacity] * e^(2*[lp176.MaxTargetExcessDiff] / [lp176.TargetConversion])
-						Excess:   2_000_000_000 - 3,
+						Capacity: lp176.MinMaxPerSecond,
 					},
-					TargetExcess: 2 * lp176.MaxTargetExcessDiff,
 				}).Bytes(),
 			},
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
-					GasUsed: 2,
+					Time:    1,
+					GasUsed: 1,
 				},
 				&customtypes.HeaderExtra{
 					ExtDataGasUsed: big.NewInt(1),
 				},
 			),
-			desiredTargetExcess: (*gas.Gas)(utils.NewUint64(0)),
 			want: (&lp176.State{
 				Gas: gas.State{
-					Capacity: 10_009_770,    // [lp176.MinMaxCapacity] * e^([lp176.MaxTargetExcessDiff] / [lp176.TargetConversion])
-					Excess:   1_998_047_816, // 2M * NewTarget / OldTarget
+					Capacity: 2*lp176.MinMaxPerSecond - 2,
+					Excess:   2,
 				},
-				TargetExcess: lp176.MaxTargetExcessDiff,
 			}).Bytes(),
 		},
 	}
@@ -392,49 +122,14 @@ func TestVerifyExtraPrefix(t *testing.T) {
 		wantErr  error
 	}{
 		{
-			name:     "ap2",
-			upgrades: extras.TestApricotPhase2Config.NetworkUpgrades,
-			header:   &types.Header{},
-			wantErr:  nil,
-		},
-		{
-			name:     "ap3_invalid_parent_header",
-			upgrades: extras.TestApricotPhase3Config.NetworkUpgrades,
-			parent: &types.Header{
-				Number: big.NewInt(1),
-			},
-			header:  &types.Header{},
-			wantErr: ap3.ErrWindowInsufficientLength,
-		},
-		{
-			name:     "ap3_invalid_header",
-			upgrades: extras.TestApricotPhase3Config.NetworkUpgrades,
-			parent: &types.Header{
-				Number: big.NewInt(0),
-			},
-			header:  &types.Header{},
-			wantErr: errInvalidExtraPrefix,
-		},
-		{
-			name:     "ap3_valid",
-			upgrades: extras.TestApricotPhase3Config.NetworkUpgrades,
-			parent: &types.Header{
-				Number: big.NewInt(0),
-			},
-			header: &types.Header{
-				Extra: (&ap3.Window{}).Bytes(),
-			},
-			wantErr: nil,
-		},
-		{
-			name:     "fortuna_invalid_header",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid_header",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			header:   &types.Header{},
 			wantErr:  lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "fortuna_invalid_gas_consumed",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid_gas_consumed",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -445,8 +140,8 @@ func TestVerifyExtraPrefix(t *testing.T) {
 			wantErr: gas.ErrInsufficientCapacity,
 		},
 		{
-			name:     "fortuna_wrong_fee_state",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_wrong_fee_state",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -464,8 +159,8 @@ func TestVerifyExtraPrefix(t *testing.T) {
 			wantErr: errIncorrectFeeState,
 		},
 		{
-			name:     "fortuna_valid",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_valid",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -502,83 +197,7 @@ func TestVerifyExtra(t *testing.T) {
 		expected error
 	}{
 		{
-			name:     "initial_valid",
-			rules:    extras.LuxRules{},
-			extra:    make([]byte, ap0.MaximumExtraDataSize),
-			expected: nil,
-		},
-		{
-			name:     "initial_invalid",
-			rules:    extras.LuxRules{},
-			extra:    make([]byte, ap0.MaximumExtraDataSize+1),
-			expected: errInvalidExtraLength,
-		},
-		{
-			name: "ap1_valid",
-			rules: extras.LuxRules{
-				IsApricotPhase1: true,
-			},
-			extra:    nil,
-			expected: nil,
-		},
-		{
-			name: "ap1_invalid",
-			rules: extras.LuxRules{
-				IsApricotPhase1: true,
-			},
-			extra:    make([]byte, 1),
-			expected: errInvalidExtraLength,
-		},
-		{
-			name: "ap3_valid",
-			rules: extras.LuxRules{
-				IsApricotPhase3: true,
-			},
-			extra:    make([]byte, ap3.WindowSize),
-			expected: nil,
-		},
-		{
-			name: "ap3_invalid_less",
-			rules: extras.LuxRules{
-				IsApricotPhase3: true,
-			},
-			extra:    make([]byte, ap3.WindowSize-1),
-			expected: errInvalidExtraLength,
-		},
-		{
-			name: "ap3_invalid_more",
-			rules: extras.LuxRules{
-				IsApricotPhase3: true,
-			},
-			extra:    make([]byte, ap3.WindowSize+1),
-			expected: errInvalidExtraLength,
-		},
-		{
-			name: "durango_valid_min",
-			rules: extras.LuxRules{
-				IsDurango: true,
-			},
-			extra:    make([]byte, ap3.WindowSize),
-			expected: nil,
-		},
-		{
-			name: "durango_valid_extra",
-			rules: extras.LuxRules{
-				IsDurango: true,
-			},
-			extra:    make([]byte, ap3.WindowSize+1),
-			expected: nil,
-		},
-		{
-			name: "durango_invalid",
-			rules: extras.LuxRules{
-				IsDurango: true,
-			},
-			extra:    make([]byte, ap3.WindowSize-1),
-			expected: errInvalidExtraLength,
-		},
-		{
-			name: "fortuna_valid_min",
+			name: "mainnet_valid_min",
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
@@ -586,7 +205,7 @@ func TestVerifyExtra(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "fortuna_valid_extra",
+			name: "mainnet_valid_extra",
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
@@ -594,7 +213,7 @@ func TestVerifyExtra(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "fortuna_invalid",
+			name: "mainnet_invalid",
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
@@ -618,29 +237,7 @@ func TestPredicateBytesFromExtra(t *testing.T) {
 		expected []byte
 	}{
 		{
-			name:     "empty_extra",
-			extra:    nil,
-			expected: nil,
-		},
-		{
-			name:     "too_short",
-			extra:    make([]byte, ap3.WindowSize-1),
-			expected: nil,
-		},
-		{
-			name:     "empty_predicate",
-			extra:    make([]byte, ap3.WindowSize),
-			expected: nil,
-		},
-		{
-			name: "non_empty_predicate",
-			extra: []byte{
-				ap3.WindowSize: 5,
-			},
-			expected: []byte{5},
-		},
-		{
-			name: "fortuna_empty_extra",
+			name: "mainnet_empty_extra",
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
@@ -648,7 +245,7 @@ func TestPredicateBytesFromExtra(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "fortuna_too_short",
+			name: "mainnet_too_short",
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
@@ -656,7 +253,7 @@ func TestPredicateBytesFromExtra(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "fortuna_empty_predicate",
+			name: "mainnet_empty_predicate",
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
@@ -664,7 +261,7 @@ func TestPredicateBytesFromExtra(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "fortuna_non_empty_predicate",
+			name: "mainnet_non_empty_predicate",
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
@@ -691,49 +288,26 @@ func TestSetPredicateBytesInExtra(t *testing.T) {
 		want      []byte
 	}{
 		{
-			name: "empty_extra_predicate",
-			want: make([]byte, ap3.WindowSize),
-		},
-		{
-			name: "empty_extra_predicate_fortuna",
+			name: "mainnet_empty_extra_predicate",
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
 			want: make([]byte, lp176.StateSize),
 		},
 		{
-			name:      "extra_too_short",
-			extra:     []byte{1},
-			predicate: []byte{2},
-			want: []byte{
-				0:              1,
-				ap3.WindowSize: 2,
-			},
-		},
-		{
-			name: "extra_too_short_fortuna",
+			name: "mainnet_extra_too_short",
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
 			extra:     []byte{1},
 			predicate: []byte{2},
 			want: []byte{
-				0:                1,
+				0:               1,
 				lp176.StateSize: 2,
 			},
 		},
 		{
-			name: "extra_too_long",
-			extra: []byte{
-				ap3.WindowSize: 1,
-			},
-			predicate: []byte{2},
-			want: []byte{
-				ap3.WindowSize: 2,
-			},
-		},
-		{
-			name: "extra_too_long_fortuna",
+			name: "mainnet_extra_too_long",
 			rules: extras.LuxRules{
 				IsFortuna: true,
 			},
@@ -750,73 +324,6 @@ func TestSetPredicateBytesInExtra(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			got := SetPredicateBytesInExtra(test.rules, test.extra, test.predicate)
 			require.Equal(t, test.want, got)
-		})
-	}
-}
-
-func TestPredicateBytesExtra(t *testing.T) {
-	tests := []struct {
-		name                   string
-		rules                  extras.LuxRules
-		extra                  []byte
-		predicate              []byte
-		wantExtraWithPredicate []byte
-	}{
-		{
-			name:                   "empty_extra_predicate",
-			extra:                  nil,
-			predicate:              nil,
-			wantExtraWithPredicate: make([]byte, ap3.WindowSize),
-		},
-		{
-			name: "empty_extra_predicate_fortuna",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
-			extra:                  nil,
-			predicate:              nil,
-			wantExtraWithPredicate: make([]byte, lp176.StateSize),
-		},
-		{
-			name: "extra_too_short",
-			extra: []byte{
-				0:                  1,
-				ap3.WindowSize - 1: 0,
-			},
-			predicate: []byte{2},
-			wantExtraWithPredicate: []byte{
-				0:              1,
-				ap3.WindowSize: 2,
-			},
-		},
-		{
-			name: "extra_too_short_fortuna",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
-			extra: []byte{
-				0:                    1,
-				lp176.StateSize - 1: 0,
-			},
-			predicate: []byte{2},
-			wantExtraWithPredicate: []byte{
-				0:                1,
-				lp176.StateSize: 2,
-			},
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var wantPredicate []byte
-			if test.predicate != nil {
-				wantPredicate = make([]byte, len(test.predicate))
-				copy(wantPredicate, test.predicate)
-			}
-
-			gotExtra := SetPredicateBytesInExtra(test.rules, test.extra, test.predicate)
-			require.Equal(t, test.wantExtraWithPredicate, gotExtra)
-			gotPredicate := PredicateBytesFromExtra(test.rules, gotExtra)
-			require.Equal(t, wantPredicate, gotPredicate)
 		})
 	}
 }

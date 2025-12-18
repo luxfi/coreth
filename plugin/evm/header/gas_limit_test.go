@@ -12,10 +12,6 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/cortina"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	"github.com/stretchr/testify/require"
@@ -31,38 +27,20 @@ func TestGasLimit(t *testing.T) {
 		wantErr   error
 	}{
 		{
-			name:     "fortuna_invalid_parent_header",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid_parent_header",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
 			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "fortuna_initial_max_capacity",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_initial_max_capacity",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
 			want: lp176.MinMaxCapacity,
-		},
-		{
-			name:     "cortina",
-			upgrades: extras.TestCortinaChainConfig.NetworkUpgrades,
-			want:     cortina.GasLimit,
-		},
-		{
-			name:     "ap1",
-			upgrades: extras.TestApricotPhase1Config.NetworkUpgrades,
-			want:     ap1.GasLimit,
-		},
-		{
-			name:     "launch",
-			upgrades: extras.TestLaunchConfig.NetworkUpgrades,
-			parent: &types.Header{
-				GasLimit: 1,
-			},
-			want: 1, // Same as parent
 		},
 	}
 	for _, test := range tests {
@@ -88,11 +66,11 @@ func TestVerifyGasUsed(t *testing.T) {
 		want     error
 	}{
 		{
-			name:     "fortuna_massive_extra_gas_used",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_massive_extra_gas_used",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
-					Number: big.NewInt(300), // Unique number to ensure unique hash
+					Number: big.NewInt(300),
 				},
 				&customtypes.HeaderExtra{
 					ExtDataGasUsed: new(big.Int).Lsh(common.Big1, 64),
@@ -101,11 +79,11 @@ func TestVerifyGasUsed(t *testing.T) {
 			want: errInvalidExtraDataGasUsed,
 		},
 		{
-			name:     "fortuna_gas_used_overflow",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_gas_used_overflow",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
-					Number:  big.NewInt(301), // Unique number to ensure unique hash
+					Number:  big.NewInt(301),
 					GasUsed: math.MaxUint[uint64](),
 				},
 				&customtypes.HeaderExtra{
@@ -115,34 +93,31 @@ func TestVerifyGasUsed(t *testing.T) {
 			want: math.ErrOverflow,
 		},
 		{
-			name:     "fortuna_invalid_capacity",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid_capacity",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
-				Number: big.NewInt(302), // Unique number to ensure unique hash
+				Number: big.NewInt(302),
 			},
 			header: &types.Header{
-				Number: big.NewInt(303), // Unique number to ensure unique hash
+				Number: big.NewInt(303),
 			},
 			want: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "fortuna_invalid_usage",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid_usage",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
 			header: &types.Header{
-				Time: 1,
-				// The maximum allowed gas used is:
-				// (header.Time - parent.Time) * [lp176.MinMaxPerSecond]
-				// which is equal to [lp176.MinMaxPerSecond].
+				Time:    1,
 				GasUsed: lp176.MinMaxPerSecond + 1,
 			},
 			want: errInvalidGasUsed,
 		},
 		{
-			name:     "fortuna_max_consumption",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_max_consumption",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -150,22 +125,6 @@ func TestVerifyGasUsed(t *testing.T) {
 				Time:    1,
 				GasUsed: lp176.MinMaxPerSecond,
 			},
-			want: nil,
-		},
-		{
-			name:     "cortina_does_not_include_extra_gas_used",
-			upgrades: extras.TestCortinaChainConfig.NetworkUpgrades,
-			parent: &types.Header{
-				Number: big.NewInt(0),
-			},
-			header: customtypes.WithHeaderExtra(
-				&types.Header{
-					GasUsed: cortina.GasLimit,
-				},
-				&customtypes.HeaderExtra{
-					ExtDataGasUsed: common.Big1,
-				},
-			),
 			want: nil,
 		},
 	}
@@ -189,8 +148,8 @@ func TestVerifyGasLimit(t *testing.T) {
 		want     error
 	}{
 		{
-			name:     "fortuna_invalid_header",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid_header",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
@@ -198,8 +157,8 @@ func TestVerifyGasLimit(t *testing.T) {
 			want:   lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "fortuna_invalid",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -209,87 +168,14 @@ func TestVerifyGasLimit(t *testing.T) {
 			want: errInvalidGasLimit,
 		},
 		{
-			name:     "fortuna_valid",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_valid",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
 			header: &types.Header{
 				GasLimit: lp176.MinMaxCapacity,
 			},
-		},
-		{
-			name:     "cortina_valid",
-			upgrades: extras.TestCortinaChainConfig.NetworkUpgrades,
-			header: &types.Header{
-				GasLimit: cortina.GasLimit,
-			},
-		},
-		{
-			name:     "cortina_invalid",
-			upgrades: extras.TestCortinaChainConfig.NetworkUpgrades,
-			header: &types.Header{
-				GasLimit: cortina.GasLimit + 1,
-			},
-			want: errInvalidGasLimit,
-		},
-		{
-			name:     "ap1_valid",
-			upgrades: extras.TestApricotPhase1Config.NetworkUpgrades,
-			header: &types.Header{
-				GasLimit: ap1.GasLimit,
-			},
-		},
-		{
-			name:     "ap1_invalid",
-			upgrades: extras.TestApricotPhase1Config.NetworkUpgrades,
-			header: &types.Header{
-				GasLimit: ap1.GasLimit + 1,
-			},
-			want: errInvalidGasLimit,
-		},
-		{
-			name:     "launch_valid",
-			upgrades: extras.TestLaunchConfig.NetworkUpgrades,
-			parent: &types.Header{
-				GasLimit: 50_000,
-			},
-			header: &types.Header{
-				GasLimit: 50_001, // Gas limit is allowed to change by 1/1024
-			},
-		},
-		{
-			name:     "launch_too_low",
-			upgrades: extras.TestLaunchConfig.NetworkUpgrades,
-			parent: &types.Header{
-				GasLimit: ap0.MinGasLimit,
-			},
-			header: &types.Header{
-				GasLimit: ap0.MinGasLimit - 1,
-			},
-			want: errInvalidGasLimit,
-		},
-		{
-			name:     "launch_too_high",
-			upgrades: extras.TestLaunchConfig.NetworkUpgrades,
-			parent: &types.Header{
-				GasLimit: ap0.MaxGasLimit,
-			},
-			header: &types.Header{
-				GasLimit: ap0.MaxGasLimit + 1,
-			},
-			want: errInvalidGasLimit,
-		},
-		{
-			name:     "change_too_large",
-			upgrades: extras.TestLaunchConfig.NetworkUpgrades,
-			parent: &types.Header{
-				GasLimit: ap0.MinGasLimit,
-			},
-			header: &types.Header{
-				GasLimit: ap0.MaxGasLimit,
-			},
-			want: errInvalidGasLimit,
 		},
 	}
 	for _, test := range tests {
@@ -313,21 +199,16 @@ func TestGasCapacity(t *testing.T) {
 		wantErr   error
 	}{
 		{
-			name:     "cortina",
-			upgrades: extras.TestCortinaChainConfig.NetworkUpgrades,
-			want:     cortina.GasLimit,
-		},
-		{
-			name:     "fortuna_invalid_header",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid_header",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
 			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "fortuna_after_1s",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_after_1s",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -359,14 +240,8 @@ func TestRemainingAtomicGasCapacity(t *testing.T) {
 		wantErr  error
 	}{
 		{
-			name:     "ap5",
-			upgrades: extras.TestApricotPhase5Config.NetworkUpgrades,
-			header:   &types.Header{},
-			want:     ap5.AtomicGasLimit,
-		},
-		{
-			name:     "fortuna_invalid_header",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_invalid_header",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
@@ -374,8 +249,8 @@ func TestRemainingAtomicGasCapacity(t *testing.T) {
 			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "fortuna_negative_capacity",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_negative_capacity",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -385,8 +260,8 @@ func TestRemainingAtomicGasCapacity(t *testing.T) {
 			wantErr: gas.ErrInsufficientCapacity,
 		},
 		{
-			name:     "f",
-			upgrades: extras.TestFortunaChainConfig.NetworkUpgrades,
+			name:     "mainnet_with_capacity",
+			upgrades: extras.TestChainConfig.NetworkUpgrades,
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},

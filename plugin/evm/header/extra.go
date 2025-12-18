@@ -135,9 +135,12 @@ func VerifyExtra(rules extras.LuxRules, extra []byte) error {
 			)
 		}
 	case rules.IsApricotPhase3:
-		if extraLen != ap3.WindowSize {
+		// Allow >= 80 bytes to support SubnetEVM blocks that have additional
+		// metadata beyond the standard AP3 window (e.g., 86-byte Extra fields).
+		// The fee window parsing only uses the first 80 bytes.
+		if extraLen < ap3.WindowSize {
 			return fmt.Errorf(
-				"%w: expected %d but got %d",
+				"%w: expected >= %d but got %d",
 				errInvalidExtraLength,
 				ap3.WindowSize,
 				extraLen,
@@ -152,11 +155,15 @@ func VerifyExtra(rules extras.LuxRules, extra []byte) error {
 			)
 		}
 	default:
-		if uint64(extraLen) > ap0.MaximumExtraDataSize {
+		// For historic SubnetEVM blocks (before any Lux upgrades were active),
+		// allow Extra fields >= 80 bytes (SubnetEVM uses 86 bytes for fee window
+		// plus block gas cost). Also allow the standard <= 64 bytes for pre-EVM blocks.
+		if uint64(extraLen) > ap0.MaximumExtraDataSize && extraLen < ap3.WindowSize {
 			return fmt.Errorf(
-				"%w: expected <= %d but got %d",
+				"%w: expected <= %d or >= %d but got %d",
 				errInvalidExtraLength,
 				ap0.MaximumExtraDataSize,
+				ap3.WindowSize,
 				extraLen,
 			)
 		}

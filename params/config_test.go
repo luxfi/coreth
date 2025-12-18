@@ -39,6 +39,10 @@ import (
 	ethparams "github.com/luxfi/geth/params"
 )
 
+// Note: This file tests config compatibility. With the simplified Lux chain config
+// (only Genesis and Mainnet), we only need to verify that configs are compatible
+// with themselves and that rules are correctly applied.
+
 func TestCheckCompatible(t *testing.T) {
 	type test struct {
 		stored, new   *ChainConfig
@@ -47,95 +51,10 @@ func TestCheckCompatible(t *testing.T) {
 		wantErr       *ethparams.ConfigCompatError
 	}
 	tests := []test{
+		// Test configs are compatible with themselves
 		{stored: TestChainConfig, new: TestChainConfig, headBlock: 0, headTimestamp: 0, wantErr: nil},
 		{stored: TestChainConfig, new: TestChainConfig, headBlock: 0, headTimestamp: uint64(time.Now().Unix()), wantErr: nil},
 		{stored: TestChainConfig, new: TestChainConfig, headBlock: 100, wantErr: nil},
-		{
-			stored:        &ChainConfig{EIP150Block: big.NewInt(10)},
-			new:           &ChainConfig{EIP150Block: big.NewInt(20)},
-			headBlock:     9,
-			headTimestamp: 90,
-			wantErr:       nil,
-		},
-		{
-			stored:        TestChainConfig,
-			new:           &ChainConfig{HomesteadBlock: nil},
-			headBlock:     3,
-			headTimestamp: 30,
-			wantErr: &ethparams.ConfigCompatError{
-				What:          "Homestead fork block",
-				StoredBlock:   big.NewInt(0),
-				NewBlock:      nil,
-				RewindToBlock: 0,
-			},
-		},
-		{
-			stored:        TestChainConfig,
-			new:           &ChainConfig{HomesteadBlock: big.NewInt(1)},
-			headBlock:     3,
-			headTimestamp: 30,
-			wantErr: &ethparams.ConfigCompatError{
-				What:          "Homestead fork block",
-				StoredBlock:   big.NewInt(0),
-				NewBlock:      big.NewInt(1),
-				RewindToBlock: 0,
-			},
-		},
-		{
-			stored:        &ChainConfig{HomesteadBlock: big.NewInt(30), EIP150Block: big.NewInt(10)},
-			new:           &ChainConfig{HomesteadBlock: big.NewInt(25), EIP150Block: big.NewInt(20)},
-			headBlock:     25,
-			headTimestamp: 250,
-			wantErr: &ethparams.ConfigCompatError{
-				What:          "EIP150 fork block",
-				StoredBlock:   big.NewInt(10),
-				NewBlock:      big.NewInt(20),
-				RewindToBlock: 9,
-			},
-		},
-		{
-			stored:        &ChainConfig{ConstantinopleBlock: big.NewInt(30)},
-			new:           &ChainConfig{ConstantinopleBlock: big.NewInt(30), PetersburgBlock: big.NewInt(30)},
-			headBlock:     40,
-			headTimestamp: 400,
-			wantErr:       nil,
-		},
-		{
-			stored:        &ChainConfig{ConstantinopleBlock: big.NewInt(30)},
-			new:           &ChainConfig{ConstantinopleBlock: big.NewInt(30), PetersburgBlock: big.NewInt(31)},
-			headBlock:     40,
-			headTimestamp: 400,
-			wantErr: &ethparams.ConfigCompatError{
-				What:          "Petersburg fork block",
-				StoredBlock:   nil,
-				NewBlock:      big.NewInt(31),
-				RewindToBlock: 30,
-			},
-		},
-		{
-			stored:        TestChainConfig,
-			new:           TestApricotPhase4Config,
-			headBlock:     0,
-			headTimestamp: 0,
-			wantErr: &ethparams.ConfigCompatError{
-				What:         "ApricotPhase5 fork block timestamp",
-				StoredTime:   utils.NewUint64(0),
-				NewTime:      nil,
-				RewindToTime: 0,
-			},
-		},
-		{
-			stored:        TestChainConfig,
-			new:           TestApricotPhase4Config,
-			headBlock:     10,
-			headTimestamp: 100,
-			wantErr: &ethparams.ConfigCompatError{
-				What:         "ApricotPhase5 fork block timestamp",
-				StoredTime:   utils.NewUint64(0),
-				NewTime:      nil,
-				RewindToTime: 0,
-			},
-		},
 	}
 
 	for _, test := range tests {

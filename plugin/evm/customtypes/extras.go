@@ -65,7 +65,17 @@ var extras = extrasType{
 			if v, ok := headerExtras.Load(key); ok {
 				return v.(*HeaderExtra)
 			}
-			return &HeaderExtra{}
+			// Fall back to header's native fields (populated during RLP decode)
+			// This ensures ExtDataGasUsed/BlockGasCost are available even when
+			// the header was decoded from RLP but not explicitly SetHeaderExtra'd.
+			extra := &HeaderExtra{
+				ExtDataGasUsed: h.ExtDataGasUsed,
+				BlockGasCost:   h.BlockGasCost,
+			}
+			if h.ExtDataHash != nil {
+				extra.ExtDataHash = *h.ExtDataHash
+			}
+			return extra
 		},
 		Set: func(h *ethtypes.Header, extra *HeaderExtra) {
 			key := headerKey(h)

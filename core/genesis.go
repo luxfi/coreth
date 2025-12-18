@@ -292,8 +292,16 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 	}
 	if conf := g.Config; conf != nil {
 		num := new(big.Int).SetUint64(g.Number)
-		// Set BaseFee if either London fork or ApricotPhase3 is enabled
-		if conf.IsLondon(num) || params.GetExtra(conf).IsApricotPhase3(g.Timestamp) {
+		extra := params.GetExtra(conf)
+		// Check if this is a Lux chain (has Lux-specific upgrades configured)
+		isLuxChain := extra.BanffBlockTimestamp != nil ||
+			extra.CortinaBlockTimestamp != nil ||
+			extra.DurangoBlockTimestamp != nil ||
+			extra.EtnaTimestamp != nil ||
+			extra.FortunaTimestamp != nil ||
+			extra.GraniteTimestamp != nil
+		// Set BaseFee if London fork is enabled (geth chains) or this is a Lux chain
+		if conf.IsLondon(num) || isLuxChain {
 			if g.BaseFee != nil {
 				head.BaseFee = g.BaseFee
 			} else {

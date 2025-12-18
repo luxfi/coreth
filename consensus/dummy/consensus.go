@@ -149,6 +149,21 @@ func NewFullFaker() *DummyEngine {
 }
 
 func verifyHeaderGasFields(config *extras.ChainConfig, header *types.Header, parent *types.Header) error {
+	// Check if this is a Lux chain (has Lux-specific upgrades configured)
+	isLuxChain := config.BanffBlockTimestamp != nil ||
+		config.CortinaBlockTimestamp != nil ||
+		config.DurangoBlockTimestamp != nil ||
+		config.EtnaTimestamp != nil ||
+		config.FortunaTimestamp != nil ||
+		config.GraniteTimestamp != nil
+
+	// For non-Lux chains (minimal geth configs), skip Lux-specific gas validations.
+	// These include BaseFee (uses Lux fee algorithm), BlockGasCost, and ExtDataGasUsed.
+	// We still verify basic gas used and gas limit via geth's standard validation.
+	if !isLuxChain {
+		return nil
+	}
+
 	if err := customheader.VerifyGasUsed(config, parent, header); err != nil {
 		return err
 	}
@@ -176,14 +191,28 @@ func verifyHeaderGasFields(config *extras.ChainConfig, header *types.Header, par
 		parent,
 		header.Time,
 	)
-	if !utils.BigEqual(headerExtra.BlockGasCost, expectedBlockGasCost) {
+	// For Genesis EVM blocks (pre-Fortuna/Granite with baseFee), the BlockGasCost
+	// may be nil in historic blocks. Accept nil as equivalent to 0 for these blocks.
+	blockGasCostValid := utils.BigEqual(headerExtra.BlockGasCost, expectedBlockGasCost)
+	if !blockGasCostValid {
+		// Check if this is a Genesis EVM block with nil BlockGasCost where 0 is expected
+		if headerExtra.BlockGasCost == nil && expectedBlockGasCost != nil && expectedBlockGasCost.Sign() == 0 {
+			blockGasCostValid = true
+		}
+	}
+	if !blockGasCostValid {
 		return fmt.Errorf("invalid block gas cost: have %d, want %d", headerExtra.BlockGasCost, expectedBlockGasCost)
 	}
 
-	// Verify ExtDataGasUsed not present before AP4
-	if !config.IsApricotPhase4(header.Time) {
-		if headerExtra.ExtDataGasUsed != nil {
-			return fmt.Errorf("invalid extDataGasUsed before fork: have %d, want <nil>", headerExtra.ExtDataGasUsed)
+	// Genesis EVM blocks (pre-Fortuna/Granite with baseFee) don't have ExtDataGasUsed.
+	// Detect these by checking if Fortuna/Granite are not active but baseFee is present.
+	isGenesisEVM := header.BaseFee != nil && header.BaseFee.Sign() > 0 &&
+		!config.IsFortuna(header.Time) && !config.IsGranite(header.Time)
+
+	// For Genesis EVM blocks, ExtDataGasUsed is optional (nil allowed)
+	if isGenesisEVM {
+		if headerExtra.ExtDataGasUsed != nil && !headerExtra.ExtDataGasUsed.IsUint64() {
+			return errExtDataGasUsedTooLarge
 		}
 		return nil
 	}
@@ -379,6 +408,11 @@ func (eng *DummyEngine) Finalize(chain consensus.ChainHeaderReader, block *types
 
 	config := params.GetExtra(chain.Config())
 	timestamp := block.Time()
+
+	// Detect Genesis EVM blocks (pre-Fortuna/Granite with baseFee)
+	isGenesisEVM := block.BaseFee() != nil && block.BaseFee().Sign() > 0 &&
+		!config.IsFortuna(timestamp) && !config.IsGranite(timestamp)
+
 	// Verify the BlockGasCost set in the header matches the expected value.
 	blockGasCost := customtypes.BlockGasCost(block)
 	expectedBlockGasCost := customheader.BlockGasCost(
@@ -386,10 +420,21 @@ func (eng *DummyEngine) Finalize(chain consensus.ChainHeaderReader, block *types
 		parent,
 		timestamp,
 	)
-	if !utils.BigEqual(blockGasCost, expectedBlockGasCost) {
+	// For Genesis EVM blocks, accept nil as equivalent to 0
+	blockGasCostValid := utils.BigEqual(blockGasCost, expectedBlockGasCost)
+	if !blockGasCostValid && isGenesisEVM {
+		if blockGasCost == nil && expectedBlockGasCost != nil && expectedBlockGasCost.Sign() == 0 {
+			blockGasCostValid = true
+		}
+	}
+	if !blockGasCostValid {
 		return fmt.Errorf("invalid blockGasCost: have %d, want %d", blockGasCost, expectedBlockGasCost)
 	}
-	if config.IsApricotPhase4(timestamp) {
+
+	// Skip AP4 checks when there's no valid base fee (EIP-1559 not active) or for Genesis EVM blocks
+	baseFee := block.BaseFee()
+	hasValidBaseFee := baseFee != nil && baseFee.Sign() > 0
+	if config.IsApricotPhase4(timestamp) && hasValidBaseFee && !isGenesisEVM {
 		// Validate extDataGasUsed and BlockGasCost match expectations
 		//
 		// NOTE: This is a duplicate check of what is already performed in
@@ -397,13 +442,14 @@ func (eng *DummyEngine) Finalize(chain consensus.ChainHeaderReader, block *types
 		if extDataGasUsed == nil {
 			extDataGasUsed = new(big.Int).Set(common.Big0)
 		}
-		if blockExtDataGasUsed := customtypes.BlockExtDataGasUsed(block); blockExtDataGasUsed == nil || !blockExtDataGasUsed.IsUint64() || blockExtDataGasUsed.Cmp(extDataGasUsed) != 0 {
+		blockExtDataGasUsed := customtypes.BlockExtDataGasUsed(block)
+		if !blockExtDataGasUsed.IsUint64() || blockExtDataGasUsed.Cmp(extDataGasUsed) != 0 {
 			return fmt.Errorf("invalid extDataGasUsed: have %d, want %d", blockExtDataGasUsed, extDataGasUsed)
 		}
 
 		// Verify the block fee was paid.
 		if err := eng.verifyBlockFee(
-			block.BaseFee(),
+			baseFee,
 			blockGasCost,
 			block.Transactions(),
 			receipts,
@@ -439,11 +485,16 @@ func (eng *DummyEngine) FinalizeAndAssemble(chain consensus.ChainHeaderReader, h
 		parent,
 		header.Time,
 	)
-	if configExtra.IsApricotPhase4(header.Time) {
+	// Set the native header field for BlockGasCost (used by ExtraPrefix -> GetHeaderExtra fallback)
+	header.BlockGasCost = headerExtra.BlockGasCost
+	// Only perform AP4 checks when there's a valid base fee (EIP-1559 is active)
+	if configExtra.IsApricotPhase4(header.Time) && header.BaseFee != nil && header.BaseFee.Sign() > 0 {
 		headerExtra.ExtDataGasUsed = extDataGasUsed
 		if headerExtra.ExtDataGasUsed == nil {
 			headerExtra.ExtDataGasUsed = new(big.Int)
 		}
+		// Set the native header field for ExtDataGasUsed (used by ExtraPrefix -> GetHeaderExtra fallback)
+		header.ExtDataGasUsed = headerExtra.ExtDataGasUsed
 
 		// Verify that this block covers the block fee.
 		if err := eng.verifyBlockFee(
