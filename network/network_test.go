@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/consensus/core"
 	consensustest "github.com/luxfi/consensus/test/helpers"
 	consensusversion "github.com/luxfi/consensus/version"
 	"github.com/luxfi/ids"
@@ -593,7 +592,7 @@ func TestNetworkRouting(t *testing.T) {
 	err = network.AppResponse(context.Background(), ids.GenerateTestNodeID(), 1, foobar)
 	require.ErrorIs(err, p2p.ErrUnrequestedResponse)
 
-	err = network.AppRequestFailed(context.Background(), nodeID, 1, &core.AppError{Code: -1, Message: "timeout"})
+	err = network.AppRequestFailed(context.Background(), nodeID, 1, &p2p.Error{Code: -1, Message: "timeout"})
 	require.ErrorIs(err, p2p.ErrUnrequestedResponse)
 }
 

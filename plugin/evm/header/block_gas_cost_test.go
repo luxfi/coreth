@@ -124,13 +124,15 @@ func TestEstimateRequiredTip(t *testing.T) {
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
 					Number:  big.NewInt(101),
+					GasUsed: 1,
 					BaseFee: big.NewInt(1),
 				},
 				&customtypes.HeaderExtra{
 					ExtDataGasUsed: big.NewInt(1),
 				},
 			),
-			wantErr: errBlockGasCostNil,
+			// nil BlockGasCost is now treated as 0 for imported blocks
+			want: new(big.Int),
 		},
 		{
 			name:     "success",
@@ -158,7 +160,12 @@ func TestEstimateRequiredTip(t *testing.T) {
 			}
 			requiredTip, err := EstimateRequiredTip(config, test.header)
 			require.ErrorIs(err, test.wantErr)
-			require.Equal(test.want, requiredTip)
+			if test.want == nil {
+				require.Nil(requiredTip)
+			} else {
+				require.NotNil(requiredTip)
+				require.Zero(test.want.Cmp(requiredTip), "expected %v, got %v", test.want, requiredTip)
+			}
 		})
 	}
 }
