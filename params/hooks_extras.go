@@ -80,10 +80,12 @@ var PrecompiledContractsApricotPhase6 = map[common.Address]contract.StatefulPrec
 	nativeasset.NativeAssetCallAddr:    &nativeasset.NativeAssetCall{GasCost: AssetCallApricot, CallNewAccountGas: CallNewAccountGas},
 }
 
+// In Lux, native asset precompiles remain active after Banff (unlike Avalanche).
+// Only the Genesis contract is deprecated.
 var PrecompiledContractsBanff = map[common.Address]contract.StatefulPrecompiledContract{
 	nativeasset.GenesisContractAddr:    &nativeasset.DeprecatedContract{},
-	nativeasset.NativeAssetBalanceAddr: &nativeasset.DeprecatedContract{},
-	nativeasset.NativeAssetCallAddr:    &nativeasset.DeprecatedContract{},
+	nativeasset.NativeAssetBalanceAddr: &nativeasset.NativeAssetBalance{GasCost: AssetBalanceApricot},
+	nativeasset.NativeAssetCallAddr:    &nativeasset.NativeAssetCall{GasCost: AssetCallApricot, CallNewAccountGas: CallNewAccountGas},
 }
 
 func (r RulesExtra) ActivePrecompiles(existing []common.Address) []common.Address {

@@ -591,3 +591,36 @@ func (w *appSenderWrapper) SendGossip(ctx context.Context, config p2p.SendConfig
 	// AppSender doesn't have SendAppGossip
 	return nil
 }
+
+// P2PSenderAdapter adapts p2p.Sender to network.AppSender
+type P2PSenderAdapter struct {
+	sender p2p.Sender
+}
+
+var _ AppSender = (*P2PSenderAdapter)(nil)
+
+// NewP2PSenderAdapter creates an adapter that wraps p2p.Sender
+func NewP2PSenderAdapter(sender p2p.Sender) AppSender {
+	return &P2PSenderAdapter{sender: sender}
+}
+
+// SendAppRequest sends to a single node via p2p.Sender
+func (a *P2PSenderAdapter) SendAppRequest(nodeID ids.NodeID, requestID uint32, request []byte) error {
+	nodeIDs := set.Of(nodeID)
+	return a.sender.SendRequest(context.Background(), nodeIDs, requestID, request)
+}
+
+// SendAppResponse forwards response via p2p.Sender
+func (a *P2PSenderAdapter) SendAppResponse(nodeID ids.NodeID, requestID uint32, response []byte) error {
+	return a.sender.SendResponse(context.Background(), nodeID, requestID, response)
+}
+
+// SendCrossChainAppRequest - cross-chain not supported via p2p.Sender
+func (a *P2PSenderAdapter) SendCrossChainAppRequest(chainID ids.ID, requestID uint32, request []byte) error {
+	return nil
+}
+
+// SendCrossChainAppResponse - cross-chain not supported via p2p.Sender
+func (a *P2PSenderAdapter) SendCrossChainAppResponse(chainID ids.ID, requestID uint32, response []byte) error {
+	return nil
+}

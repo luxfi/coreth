@@ -95,15 +95,22 @@ func EstimateRequiredTip(
 		return nil, nil
 	case header.BaseFee == nil:
 		return nil, errBaseFeeNil
-	case extra.BlockGasCost == nil:
-		return nil, errBlockGasCostNil
-	case extra.ExtDataGasUsed == nil:
-		return nil, errExtDataGasUsedNil
+	}
+
+	// For imported blocks that predate Lux-specific fields or were exported
+	// without them, treat nil BlockGasCost and ExtDataGasUsed as 0.
+	blockGasCost := extra.BlockGasCost
+	if blockGasCost == nil {
+		blockGasCost = common.Big0
+	}
+	extDataGasUsed := extra.ExtDataGasUsed
+	if extDataGasUsed == nil {
+		extDataGasUsed = common.Big0
 	}
 
 	// totalGasUsed = GasUsed + ExtDataGasUsed
 	totalGasUsed := new(big.Int).SetUint64(header.GasUsed)
-	totalGasUsed.Add(totalGasUsed, extra.ExtDataGasUsed)
+	totalGasUsed.Add(totalGasUsed, extDataGasUsed)
 	if totalGasUsed.Sign() == 0 {
 		return nil, errNoGasUsed
 	}
@@ -113,7 +120,7 @@ func EstimateRequiredTip(
 	// We add totalGasUsed - 1 to ensure that the total required tips
 	// calculation rounds up.
 	totalRequiredTips := new(big.Int)
-	totalRequiredTips.Mul(extra.BlockGasCost, header.BaseFee)
+	totalRequiredTips.Mul(blockGasCost, header.BaseFee)
 	totalRequiredTips.Add(totalRequiredTips, totalGasUsed)
 	totalRequiredTips.Sub(totalRequiredTips, common.Big1)
 

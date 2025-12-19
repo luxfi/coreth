@@ -665,6 +665,28 @@ func (bc *BlockChain) DrainAcceptorQueue() {
 	}
 }
 
+// AcceptImportedState accepts and commits the state for imported blocks.
+// This should be called after importing blocks via InsertChain to ensure
+// the state trie is persisted to disk. Without calling this, imported
+// blocks will have their state in memory but it won't be committed,
+// causing "required historical state unavailable" errors on restart.
+func (bc *BlockChain) AcceptImportedState(block *types.Block) error {
+	log.Info("Accepting imported state", "block", block.NumberU64(), "root", block.Root())
+
+	// Accept the trie for the imported block
+	if err := bc.stateManager.AcceptTrie(block); err != nil {
+		return fmt.Errorf("failed to accept trie for block %d: %w", block.NumberU64(), err)
+	}
+
+	// Commit the accepted state to disk
+	if err := bc.stateManager.CommitAccepted(); err != nil {
+		return fmt.Errorf("failed to commit accepted state: %w", err)
+	}
+
+	log.Info("Successfully committed imported state", "block", block.NumberU64())
+	return nil
+}
+
 // stopAcceptor sends a signal to the Acceptor to stop processing accepted
 // blocks. The Acceptor will exit once all items in [acceptorQueue] have been
 // processed.
@@ -1559,21 +1581,39 @@ func (bc *BlockChain) reorg(oldHead *types.Header, newHead *types.Block) error {
 	}
 
 	// Delete any canonical number assignments above the new head
-	indexesBatch := bc.db.NewBatch()
-
 	// Use the height of [newHead] to determine which canonical hashes to remove
 	// in case the new chain is shorter than the old chain, in which case
 	// there may be hashes set on the canonical chain that were invalidated
 	// but not yet overwritten by the re-org.
+	//
+	// Process in batches to avoid "Txn is too big" errors when deleting
+	// many canonical hashes (e.g., after RLP import).
+	const maxBatchSize = 10000
+	indexesBatch := bc.db.NewBatch()
+	batchCount := 0
+
 	for i := newHead.NumberU64() + 1; ; i++ {
 		hash := rawdb.ReadCanonicalHash(bc.db, i)
 		if hash == (common.Hash{}) {
 			break
 		}
 		rawdb.DeleteCanonicalHash(indexesBatch, i)
+		batchCount++
+
+		// Write batch if it reaches the limit
+		if batchCount >= maxBatchSize {
+			if err := indexesBatch.Write(); err != nil {
+				log.Crit("Failed to delete useless indexes", "err", err)
+			}
+			indexesBatch.Reset()
+			batchCount = 0
+		}
 	}
-	if err := indexesBatch.Write(); err != nil {
-		log.Crit("Failed to delete useless indexes", "err", err)
+	// Write any remaining entries
+	if batchCount > 0 {
+		if err := indexesBatch.Write(); err != nil {
+			log.Crit("Failed to delete useless indexes", "err", err)
+		}
 	}
 
 	// Send out events for logs from the old canon chain, and 'reborn'

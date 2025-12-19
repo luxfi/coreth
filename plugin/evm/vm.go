@@ -286,13 +286,23 @@ func (vm *VM) Initialize(
 	_ []interface{},
 	appSenderIface interface{},
 ) error {
-	// Type assert appSender for use in network initialization
+	// Debug: Mark that Initialize was called with file logging
+	debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if debugFile != nil {
+		fmt.Fprintf(debugFile, "%s DEBUG coreth: VM.Initialize called, IsPlugin=%v\n", time.Now().Format("15:04:05.000"), vm.IsPlugin)
+		debugFile.Close()
+	}
+	fmt.Fprintf(originalStderr, "DEBUG: VM.Initialize called, IsPlugin=%v\n", vm.IsPlugin)
+
+	// Type assert appSender - node provides p2p.Sender
 	var appSender network.AppSender
 	if appSenderIface != nil {
-		var ok bool
-		appSender, ok = appSenderIface.(network.AppSender)
-		if !ok {
-			return fmt.Errorf("expected network.AppSender, got %T", appSenderIface)
+		if p2pSender, ok := appSenderIface.(p2p.Sender); ok {
+			appSender = network.NewP2PSenderAdapter(p2pSender)
+		} else if networkSender, ok := appSenderIface.(network.AppSender); ok {
+			appSender = networkSender
+		} else {
+			return fmt.Errorf("expected p2p.Sender or network.AppSender, got %T", appSenderIface)
 		}
 	}
 	_ = toEngine // unused but keep parameter
@@ -340,13 +350,38 @@ func (vm *VM) Initialize(
 	// initialized the logger.
 	deprecateMsg := vm.config.Deprecate()
 
-	// Create logger
+	// Create logger - file-based debug logging
+	{
+		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if debugFile != nil {
+			fmt.Fprintf(debugFile, "%s DEBUG coreth: About to call BCLookup.PrimaryAlias\n", time.Now().Format("15:04:05.000"))
+			debugFile.Close()
+		}
+	}
+	fmt.Fprintf(originalStderr, "DEBUG: About to call BCLookup.PrimaryAlias\n")
 	alias, err := vm.ctx.BCLookup.PrimaryAlias(vm.ctx.ChainID)
+	{
+		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if debugFile != nil {
+			fmt.Fprintf(debugFile, "%s DEBUG coreth: BCLookup.PrimaryAlias returned, err=%v, alias=%s\n", time.Now().Format("15:04:05.000"), err, alias)
+			debugFile.Close()
+		}
+	}
+	fmt.Fprintf(originalStderr, "DEBUG: BCLookup.PrimaryAlias returned, err=%v\n", err)
 	if err != nil {
 		// fallback to ChainID string instead of erroring
 		alias = vm.ctx.ChainID.String()
 	}
 	vm.chainAlias = alias
+
+	// Debug: step 2
+	{
+		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if debugFile != nil {
+			fmt.Fprintf(debugFile, "%s DEBUG coreth: step 2 - creating logger, alias=%s\n", time.Now().Format("15:04:05.000"), alias)
+			debugFile.Close()
+		}
+	}
 
 	var writer io.Writer = originalStderr
 	if logWriter, ok := vm.ctx.Log.(io.Writer); ok && !vm.IsPlugin {
@@ -358,6 +393,15 @@ func (vm *VM) Initialize(
 		return fmt.Errorf("%w: %w ", errInitializingLogger, err)
 	}
 	vm.logger = corethLogger
+
+	// Debug: step 3
+	{
+		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if debugFile != nil {
+			fmt.Fprintf(debugFile, "%s DEBUG coreth: step 3 - logger created, logging init message\n", time.Now().Format("15:04:05.000"))
+			debugFile.Close()
+		}
+	}
 
 	log.Info("Initializing Coreth VM", "Version", Version, "Config", vm.config)
 
@@ -372,13 +416,40 @@ func (vm *VM) Initialize(
 
 	vm.shutdownChan = make(chan struct{}, 1)
 
+	// Debug: step 4
+	{
+		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if debugFile != nil {
+			fmt.Fprintf(debugFile, "%s DEBUG coreth: step 4 - about to initializeMetrics\n", time.Now().Format("15:04:05.000"))
+			debugFile.Close()
+		}
+	}
+
 	if err := vm.initializeMetrics(); err != nil {
 		return fmt.Errorf("failed to initialize metrics: %w", err)
+	}
+
+	// Debug: step 5
+	{
+		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if debugFile != nil {
+			fmt.Fprintf(debugFile, "%s DEBUG coreth: step 5 - about to initializeDBs\n", time.Now().Format("15:04:05.000"))
+			debugFile.Close()
+		}
 	}
 
 	// Initialize the database
 	if err := vm.initializeDBs(vmDB); err != nil {
 		return fmt.Errorf("failed to initialize databases: %w", err)
+	}
+
+	// Debug: step 6
+	{
+		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if debugFile != nil {
+			fmt.Fprintf(debugFile, "%s DEBUG coreth: step 6 - DBs initialized\n", time.Now().Format("15:04:05.000"))
+			debugFile.Close()
+		}
 	}
 	if vm.config.InspectDatabase {
 		if err := vm.inspectDatabases(); err != nil {
@@ -1571,6 +1642,38 @@ func (vm *VM) importRLPBlocks(rlpPath string) error {
 		"elapsed", elapsed,
 		"rate", fmt.Sprintf("%.1f blocks/sec", float64(imported)/elapsed.Seconds()),
 	)
+
+	// Update lastAcceptedKey to mark imported blocks as accepted
+	// This is critical - without this, imported blocks exist in DB but aren't
+	// recognized by the consensus layer
+	if imported > 0 {
+		currentBlock := vm.blockChain.CurrentBlock()
+		if currentBlock != nil {
+			// CRITICAL: Accept and commit the state trie for the imported blocks
+			// Without this, the state exists in memory but isn't persisted to disk,
+			// causing "required historical state unavailable" errors on restart
+			fullBlock := vm.blockChain.GetBlock(currentBlock.Hash(), currentBlock.Number.Uint64())
+			if fullBlock != nil {
+				log.Info("Committing state for imported blocks", "height", fullBlock.NumberU64())
+				if err := vm.blockChain.AcceptImportedState(fullBlock); err != nil {
+					return fmt.Errorf("failed to accept imported state: %w", err)
+				}
+			}
+
+			currentHash := currentBlock.Hash()
+			if err := vm.acceptedBlockDB.Put(lastAcceptedKey, currentHash[:]); err != nil {
+				return fmt.Errorf("failed to update last accepted block after import: %w", err)
+			}
+			// Commit the versiondb to persist the lastAccepted update
+			if err := vm.versiondb.Commit(); err != nil {
+				return fmt.Errorf("failed to commit versiondb after import: %w", err)
+			}
+			log.Info("Updated last accepted block after RLP import",
+				"hash", currentHash,
+				"height", currentBlock.Number.Uint64(),
+			)
+		}
+	}
 
 	return nil
 }

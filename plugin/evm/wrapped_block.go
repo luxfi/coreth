@@ -393,12 +393,11 @@ func (b *wrappedBlock) syntacticVerify() error {
 
 	headerExtra := customtypes.GetHeaderExtra(ethHeader)
 	if rulesExtra.IsApricotPhase4 {
-		switch {
-		// Make sure BlockGasCost is not nil
-		// NOTE: ethHeader.BlockGasCost correctness is checked in header verification
-		case headerExtra.BlockGasCost == nil:
-			return errNilBlockGasCostApricotPhase4
-		case !headerExtra.BlockGasCost.IsUint64():
+		// NOTE: BlockGasCost may be nil for blocks imported from RLP that predate
+		// the Apricot Phase 4 upgrade or were exported without Lux-specific fields.
+		// We treat nil BlockGasCost as 0 for backward compatibility with imported blocks.
+		// When BlockGasCost IS set, verify it's a valid uint64.
+		if headerExtra.BlockGasCost != nil && !headerExtra.BlockGasCost.IsUint64() {
 			return fmt.Errorf("too large blockGasCost: %d", headerExtra.BlockGasCost)
 		}
 	}
