@@ -18,7 +18,6 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/node/codec"
 	consensuscontext "github.com/luxfi/consensus/context"
-	"github.com/luxfi/consensus/core"
 	validators "github.com/luxfi/consensus/validator"
 	consensusversion "github.com/luxfi/consensus/version"
 	"github.com/luxfi/math/set"
@@ -41,11 +40,11 @@ type AppSender interface {
 type AppHandler interface {
 	AppRequest(ctx context.Context, nodeID ids.NodeID, requestID uint32, deadline time.Time, request []byte) error
 	AppResponse(ctx context.Context, nodeID ids.NodeID, requestID uint32, response []byte) error
-	AppRequestFailed(ctx context.Context, nodeID ids.NodeID, requestID uint32, appErr *core.AppError) error
+	AppRequestFailed(ctx context.Context, nodeID ids.NodeID, requestID uint32, appErr *p2p.Error) error
 	AppGossip(ctx context.Context, nodeID ids.NodeID, msg []byte) error
 	CrossChainAppRequest(ctx context.Context, chainID ids.ID, requestID uint32, deadline time.Time, msg []byte) error
 	CrossChainAppResponse(ctx context.Context, chainID ids.ID, requestID uint32, msg []byte) error
-	CrossChainAppRequestFailed(ctx context.Context, chainID ids.ID, requestID uint32, appErr *core.AppError) error
+	CrossChainAppRequestFailed(ctx context.Context, chainID ids.ID, requestID uint32, appErr *p2p.Error) error
 }
 
 // Minimum amount of time to handle a request
@@ -346,21 +345,13 @@ func (n *network) AppResponse(ctx context.Context, nodeID ids.NodeID, requestID 
 // - request times out before a response is provided
 // error returned by this function is expected to be treated as fatal by the engine
 // returns error only when the response handler returns an error
-func (n *network) AppRequestFailed(ctx context.Context, nodeID ids.NodeID, requestID uint32, appErr *core.AppError) error {
+func (n *network) AppRequestFailed(ctx context.Context, nodeID ids.NodeID, requestID uint32, appErr *p2p.Error) error {
 	log.Debug("received AppRequestFailed from peer", "nodeID", nodeID, "requestID", requestID)
 
 	handler, exists := n.markRequestFulfilled(requestID)
 	if !exists {
 		log.Debug("forwarding AppRequestFailed to SDK network", "nodeID", nodeID, "requestID", requestID)
-		// Convert core.AppError to p2p.Error
-		var p2pErr *p2p.Error
-		if appErr != nil {
-			p2pErr = &p2p.Error{
-				Code:    appErr.Code,
-				Message: appErr.Message,
-			}
-		}
-		return n.sdkNetwork.RequestFailed(ctx, nodeID, requestID, p2pErr)
+		return n.sdkNetwork.RequestFailed(ctx, nodeID, requestID, appErr)
 	}
 
 	// We must release the slot
@@ -557,7 +548,7 @@ func (n *network) CrossChainAppResponse(ctx context.Context, chainID ids.ID, req
 }
 
 // CrossChainAppRequestFailed notifies that a CrossChainAppRequest failed or timed out
-func (n *network) CrossChainAppRequestFailed(ctx context.Context, chainID ids.ID, requestID uint32, appErr *core.AppError) error {
+func (n *network) CrossChainAppRequestFailed(ctx context.Context, chainID ids.ID, requestID uint32, appErr *p2p.Error) error {
 	// For now, we don't handle cross-chain request failures
 	return nil
 }

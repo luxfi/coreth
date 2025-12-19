@@ -1,6 +1,6 @@
 module github.com/luxfi/coreth
 
-go 1.23.4
+go 1.25.5
 
 require (
 	github.com/VictoriaMetrics/fastcache v1.13.0
@@ -176,5 +176,6 @@ require (
 	github.com/luxfi/ids v1.2.4
 	github.com/luxfi/math v1.0.2
 	github.com/luxfi/p2p v1.4.7
+	github.com/luxfi/vm v1.0.0
 	github.com/luxfi/warp v1.16.37
 )
