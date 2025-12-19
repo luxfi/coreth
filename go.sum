@@ -264,12 +264,12 @@ github.com/leanovate/gopter v0.2.11 h1:vRjThO1EKPb/1NsDXuDrzldR28RLkBflWYcU9CvzW
 github.com/leanovate/gopter v0.2.11/go.mod h1:aK3tzZP/C+p1m3SPRE4SYZFGP7jjkuSI4f7Xvpt0S9c=
 github.com/luxfi/cache v1.0.0 h1:OcqGi/qs9ky+7O8fR6WMZtFsunvA40LBTg3QRQqJurs=
 github.com/luxfi/cache v1.0.0/go.mod h1:BEvpffvV3SXs/KSa9nUC1TszxKwUdIHwIaoXpeiYU+Y=
-github.com/luxfi/consensus v1.22.27 h1:NjLg1NZJZ07NSe+rRNkftLlbtX3jnU1BjaJ0XM6BVZI=
-github.com/luxfi/consensus v1.22.27/go.mod h1:T2ldnUwlmlIP99P4RT0HB2bwNglWhnBSo6suoNkV7bc=
+github.com/luxfi/consensus v1.22.31 h1:SqZdKmIY40ej3avRGYpvT1/QBdo4uwiYnOJU87AUVJc=
+github.com/luxfi/consensus v1.22.31/go.mod h1:SIxXUq9h+WOguNbBkAuFPPFZyIFzc1fz0h2l7iTrOwk=
 github.com/luxfi/constants v1.2.3 h1:ewo3Ch6AJDI3G42J0rlNAdZU1Fv96YEyOmp3E2K/pzE=
 github.com/luxfi/constants v1.2.3/go.mod h1:r5WL5Z03I9iHo910pHykO+RuDCwe4jy0rBSueG1l1mo=
-github.com/luxfi/crypto v1.17.23 h1:+G9XZVY9jz+wlTgpCDAMvrK/ZsYvMKgjaclRPHru1VU=
-github.com/luxfi/crypto v1.17.23/go.mod h1:2+BSbTqb0Skji6kgh695125Z7f4PapsER8ImCQVmVBw=
+github.com/luxfi/crypto v1.17.24 h1:644nJjyslF50RwtAwYhuT711IiLdVKsWX6tM9gwOOUE=
+github.com/luxfi/crypto v1.17.24/go.mod h1:FDe5QXUY/JpSEfVkSmPBeOwhWRrCuuGeRuJ/UDq2w2I=
 github.com/luxfi/database v1.2.12 h1:0TWcVlkotLcn9oFUXeHn5zBT24RxnPJLw9LIgapZIzc=
 github.com/luxfi/database v1.2.12/go.mod h1:BlczmDTU4z76wPGlhtbzI4iWbEIiWDyfDOCGoq8Cmc0=
 github.com/luxfi/genesis v1.5.5 h1:vYICVQZnnEa0MN6wpEw1NNT84pJWMjIuqqD7MO6ta+M=
@@ -338,8 +338,8 @@ github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7J
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
 github.com/onsi/gomega v1.19.0/go.mod h1:LY+I3pBVzYsTBU1AnDwOSxaYi9WoWiqgwooUqq9yPro=
-github.com/onsi/gomega v1.38.0 h1:c/WX+w8SLAinvuKKQFh77WEucCnPk4j2OTUr7lt7BeY=
-github.com/onsi/gomega v1.38.0/go.mod h1:OcXcwId0b9QsE7Y49u+BTrL4IdKOBOKnD6VQNTJEB6o=
+github.com/onsi/gomega v1.37.0 h1:CdEG8g0S133B4OswTDC/5XPSzE1OeP29QOioj2PID2Y=
+github.com/onsi/gomega v1.37.0/go.mod h1:8D9+Txp43QWKhM24yyOBEdpkzN8FvJyAwecBgsU4KU0=
 github.com/opentracing/opentracing-go v1.1.0 h1:pWlfV3Bxv7k65HYwkikxat0+s3pV4bsqf19k25Ur8rU=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
