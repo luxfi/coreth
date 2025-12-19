@@ -45,19 +45,6 @@ var (
 	// All legacy upgrades are active, with modern upgrades scheduled.
 	MainnetChainConfig = TestChainConfig
 
-	// TestPreBanffChainConfig is for testing legacy behavior before Banff.
-	// Native asset precompiles are active (not deprecated) with this config.
-	TestPreBanffChainConfig = &ChainConfig{
-		NetworkUpgrades: NetworkUpgrades{
-			BanffBlockTimestamp:   utils.NewUint64(1000), // Banff not active at timestamp 0
-			CortinaBlockTimestamp: utils.NewUint64(2000),
-			DurangoBlockTimestamp: utils.NewUint64(3000),
-			EtnaTimestamp:         utils.NewUint64(4000),
-			FortunaTimestamp:      utils.NewUint64(5000),
-			GraniteTimestamp:      utils.NewUint64(6000),
-		},
-	}
-
 	// Legacy test configs - all point to TestChainConfig for backward compatibility
 	// These are kept for tests that still reference them.
 	TestBanffChainConfig   = TestChainConfig

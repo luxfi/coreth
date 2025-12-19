@@ -1,0 +1,66 @@
+[12-18|12:57:35.194] INFO server/server.go:170 serving gRPC server
+[12-18|12:57:35.194] INFO server/server.go:180 dialing gRPC server for gRPC gateway
+[12-18|12:57:35.195] INFO server/server.go:204 serving gRPC gateway
+[12-18|12:57:36.182] INFO server/server.go:355 starting {"{exec-path 15 0 /Users/z/go/bin/luxd <nil>}": {"Key":"num-nodes","Type":19,"Integer":5,"String":"","Interface":null}, "{track-subnets 15 0  <nil>}": {"Key":"pid","Type":12,"Integer":48043,"String":"","Interface":null}, "{root-data-dir 15 0 /Users/z/.lux/runs/mainnet/network_20251218_125736 <nil>}": {"Key":"plugin-dir","Type":15,"Integer":0,"String":"/Users/z/.lux/plugins","Interface":null}, "{chain-configs 23 0  map[]}": {"Key":"global-node-config","Type":15,"Integer":0,"String":"{\n\t\t\"network-id\": 96369,\n\t\t\"db-type\": \"badgerdb\",\n\t\t\"sybil-protection-enabled\": true,\n\t\t\"network-allow-private-ips\": true,\n\t\t\"health-check-frequency\": \"30s\",\n\t\t\"log-level\": \"info\",\n\t\t\"http-host\": \"127.0.0.1\",\n\t\t\"api-admin-enabled\": true\n\t}","Interface":null}}
+[12-18|12:58:07.530] INFO server/server.go:383 network healthy
+[12-18|13:00:16.296] INFO server/server.go:1345 RemoveSnapshot
+[12-18|13:00:16.296] WARN server/server.go:1352 snapshot remove failed to complete
+[12-18|13:00:16.296] INFO server/server.go:1324 SaveSnapshot
+[12-18|13:00:16.558] INFO server/server.go:824 removing network
+[12-18|13:00:16.559] INFO server/server.go:824 removing network
+[12-18|13:00:16.560] WARN server/server.go:211 root context is done
+[12-18|13:00:16.560] WARN server/server.go:214 closed gRPC gateway server
+[12-18|13:00:16.560] WARN server/server.go:219 closed gRPC server
+[12-18|13:00:16.560] WARN server/server.go:221 gRPC terminated
+[12-18|15:46:57.397] INFO server/server.go:180 dialing gRPC server for gRPC gateway
+[12-18|15:46:57.397] INFO server/server.go:170 serving gRPC server
+[12-18|15:46:57.399] INFO server/server.go:204 serving gRPC gateway
+[12-18|15:46:57.714] INFO server/server.go:1273 starting {"{pid 12 41368  <nil>}": {"Key":"root-data-dir","Type":15,"Integer":0,"String":"/Users/z/.lux/runs/local_network/network_20251218_154657","Interface":null}}
+[12-18|15:56:57.971] WARN server/server.go:1306 snapshot load failed to complete. stopping network and cleaning up network
+[12-18|15:56:57.971] INFO server/server.go:824 removing network
+[12-18|15:56:58.277] INFO server/server.go:1345 RemoveSnapshot
+[12-18|15:56:58.277] INFO server/server.go:1345 RemoveSnapshot
+[12-18|15:56:58.278] INFO server/server.go:824 removing network
+[12-18|15:56:58.278] INFO server/server.go:824 removing network
+[12-18|15:56:58.279] WARN server/server.go:211 root context is done
+[12-18|15:56:58.279] WARN server/server.go:214 closed gRPC gateway server
+[12-18|15:56:58.279] WARN server/server.go:219 closed gRPC server
+[12-18|15:56:58.279] WARN server/server.go:221 gRPC terminated
+[12-18|15:57:00.329] INFO server/server.go:180 dialing gRPC server for gRPC gateway
+[12-18|15:57:00.329] INFO server/server.go:170 serving gRPC server
+[12-18|15:57:00.330] INFO server/server.go:204 serving gRPC gateway
+[12-18|15:57:00.656] INFO server/server.go:1273 starting {"{pid 12 62276  <nil>}": {"Key":"root-data-dir","Type":15,"Integer":0,"String":"/Users/z/.lux/runs/local_network/network_20251218_155700","Interface":null}}
+[12-18|16:04:38.960] WARN server/server.go:1306 snapshot load failed to complete. stopping network and cleaning up network
+[12-18|16:04:38.961] INFO server/server.go:824 removing network
+[12-18|16:04:38.961] INFO server/server.go:1273 starting {"{pid 12 62276  <nil>}": {"Key":"root-data-dir","Type":15,"Integer":0,"String":"/Users/z/.lux/runs/local_network/network_20251218_160438","Interface":null}}
+[12-18|16:05:10.657] INFO server/server.go:1311 network healthy
+[12-18|16:05:10.657] INFO server/server.go:1345 RemoveSnapshot
+[12-18|16:05:10.665] INFO server/server.go:1324 SaveSnapshot
+[12-18|16:05:11.017] INFO server/server.go:824 removing network
+[12-18|16:05:11.018] INFO server/server.go:824 removing network
+[12-18|16:05:11.018] WARN server/server.go:211 root context is done
+[12-18|16:05:11.018] WARN server/server.go:214 closed gRPC gateway server
+[12-18|16:05:11.018] WARN server/server.go:219 closed gRPC server
+[12-18|16:05:11.018] WARN server/server.go:221 gRPC terminated
+[12-18|16:05:13.067] INFO server/server.go:180 dialing gRPC server for gRPC gateway
+[12-18|16:05:13.067] INFO server/server.go:170 serving gRPC server
+[12-18|16:05:13.068] INFO server/server.go:204 serving gRPC gateway
+[12-18|16:05:13.393] INFO server/server.go:1273 starting {"{pid 12 81568  <nil>}": {"Key":"root-data-dir","Type":15,"Integer":0,"String":"/Users/z/.lux/runs/local_network/network_20251218_160513","Interface":null}}
+[12-18|16:12:41.585] WARN server/server.go:1306 snapshot load failed to complete. stopping network and cleaning up network
+[12-18|16:12:41.585] INFO server/server.go:824 removing network
+[12-18|16:12:41.586] INFO server/server.go:1345 RemoveSnapshot
+[12-18|16:12:41.586] INFO server/server.go:1345 RemoveSnapshot
+[12-18|16:12:41.587] INFO server/server.go:824 removing network
+[12-18|16:12:41.587] INFO server/server.go:824 removing network
+[12-18|16:12:41.587] WARN server/server.go:211 root context is done
+[12-18|16:12:41.587] WARN server/server.go:214 closed gRPC gateway server
+[12-18|16:12:41.587] WARN server/server.go:219 closed gRPC server
+[12-18|16:12:41.587] WARN server/server.go:221 gRPC terminated
+[12-18|16:12:43.642] INFO server/server.go:180 dialing gRPC server for gRPC gateway
+[12-18|16:12:43.642] INFO server/server.go:170 serving gRPC server
+[12-18|16:12:43.643] INFO server/server.go:204 serving gRPC gateway
+[12-18|16:12:43.957] INFO server/server.go:1273 starting {"{pid 12 97087  <nil>}": {"Key":"root-data-dir","Type":15,"Integer":0,"String":"/Users/z/.lux/runs/local_network/network_20251218_161243","Interface":null}}
+[12-18|16:12:45.204] WARN server/server.go:1306 snapshot load failed to complete. stopping network and cleaning up network
+[12-18|16:12:45.204] INFO server/server.go:824 removing network
+[12-18|16:12:50.064] INFO server/server.go:1273 starting {"{pid 12 97087  <nil>}": {"Key":"root-data-dir","Type":15,"Integer":0,"String":"/Users/z/.lux/runs/local_network/network_20251218_161250","Interface":null}}
+[12-18|16:13:21.364] INFO server/server.go:1311 network healthy

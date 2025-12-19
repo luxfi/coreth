@@ -86,28 +86,6 @@ var (
 	TestApricotPhase6Config     = TestChainConfig
 	TestApricotPhasePost6Config = TestChainConfig
 
-	// TestPreBanffChainConfig is for testing legacy behavior before Banff.
-	// Native asset precompiles are active (not deprecated) with this config.
-	TestPreBanffChainConfig = WithExtra(
-		&ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			DAOForkBlock:        big.NewInt(0),
-			DAOForkSupport:      true,
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		extras.TestPreBanffChainConfig,
-	)
-
 	TestBanffChainConfig = WithExtra(
 		&ChainConfig{
 			ChainID:             big.NewInt(1),
