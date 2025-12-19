@@ -24,9 +24,9 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/p2p"
 	luxdssip "github.com/luxfi/p2p/gossip"
-	luxcore "github.com/luxfi/consensus/core"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
+	luxvm "github.com/luxfi/vm"
 	luxutils "github.com/luxfi/node/utils"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
@@ -241,15 +241,15 @@ func (vm *VM) Initialize(
 }
 
 func (vm *VM) SetState(ctx context.Context, state uint32) error {
-	vmState := luxcore.VMState(state)
+	vmState := luxvm.State(state)
 	switch vmState {
-	case luxcore.VMStateSyncing:
+	case luxvm.Syncing:
 		vm.bootstrapped.Set(false)
-	case luxcore.VMBootstrapping:
+	case luxvm.Bootstrapping:
 		if err := vm.onBootstrapStarted(); err != nil {
 			return err
 		}
-	case luxcore.VMNormalOp:
+	case luxvm.Ready:
 		if err := vm.onNormalOperationsStarted(); err != nil {
 			return err
 		}

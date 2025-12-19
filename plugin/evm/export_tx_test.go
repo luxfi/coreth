@@ -23,7 +23,6 @@ import (
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/ids"
 	commonEng "github.com/luxfi/consensus/core"
-	consensuscore "github.com/luxfi/consensus/core"
 	consensustest "github.com/luxfi/consensus/test/helpers"
 	"github.com/luxfi/node/upgrade/upgradetest"
 	luxutils "github.com/luxfi/node/utils"
@@ -83,7 +82,7 @@ func createExportTxOptions(t *testing.T, vm *atomicvm.VM, sharedMemory *luxatomi
 
 	msg, err := vm.WaitForEvent(context.Background())
 	require.NoError(t, err)
-	require.Equal(t, consensuscore.PendingTxs, msg)
+	require.Equal(t, commonEng.PendingTxs, msg)
 
 	blk, err := vm.BuildBlock(context.Background())
 	if err != nil {
@@ -404,7 +403,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			require.Equal(t, consensuscore.PendingTxs, tvm.WaitForEvent(context.Background()))
+			require.Equal(t, commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
 
 			blk, err := tvm.vm.BuildBlock(context.Background())
 			if err != nil {
@@ -1754,7 +1753,7 @@ func TestNewExportTx(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			require.Equal(t, consensuscore.PendingTxs, tvm.WaitForEvent(context.Background()))
+			require.Equal(t, commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
 
 			blk, err := tvm.vm.BuildBlock(context.Background())
 			if err != nil {
@@ -1943,7 +1942,7 @@ func TestNewExportTxMulticoin(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			require.Equal(t, consensuscore.PendingTxs, tvm.WaitForEvent(context.Background()))
+			require.Equal(t, commonEng.PendingTxs, tvm.WaitForEvent(context.Background()))
 
 			blk, err := tvm.vm.BuildBlock(context.Background())
 			if err != nil {
