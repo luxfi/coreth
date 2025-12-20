@@ -2,6 +2,8 @@ module github.com/luxfi/coreth
 
 go 1.25.5
 
+exclude github.com/luxfi/geth v1.16.1
+
 require (
 	github.com/VictoriaMetrics/fastcache v1.13.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
