@@ -35,8 +35,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/geth/log"
 	"github.com/luxfi/geth/rlp"
 )
 
@@ -90,16 +90,6 @@ func (api *AdminAPI) ExportChain(file string, first *uint64, last *uint64) (bool
 	return true, nil
 }
 
-func hasAllBlocks(chain *core.BlockChain, bs []*types.Block) bool {
-	for _, b := range bs {
-		if !chain.HasBlock(b.Hash(), b.NumberU64()) {
-			return false
-		}
-	}
-
-	return true
-}
-
 // ImportChain imports a blockchain from a local file.
 func (api *AdminAPI) ImportChain(file string) (bool, error) {
 	// Make sure the can access the file to import
@@ -120,6 +110,10 @@ func (api *AdminAPI) ImportChain(file string) (bool, error) {
 	stream := rlp.NewStream(reader, 0)
 
 	blocks, index := make([]*types.Block, 0, 2500), 0
+	chain := api.eth.BlockChain()
+	var lastInsertedBlock *types.Block
+	log.Info("ImportChain: starting", "file", file, "currentBlock", chain.CurrentBlock().Number)
+
 	for batch := 0; ; batch++ {
 		// Load a batch of blocks from the input file
 		for len(blocks) < cap(blocks) {
@@ -131,24 +125,44 @@ func (api *AdminAPI) ImportChain(file string) (bool, error) {
 			}
 			// ignore the genesis block when importing blocks
 			if block.NumberU64() == 0 {
+				log.Info("ImportChain: skipping genesis block")
 				continue
 			}
 			blocks = append(blocks, block)
 			index++
 		}
 		if len(blocks) == 0 {
+			log.Info("ImportChain: no more blocks to load", "total", index)
 			break
 		}
 
-		if hasAllBlocks(api.eth.BlockChain(), blocks) {
-			blocks = blocks[:0]
-			continue
+		log.Info("ImportChain: loaded batch", "batch", batch, "blocks", len(blocks), "firstNum", blocks[0].NumberU64())
+
+		// Always call InsertChain to ensure full transaction re-execution.
+		// InsertChain -> insertBlock handles ErrKnownBlock and still re-executes
+		// transactions to regenerate state and snapshots properly.
+		log.Info("ImportChain: inserting batch", "batch", batch, "blocks", len(blocks), "firstNum", blocks[0].NumberU64())
+		n, err := chain.InsertChain(blocks)
+		if err != nil {
+			return false, fmt.Errorf("batch %d: failed to insert after %d blocks: %v", batch, n, err)
 		}
-		// Import the batch and reset the buffer
-		if _, err := api.eth.BlockChain().InsertChain(blocks); err != nil {
-			return false, fmt.Errorf("batch %d: failed to insert: %v", batch, err)
+		log.Info("ImportChain: inserted", "batch", batch, "count", n)
+		if n > 0 {
+			lastInsertedBlock = blocks[n-1]
 		}
 		blocks = blocks[:0]
 	}
+
+	// Update the last accepted block so RPC queries can see imported blocks
+	if lastInsertedBlock != nil {
+		log.Info("ImportChain: setting last accepted", "block", lastInsertedBlock.NumberU64())
+		if err := chain.SetLastAcceptedBlockDirect(lastInsertedBlock); err != nil {
+			return false, fmt.Errorf("failed to set last accepted block: %v", err)
+		}
+		log.Info("ImportChain: completed", "lastBlock", lastInsertedBlock.NumberU64(), "total", index)
+	} else {
+		log.Info("ImportChain: no blocks imported", "total", index)
+	}
+
 	return true, nil
 }

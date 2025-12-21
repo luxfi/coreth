@@ -282,14 +282,6 @@ func (v *VM) Initialize(
 	_ []interface{},
 	appSenderIface interface{},
 ) error {
-	// Debug: Mark that Initialize was called with file logging
-	debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if debugFile != nil {
-		fmt.Fprintf(debugFile, "%s DEBUG coreth: VM.Initialize called, IsPlugin=%v\n", time.Now().Format("15:04:05.000"), v.IsPlugin)
-		debugFile.Close()
-	}
-	fmt.Fprintf(originalStderr, "DEBUG: VM.Initialize called, IsPlugin=%v\n", v.IsPlugin)
-
 	// Type assert appSender - node provides p2p.Sender
 	var appSender network.AppSender
 	if appSenderIface != nil {
@@ -346,38 +338,21 @@ func (v *VM) Initialize(
 	// initialized the logger.
 	deprecateMsg := v.config.Deprecate()
 
-	// Create logger - file-based debug logging
-	{
-		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if debugFile != nil {
-			fmt.Fprintf(debugFile, "%s DEBUG coreth: About to call BCLookup.PrimaryAlias\n", time.Now().Format("15:04:05.000"))
-			debugFile.Close()
+	// Get chain alias from BCLookup with defensive nil check
+	var alias string
+	if v.ctx.BCLookup != nil {
+		var err error
+		alias, err = v.ctx.BCLookup.PrimaryAlias(v.ctx.ChainID)
+		if err != nil {
+			// fallback to ChainID string instead of erroring
+			alias = v.ctx.ChainID.String()
 		}
-	}
-	fmt.Fprintf(originalStderr, "DEBUG: About to call BCLookup.PrimaryAlias\n")
-	alias, err := v.ctx.BCLookup.PrimaryAlias(v.ctx.ChainID)
-	{
-		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if debugFile != nil {
-			fmt.Fprintf(debugFile, "%s DEBUG coreth: BCLookup.PrimaryAlias returned, err=%v, alias=%s\n", time.Now().Format("15:04:05.000"), err, alias)
-			debugFile.Close()
-		}
-	}
-	fmt.Fprintf(originalStderr, "DEBUG: BCLookup.PrimaryAlias returned, err=%v\n", err)
-	if err != nil {
-		// fallback to ChainID string instead of erroring
+	} else {
+		// BCLookup is nil - use ChainID string as fallback
+		// This can happen with plugin VMs if context is not properly propagated
 		alias = v.ctx.ChainID.String()
 	}
 	v.chainAlias = alias
-
-	// Debug: step 2
-	{
-		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if debugFile != nil {
-			fmt.Fprintf(debugFile, "%s DEBUG coreth: step 2 - creating logger, alias=%s\n", time.Now().Format("15:04:05.000"), alias)
-			debugFile.Close()
-		}
-	}
 
 	var writer io.Writer = originalStderr
 	if logWriter, ok := v.ctx.Log.(io.Writer); ok && !v.IsPlugin {
@@ -389,15 +364,6 @@ func (v *VM) Initialize(
 		return fmt.Errorf("%w: %w ", errInitializingLogger, err)
 	}
 	v.logger = corethLogger
-
-	// Debug: step 3
-	{
-		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if debugFile != nil {
-			fmt.Fprintf(debugFile, "%s DEBUG coreth: step 3 - logger created, logging init message\n", time.Now().Format("15:04:05.000"))
-			debugFile.Close()
-		}
-	}
 
 	log.Info("Initializing Coreth VM", "Version", Version, "Config", v.config)
 
@@ -412,26 +378,8 @@ func (v *VM) Initialize(
 
 	v.shutdownChan = make(chan struct{}, 1)
 
-	// Debug: step 4
-	{
-		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if debugFile != nil {
-			fmt.Fprintf(debugFile, "%s DEBUG coreth: step 4 - about to initializeMetrics\n", time.Now().Format("15:04:05.000"))
-			debugFile.Close()
-		}
-	}
-
 	if err := v.initializeMetrics(); err != nil {
 		return fmt.Errorf("failed to initialize metrics: %w", err)
-	}
-
-	// Debug: step 5
-	{
-		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if debugFile != nil {
-			fmt.Fprintf(debugFile, "%s DEBUG coreth: step 5 - about to initializeDBs\n", time.Now().Format("15:04:05.000"))
-			debugFile.Close()
-		}
 	}
 
 	// Initialize the database
@@ -439,14 +387,6 @@ func (v *VM) Initialize(
 		return fmt.Errorf("failed to initialize databases: %w", err)
 	}
 
-	// Debug: step 6
-	{
-		debugFile, _ := os.OpenFile("/tmp/coreth_vm_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if debugFile != nil {
-			fmt.Fprintf(debugFile, "%s DEBUG coreth: step 6 - DBs initialized\n", time.Now().Format("15:04:05.000"))
-			debugFile.Close()
-		}
-	}
 	if v.config.InspectDatabase {
 		if err := v.inspectDatabases(); err != nil {
 			return err
@@ -589,24 +529,29 @@ func (v *VM) Initialize(
 		}
 	}
 
-	// Type assert WarpSigner from context
-	warpSigner, ok := v.ctx.WarpSigner.(luxwarp.Signer)
-	if !ok {
-		return fmt.Errorf("expected luxwarp.Signer, got %T", v.ctx.WarpSigner)
+	// Type assert WarpSigner from context - may be nil for plugin VMs
+	if v.ctx.WarpSigner != nil {
+		warpSigner, ok := v.ctx.WarpSigner.(luxwarp.Signer)
+		if !ok {
+			return fmt.Errorf("expected luxwarp.Signer, got %T", v.ctx.WarpSigner)
+		}
+
+		v.warpBackend, err = warp.NewBackend(
+			v.ctx.NetworkID,
+			v.ctx.ChainID,
+			warpSigner,
+			v,
+			v.warpDB,
+			meteredCache,
+			offchainWarpMessages,
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Info("WarpSigner is nil, warp messaging disabled for this chain")
 	}
 
-	v.warpBackend, err = warp.NewBackend(
-		v.ctx.NetworkID,
-		v.ctx.ChainID,
-		warpSigner,
-		v,
-		v.warpDB,
-		meteredCache,
-		offchainWarpMessages,
-	)
-	if err != nil {
-		return err
-	}
 	if err := v.initializeChain(lastAcceptedHash); err != nil {
 		return err
 	}
@@ -621,15 +566,17 @@ func (v *VM) Initialize(
 	// Use stored ctxLogger for RecoverAndPanic
 	go v.ctxLogger.RecoverAndPanic(v.startContinuousProfiler)
 
-	// Type assert WarpSigner to lp118.Signer for handler
-	lp118Signer, ok := v.ctx.WarpSigner.(lp118.Signer)
-	if !ok {
-		return fmt.Errorf("expected lp118.Signer, got %T", v.ctx.WarpSigner)
-	}
+	// Add p2p warp message handler if WarpSigner is available
+	if v.ctx.WarpSigner != nil {
+		lp118Signer, ok := v.ctx.WarpSigner.(lp118.Signer)
+		if !ok {
+			return fmt.Errorf("expected lp118.Signer, got %T", v.ctx.WarpSigner)
+		}
 
-	// Add p2p warp message warpHandler
-	warpHandler := lp118.NewCachedHandler(meteredCache, v.warpBackend, lp118Signer)
-	v.Network.AddHandler(p2p.SignatureRequestHandlerID, lp118.NewHandlerAdapter(warpHandler))
+		// Add p2p warp message warpHandler
+		warpHandler := lp118.NewCachedHandler(meteredCache, v.warpBackend, lp118Signer)
+		v.Network.AddHandler(p2p.SignatureRequestHandlerID, lp118.NewHandlerAdapter(warpHandler))
+	}
 
 	v.stateSyncDone = make(chan struct{})
 
