@@ -8,8 +8,8 @@ import "fmt"
 var (
 	// GitCommit is set by the build script
 	GitCommit string
-	// Version is the version of Coreth
-	Version string = "v0.15.1"
+	// Version is the version of Coreth (set by build script via ldflags)
+	Version string = "v0.15.57"
 )
 
 func init() {
