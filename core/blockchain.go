@@ -2216,6 +2216,34 @@ func (bc *BlockChain) CacheConfig() *CacheConfig {
 	return bc.cacheConfig
 }
 
+// SetLastAcceptedBlockDirect sets the last accepted block directly without
+// validation. This is used during block import to update the canonical chain
+// head after InsertChain has verified and inserted the blocks.
+// IMPORTANT: Only use this for imported blocks that have already been validated.
+func (bc *BlockChain) SetLastAcceptedBlockDirect(block *types.Block) error {
+	bc.chainmu.Lock()
+	defer bc.chainmu.Unlock()
+
+	// Update database pointers
+	batch := bc.db.NewBatch()
+	if err := bc.batchBlockAcceptedIndices(batch, block); err != nil {
+		return err
+	}
+	rawdb.WriteHeadBlockHash(batch, block.Hash())
+	rawdb.WriteHeadHeaderHash(batch, block.Hash())
+	if err := batch.Write(); err != nil {
+		return err
+	}
+
+	// Update in-memory chain markers
+	bc.lastAccepted = block
+	bc.acceptorTip = block
+	bc.currentBlock.Store(block.Header())
+	bc.hc.SetCurrentHeader(block.Header())
+
+	return nil
+}
+
 func (bc *BlockChain) repairTxIndexTail(newTail uint64) error {
 	bc.txIndexTailLock.Lock()
 	defer bc.txIndexTailLock.Unlock()

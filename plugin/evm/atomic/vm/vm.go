@@ -374,7 +374,16 @@ func (vm *VM) Shutdown(context.Context) error {
 }
 
 func (vm *VM) CreateHandlers(ctx context.Context) (map[string]http.Handler, error) {
-	apis := make(map[string]http.Handler)
+	// Get handlers from inner VM first (includes /rpc, /ws, /admin)
+	apis, err := vm.InnerVM.CreateHandlers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if apis == nil {
+		apis = make(map[string]http.Handler)
+	}
+
+	// Add LUX API handler for atomic transactions
 	luxAPI, err := rpc.NewHandler("lux", &LuxAPI{vm})
 	if err != nil {
 		return nil, fmt.Errorf("failed to register service for LUX API due to %w", err)
