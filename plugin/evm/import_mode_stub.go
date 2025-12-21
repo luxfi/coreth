@@ -1,17 +1,17 @@
-//go:build pebble
+//go:build !pebble
 
 package evm
 
 import (
-	"encoding/binary"
-	"fmt"
+	"errors"
 	"os"
 	"path/filepath"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/ethdb/pebble"
 	"github.com/luxfi/log"
 )
+
+var errPebbleNotSupported = errors.New("import mode requires pebble database support (build with -tags=pebble)")
 
 // CheckImportMode checks if we should run in import mode
 func CheckImportMode(importPath string, chainDataDir string) (bool, error) {
@@ -21,7 +21,7 @@ func CheckImportMode(importPath string, chainDataDir string) (bool, error) {
 
 	// Check if import path exists
 	if _, err := os.Stat(importPath); os.IsNotExist(err) {
-		return false, fmt.Errorf("import path does not exist: %s", importPath)
+		return false, errPebbleNotSupported
 	}
 
 	// Check if we already have chain data
@@ -31,37 +31,12 @@ func CheckImportMode(importPath string, chainDataDir string) (bool, error) {
 		return false, nil
 	}
 
-	return true, nil
+	return false, errPebbleNotSupported
 }
 
 // GetImportedChainHeight reads the last block height from the import database
 func GetImportedChainHeight(importPath string) (uint64, common.Hash, error) {
-	// Open the source database using pebble directly
-	sourceDB, err := pebble.New(importPath, 16, 16, "", true)
-	if err != nil {
-		return 0, common.Hash{}, fmt.Errorf("failed to open source database: %w", err)
-	}
-	defer sourceDB.Close()
-
-	// Find the last block
-	var lastBlockNumber uint64
-	var lastBlockHash common.Hash
-	
-	it := sourceDB.NewIterator([]byte("h"), nil)
-	defer it.Release()
-	
-	for it.Next() {
-		key := it.Key()
-		if len(key) == 41 && key[0] == 'h' {
-			blockNumber := binary.BigEndian.Uint64(key[1:9])
-			if blockNumber > lastBlockNumber {
-				lastBlockNumber = blockNumber
-				copy(lastBlockHash[:], key[9:41])
-			}
-		}
-	}
-	
-	return lastBlockNumber, lastBlockHash, nil
+	return 0, common.Hash{}, errPebbleNotSupported
 }
 
 // CreateImportMarker creates a marker file to indicate import is in progress

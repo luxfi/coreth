@@ -18,7 +18,7 @@ require (
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.3.2
 	github.com/luxfi/crypto v1.17.25
-	github.com/luxfi/geth v1.16.57
+	github.com/luxfi/geth v1.16.59
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/log v1.1.26
 	github.com/luxfi/metric v1.4.8
