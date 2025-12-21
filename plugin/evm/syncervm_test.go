@@ -325,7 +325,7 @@ func createSyncServerAndClientVMs(t *testing.T, test syncTest, numBlocks int) *s
 		case 1:
 			// export some of the imported UTXOs to test exportTx is properly synced
 			exportTx, err = server.atomicVM.NewExportTx(
-				server.vm.ctx.LUXAssetID,
+				server.vm.ctx.XAssetID,
 				importAmount/2,
 				server.vm.ctx.XChainID,
 				testShortIDAddrs[0],

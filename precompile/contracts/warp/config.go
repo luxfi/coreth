@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/luxfi/constants"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/consensus/validator"
 	"github.com/luxfi/warp"
@@ -218,7 +219,7 @@ func (c *Config) VerifyPredicate(predicateContext *precompileconfig.PredicateCon
 	
 	state := warpValidators.NewState(
 		validatorState,
-		predicateContext.ConsensusCtx.SubnetID,
+		constants.PrimaryNetworkID,
 		sourceChainID,
 		c.RequirePrimaryNetworkSigners,
 	)

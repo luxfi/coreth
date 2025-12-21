@@ -172,7 +172,7 @@ require (
 )
 
 require (
-	github.com/luxfi/consensus v1.22.35
+	github.com/luxfi/consensus v1.22.39
 	github.com/luxfi/constants v1.2.3
 	github.com/luxfi/database v1.2.12
 	github.com/luxfi/ids v1.2.4

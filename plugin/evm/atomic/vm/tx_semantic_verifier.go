@@ -100,11 +100,11 @@ func (s *semanticVerifier) ImportTx(utx *atomic.UnsignedImportTx) error {
 		if err != nil {
 			return err
 		}
-		fc.Produce(ctx.LUXAssetID, txFee)
+		fc.Produce(ctx.XAssetID, txFee)
 
 	// Apply fees to import transactions as of Apricot Phase 2
 	case rules.IsApricotPhase2:
-		fc.Produce(ctx.LUXAssetID, ap0.AtomicTxFee)
+		fc.Produce(ctx.XAssetID, ap0.AtomicTxFee)
 	}
 	for _, out := range utx.Outs {
 		fc.Produce(out.AssetID, out.Amount)
@@ -230,10 +230,10 @@ func (s *semanticVerifier) ExportTx(utx *atomic.UnsignedExportTx) error {
 		if err != nil {
 			return err
 		}
-		fc.Produce(ctx.LUXAssetID, txFee)
+		fc.Produce(ctx.XAssetID, txFee)
 	// Apply fees to export transactions before Apricot Phase 3
 	default:
-		fc.Produce(ctx.LUXAssetID, ap0.AtomicTxFee)
+		fc.Produce(ctx.XAssetID, ap0.AtomicTxFee)
 	}
 	for _, out := range utx.ExportedOutputs {
 		fc.Produce(out.AssetID(), out.Output().Amount())

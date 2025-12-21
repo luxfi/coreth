@@ -534,7 +534,7 @@ func (vm *VM) preBatchOnFinalizeAndAssemble(header *types.Header, state *state.S
 		}
 		var contribution, gasUsed *big.Int
 		if rules.IsApricotPhase4 {
-			contribution, gasUsed, err = tx.BlockFeeContribution(rules.IsApricotPhase5, vm.Ctx.LUXAssetID, header.BaseFee)
+			contribution, gasUsed, err = tx.BlockFeeContribution(rules.IsApricotPhase5, vm.Ctx.XAssetID, header.BaseFee)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -592,7 +592,7 @@ func (vm *VM) postBatchOnFinalizeAndAssemble(
 		// Note: we do not need to check if we are in at least ApricotPhase4 here because
 		// we assume that this function will only be called when the block is in at least
 		// ApricotPhase5.
-		txContribution, txGasUsed, err = tx.BlockFeeContribution(true, vm.Ctx.LUXAssetID, header.BaseFee)
+		txContribution, txGasUsed, err = tx.BlockFeeContribution(true, vm.Ctx.XAssetID, header.BaseFee)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -722,7 +722,7 @@ func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, state
 		}
 		// If ApricotPhase4 is enabled, calculate the block fee contribution
 		if rulesExtra.IsApricotPhase4 {
-			contribution, gasUsed, err := tx.BlockFeeContribution(rulesExtra.IsApricotPhase5, vm.Ctx.LUXAssetID, block.BaseFee())
+			contribution, gasUsed, err := tx.BlockFeeContribution(rulesExtra.IsApricotPhase5, vm.Ctx.XAssetID, block.BaseFee())
 			if err != nil {
 				return nil, nil, err
 			}

@@ -104,7 +104,7 @@ func (utx *UnsignedImportTx) Verify(
 		if err := out.Verify(); err != nil {
 			return fmt.Errorf("EVM Output failed verification: %w", err)
 		}
-		if rules.IsBanff && out.AssetID != ctx.LUXAssetID {
+		if rules.IsBanff && out.AssetID != ctx.XAssetID {
 			return ErrImportNonLUXOutputBanff
 		}
 	}
@@ -113,7 +113,7 @@ func (utx *UnsignedImportTx) Verify(
 		if err := in.Verify(); err != nil {
 			return fmt.Errorf("atomic input failed verification: %w", err)
 		}
-		if rules.IsBanff && in.AssetID() != ctx.LUXAssetID {
+		if rules.IsBanff && in.AssetID() != ctx.XAssetID {
 			return ErrImportNonLUXInputBanff
 		}
 	}
@@ -236,7 +236,7 @@ func NewImportTx(
 		signers = append(signers, utxoSigners)
 	}
 	lux.SortTransferableInputsWithSigners(importedInputs, signers)
-	importedLUXAmount := importedAmount[ctx.LUXAssetID]
+	importedLUXAmount := importedAmount[ctx.XAssetID]
 
 	outs := make([]EVMOutput, 0, len(importedAmount))
 	// This will create unique outputs (in the context of sorting)
@@ -244,7 +244,7 @@ func NewImportTx(
 	for assetID, amount := range importedAmount {
 		// Skip the LUX amount since it is included separately to account for
 		// the fee
-		if assetID == ctx.LUXAssetID || amount == 0 {
+		if assetID == ctx.XAssetID || amount == 0 {
 			continue
 		}
 		outs = append(outs, EVMOutput{
@@ -303,7 +303,7 @@ func NewImportTx(
 		outs = append(outs, EVMOutput{
 			Address: to,
 			Amount:  importedLUXAmount - txFeeWithChange,
-			AssetID: ctx.LUXAssetID,
+			AssetID: ctx.XAssetID,
 		})
 	}
 
@@ -335,7 +335,7 @@ func NewImportTx(
 // accounts accordingly with the imported EVMOutputs
 func (utx *UnsignedImportTx) EVMStateTransfer(ctx *consensusctx.Context, state StateDB) error {
 	for _, to := range utx.Outs {
-		if to.AssetID == ctx.LUXAssetID {
+		if to.AssetID == ctx.XAssetID {
 			log.Debug("import_tx", "src", utx.SourceChain, "addr", to.Address, "amount", to.Amount, "assetID", "LUX")
 			// If the asset is LUX, convert the input amount in nLUX to gWei by
 			// multiplying by the x2c rate.

@@ -111,8 +111,6 @@ func (test PrecompileTest) setup(t testing.TB, module modules.Module, state *tes
 	}
 	quasarContext := &consensusctx.Context{
 		NetworkID: 1,
-		QuantumID: 1,
-		NetID:     ids.Empty,
 		ChainID:   ids.GenerateTestID(),
 	}
 

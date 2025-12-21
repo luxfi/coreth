@@ -264,8 +264,8 @@ github.com/leanovate/gopter v0.2.11 h1:vRjThO1EKPb/1NsDXuDrzldR28RLkBflWYcU9CvzW
 github.com/leanovate/gopter v0.2.11/go.mod h1:aK3tzZP/C+p1m3SPRE4SYZFGP7jjkuSI4f7Xvpt0S9c=
 github.com/luxfi/cache v1.0.0 h1:OcqGi/qs9ky+7O8fR6WMZtFsunvA40LBTg3QRQqJurs=
 github.com/luxfi/cache v1.0.0/go.mod h1:BEvpffvV3SXs/KSa9nUC1TszxKwUdIHwIaoXpeiYU+Y=
-github.com/luxfi/consensus v1.22.35 h1:ZJOEITtoy5pT9OkT+z+9qulbsVNFdcdsUAibCtXSoF4=
-github.com/luxfi/consensus v1.22.35/go.mod h1:/sNvvKfESWfq57Jmrf22T2GquLNg6PU9m9MJ3wqfoYU=
+github.com/luxfi/consensus v1.22.39 h1:wpN8s7MITFKCdaXHBtH5h9qxOtimg1jDlBKRBYZhAa4=
+github.com/luxfi/consensus v1.22.39/go.mod h1:cMUQ6aKRfwruhWSOzhkh0QG3Rg5oj7Lyn21LLbAh/jU=
 github.com/luxfi/constants v1.2.3 h1:ewo3Ch6AJDI3G42J0rlNAdZU1Fv96YEyOmp3E2K/pzE=
 github.com/luxfi/constants v1.2.3/go.mod h1:r5WL5Z03I9iHo910pHykO+RuDCwe4jy0rBSueG1l1mo=
 github.com/luxfi/crypto v1.17.25 h1:emTejQ17bGj/1tu0ETB196Hbn6fJfo8wUNGIOWit6RM=
