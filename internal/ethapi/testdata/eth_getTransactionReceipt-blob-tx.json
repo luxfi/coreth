@@ -1,5 +1,5 @@
 {
-  "blobGasPrice": null,
+  "blobGasPrice": "0x1",
   "blobGasUsed": "0x20000",
   "blockHash": "0xa560dbb0c2483f11294cf5d289ffd67c8281d00fad66f3dbd30dd55194f6b8af",
   "blockNumber": "0x6",
