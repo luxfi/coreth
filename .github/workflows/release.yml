@@ -1,0 +1,156 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  validate-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - name: Extract version from tag
+        id: extract
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+          # Validate version < v2.0.0
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          if [ "$MAJOR" -ge 2 ]; then
+            echo "ERROR: Version >= v2.0.0 not allowed"
+            exit 1
+          fi
+
+  build-linux-amd64:
+    needs: validate-version
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o coreth-linux-amd64 ./plugin
+          tar -czf coreth-linux-amd64-v${{ needs.validate-version.outputs.version }}.tar.gz coreth-linux-amd64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-amd64
+          path: coreth-linux-amd64-v${{ needs.validate-version.outputs.version }}.tar.gz
+
+  build-linux-arm64:
+    needs: validate-version
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o coreth-linux-arm64 ./plugin
+          tar -czf coreth-linux-arm64-v${{ needs.validate-version.outputs.version }}.tar.gz coreth-linux-arm64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-arm64
+          path: coreth-linux-arm64-v${{ needs.validate-version.outputs.version }}.tar.gz
+
+  build-darwin-amd64:
+    needs: validate-version
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build
+        run: |
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o coreth-darwin-amd64 ./plugin
+          tar -czf coreth-darwin-amd64-v${{ needs.validate-version.outputs.version }}.tar.gz coreth-darwin-amd64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darwin-amd64
+          path: coreth-darwin-amd64-v${{ needs.validate-version.outputs.version }}.tar.gz
+
+  build-darwin-arm64:
+    needs: validate-version
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build
+        run: |
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o coreth-darwin-arm64 ./plugin
+          tar -czf coreth-darwin-arm64-v${{ needs.validate-version.outputs.version }}.tar.gz coreth-darwin-arm64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darwin-arm64
+          path: coreth-darwin-arm64-v${{ needs.validate-version.outputs.version }}.tar.gz
+
+  create-release:
+    needs:
+      - validate-version
+      - build-linux-amd64
+      - build-linux-arm64
+      - build-darwin-amd64
+      - build-darwin-arm64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Organize release files
+        run: |
+          mkdir -p ./release
+          find ./artifacts -name "*.tar.gz" -exec cp {} ./release/ \;
+          cd ./release
+          sha256sum *.tar.gz > SHA256SUMS.txt
+          ls -la
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            echo "## Changes" > CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD >> CHANGELOG.md
+          else
+            echo "## Initial Release" > CHANGELOG.md
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ needs.validate-version.outputs.version }}"
+          gh release create "${TAG}" ./release/* \
+            --title "Coreth ${TAG}" \
+            --notes-file CHANGELOG.md \
+            --latest
