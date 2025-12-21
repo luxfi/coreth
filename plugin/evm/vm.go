@@ -80,7 +80,6 @@ import (
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/ethdb/pebble"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/triedb"
@@ -1377,23 +1376,10 @@ func (v *VM) importChainData(dataPath string) error {
 		return nil // RLP import happens in importRLPBlocks after chain init
 	}
 
-	// Open the source database using pebble directly
-	pebbleDB, err := pebble.New(dataPath, 16, 16, "", true)
+	// Open the source database
+	sourceDB, err := openSourceDatabase(dataPath)
 	if err != nil {
 		return fmt.Errorf("failed to open source database: %w", err)
-	}
-	defer pebbleDB.Close()
-
-	// Wrap with rawdb for higher-level access
-	// The ancient data is stored in a subdirectory of the chaindata directory
-	ancientPath := filepath.Join(dataPath, "ancient")
-	sourceDB, err := rawdb.Open(pebbleDB, rawdb.OpenOptions{
-		ReadOnly: true,
-		Ancient:  ancientPath,
-	})
-	if err != nil {
-		pebbleDB.Close()
-		return fmt.Errorf("failed to wrap database: %w", err)
 	}
 	defer sourceDB.Close()
 
