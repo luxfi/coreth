@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/luxfi/constants"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/p2p/lp118"
 	consensusctx "github.com/luxfi/consensus/context"
@@ -94,7 +95,7 @@ func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, qu
 }
 
 func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.UnsignedMessage, quorumNum uint64, subnetIDStr string) (hexutil.Bytes, error) {
-	subnetID := a.chainContext.SubnetID
+	subnetID := constants.PrimaryNetworkID
 	if len(subnetIDStr) > 0 {
 		sid, err := ids.FromString(subnetIDStr)
 		if err != nil {
@@ -114,7 +115,7 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.Uns
 		return nil, err
 	}
 
-	state := warpValidators.NewState(validatorState, a.chainContext.SubnetID, a.chainContext.ChainID, a.requirePrimaryNetworkSigners())
+	state := warpValidators.NewState(validatorState, constants.PrimaryNetworkID, a.chainContext.ChainID, a.requirePrimaryNetworkSigners())
 
 	// Get validator set from the wrapped state
 	validatorMap, err := state.GetValidatorSet(ctx, pChainHeight, subnetID)

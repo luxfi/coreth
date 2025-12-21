@@ -15,6 +15,7 @@ import (
 	"github.com/luxfi/log"
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/luxfi/constants"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/node/codec"
 	consensuscontext "github.com/luxfi/consensus/context"
@@ -163,7 +164,7 @@ func NewNetwork(
 		appRequestHandler:          message.NoopRequestHandler{},
 		peers:                      NewPeerTracker(),
 		appStats:                   stats.NewRequestHandlerStats(),
-		p2pValidators:              p2p.NewValidators(p2pNetwork.Peers, ctx.Log.(log.Logger), ctx.SubnetID, ctx.ValidatorState.(validators.State), maxValidatorSetStaleness),
+		p2pValidators:              p2p.NewValidators(p2pNetwork.Peers, ctx.Log.(log.Logger), constants.PrimaryNetworkID, ctx.ValidatorState.(validators.State), maxValidatorSetStaleness),
 	}, nil
 }
 
