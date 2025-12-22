@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/node/proto/pb/sdk"
 	"github.com/luxfi/crypto/bls"
-	luxWarp "github.com/luxfi/warp"
+	"github.com/luxfi/warp"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -27,7 +27,7 @@ var _ SignatureGetter = (*NetworkSignatureGetter)(nil)
 // SignatureGetter defines the minimum network interface to perform signature aggregation
 type SignatureGetter interface {
 	// GetSignature attempts to fetch a BLS Signature from [nodeID] for [unsignedWarpMessage]
-	GetSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *luxWarp.UnsignedMessage) (*bls.Signature, error)
+	GetSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *warp.UnsignedMessage) (*bls.Signature, error)
 }
 
 type NetworkClient interface {
@@ -52,7 +52,7 @@ func NewSignatureGetter(client NetworkClient, networkCodec codec.Manager) *Netwo
 //
 // Note: this function will continue attempting to fetch the signature from [nodeID] until it receives an invalid value or [ctx] is cancelled.
 // The caller is responsible to cancel [ctx] if it no longer needs to fetch this signature.
-func (s *NetworkSignatureGetter) GetSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *luxWarp.UnsignedMessage) (*bls.Signature, error) {
+func (s *NetworkSignatureGetter) GetSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *warp.UnsignedMessage) (*bls.Signature, error) {
 	protoMsg := &sdk.SignatureRequest{Message: unsignedWarpMessage.Bytes()}
 	protoBytes, err := proto.Marshal(protoMsg)
 	if err != nil {

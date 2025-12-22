@@ -15,7 +15,7 @@ import (
 	"github.com/luxfi/node/cache/lru"
 	"github.com/luxfi/p2p"
 	"github.com/luxfi/p2p/lp118"
-	luxWarp "github.com/luxfi/warp"
+	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 
 	"github.com/luxfi/coreth/metrics/metricstest"
@@ -27,10 +27,10 @@ const testNetworkID uint32 = 369
 
 // testWarpSigner wraps a warp.Signer to implement lp118.Signer
 type testWarpSigner struct {
-	signer luxWarp.Signer
+	signer warp.Signer
 }
 
-func (s *testWarpSigner) Sign(msg *luxWarp.UnsignedMessage) ([]byte, error) {
+func (s *testWarpSigner) Sign(msg *warp.UnsignedMessage) ([]byte, error) {
 	sig, err := s.signer.Sign(msg)
 	if err != nil {
 		return nil, err
@@ -47,12 +47,12 @@ func TestAddressedCallSignatures(t *testing.T) {
 	// Create BLS key and signer
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := luxWarp.NewSigner(sk, testNetworkID, chainID)
+	warpSigner := warp.NewSigner(sk, testNetworkID, chainID)
 	lp118Signer := &testWarpSigner{signer: warpSigner}
 
 	offChainPayload, err := payload.NewAddressedCall([]byte{1, 2, 3}, []byte{1, 2, 3})
 	require.NoError(t, err)
-	offchainMessage, err := luxWarp.NewUnsignedMessage(testNetworkID, chainID, offChainPayload.Bytes())
+	offchainMessage, err := warp.NewUnsignedMessage(testNetworkID, chainID, offChainPayload.Bytes())
 	require.NoError(t, err)
 	offchainSignature, err := warpSigner.Sign(offchainMessage)
 	require.NoError(t, err)
@@ -66,7 +66,7 @@ func TestAddressedCallSignatures(t *testing.T) {
 			setup: func(backend Backend) (request []byte, expectedResponse []byte) {
 				knownPayload, err := payload.NewAddressedCall([]byte{0, 0, 0}, []byte("test"))
 				require.NoError(t, err)
-				msg, err := luxWarp.NewUnsignedMessage(testNetworkID, chainID, knownPayload.Bytes())
+				msg, err := warp.NewUnsignedMessage(testNetworkID, chainID, knownPayload.Bytes())
 				require.NoError(t, err)
 				signature, err := warpSigner.Sign(msg)
 				require.NoError(t, err)
@@ -92,7 +92,7 @@ func TestAddressedCallSignatures(t *testing.T) {
 			setup: func(_ Backend) (request []byte, expectedResponse []byte) {
 				unknownPayload, err := payload.NewAddressedCall([]byte{0, 0, 0}, []byte("unknown message"))
 				require.NoError(t, err)
-				unknownMessage, err := luxWarp.NewUnsignedMessage(testNetworkID, chainID, unknownPayload.Bytes())
+				unknownMessage, err := warp.NewUnsignedMessage(testNetworkID, chainID, unknownPayload.Bytes())
 				require.NoError(t, err)
 				return unknownMessage.Bytes(), nil
 			},
@@ -171,7 +171,7 @@ func TestBlockSignatures(t *testing.T) {
 	// Create BLS key and signer
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := luxWarp.NewSigner(sk, testNetworkID, chainID)
+	warpSigner := warp.NewSigner(sk, testNetworkID, chainID)
 	lp118Signer := &testWarpSigner{signer: warpSigner}
 
 	knownBlkID := ids.GenerateTestID()
@@ -183,7 +183,7 @@ func TestBlockSignatures(t *testing.T) {
 			panic(err)
 		}
 
-		msg, err := luxWarp.NewUnsignedMessage(testNetworkID, chainID, idPayload.Bytes())
+		msg, err := warp.NewUnsignedMessage(testNetworkID, chainID, idPayload.Bytes())
 		if err != nil {
 			panic(err)
 		}
@@ -200,7 +200,7 @@ func TestBlockSignatures(t *testing.T) {
 			setup: func() (request []byte, expectedResponse []byte) {
 				hashPayload, err := payload.NewHash(knownBlkID[:])
 				require.NoError(t, err)
-				unsignedMessage, err := luxWarp.NewUnsignedMessage(testNetworkID, chainID, hashPayload.Bytes())
+				unsignedMessage, err := warp.NewUnsignedMessage(testNetworkID, chainID, hashPayload.Bytes())
 				require.NoError(t, err)
 				signature, err := warpSigner.Sign(unsignedMessage)
 				require.NoError(t, err)

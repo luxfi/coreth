@@ -11,7 +11,7 @@ import (
 
 	"github.com/luxfi/ids"
 	"github.com/luxfi/crypto/bls"
-	luxWarp "github.com/luxfi/warp"
+	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 	warpBackend "github.com/luxfi/coreth/warp"
 )
@@ -26,7 +26,7 @@ func NewAPIFetcher(clients map[ids.NodeID]warpBackend.Client) *apiFetcher {
 	}
 }
 
-func (f *apiFetcher) GetSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *luxWarp.UnsignedMessage) (*bls.Signature, error) {
+func (f *apiFetcher) GetSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *warp.UnsignedMessage) (*bls.Signature, error) {
 	client, ok := f.clients[nodeID]
 	if !ok {
 		return nil, fmt.Errorf("no warp client for nodeID: %s", nodeID)
