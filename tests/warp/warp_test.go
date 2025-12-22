@@ -30,7 +30,7 @@ import (
 	"github.com/luxfi/constants"
 	"github.com/luxfi/node/vms/platformvm"
 	"github.com/luxfi/node/vms/platformvm/api"
-	luxWarp "github.com/luxfi/warp"
+	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 
 	"github.com/luxfi/coreth/accounts/abi/bind"
@@ -183,11 +183,11 @@ type warpTest struct {
 	// Fields set throughout test execution
 	blockID                     ids.ID
 	blockPayload                *payload.Hash
-	blockPayloadUnsignedMessage *luxWarp.UnsignedMessage
-	blockPayloadSignedMessage   *luxWarp.Message
+	blockPayloadUnsignedMessage *warp.UnsignedMessage
+	blockPayloadSignedMessage   *warp.Message
 
-	addressedCallUnsignedMessage *luxWarp.UnsignedMessage
-	addressedCallSignedMessage   *luxWarp.Message
+	addressedCallUnsignedMessage *warp.UnsignedMessage
+	addressedCallSignedMessage   *warp.Message
 }
 
 func newWarpTest(ctx context.Context, sendingSubnet *Subnet, receivingSubnet *Subnet) *warpTest {
@@ -291,7 +291,7 @@ func (w *warpTest) sendMessageFromSendingSubnet() {
 	w.blockID = ids.ID(blockHash) // Set blockID to construct a warp message containing a block hash payload later
 	w.blockPayload, err = payload.NewHash(w.blockID[:])
 	require.NoError(err)
-	w.blockPayloadUnsignedMessage, err = luxWarp.NewUnsignedMessage(w.networkID, w.sendingSubnet.BlockchainID, w.blockPayload.Bytes())
+	w.blockPayloadUnsignedMessage, err = warp.NewUnsignedMessage(w.networkID, w.sendingSubnet.BlockchainID, w.blockPayload.Bytes())
 	require.NoError(err)
 
 	ginkgo.GinkgoLogr.Info("Fetching relevant warp logs from the newly produced block")
@@ -361,9 +361,9 @@ func (w *warpTest) aggregateSignaturesViaAPI() {
 	require.NotZero(len(validators))
 
 	totalWeight := uint64(0)
-	warpValidators := make([]*luxWarp.Validator, 0, len(validators))
+	warpValidators := make([]*warp.Validator, 0, len(validators))
 	for nodeID, validator := range validators {
-		warpValidators = append(warpValidators, &luxWarp.Validator{
+		warpValidators = append(warpValidators, &warp.Validator{
 			PublicKey: validator.PublicKey,
 			Weight:    validator.Weight,
 			NodeID:    nodeID,
