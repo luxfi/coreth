@@ -21,7 +21,7 @@ const (
 
 // Verify verifies the signature of the message
 // It also implements the lp118.Verifier interface
-func (b *backend) Verify(ctx context.Context, unsignedMessage *warp.UnsignedMessage, _ []byte) *p2p.Error {
+func (b *backend) Verify(ctx context.Context, unsignedMessage *warp.UnsignedMessage, _ []byte) error {
 	messageID := unsignedMessage.ID()
 	// Known on-chain messages should be signed
 	if _, err := b.GetMessage(messageID); err == nil {
@@ -56,7 +56,7 @@ func (b *backend) Verify(ctx context.Context, unsignedMessage *warp.UnsignedMess
 
 // verifyBlockMessage returns nil if blockHashPayload contains the ID
 // of an accepted block indicating it should be signed by the VM.
-func (b *backend) verifyBlockMessage(ctx context.Context, blockHashPayload *payload.Hash) *p2p.Error {
+func (b *backend) verifyBlockMessage(ctx context.Context, blockHashPayload *payload.Hash) error {
 	blockID, err := ids.ToID(blockHashPayload.Hash)
 	if err != nil {
 		b.stats.IncBlockValidationFail()

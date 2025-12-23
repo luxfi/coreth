@@ -175,7 +175,7 @@ require (
 	github.com/luxfi/database v1.2.14
 	github.com/luxfi/ids v1.2.5
 	github.com/luxfi/math v1.1.1
-	github.com/luxfi/p2p v1.4.9
+	github.com/luxfi/p2p v1.5.0
 	github.com/luxfi/vm v1.0.1
 	github.com/luxfi/warp v1.16.39
 )
