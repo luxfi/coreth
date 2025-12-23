@@ -177,5 +177,5 @@ require (
 	github.com/luxfi/math v1.1.1
 	github.com/luxfi/p2p v1.5.0
 	github.com/luxfi/vm v1.0.1
-	github.com/luxfi/warp v1.16.39
+	github.com/luxfi/warp v1.18.0
 )

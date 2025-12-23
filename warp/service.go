@@ -8,17 +8,16 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/constants"
-	"github.com/luxfi/ids"
-	"github.com/luxfi/p2p/lp118"
 	consensusctx "github.com/luxfi/consensus/context"
 	validators "github.com/luxfi/consensus/validator"
-	"github.com/luxfi/warp"
-	"github.com/luxfi/warp/payload"
+	"github.com/luxfi/constants"
 	warpprecompile "github.com/luxfi/coreth/precompile/contracts/warp"
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/geth/common/hexutil"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
+	"github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 )
 
 var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")
@@ -27,11 +26,11 @@ var errNoValidators = errors.New("cannot aggregate signatures from subnet with n
 type API struct {
 	chainContext                 *consensusctx.Context
 	backend                      Backend
-	signatureAggregator          *lp118.SignatureAggregator
+	signatureAggregator          *warp.SignatureAggregator
 	requirePrimaryNetworkSigners func() bool
 }
 
-func NewAPI(chainCtx *consensusctx.Context, backend Backend, signatureAggregator *lp118.SignatureAggregator, requirePrimaryNetworkSigners func() bool) *API {
+func NewAPI(chainCtx *consensusctx.Context, backend Backend, signatureAggregator *warp.SignatureAggregator, requirePrimaryNetworkSigners func() bool) *API {
 	return &API{
 		backend:                      backend,
 		chainContext:                 chainCtx,

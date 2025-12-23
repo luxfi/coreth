@@ -40,7 +40,6 @@ import (
 	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/p2p"
 	p2pgossip "github.com/luxfi/p2p/gossip"
-	"github.com/luxfi/p2p/lp118"
 	"github.com/luxfi/metric"
 	"github.com/luxfi/vm"
 	luxwarp "github.com/luxfi/warp"
@@ -567,14 +566,14 @@ func (v *VM) Initialize(
 
 	// Add p2p warp message handler if WarpSigner is available
 	if v.ctx.WarpSigner != nil {
-		lp118Signer, ok := v.ctx.WarpSigner.(lp118.Signer)
+		warpSigner, ok := v.ctx.WarpSigner.(luxwarp.Signer)
 		if !ok {
-			return fmt.Errorf("expected lp118.Signer, got %T", v.ctx.WarpSigner)
+			return fmt.Errorf("expected warp.Signer, got %T", v.ctx.WarpSigner)
 		}
 
-		// Add p2p warp message warpHandler
-		warpHandler := lp118.NewCachedHandler(meteredCache, v.warpBackend, lp118Signer)
-		v.Network.AddHandler(p2p.SignatureRequestHandlerID, lp118.NewHandlerAdapter(warpHandler))
+		// Add p2p warp message handler
+		warpHandler := luxwarp.NewCachedSignatureHandler(meteredCache, v.warpBackend, warpSigner)
+		v.Network.AddHandler(p2p.SignatureRequestHandlerID, luxwarp.NewSignatureHandlerAdapter(warpHandler))
 	}
 
 	v.stateSyncDone = make(chan struct{})
@@ -1213,7 +1212,7 @@ func (v *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 
 	if v.config.WarpAPIEnabled {
 		warpSDKClient := v.Network.NewClient(p2p.SignatureRequestHandlerID)
-		signatureAggregator := lp118.NewSignatureAggregator(v.ctxLogger, warpSDKClient)
+		signatureAggregator := luxwarp.NewSignatureAggregator(v.ctxLogger, warpSDKClient)
 
 		if err := handler.RegisterName("warp", warp.NewAPI(v.ctx, v.warpBackend, signatureAggregator, v.requirePrimaryNetworkSigners)); err != nil {
 			return nil, err
