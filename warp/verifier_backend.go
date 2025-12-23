@@ -20,7 +20,7 @@ const (
 )
 
 // Verify verifies the signature of the message
-// It also implements the lp118.Verifier interface
+// It also implements the warp.Verifier interface
 func (b *backend) Verify(ctx context.Context, unsignedMessage *warp.UnsignedMessage, _ []byte) error {
 	messageID := unsignedMessage.ID()
 	// Known on-chain messages should be signed

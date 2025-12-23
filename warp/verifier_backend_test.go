@@ -8,24 +8,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luxfi/coreth/metrics/metricstest"
+	"github.com/luxfi/coreth/warp/warptest"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/node/cache"
 	"github.com/luxfi/node/cache/lru"
 	"github.com/luxfi/p2p"
-	"github.com/luxfi/p2p/lp118"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
-
-	"github.com/luxfi/coreth/metrics/metricstest"
-	"github.com/luxfi/coreth/warp/warptest"
 	"github.com/stretchr/testify/require"
 )
 
 const testNetworkID uint32 = 369
 
-// testWarpSigner wraps a warp.Signer to implement lp118.Signer
+// testWarpSigner wraps a warp.Signer to implement warp.Signer (for tests)
 type testWarpSigner struct {
 	signer warp.Signer
 }
@@ -48,7 +46,7 @@ func TestAddressedCallSignatures(t *testing.T) {
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
 	warpSigner := warp.NewSigner(sk, testNetworkID, chainID)
-	lp118Signer := &testWarpSigner{signer: warpSigner}
+	testSigner := &testWarpSigner{signer: warpSigner}
 
 	offChainPayload, err := payload.NewAddressedCall([]byte{1, 2, 3}, []byte{1, 2, 3})
 	require.NoError(t, err)
@@ -121,11 +119,11 @@ func TestAddressedCallSignatures(t *testing.T) {
 				}
 				warpBackend, err := NewBackend(testNetworkID, chainID, warpSigner, warptest.EmptyBlockClient, database, sigCache, [][]byte{offchainMessage.Bytes()})
 				require.NoError(t, err)
-				handler := lp118.NewCachedHandler(sigCache, warpBackend, lp118Signer)
+				handler := warp.NewCachedSignatureHandler(sigCache, warpBackend, testSigner)
 
 				requestBytes, expectedResponse := test.setup(warpBackend)
-				// Use lp118 binary format for request
-				reqBytes, err := lp118.MarshalSignatureRequest(&lp118.SignatureRequest{Message: requestBytes})
+				// Use warp binary format for request
+				reqBytes, err := warp.MarshalSignatureRequest(&warp.SignatureRequest{Message: requestBytes})
 				require.NoError(t, err)
 
 				responseBytes, handlerErr := handler.Request(context.Background(), ids.GenerateTestNodeID(), time.Time{}, reqBytes)
@@ -152,8 +150,8 @@ func TestAddressedCallSignatures(t *testing.T) {
 				} else {
 					require.Zero(t, warpBackend.(*backend).signatureCache.Len())
 				}
-				// Use lp118 binary format for response
-				response, err := lp118.UnmarshalSignatureResponse(responseBytes)
+				// Use warp binary format for response
+				response, err := warp.UnmarshalSignatureResponse(responseBytes)
 				require.NoError(t, err, "error unmarshalling SignatureResponse")
 
 				require.Equal(t, expectedResponse, response.Signature)
@@ -172,7 +170,7 @@ func TestBlockSignatures(t *testing.T) {
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
 	warpSigner := warp.NewSigner(sk, testNetworkID, chainID)
-	lp118Signer := &testWarpSigner{signer: warpSigner}
+	testSigner := &testWarpSigner{signer: warpSigner}
 
 	knownBlkID := ids.GenerateTestID()
 	blockClient := warptest.MakeBlockClient(knownBlkID)
@@ -249,11 +247,11 @@ func TestBlockSignatures(t *testing.T) {
 					nil,
 				)
 				require.NoError(t, err)
-				handler := lp118.NewCachedHandler(sigCache, warpBackend, lp118Signer)
+				handler := warp.NewCachedSignatureHandler(sigCache, warpBackend, testSigner)
 
 				requestBytes, expectedResponse := test.setup()
-				// Use lp118 binary format for request
-				reqBytes, err := lp118.MarshalSignatureRequest(&lp118.SignatureRequest{Message: requestBytes})
+				// Use warp binary format for request
+				reqBytes, err := warp.MarshalSignatureRequest(&warp.SignatureRequest{Message: requestBytes})
 				require.NoError(t, err)
 
 				responseBytes, handlerErr := handler.Request(context.Background(), ids.GenerateTestNodeID(), time.Time{}, reqBytes)
@@ -280,8 +278,8 @@ func TestBlockSignatures(t *testing.T) {
 				} else {
 					require.Zero(t, warpBackend.(*backend).signatureCache.Len())
 				}
-				// Use lp118 binary format for response
-				response, err := lp118.UnmarshalSignatureResponse(responseBytes)
+				// Use warp binary format for response
+				response, err := warp.UnmarshalSignatureResponse(responseBytes)
 				require.NoError(t, err, "error unmarshalling SignatureResponse")
 				require.Equal(t, expectedResponse, response.Signature)
 			})
