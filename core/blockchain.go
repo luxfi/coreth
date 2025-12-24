@@ -50,8 +50,6 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
-	"github.com/luxfi/geth/triedb/hashdb"
-	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/lru"
 	"github.com/luxfi/geth/core/rawdb"
@@ -60,9 +58,11 @@ import (
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/geth/triedb/hashdb"
+	"github.com/luxfi/geth/triedb/pathdb"
+	"github.com/luxfi/log"
 
 	// Force geth metrics of the same name to be registered first.
 	_ "github.com/luxfi/geth/core"
@@ -790,6 +790,37 @@ func (bc *BlockChain) loadGenesisState() error {
 	bc.hc.SetGenesis(bc.genesisBlock.Header())
 	bc.hc.SetCurrentHeader(bc.genesisBlock.Header())
 	return nil
+}
+
+// EnsureGenesisState ensures that the genesis block state is accessible.
+// This is needed before importing blocks because the import validation
+// requires parent state to be accessible.
+// For RLP imports, this checks if genesis allocations are stored, which allows
+// block_validator.go's special case for block 1 to handle validation properly.
+func (bc *BlockChain) EnsureGenesisState() error {
+	genesis := bc.genesisBlock
+	if genesis == nil {
+		return errors.New("genesis block not set")
+	}
+
+	// Check if genesis state is already accessible
+	if bc.HasState(genesis.Root()) {
+		log.Debug("Genesis state is accessible", "root", genesis.Root().Hex())
+		return nil
+	}
+
+	// For RLP import: check if genesis allocations exist in database
+	// If they do, block_validator.go has special handling for block 1 that will work
+	blob := rawdb.ReadGenesisStateSpec(bc.db, genesis.Hash())
+	if blob != nil {
+		log.Info("Genesis allocations found in database, RLP import can proceed",
+			"genesisHash", genesis.Hash().Hex(),
+			"genesisRoot", genesis.Root().Hex())
+		return nil
+	}
+
+	log.Error("Genesis state not accessible and allocations not stored")
+	return errors.New("genesis state not accessible and allocations not stored in database")
 }
 
 // Export writes the active chain to the given writer.
