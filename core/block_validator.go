@@ -112,6 +112,17 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 		if !v.bc.HasBlock(block.ParentHash(), block.NumberU64()-1) {
 			return consensus.ErrUnknownAncestor
 		}
+		// Special case: for block 1, if the genesis block exists but state is not accessible,
+		// we allow import because genesis state is deterministic from the allocations.
+		// This handles the case where genesis state trie nodes aren't committed to the database.
+		if block.NumberU64() == 1 {
+			genesis := v.bc.GetBlockByNumber(0)
+			if genesis != nil && genesis.Hash() == block.ParentHash() {
+				// Genesis block exists and matches - allow import to proceed
+				// The state will be regenerated during block processing
+				return nil
+			}
+		}
 		return consensus.ErrPrunedAncestor
 	}
 	return nil

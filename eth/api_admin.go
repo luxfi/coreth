@@ -106,11 +106,17 @@ func (api *AdminAPI) ImportChain(file string) (bool, error) {
 		}
 	}
 
+	// Ensure genesis state is accessible before import
+	chain := api.eth.BlockChain()
+	if err := chain.EnsureGenesisState(); err != nil {
+		log.Error("ImportChain: failed to ensure genesis state", "error", err)
+		return false, fmt.Errorf("failed to ensure genesis state: %w", err)
+	}
+
 	// Run actual the import in pre-configured batches
 	stream := rlp.NewStream(reader, 0)
 
 	blocks, index := make([]*types.Block, 0, 2500), 0
-	chain := api.eth.BlockChain()
 	var lastInsertedBlock *types.Block
 	log.Info("ImportChain: starting", "file", file, "currentBlock", chain.CurrentBlock().Number)
 

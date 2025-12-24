@@ -346,6 +346,19 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 		if err := triedb.Commit(root, true); err != nil {
 			panic(fmt.Sprintf("unable to commit genesis block: %v", err))
 		}
+		// Verify the state was committed properly by attempting to read it back
+		if _, err := triedb.NodeReader(root); err != nil {
+			log.Warn("Genesis state committed but not immediately accessible - forcing sync",
+				"root", root.Hex(), "error", err)
+			// Try to force a sync/flush if supported by the underlying database
+			if syncer, ok := db.(interface{ Sync() error }); ok {
+				if syncErr := syncer.Sync(); syncErr != nil {
+					log.Error("Failed to sync database after genesis commit", "error", syncErr)
+				}
+			}
+		} else {
+			log.Info("Genesis state verified accessible", "root", root.Hex())
+		}
 	}
 	return block
 }
@@ -364,6 +377,14 @@ func (g *Genesis) Commit(db ethdb.Database, triedb *triedb.Database) (*types.Blo
 	if err := config.CheckConfigForkOrder(); err != nil {
 		return nil, err
 	}
+
+	// Marshal and store the genesis allocations for state recovery
+	blob, err := json.Marshal(g.Alloc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal genesis alloc: %w", err)
+	}
+	rawdb.WriteGenesisStateSpec(db, block.Hash(), blob)
+
 	rawdb.WriteBlock(db, block)
 	rawdb.WriteReceipts(db, block.Hash(), block.NumberU64(), nil)
 	rawdb.WriteCanonicalHash(db, block.Hash(), block.NumberU64())
