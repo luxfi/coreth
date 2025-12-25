@@ -29,12 +29,14 @@ package eth
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/log"
 	"github.com/luxfi/geth/rlp"
@@ -169,6 +171,49 @@ func (api *AdminAPI) ImportChain(file string) (bool, error) {
 	} else {
 		log.Info("ImportChain: no blocks imported", "total", index)
 	}
+
+	return true, nil
+}
+
+// WriteGenesisStateSpec writes the genesis state spec to the database.
+// This is required for RLP import to work when the genesis state trie is not accessible.
+// The genesis allocs are stored in the database, enabling block_validator.go's special
+// handling for block 1 (which allows import even without the genesis state trie).
+func (api *AdminAPI) WriteGenesisStateSpec(genesisFile string) (bool, error) {
+	// Read genesis file
+	data, err := os.ReadFile(genesisFile)
+	if err != nil {
+		return false, fmt.Errorf("failed to read genesis file: %w", err)
+	}
+
+	// Parse genesis to get alloc
+	var genesis struct {
+		Alloc types.GenesisAlloc `json:"alloc"`
+	}
+	if err := json.Unmarshal(data, &genesis); err != nil {
+		return false, fmt.Errorf("failed to parse genesis: %w", err)
+	}
+
+	// Marshal alloc to JSON
+	allocJSON, err := json.Marshal(genesis.Alloc)
+	if err != nil {
+		return false, fmt.Errorf("failed to marshal alloc: %w", err)
+	}
+
+	// Get the genesis block hash
+	chain := api.eth.BlockChain()
+	genesisBlock := chain.GetBlockByNumber(0)
+	if genesisBlock == nil {
+		return false, errors.New("genesis block not found")
+	}
+
+	// Write to database using proper rawdb method
+	db := api.eth.ChainDb()
+	rawdb.WriteGenesisStateSpec(db, genesisBlock.Hash(), allocJSON)
+
+	log.Info("WriteGenesisStateSpec: written",
+		"genesisHash", genesisBlock.Hash().Hex(),
+		"allocSize", len(allocJSON))
 
 	return true, nil
 }
