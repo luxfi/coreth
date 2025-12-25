@@ -688,6 +688,21 @@ func (v *VM) initializeChain(lastAcceptedHash common.Hash) error {
 	v.blockChain = v.eth.BlockChain()
 	v.miner = v.eth.Miner()
 
+	// Register callback for admin_importChain to update acceptedBlockDB.
+	// This is critical: when blocks are imported via the admin API, the VM layer's
+	// acceptedBlockDB must be updated so ReadLastAccepted() returns the correct hash on restart.
+	v.eth.SetPostImportCallback(func(lastBlockHash common.Hash, lastBlockHeight uint64) error {
+		log.Info("PostImportCallback: updating acceptedBlockDB", "hash", lastBlockHash, "height", lastBlockHeight)
+		if err := v.acceptedBlockDB.Put(lastAcceptedKey, lastBlockHash[:]); err != nil {
+			return fmt.Errorf("failed to update acceptedBlockDB: %w", err)
+		}
+		if err := v.versiondb.Commit(); err != nil {
+			return fmt.Errorf("failed to commit versiondb: %w", err)
+		}
+		log.Info("PostImportCallback: acceptedBlockDB updated successfully")
+		return nil
+	})
+
 	// Set the gas parameters for the tx pool to the minimum gas price for the
 	// latest upgrade.
 	v.txPool.SetGasTip(big.NewInt(0))
