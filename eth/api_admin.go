@@ -167,6 +167,24 @@ func (api *AdminAPI) ImportChain(file string) (bool, error) {
 		if err := chain.SetLastAcceptedBlockDirect(lastInsertedBlock); err != nil {
 			return false, fmt.Errorf("failed to set last accepted block: %v", err)
 		}
+
+		// CRITICAL FIX: Commit the imported state to disk
+		// Without this, the state trie is only in memory and will be lost on shutdown.
+		// This causes "required historical state unavailable" errors on restart.
+		log.Info("ImportChain: committing imported state", "block", lastInsertedBlock.NumberU64(), "root", lastInsertedBlock.Root())
+		if err := chain.AcceptImportedState(lastInsertedBlock); err != nil {
+			return false, fmt.Errorf("failed to commit imported state: %v", err)
+		}
+		log.Info("ImportChain: state committed successfully")
+
+		// CRITICAL: Call the post-import callback to update the VM layer's acceptedBlockDB.
+		// Without this, ReadLastAccepted() returns genesis hash on restart because
+		// acceptedBlockDB is not updated by the admin API import path.
+		if err := api.eth.CallPostImportCallback(lastInsertedBlock.Hash(), lastInsertedBlock.NumberU64()); err != nil {
+			return false, fmt.Errorf("failed to call post-import callback: %v", err)
+		}
+		log.Info("ImportChain: post-import callback completed")
+
 		log.Info("ImportChain: completed", "lastBlock", lastInsertedBlock.NumberU64(), "total", index)
 	} else {
 		log.Info("ImportChain: no blocks imported", "total", index)
