@@ -250,6 +250,11 @@ type Config struct {
 
 	// ImportChainData specifies the path to a database containing existing blockchain data to import
 	ImportChainData string `json:"import-chain-data"`
+
+	// EnableAutomining enables automatic block production when there are pending transactions.
+	// This is used for dev mode (luxd --dev) to provide anvil-like behavior where blocks
+	// are mined immediately when transactions are submitted.
+	EnableAutomining bool `json:"enable-automining"`
 }
 
 // TxPoolConfig contains the transaction pool config to be passed

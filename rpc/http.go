@@ -128,10 +128,12 @@ type HTTPTimeouts struct {
 
 // DefaultHTTPTimeouts represents the default timeout values used if further
 // configuration is not provided.
+// Note: Extended timeouts to support long-running admin operations like admin_importChain
+// which can take 30-60 minutes for large block imports (1M+ blocks).
 var DefaultHTTPTimeouts = HTTPTimeouts{
-	ReadTimeout:       30 * time.Second,
+	ReadTimeout:       3600 * time.Second, // 1 hour for large imports
 	ReadHeaderTimeout: 30 * time.Second,
-	WriteTimeout:      30 * time.Second,
+	WriteTimeout:      3600 * time.Second, // 1 hour for large imports
 	IdleTimeout:       120 * time.Second,
 }
 
