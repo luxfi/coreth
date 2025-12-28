@@ -156,3 +156,99 @@ func (b *blockBuilder) waitForNeedToBuild(ctx context.Context) (time.Time, error
 	}
 	return b.lastBuildTime, nil
 }
+
+// AutominingConfig contains configuration for automining.
+type AutominingConfig struct {
+	// BuildBlock builds a new block and returns it wrapped for consensus.
+	// The block must implement both Verify() and Accept() methods.
+	BuildBlock func(ctx context.Context) (interface {
+		Verify(context.Context) error
+		Accept(context.Context) error
+	}, error)
+	// Interval is the minimum time between block builds.
+	Interval time.Duration
+}
+
+// startAutomining starts a goroutine that automatically builds and accepts
+// blocks when there are pending transactions. This is used for dev mode
+// (luxd --dev) to provide anvil-like behavior where blocks are mined
+// immediately when transactions are submitted.
+func (b *blockBuilder) startAutomining(config AutominingConfig) {
+	// Subscribe to new transactions
+	txSubmitChan := make(chan core.NewTxsEvent)
+	b.txPool.SubscribeTransactions(txSubmitChan, true)
+
+	var extraChan <-chan struct{}
+	if b.extraMempool != nil {
+		extraChan = b.extraMempool.SubscribePendingTxs()
+	}
+
+	interval := config.Interval
+	if interval == 0 {
+		interval = 100 * time.Millisecond // Default interval for dev mode
+	}
+
+	b.shutdownWg.Add(1)
+	go b.Logger().RecoverAndPanic(func() {
+		defer b.shutdownWg.Done()
+
+		log.Info("Automining started - blocks will be produced when transactions are pending")
+
+		for {
+			select {
+			case <-txSubmitChan:
+				b.automineBlock(config, interval)
+			case <-extraChan:
+				b.automineBlock(config, interval)
+			case <-b.shutdownChan:
+				log.Info("Automining stopped")
+				return
+			}
+		}
+	})
+}
+
+// automineBlock builds and accepts a block if there are pending transactions.
+func (b *blockBuilder) automineBlock(config AutominingConfig, interval time.Duration) {
+	// Wait minimum interval between blocks
+	b.buildBlockLock.Lock()
+	timeSinceLastBuild := time.Since(b.lastBuildTime)
+	b.buildBlockLock.Unlock()
+
+	if timeSinceLastBuild < interval {
+		time.Sleep(interval - timeSinceLastBuild)
+	}
+
+	// Check if we still need to build
+	if !b.needToBuild() {
+		return
+	}
+
+	ctx := context.Background()
+
+	// Build the block
+	blk, err := config.BuildBlock(ctx)
+	if err != nil {
+		log.Error("Automining: failed to build block", "err", err)
+		return
+	}
+
+	// Verify the block before accepting
+	if err := blk.Verify(ctx); err != nil {
+		log.Error("Automining: failed to verify block", "err", err)
+		return
+	}
+
+	// Accept the block (after verification)
+	if err := blk.Accept(ctx); err != nil {
+		log.Error("Automining: failed to accept block", "err", err)
+		return
+	}
+
+	log.Info("Automining: block built, verified, and accepted")
+
+	// Update last build time
+	b.buildBlockLock.Lock()
+	b.lastBuildTime = time.Now()
+	b.buildBlockLock.Unlock()
+}

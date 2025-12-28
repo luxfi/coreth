@@ -7,6 +7,7 @@ package registry
 // Force imports of each precompile to ensure each precompile's init function runs and registers itself
 // with the registry.
 import (
+	_ "github.com/luxfi/coreth/precompile/contracts/fhe"
 	_ "github.com/luxfi/coreth/precompile/contracts/warp"
 	// ADD PRECOMPILES BELOW
 	// _ "github.com/luxfi/coreth/precompile/contracts/newprecompile"
@@ -15,6 +16,8 @@ import (
 // This list is kept just for reference. The actual addresses defined in respective packages of precompiles.
 // Note: it is important that none of these addresses conflict with each other or any other precompiles
 // in /coreth/contracts/contracts/**.
+//
+// FHEPrecompileAddress = common.HexToAddress("0x0000000000000000000000000000000000000080") // 128
 
 // WarpMessengerAddress = common.HexToAddress("0x0200000000000000000000000000000000000005")
 // ADD PRECOMPILES BELOW

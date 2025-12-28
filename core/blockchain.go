@@ -54,6 +54,7 @@ import (
 	"github.com/luxfi/geth/common/lru"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/ethdb"
@@ -63,6 +64,8 @@ import (
 	"github.com/luxfi/geth/triedb/hashdb"
 	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/luxfi/log"
+
+	"github.com/holiman/uint256"
 
 	// Force geth metrics of the same name to be registered first.
 	_ "github.com/luxfi/geth/core"
@@ -795,8 +798,8 @@ func (bc *BlockChain) loadGenesisState() error {
 // EnsureGenesisState ensures that the genesis block state is accessible.
 // This is needed before importing blocks because the import validation
 // requires parent state to be accessible.
-// For RLP imports, this checks if genesis allocations are stored, which allows
-// block_validator.go's special case for block 1 to handle validation properly.
+// For RLP imports, if the genesis state is not accessible but allocations are stored,
+// this function will regenerate and commit the genesis state from the allocations.
 func (bc *BlockChain) EnsureGenesisState() error {
 	genesis := bc.genesisBlock
 	if genesis == nil {
@@ -809,18 +812,100 @@ func (bc *BlockChain) EnsureGenesisState() error {
 		return nil
 	}
 
-	// For RLP import: check if genesis allocations exist in database
-	// If they do, block_validator.go has special handling for block 1 that will work
-	blob := rawdb.ReadGenesisStateSpec(bc.db, genesis.Hash())
-	if blob != nil {
-		log.Info("Genesis allocations found in database, RLP import can proceed",
-			"genesisHash", genesis.Hash().Hex(),
-			"genesisRoot", genesis.Root().Hex())
-		return nil
+	// For PathDB, the genesis state was committed at startup but the in-memory layer
+	// may have been evicted. Try to recover it by loading from the journal/disk.
+	if bc.triedb.Scheme() == rawdb.PathScheme {
+		log.Info("Genesis state not in memory, attempting PathDB recovery",
+			"root", genesis.Root().Hex())
+
+		// For PathDB with allow-missing-tries, we can proceed without the genesis
+		// state in memory. The import will use the database scheme's fallback
+		// mechanism to read state from disk.
+		if bc.cacheConfig.AllowMissingTries {
+			log.Info("AllowMissingTries enabled, proceeding without genesis state in memory",
+				"root", genesis.Root().Hex())
+			return nil
+		}
+
+		// If allow-missing-tries is disabled, we cannot recover PathDB state easily.
+		// The genesis state WAS committed at startup (as the log shows), but PathDB's
+		// layer structure makes it hard to recover after the layer is evicted.
+		return fmt.Errorf("genesis state not accessible in PathDB mode (state was committed at startup but layer was evicted)")
 	}
 
-	log.Error("Genesis state not accessible and allocations not stored")
-	return errors.New("genesis state not accessible and allocations not stored in database")
+	// For HashDB: regenerate genesis state from stored allocations
+	blob := rawdb.ReadGenesisStateSpec(bc.db, genesis.Hash())
+	if blob == nil {
+		log.Error("Genesis state not accessible and allocations not stored")
+		return errors.New("genesis state not accessible and allocations not stored in database")
+	}
+
+	// Unmarshal the genesis allocations
+	var alloc types.GenesisAlloc
+	if err := alloc.UnmarshalJSON(blob); err != nil {
+		return fmt.Errorf("failed to unmarshal genesis alloc: %w", err)
+	}
+
+	log.Info("Regenerating genesis state from stored allocations (HashDB)",
+		"genesisHash", genesis.Hash().Hex(),
+		"genesisRoot", genesis.Root().Hex(),
+		"allocSize", len(alloc))
+
+	// Create a fresh triedb for HashDB regeneration
+	freshTriedb := triedb.NewDatabase(bc.db, nil)
+	defer freshTriedb.Close()
+
+	// Create statedb from EmptyRootHash using the fresh triedb
+	freshStateCache := extstate.NewDatabase(freshTriedb, nil)
+	statedb, err := state.New(types.EmptyRootHash, freshStateCache)
+	if err != nil {
+		log.Error("Failed to create statedb from empty root", "error", err)
+		return fmt.Errorf("failed to create statedb for genesis regeneration: %w", err)
+	}
+
+	// Apply all genesis allocations
+	for addr, account := range alloc {
+		if account.Balance != nil {
+			statedb.SetBalance(addr, uint256.MustFromBig(account.Balance), tracing.BalanceIncreaseGenesisBalance)
+		}
+		if len(account.Code) > 0 {
+			statedb.SetCode(addr, account.Code, tracing.CodeChangeGenesis)
+		}
+		if account.Nonce != 0 {
+			statedb.SetNonce(addr, account.Nonce, tracing.NonceChangeGenesis)
+		}
+		for key, value := range account.Storage {
+			statedb.SetState(addr, key, value)
+		}
+	}
+
+	// Compute the state root
+	root := statedb.IntermediateRoot(false)
+	if root != genesis.Root() {
+		return fmt.Errorf("regenerated genesis state root mismatch: got %s, want %s", root.Hex(), genesis.Root().Hex())
+	}
+
+	// Commit the statedb to the fresh triedb
+	if _, err := statedb.Commit(0, false, false); err != nil {
+		return fmt.Errorf("failed to commit genesis statedb: %w", err)
+	}
+
+	// Commit to the fresh triedb (writes to the underlying database)
+	if err := freshTriedb.Commit(root, true); err != nil {
+		return fmt.Errorf("failed to commit genesis triedb: %w", err)
+	}
+
+	log.Info("Successfully regenerated genesis state to disk",
+		"root", root.Hex())
+
+	// Final verification - check if bc.HasState now returns true
+	if !bc.HasState(root) {
+		log.Error("Genesis state regenerated but bc.HasState returns false",
+			"root", root.Hex())
+		return errors.New("genesis state regenerated but bc.HasState still returns false")
+	}
+
+	return nil
 }
 
 // Export writes the active chain to the given writer.
