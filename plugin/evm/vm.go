@@ -699,7 +699,14 @@ func (v *VM) initializeChain(lastAcceptedHash common.Hash) error {
 		if err := v.versiondb.Commit(); err != nil {
 			return fmt.Errorf("failed to commit versiondb: %w", err)
 		}
-		log.Info("PostImportCallback: acceptedBlockDB updated successfully")
+		// CRITICAL: Force sync to disk to ensure persistence across restarts.
+		// Without this, async writes (e.g., badgerdb with SyncWrites=false) may be
+		// lost if the network stops before the background flush completes.
+		if err := v.versiondb.Sync(); err != nil {
+			log.Warn("PostImportCallback: sync failed (non-fatal)", "error", err)
+			// Don't return error - the commit succeeded, sync is best-effort
+		}
+		log.Info("PostImportCallback: acceptedBlockDB updated and synced successfully")
 		return nil
 	})
 
@@ -940,6 +947,19 @@ func (v *VM) initBlockBuilding() error {
 	v.builderLock.Lock()
 	v.builder = v.NewBlockBuilder(v.extensionConfig.ExtraMempool)
 	v.builder.awaitSubmittedTxs()
+
+	// Start automining if enabled (dev mode)
+	if v.config.EnableAutomining {
+		v.builder.startAutomining(AutominingConfig{
+			BuildBlock: func(ctx context.Context) (interface {
+				Verify(context.Context) error
+				Accept(context.Context) error
+			}, error) {
+				return v.buildBlock(ctx)
+			},
+			Interval: 100 * time.Millisecond,
+		})
+	}
 	v.builderLock.Unlock()
 
 	v.ethTxGossipHandler = gossip.NewTxGossipHandler[*GossipEthTx](
