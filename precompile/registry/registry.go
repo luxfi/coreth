@@ -7,10 +7,13 @@ package registry
 // Force imports of each precompile to ensure each precompile's init function runs and registers itself
 // with the registry.
 import (
-	_ "github.com/luxfi/coreth/precompile/contracts/fhe"
+	// Chain-integrated precompiles (stay in coreth)
 	_ "github.com/luxfi/coreth/precompile/contracts/warp"
-	// ADD PRECOMPILES BELOW
-	// _ "github.com/luxfi/coreth/precompile/contracts/newprecompile"
+
+	// Crypto precompiles from standalone precompiles package
+	_ "github.com/luxfi/precompiles/fhe"
+	_ "github.com/luxfi/precompiles/mldsa"
+	_ "github.com/luxfi/precompiles/pqcrypto"
 )
 
 // This list is kept just for reference. The actual addresses defined in respective packages of precompiles.

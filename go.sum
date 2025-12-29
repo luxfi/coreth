@@ -258,6 +258,7 @@ github.com/leanovate/gopter v0.2.11 h1:vRjThO1EKPb/1NsDXuDrzldR28RLkBflWYcU9CvzW
 github.com/leanovate/gopter v0.2.11/go.mod h1:aK3tzZP/C+p1m3SPRE4SYZFGP7jjkuSI4f7Xvpt0S9c=
 github.com/luxfi/cache v1.0.0 h1:OcqGi/qs9ky+7O8fR6WMZtFsunvA40LBTg3QRQqJurs=
 github.com/luxfi/cache v1.0.0/go.mod h1:BEvpffvV3SXs/KSa9nUC1TszxKwUdIHwIaoXpeiYU+Y=
+github.com/luxfi/cache v1.1.0/go.mod h1:9GvlEEE9rFPaaWxvVpSPwW8ZMo2+8VMNNcuPa4AwzPg=
 github.com/luxfi/consensus v1.22.44 h1:GRzJUUG3ZEYcn3/Ve5GAJKNcOKgvFAIR4HErvsLbmLs=
 github.com/luxfi/consensus v1.22.44/go.mod h1:mNUPWj7hy3ZI0vmhPQvTKaeRci3SpEqKhqosOUYU4b8=
 github.com/luxfi/constants v1.2.4 h1:tUZfdNnn/N8Zs0NnDn1z+atrDz1AZtH+Dtowvyhx+Bg=
@@ -290,6 +291,8 @@ github.com/luxfi/p2p v1.18.2 h1:elpyXr58wht1KP64D4BcKXft1AEjJ3IRACj/W8vdLI8=
 github.com/luxfi/p2p v1.18.2/go.mod h1:eM6XpmBFbDjaI7fFuGYBPab77TS1esxHxAOluBLAC0Y=
 github.com/luxfi/precompiles v0.1.6 h1:JkMoQ92gLdZ3W3dI/EvMrsdsn4egkjKPNMksK0GVKXI=
 github.com/luxfi/precompiles v0.1.6/go.mod h1:X/lQTeT3AyNyIfOfRVK88YWcrKh3B75bwVjZCo5t9wA=
+github.com/luxfi/precompiles v0.1.7 h1:psc6jV3rKfxzWQ3SeQXOeA3R55U0CO1IFwgA29Jl/+Y=
+github.com/luxfi/precompiles v0.1.7/go.mod h1:MouNKtTg2UkK1votP+jIhueT7HQ03UaP3X6C1Om9R7k=
 github.com/luxfi/sampler v1.0.0 h1:k8Sf6otW83w4pQp0jXLA+g3J/joB7w7SqXQsWmNTOV0=
 github.com/luxfi/sampler v1.0.0/go.mod h1:f96/ozlj9vFfZj+akLtrHn4VpulQahwB+MQQhpeIekk=
 github.com/luxfi/trace v0.1.4 h1:ttCRyXGwWuz232se+lIUqhWHBoTuvPLhHH/hLWyqtaM=
