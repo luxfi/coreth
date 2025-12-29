@@ -274,7 +274,7 @@ func (v *VM) Initialize(
 	chainCtx interface{},
 	db interface{},
 	genesisBytes []byte,
-	_ []byte,
+	upgradeBytes []byte,
 	configBytes []byte,
 	toEngine interface{},
 	_ []interface{},
@@ -402,6 +402,22 @@ func (v *VM) Initialize(
 	g, err := parseGenesis(vmCtx, genesisBytes)
 	if err != nil {
 		return err
+	}
+
+	// Parse and apply upgrade configuration from upgradeBytes (upgrade.json)
+	if len(upgradeBytes) > 0 {
+		var upgradeConfig extras.UpgradeConfig
+		if err := json.Unmarshal(upgradeBytes, &upgradeConfig); err != nil {
+			return fmt.Errorf("failed to parse upgrade config: %w", err)
+		}
+
+		// Merge precompile upgrades from upgrade.json into chain config
+		if len(upgradeConfig.PrecompileUpgrades) > 0 {
+			configExtra := params.GetExtra(g.Config)
+			configExtra.PrecompileUpgrades = append(configExtra.PrecompileUpgrades, upgradeConfig.PrecompileUpgrades...)
+			log.Info("Applied precompile upgrades from upgrade.json",
+				"count", len(upgradeConfig.PrecompileUpgrades))
+		}
 	}
 
 	// v.ChainConfig() should be available for wrapping VMs before v.initializeChain()
@@ -1243,6 +1259,13 @@ func (v *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 		}
 		apis[adminEndpoint] = adminAPI
 		enabledAPIs = append(enabledAPIs, "coreth-admin")
+
+		// Also register eth.AdminAPI with geth RPC server for underscore notation (admin_importChain)
+		// This enables block import via RPC with proper persistence callback
+		if err := handler.RegisterName("admin", eth.NewAdminAPI(v.eth)); err != nil {
+			return nil, fmt.Errorf("failed to register eth admin API: %w", err)
+		}
+		log.Info("Registered eth admin API with geth RPC server (admin_importChain enabled)")
 	}
 
 	if v.config.WarpAPIEnabled {

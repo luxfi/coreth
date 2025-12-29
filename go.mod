@@ -108,7 +108,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/luxfi/cache v1.0.0 // indirect
+	github.com/luxfi/cache v1.1.0 // indirect
 	github.com/luxfi/genesis v1.5.9 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
@@ -179,7 +179,7 @@ require (
 	github.com/luxfi/ids v1.2.5
 	github.com/luxfi/math v1.2.0
 	github.com/luxfi/p2p v1.18.2
-	github.com/luxfi/precompiles v0.1.6
+	github.com/luxfi/precompiles v0.1.7
 	github.com/luxfi/vm v1.0.1
 	github.com/luxfi/warp v1.18.0
 )

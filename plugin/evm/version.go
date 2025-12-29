@@ -9,7 +9,7 @@ var (
 	// GitCommit is set by the build script
 	GitCommit string
 	// Version is the version of Coreth (set by build script via ldflags)
-	Version string = "v0.15.57"
+	Version string = "v0.15.66-upgrade-bytes-fix"
 )
 
 func init() {
