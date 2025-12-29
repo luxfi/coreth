@@ -49,6 +49,7 @@ require (
 // Local replace directives removed for v1 genesis launch
 
 require (
+	github.com/ALTree/bigfloat v0.2.0 // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -96,6 +97,7 @@ require (
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/flatbuffers v25.2.10+incompatible // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/pprof v0.0.0-20250820193118-f64d9cf942d6 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -111,9 +113,12 @@ require (
 	github.com/luxfi/cache v1.1.0 // indirect
 	github.com/luxfi/genesis v1.5.9 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
+	github.com/luxfi/lattice/v6 v6.1.2 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
 	github.com/luxfi/sampler v1.0.0 // indirect
+	github.com/luxfi/tfhe v1.0.0 // indirect
 	github.com/luxfi/trace v0.1.4 // indirect
+	github.com/luxfi/utils v1.1.0 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/pointerstructure v1.2.1 // indirect
@@ -179,7 +184,7 @@ require (
 	github.com/luxfi/ids v1.2.5
 	github.com/luxfi/math v1.2.0
 	github.com/luxfi/p2p v1.18.2
-	github.com/luxfi/precompiles v0.1.7
+	github.com/luxfi/precompiles v0.1.8
 	github.com/luxfi/vm v1.0.1
 	github.com/luxfi/warp v1.18.0
 )
