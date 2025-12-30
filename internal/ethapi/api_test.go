@@ -64,9 +64,10 @@ import (
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/event"
 	gethparams "github.com/luxfi/geth/params"
+	"slices"
+
 	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 )
 
 func testTransactionMarshal(t *testing.T, tests []txData, config *params.ChainConfig) {

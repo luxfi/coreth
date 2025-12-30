@@ -42,9 +42,10 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/triedb"
+	"slices"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/holiman/uint256"
-	"golang.org/x/exp/slices"
 )
 
 var dumper = spew.ConfigState{Indent: "    "}

@@ -52,9 +52,10 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/crypto"
+	"slices"
+
 	"github.com/luxfi/geth/eth/tracers/logger"
 	"github.com/luxfi/geth/ethdb"
-	"golang.org/x/exp/slices"
 )
 
 var (

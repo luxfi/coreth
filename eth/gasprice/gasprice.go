@@ -42,8 +42,9 @@ import (
 	"github.com/luxfi/geth/common/lru"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
+	"slices"
+
 	"github.com/luxfi/log"
-	"golang.org/x/exp/slices"
 )
 
 const (

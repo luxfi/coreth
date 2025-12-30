@@ -32,8 +32,9 @@ import (
 	"fmt"
 	"sort"
 
+	"slices"
+
 	"github.com/luxfi/geth/common"
-	"golang.org/x/exp/slices"
 )
 
 // weightedIterator is a iterator with an assigned weight. It is used to prioritise
