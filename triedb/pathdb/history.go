@@ -33,9 +33,10 @@ import (
 	"errors"
 	"fmt"
 
+	"slices"
+
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/trie/triestate"
-	"golang.org/x/exp/slices"
 )
 
 // State history records the state changes involved in executing a block. The

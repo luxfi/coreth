@@ -36,11 +36,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"slices"
+
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/rlp"
 	bloomfilter "github.com/holiman/bloomfilter/v2"
-	"golang.org/x/exp/slices"
 )
 
 var (

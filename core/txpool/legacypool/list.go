@@ -36,10 +36,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"slices"
+
 	"github.com/holiman/uint256"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"golang.org/x/exp/slices"
 )
 
 // nonceHeap is a heap.Interface implementation over 64bit unsigned integers for

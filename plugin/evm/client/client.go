@@ -7,11 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
-
-	"golang.org/x/exp/slog"
-
 	"github.com/luxfi/node/api"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/node/utils/formatting"

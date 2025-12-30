@@ -43,10 +43,11 @@ import (
 	"os"
 	"strconv"
 
+	"slices"
+
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/rlp"
-	"golang.org/x/exp/slices"
 )
 
 type allocItem struct {

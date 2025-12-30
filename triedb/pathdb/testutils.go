@@ -31,11 +31,12 @@ import (
 	"bytes"
 	"fmt"
 
+	"slices"
+
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/trie/triestate"
-	"golang.org/x/exp/slices"
 )
 
 // testHasher is a test utility for computing root hash of a batch of state
