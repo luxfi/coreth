@@ -22,7 +22,7 @@ require (
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/log v1.2.1
 	github.com/luxfi/metric v1.4.8
-	github.com/luxfi/node v1.22.73
+	github.com/luxfi/node v1.22.74
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.25.1
@@ -112,9 +112,9 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/luxfi/address v1.0.0 // indirect
 	github.com/luxfi/cache v1.1.0 // indirect
-	github.com/luxfi/const v1.4.0 // indirect
+	github.com/luxfi/const v1.4.0
 	github.com/luxfi/fhe v1.2.0 // indirect
-	github.com/luxfi/genesis v1.5.16 // indirect
+	github.com/luxfi/genesis v1.5.17 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
 	github.com/luxfi/keychain v1.0.1 // indirect
 	github.com/luxfi/lattice/v6 v6.1.2 // indirect
@@ -183,7 +183,6 @@ require (
 
 require (
 	github.com/luxfi/consensus v1.22.46
-	github.com/luxfi/constants v1.3.0
 	github.com/luxfi/database v1.2.17
 	github.com/luxfi/ids v1.2.5
 	github.com/luxfi/math v1.2.0
