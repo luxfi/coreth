@@ -15,7 +15,7 @@ import (
 	"github.com/luxfi/log"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/luxfi/constants"
+	"github.com/luxfi/const"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/node/codec"
 	consensuscontext "github.com/luxfi/consensus/context"

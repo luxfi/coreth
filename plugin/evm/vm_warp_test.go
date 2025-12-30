@@ -32,7 +32,7 @@ import (
 	"github.com/luxfi/node/upgrade"
 	"github.com/luxfi/node/upgrade/upgradetest"
 	avagoUtils "github.com/luxfi/node/utils"
-	"github.com/luxfi/constants"
+	"github.com/luxfi/const"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/crypto/bls/signer/localsigner"
 	"github.com/luxfi/math/set"

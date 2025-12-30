@@ -28,7 +28,7 @@ import (
 	"github.com/luxfi/consensus/engine/chain/block"
 	luxvm "github.com/luxfi/vm"
 	luxutils "github.com/luxfi/node/utils"
-	"github.com/luxfi/constants"
+	"github.com/luxfi/const"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/log"
 	"github.com/luxfi/math/set"

@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	consensusctx "github.com/luxfi/consensus/context"
-	"github.com/luxfi/constants"
+	"github.com/luxfi/const"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/node/utils/formatting/address"
 )
