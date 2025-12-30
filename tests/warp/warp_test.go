@@ -27,7 +27,7 @@ import (
 	"github.com/luxfi/consensus/validator"
 	"github.com/luxfi/node/tests/fixture/e2e"
 	"github.com/luxfi/node/tests/fixture/tmpnet"
-	"github.com/luxfi/constants"
+	"github.com/luxfi/const"
 	"github.com/luxfi/node/vms/platformvm"
 	"github.com/luxfi/node/vms/platformvm/api"
 	"github.com/luxfi/warp"

@@ -20,7 +20,7 @@ import (
 	"github.com/luxfi/ids"
 	consensusctx "github.com/luxfi/consensus/context"
 	luxutils "github.com/luxfi/node/utils"
-	"github.com/luxfi/constants"
+	"github.com/luxfi/const"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/node/utils/math"
 	"github.com/luxfi/math/set"
