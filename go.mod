@@ -5,24 +5,24 @@ go 1.25.5
 exclude github.com/luxfi/geth v1.16.1
 
 require (
-	github.com/VictoriaMetrics/fastcache v1.13.0
+	github.com/VictoriaMetrics/fastcache v1.13.2
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/fjl/gencodec v0.1.1
 	github.com/go-cmd/cmd v1.4.3
 	github.com/gorilla/rpc v1.2.1
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674
-	github.com/hashicorp/go-bexpr v0.1.14
+	github.com/hashicorp/go-bexpr v0.1.15
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/holiman/billy v0.0.0-20250707135307-f2f9b9aae7db
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.3.2
-	github.com/luxfi/crypto v1.17.26
-	github.com/luxfi/geth v1.16.64
+	github.com/luxfi/crypto v1.17.27
+	github.com/luxfi/geth v1.16.66
 	github.com/luxfi/go-bip39 v1.1.2
-	github.com/luxfi/log v1.1.26
+	github.com/luxfi/log v1.2.1
 	github.com/luxfi/metric v1.4.8
-	github.com/luxfi/node v1.22.44
+	github.com/luxfi/node v1.22.73
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.25.1
@@ -38,9 +38,9 @@ require (
 	go.uber.org/mock v0.6.0
 	go.uber.org/zap v1.27.1
 	golang.org/x/crypto v0.46.0
-	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b
+	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
 	golang.org/x/sync v0.19.0
-	golang.org/x/time v0.12.0
+	golang.org/x/time v0.14.0
 	golang.org/x/tools v0.40.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
@@ -71,7 +71,7 @@ require (
 	github.com/crate-crypto/go-eth-kzg v1.4.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
-	github.com/dgraph-io/badger/v4 v4.8.0 // indirect
+	github.com/dgraph-io/badger/v4 v4.9.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.2.0 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dop251/goja v0.0.0-20230806174421-c933cf95e127 // indirect
@@ -83,7 +83,7 @@ require (
 	github.com/ferranbt/fastssz v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/garslo/gogen v0.0.0-20170306192744-1d203ffc1f61 // indirect
-	github.com/gballet/go-libpcsclite v0.0.0-20191108122812-4678299bea08 // indirect
+	github.com/gballet/go-libpcsclite v0.0.0-20250918194357-1ec6f2e601c6 // indirect
 	github.com/getsentry/sentry-go v0.35.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -91,7 +91,7 @@ require (
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
-	github.com/gofrs/flock v0.12.1 // indirect
+	github.com/gofrs/flock v0.13.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/mock v1.7.0-rc.1 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
@@ -110,13 +110,17 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/luxfi/address v1.0.0 // indirect
 	github.com/luxfi/cache v1.1.0 // indirect
-	github.com/luxfi/genesis v1.5.9 // indirect
+	github.com/luxfi/const v1.4.0 // indirect
+	github.com/luxfi/fhe v1.2.0 // indirect
+	github.com/luxfi/genesis v1.5.16 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
+	github.com/luxfi/keychain v1.0.1 // indirect
 	github.com/luxfi/lattice/v6 v6.1.2 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
 	github.com/luxfi/sampler v1.0.0 // indirect
-	github.com/luxfi/tfhe v1.0.0 // indirect
+	github.com/luxfi/staking v1.0.0 // indirect
 	github.com/luxfi/trace v0.1.4 // indirect
 	github.com/luxfi/utils v1.1.0 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
@@ -178,13 +182,13 @@ require (
 )
 
 require (
-	github.com/luxfi/consensus v1.22.44
-	github.com/luxfi/constants v1.2.4
+	github.com/luxfi/consensus v1.22.46
+	github.com/luxfi/constants v1.3.0
 	github.com/luxfi/database v1.2.17
 	github.com/luxfi/ids v1.2.5
 	github.com/luxfi/math v1.2.0
 	github.com/luxfi/p2p v1.18.2
-	github.com/luxfi/precompiles v0.1.8
+	github.com/luxfi/precompiles v0.1.10
 	github.com/luxfi/vm v1.0.1
-	github.com/luxfi/warp v1.18.0
+	github.com/luxfi/warp v1.18.2
 )
