@@ -17,7 +17,7 @@ require (
 	github.com/holiman/billy v0.0.0-20250707135307-f2f9b9aae7db
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.3.2
-	github.com/luxfi/crypto v1.17.27
+	github.com/luxfi/crypto v1.17.28
 	github.com/luxfi/geth v1.16.66
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/log v1.2.1
@@ -59,7 +59,7 @@ require (
 	github.com/btcsuite/btcd/btcutil v1.1.6 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudflare/circl v1.6.2-0.20251204010831-23491bd573cf // indirect
+	github.com/cloudflare/circl v1.6.2 // indirect
 	github.com/cockroachdb/errors v1.12.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
@@ -113,11 +113,10 @@ require (
 	github.com/luxfi/address v1.0.0 // indirect
 	github.com/luxfi/cache v1.1.0 // indirect
 	github.com/luxfi/const v1.4.0
-	github.com/luxfi/fhe v1.2.0 // indirect
+	github.com/luxfi/fhe v1.4.0 // indirect
 	github.com/luxfi/genesis v1.5.17 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
 	github.com/luxfi/keychain v1.0.1 // indirect
-	github.com/luxfi/lattice/v6 v6.1.2 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
 	github.com/luxfi/sampler v1.0.0 // indirect
 	github.com/luxfi/staking v1.0.0 // indirect
@@ -187,7 +186,9 @@ require (
 	github.com/luxfi/ids v1.2.5
 	github.com/luxfi/math v1.2.0
 	github.com/luxfi/p2p v1.18.2
-	github.com/luxfi/precompiles v0.1.10
+	github.com/luxfi/precompiles v0.1.11
 	github.com/luxfi/vm v1.0.1
 	github.com/luxfi/warp v1.18.2
 )
+
+require github.com/luxfi/lattice/v7 v7.0.0 // indirect
