@@ -17,7 +17,7 @@ import (
 
 	"github.com/luxfi/consensus/core"
 	"github.com/luxfi/node/upgrade/upgradetest"
-	"github.com/luxfi/node/vms/components/chain"
+	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/coreth/plugin/evm/extension"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

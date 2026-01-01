@@ -36,7 +36,7 @@ import (
 	"github.com/luxfi/node/utils/profiler"
 	"github.com/luxfi/node/utils/timer/mockable"
 	"github.com/luxfi/node/utils/units"
-	"github.com/luxfi/node/vms/components/chain"
+	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/p2p"
 	p2pgossip "github.com/luxfi/p2p/gossip"
@@ -247,6 +247,10 @@ type VM struct {
 	bootstrapped utils.Atomic[bool]
 	IsPlugin     bool
 
+	// toEngine is used to notify the consensus engine about pending transactions
+	// Uses block.Message to match the exact channel type from chains/manager.go
+	toEngine chan<- block.Message
+
 	stateSyncDone chan struct{}
 
 	logger corethlog.Logger
@@ -291,7 +295,6 @@ func (v *VM) Initialize(
 			return fmt.Errorf("expected p2p.Sender or network.AppSender, got %T", appSenderIface)
 		}
 	}
-	_ = toEngine // unused but keep parameter
 	// Type assert chainCtx
 	vmCtx, ok := chainCtx.(*consensusctx.Context)
 	if !ok {
@@ -364,6 +367,27 @@ func (v *VM) Initialize(
 	v.logger = corethLogger
 
 	log.Info("Initializing Coreth VM", "Version", Version, "Config", v.config)
+	log.Info("CORETH_BUILD_2026_01_01_0115", "marker", "PLUGIN_LOADED_FROM_PLUGINS_DIR")
+
+	// Store toEngine channel for notifying consensus about pending transactions
+	// The manager passes chan block.Message (bidirectional), we store it as send-only.
+	// IMPORTANT: Must use block.Message type exactly to match chains/manager.go channel type.
+	log.Info("toEngine dynamic type", "type", fmt.Sprintf("%T", toEngine))
+	switch ch := toEngine.(type) {
+	case chan<- block.Message:
+		v.toEngine = ch
+		log.Info("toEngine stored", "as", "chan<- block.Message")
+	case chan block.Message:
+		// Cast bidirectional channel to send-only
+		v.toEngine = (chan<- block.Message)(ch)
+		log.Info("toEngine stored", "as", "chan block.Message (cast to send-only)")
+	default:
+		if toEngine == nil {
+			log.Warn("toEngine is nil - cannot notify consensus on PendingTxs")
+		} else {
+			log.Warn("unexpected toEngine type", "type", fmt.Sprintf("%T", toEngine))
+		}
+	}
 
 	if deprecateMsg != "" {
 		log.Warn("Deprecation Warning", "msg", deprecateMsg)
@@ -704,11 +728,15 @@ func (v *VM) initializeChain(lastAcceptedHash common.Hash) error {
 	v.blockChain = v.eth.BlockChain()
 	v.miner = v.eth.Miner()
 
-	// Register callback for admin_importChain to update acceptedBlockDB.
-	// This is critical: when blocks are imported via the admin API, the VM layer's
-	// acceptedBlockDB must be updated so ReadLastAccepted() returns the correct hash on restart.
+	// Register callback for admin_importChain to update both:
+	// 1. acceptedBlockDB - persistence for ReadLastAccepted() on restart
+	// 2. chain.State.lastAcceptedBlock - consensus layer's view of the chain head
+	// This is critical: without both updates, imported blocks won't be recognized
+	// as the canonical chain head and new blocks cannot be produced.
 	v.eth.SetPostImportCallback(func(lastBlockHash common.Hash, lastBlockHeight uint64) error {
-		log.Info("PostImportCallback: updating acceptedBlockDB", "hash", lastBlockHash, "height", lastBlockHeight)
+		log.Info("PostImportCallback: updating acceptedBlockDB and chain.State", "hash", lastBlockHash, "height", lastBlockHeight)
+
+		// Step 1: Update acceptedBlockDB for persistence
 		if err := v.acceptedBlockDB.Put(lastAcceptedKey, lastBlockHash[:]); err != nil {
 			return fmt.Errorf("failed to update acceptedBlockDB: %w", err)
 		}
@@ -723,13 +751,58 @@ func (v *VM) initializeChain(lastAcceptedHash common.Hash) error {
 			// Don't return error - the commit succeeded, sync is best-effort
 		}
 		log.Info("PostImportCallback: acceptedBlockDB updated and synced successfully")
+
+		// Step 2: Update chain.State.lastAcceptedBlock for consensus
+		// This ensures the Snowman consensus engine recognizes the imported blocks
+		// as the canonical chain head.
+		if v.State == nil {
+			log.Warn("PostImportCallback: chain.State not initialized yet, skipping state update")
+			return nil
+		}
+
+		// Get the eth block from the blockchain
+		ethBlock := v.blockChain.GetBlockByHash(lastBlockHash)
+		if ethBlock == nil {
+			return fmt.Errorf("failed to get block by hash %s from blockchain", lastBlockHash.Hex())
+		}
+
+		// Wrap the eth block as a consensus block
+		wrappedBlock, err := wrapBlock(ethBlock, v)
+		if err != nil {
+			return fmt.Errorf("failed to wrap block: %w", err)
+		}
+
+		// Update the chain.State's lastAcceptedBlock
+		if err := v.SetLastAcceptedBlock(wrappedBlock); err != nil {
+			return fmt.Errorf("failed to set last accepted block in chain.State: %w", err)
+		}
+
+		log.Info("PostImportCallback: chain.State updated successfully", "height", lastBlockHeight, "hash", lastBlockHash.Hex())
+
+		// Notify consensus engine to start building blocks from the imported tip
+		if v.toEngine != nil {
+			select {
+			case v.toEngine <- block.Message{Type: block.PendingTxs}:
+				log.Info("PostImportCallback: notified consensus engine to resume block production")
+			default:
+				log.Warn("PostImportCallback: toEngine channel full, consensus notification dropped")
+			}
+		}
 		return nil
 	})
 
 	// Set the gas parameters for the tx pool to the minimum gas price for the
 	// latest upgrade.
 	v.txPool.SetGasTip(big.NewInt(0))
-	v.txPool.SetMinFee(big.NewInt(lp176.MinGasPrice))
+	log.Warn("CORETH-ZACH: SkipBlockFee config value", "skipBlockFee", v.config.SkipBlockFee)
+	if v.config.SkipBlockFee {
+		// Allow zero-fee transactions when skip-block-fee is enabled
+		log.Warn("CORETH-ZACH: Setting MinFee to 0")
+		v.txPool.SetMinFee(big.NewInt(0))
+	} else {
+		log.Warn("CORETH-ZACH: Setting MinFee to lp176.MinGasPrice", "minGasPrice", lp176.MinGasPrice)
+		v.txPool.SetMinFee(big.NewInt(lp176.MinGasPrice))
+	}
 
 	v.eth.Start()
 	return v.initChainState(v.blockChain.LastAcceptedBlock())

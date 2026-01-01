@@ -199,3 +199,5 @@ require (
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
 )
+
+replace github.com/luxfi/vm => ../vm
