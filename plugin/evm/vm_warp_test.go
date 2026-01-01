@@ -36,7 +36,7 @@ import (
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/crypto/bls/signer/localsigner"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/node/vms/components/chain"
+	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/eth/tracers"

@@ -16,7 +16,7 @@ import (
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/consensus/engine/chain/block"
-	"github.com/luxfi/node/vms/components/chain"
+	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/coreth/eth"
 	"github.com/luxfi/coreth/params"

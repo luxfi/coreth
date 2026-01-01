@@ -51,7 +51,7 @@ import (
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/vms/components/lux"
-	"github.com/luxfi/node/vms/components/chain"
+	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/node/vms/secp256k1fx"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/constants"
