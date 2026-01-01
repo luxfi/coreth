@@ -6,11 +6,11 @@ package params
 import (
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/precompiles/mldsa"
-	"github.com/luxfi/precompiles/pqcrypto"
-	"github.com/luxfi/precompiles/slhdsa"
+	"github.com/luxfi/precompile/mldsa"
+	"github.com/luxfi/precompile/pqcrypto"
+	"github.com/luxfi/precompile/slhdsa"
 
-	pqcontract "github.com/luxfi/precompiles/contract"
+	pqcontract "github.com/luxfi/precompile/contract"
 )
 
 // pqPrecompileAdapter wraps a precompiles.StatefulPrecompiledContract to implement

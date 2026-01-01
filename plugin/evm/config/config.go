@@ -80,6 +80,11 @@ var (
 		"internal-eth",
 		"internal-blockchain",
 		"internal-transaction",
+		// Dev APIs for Anvil/Hardhat compatibility
+		"eth-dev",
+		"evm-dev",
+		"anvil-dev",
+		"hardhat-dev",
 	}
 	defaultAllowUnprotectedTxHashes = []common.Hash{
 		common.HexToHash("0xfefb2da535e927b85fe68eb81cb2e4a5827c905f78381a01ef2322aa9b0aee8e"), // EIP-1820: https://eips.ethereum.org/EIPS/eip-1820
@@ -255,6 +260,11 @@ type Config struct {
 	// This is used for dev mode (luxd --dev) to provide anvil-like behavior where blocks
 	// are mined immediately when transactions are submitted.
 	EnableAutomining bool `json:"enable-automining"`
+
+	// SkipBlockFee disables block fee validation in the consensus engine.
+	// This is used for dev mode to allow block generation without requiring
+	// transactions that pay sufficient fees to cover block costs.
+	SkipBlockFee bool `json:"skip-block-fee"`
 }
 
 // TxPoolConfig contains the transaction pool config to be passed

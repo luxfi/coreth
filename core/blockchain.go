@@ -518,7 +518,16 @@ func (bc *BlockChain) batchBlockAcceptedIndices(batch ethdb.Batch, b *types.Bloc
 func (bc *BlockChain) flattenSnapshot(postAbortWork func() error, hash common.Hash) error {
 	// If snapshots are not initialized, perform [postAbortWork] immediately.
 	if bc.snaps == nil {
-		return postAbortWork()
+		if err := postAbortWork(); err != nil {
+			// In dev mode or when using HashDB, some trie operations may return "not supported"
+			// (e.g., Dereference on HashDB). This is not fatal - we can continue operating.
+			if strings.Contains(err.Error(), "not supported") {
+				log.Debug("Trie operation not supported (no snapshots), continuing", "blockHash", hash, "err", err)
+				return nil
+			}
+			return err
+		}
+		return nil
 	}
 
 	// Abort snapshot generation before pruning anything from trie database
@@ -526,8 +535,14 @@ func (bc *BlockChain) flattenSnapshot(postAbortWork func() error, hash common.Ha
 	bc.snaps.AbortGeneration()
 
 	// Perform work after snapshot generation is aborted (typically trie updates)
+	// In dev mode or when using HashDB, some trie operations may return "not supported"
+	// (e.g., Dereference on HashDB). This is not fatal - we can continue operating.
 	if err := postAbortWork(); err != nil {
-		return err
+		if strings.Contains(err.Error(), "not supported") {
+			log.Debug("Trie operation not supported in AcceptTrie, continuing", "blockHash", hash, "err", err)
+		} else {
+			return err
+		}
 	}
 
 	// Ensure we avoid flattening the snapshot while we are processing a block, or
@@ -539,7 +554,15 @@ func (bc *BlockChain) flattenSnapshot(postAbortWork func() error, hash common.Ha
 	// Flatten the entire snap Trie to disk
 	//
 	// Note: This resumes snapshot generation.
-	return bc.snaps.Flatten(hash)
+	err := bc.snaps.Flatten(hash)
+	// In dev mode or when using HashDB (which doesn't support all PathDB operations),
+	// snapshot flattening may return "not supported". This is not fatal - we can
+	// continue operating without flattening since the state is still consistent.
+	if err != nil && strings.Contains(err.Error(), "not supported") {
+		log.Debug("Snapshot flattening not supported, continuing without flatten", "blockHash", hash, "err", err)
+		return nil
+	}
+	return err
 }
 
 // warmAcceptedCaches fetches previously accepted headers and logs from disk to
@@ -1438,6 +1461,53 @@ func (bc *BlockChain) InsertBlockManual(block *types.Block, writes bool) error {
 	bc.chainmu.Unlock()
 
 	return err
+}
+
+// InsertBlockWithoutState inserts a block into the chain without executing transactions
+// or validating state. This is a DEV-MODE-ONLY method for inserting synthetic blocks
+// with pre-committed state (e.g., from eth_setBalance, eth_setStorageAt).
+// WARNING: This bypasses state validation and should only be used in dev mode.
+func (bc *BlockChain) InsertBlockWithoutState(block *types.Block) error {
+	bc.chainmu.Lock()
+	defer bc.chainmu.Unlock()
+
+	// Verify parent exists (except for genesis)
+	if block.NumberU64() > 0 {
+		parent := bc.GetHeader(block.ParentHash(), block.NumberU64()-1)
+		if parent == nil {
+			return fmt.Errorf("unknown ancestor: block %d parent %s not found", block.NumberU64(), block.ParentHash().Hex())
+		}
+	}
+
+	// Write block to database with all necessary indices
+	batch := bc.db.NewBatch()
+	rawdb.WriteBlock(batch, block)
+	rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), nil)
+	rawdb.WriteCanonicalHash(batch, block.Hash(), block.NumberU64())
+	rawdb.WriteTxLookupEntriesByBlock(batch, block)
+	// Also write accepted indices (for RPC "latest" to work)
+	if err := bc.batchBlockAcceptedIndices(batch, block); err != nil {
+		return fmt.Errorf("write accepted indices: %w", err)
+	}
+	rawdb.WriteHeadBlockHash(batch, block.Hash())
+	rawdb.WriteHeadHeaderHash(batch, block.Hash())
+	if err := batch.Write(); err != nil {
+		return fmt.Errorf("write block data: %w", err)
+	}
+
+	// Update ALL head pointers including lastAccepted (for RPC to work)
+	bc.writeHeadBlock(block)
+	bc.currentBlock.Store(block.Header())
+	bc.lastAccepted = block
+	bc.acceptorTip = block
+	bc.hc.SetCurrentHeader(block.Header())
+
+	log.Debug("Inserted block without state",
+		"number", block.NumberU64(),
+		"hash", block.Hash().Hex(),
+		"root", block.Root().Hex())
+
+	return nil
 }
 
 func (bc *BlockChain) insertBlock(block *types.Block, writes bool) error {
