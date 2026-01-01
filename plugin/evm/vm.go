@@ -690,7 +690,7 @@ func (v *VM) initializeChain(lastAcceptedHash common.Hash) error {
 		lastAcceptedHash,
 		dummy.NewDummyEngine(
 			v.extensionConfig.ConsensusCallbacks,
-			dummy.Mode{},
+			dummy.Mode{ModeSkipBlockFee: v.config.SkipBlockFee},
 			v.clock,
 			desiredTargetExcess,
 		),
