@@ -17,7 +17,7 @@ import (
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/database"
-	"github.com/luxfi/database/leveldb"
+	"github.com/luxfi/database/badgerdb"
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
@@ -732,9 +732,8 @@ func BenchmarkAtomicTrieIterate(b *testing.B) {
 	}
 }
 
-func levelDB(t testing.TB) database.Database {
-	// leveldb.New(path, blockCacheSize, writeCacheSize, handleCap)
-	db, err := leveldb.New(t.TempDir(), 0, 0, 0)
+func badgerDB(t testing.TB) database.Database {
+	db, err := badgerdb.New(t.TempDir(), nil, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -758,13 +757,13 @@ func BenchmarkApplyToSharedMemory(b *testing.B) {
 			blocks: 250_000,
 		},
 		{
-			name:   "leveldb-25k",
-			newDB:  func() database.Database { return levelDB(b) },
+			name:   "badgerdb-25k",
+			newDB:  func() database.Database { return badgerDB(b) },
 			blocks: 25_000,
 		},
 		{
-			name:   "leveldb-250k",
-			newDB:  func() database.Database { return levelDB(b) },
+			name:   "badgerdb-250k",
+			newDB:  func() database.Database { return badgerDB(b) },
 			blocks: 250_000,
 		},
 	}
