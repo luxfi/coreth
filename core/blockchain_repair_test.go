@@ -44,7 +44,7 @@ import (
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/geth/ethdb/leveldb"
+	"github.com/luxfi/geth/ethdb/badgerdb"
 	"github.com/luxfi/geth/triedb"
 	"github.com/stretchr/testify/require"
 )
@@ -527,7 +527,7 @@ func testRepairWithScheme(t *testing.T, tt *rewindTest, snapshots bool, scheme s
 	// Create a temporary persistent database
 	datadir := t.TempDir()
 
-	kvdb, err := leveldb.New(datadir, 0, 0, "", false)
+	kvdb, err := badgerdb.New(datadir, 0, 0, "", false)
 	if err != nil {
 		t.Fatalf("Failed to create persistent database: %v", err)
 	}
@@ -618,7 +618,7 @@ func testRepairWithScheme(t *testing.T, tt *rewindTest, snapshots bool, scheme s
 	chain.stopWithoutSaving()
 
 	// Start a new blockchain back up and see where the repair leads us
-	kvdb, err = leveldb.New(datadir, 0, 0, "", false)
+	kvdb, err = badgerdb.New(datadir, 0, 0, "", false)
 	if err != nil {
 		t.Fatalf("Failed to reopen persistent database: %v", err)
 	}

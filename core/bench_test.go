@@ -41,7 +41,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/ethdb/leveldb"
+	"github.com/luxfi/geth/ethdb/badgerdb"
 )
 
 func BenchmarkInsertChain_empty_memdb(b *testing.B) {
@@ -165,7 +165,7 @@ func benchInsertChain(b *testing.B, disk bool, gen func(int, *BlockGen)) {
 		db = rawdb.NewMemoryDatabase()
 	} else {
 		dir := b.TempDir()
-		kvdb, err := leveldb.New(dir, 128, 128, "", false)
+		kvdb, err := badgerdb.New(dir, 128, 128, "", false)
 		if err != nil {
 			b.Fatalf("cannot create temporary database: %v", err)
 		}
@@ -268,7 +268,7 @@ func benchWriteChain(b *testing.B, full bool, count uint64) {
 	genesis := &Genesis{Config: params.TestChainConfig}
 	for i := 0; i < b.N; i++ {
 		dir := b.TempDir()
-		kvdb, err := leveldb.New(dir, 128, 1024, "", false)
+		kvdb, err := badgerdb.New(dir, 128, 1024, "", false)
 		if err != nil {
 			b.Fatalf("error opening database at %v: %v", dir, err)
 		}
@@ -281,7 +281,7 @@ func benchWriteChain(b *testing.B, full bool, count uint64) {
 func benchReadChain(b *testing.B, full bool, count uint64) {
 	dir := b.TempDir()
 
-	kvdb, err := leveldb.New(dir, 128, 1024, "", false)
+	kvdb, err := badgerdb.New(dir, 128, 1024, "", false)
 	if err != nil {
 		b.Fatalf("error opening database at %v: %v", dir, err)
 	}
@@ -294,7 +294,7 @@ func benchReadChain(b *testing.B, full bool, count uint64) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		kvdb, err := leveldb.New(dir, 128, 1024, "", false)
+		kvdb, err := badgerdb.New(dir, 128, 1024, "", false)
 		if err != nil {
 			b.Fatalf("error opening database at %v: %v", dir, err)
 		}
