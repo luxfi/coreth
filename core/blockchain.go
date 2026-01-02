@@ -696,20 +696,25 @@ func (bc *BlockChain) DrainAcceptorQueue() {
 // the state trie is persisted to disk. Without calling this, imported
 // blocks will have their state in memory but it won't be committed,
 // causing "required historical state unavailable" errors on restart.
+//
+// IMPORTANT: We force a direct commit to the triedb instead of using
+// stateManager.AcceptTrie because cappedMemoryTrieWriter only commits
+// at certain intervals (when block.NumberU64() % commitInterval == 0).
+// For imported blocks, we MUST commit the final block's state regardless
+// of its block number.
 func (bc *BlockChain) AcceptImportedState(block *types.Block) error {
 	log.Info("Accepting imported state", "block", block.NumberU64(), "root", block.Root())
 
-	// Accept the trie for the imported block
-	if err := bc.stateManager.AcceptTrie(block); err != nil {
-		return fmt.Errorf("failed to accept trie for block %d: %w", block.NumberU64(), err)
+	root := block.Root()
+
+	// Force commit the state trie directly to disk.
+	// This bypasses the cappedMemoryTrieWriter's interval-based commit logic
+	// which could skip committing if the block number isn't at a commit interval.
+	if err := bc.triedb.Commit(root, true); err != nil {
+		return fmt.Errorf("failed to commit state trie for block %d: %w", block.NumberU64(), err)
 	}
 
-	// Commit the accepted state to disk
-	if err := bc.stateManager.CommitAccepted(); err != nil {
-		return fmt.Errorf("failed to commit accepted state: %w", err)
-	}
-
-	log.Info("Successfully committed imported state", "block", block.NumberU64())
+	log.Info("Successfully committed imported state", "block", block.NumberU64(), "root", root.Hex())
 	return nil
 }
 
@@ -824,16 +829,19 @@ func (bc *BlockChain) loadGenesisState() error {
 // For RLP imports, if the genesis state is not accessible but allocations are stored,
 // this function will regenerate and commit the genesis state from the allocations.
 func (bc *BlockChain) EnsureGenesisState() error {
+	log.Info("EnsureGenesisState: starting")
 	genesis := bc.genesisBlock
 	if genesis == nil {
 		return errors.New("genesis block not set")
 	}
+	log.Info("EnsureGenesisState: checking HasState", "root", genesis.Root().Hex())
 
 	// Check if genesis state is already accessible
 	if bc.HasState(genesis.Root()) {
-		log.Debug("Genesis state is accessible", "root", genesis.Root().Hex())
+		log.Info("EnsureGenesisState: genesis state is accessible", "root", genesis.Root().Hex())
 		return nil
 	}
+	log.Info("EnsureGenesisState: genesis state NOT accessible, proceeding with recovery")
 
 	// For PathDB, the genesis state was committed at startup but the in-memory layer
 	// may have been evicted. Try to recover it by loading from the journal/disk.

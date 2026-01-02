@@ -11,12 +11,12 @@ import (
 	"github.com/holiman/uint256"
 
 	consensusctx "github.com/luxfi/consensus/context"
+	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/plugin/evm/extension"
 	"github.com/luxfi/log"
 	"github.com/luxfi/node/utils/lock"
-	"github.com/luxfi/vm"
 )
 
 const (
@@ -41,6 +41,10 @@ type blockBuilder struct {
 	// This is used to ensure that we don't build blocks too frequently,
 	// but at least after a minimum delay of minBlockBuildingRetryDelay.
 	lastBuildTime time.Time
+
+	// toEngine is used to notify the consensus engine about pending transactions
+	// for multi-validator consensus block production
+	toEngine chan<- block.Message
 }
 
 // Logger returns the logger from the context
@@ -57,6 +61,7 @@ func (vm *VM) NewBlockBuilder(extraMempool extension.BuilderMempool) *blockBuild
 		extraMempool: extraMempool,
 		shutdownChan: vm.shutdownChan,
 		shutdownWg:   &vm.shutdownWg,
+		toEngine:     vm.toEngine, // Pass toEngine channel for consensus notification
 	}
 	b.pendingSignal = lock.NewCond(&b.buildBlockLock)
 	return b
@@ -108,9 +113,13 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 			case <-txSubmitChan:
 				log.Trace("New tx detected, trying to generate a block")
 				b.signalCanBuild()
+				// Notify consensus engine about pending transactions for multi-validator consensus
+				b.notifyConsensusEngine()
 			case <-extraChan:
 				log.Trace("New extra Tx detected, trying to generate a block")
 				b.signalCanBuild()
+				// Notify consensus engine about pending transactions for multi-validator consensus
+				b.notifyConsensusEngine()
 			case <-b.shutdownChan:
 				return
 			}
@@ -118,19 +127,34 @@ func (b *blockBuilder) awaitSubmittedTxs() {
 	})
 }
 
+// notifyConsensusEngine sends a PendingTxs message to the consensus engine via toEngine channel.
+// This is required for multi-validator consensus where the node's chain manager reads from
+// toEngine to trigger block building and gossiping.
+func (b *blockBuilder) notifyConsensusEngine() {
+	if b.toEngine == nil {
+		return
+	}
+	select {
+	case b.toEngine <- block.Message{Type: block.PendingTxs}:
+		log.Debug("Notified consensus engine about pending transactions")
+	default:
+		log.Trace("toEngine channel full, notification dropped")
+	}
+}
+
 // waitForEvent waits until a block needs to be built.
 // It returns only after at least [minBlockBuildingRetryDelay] passed from the last time a block was built.
-func (b *blockBuilder) waitForEvent(ctx context.Context) (vm.Message, error) {
+func (b *blockBuilder) waitForEvent(ctx context.Context) (block.Message, error) {
 	lastBuildTime, err := b.waitForNeedToBuild(ctx)
 	if err != nil {
-		return vm.Message{}, err
+		return block.Message{}, err
 	}
 	timeSinceLastBuildTime := time.Since(lastBuildTime)
 	if b.lastBuildTime.IsZero() || timeSinceLastBuildTime >= minBlockBuildingRetryDelay {
 		log.Debug("Last time we built a block was long enough ago, no need to wait",
 			"timeSinceLastBuildTime", timeSinceLastBuildTime,
 		)
-		return vm.Message{Type: vm.PendingTxs}, nil
+		return block.Message{Type: block.PendingTxs}, nil
 	}
 	timeUntilNextBuild := minBlockBuildingRetryDelay - timeSinceLastBuildTime
 	log.Debug("Last time we built a block was too recent, waiting",
@@ -138,9 +162,9 @@ func (b *blockBuilder) waitForEvent(ctx context.Context) (vm.Message, error) {
 	)
 	select {
 	case <-ctx.Done():
-		return vm.Message{}, ctx.Err()
+		return block.Message{}, ctx.Err()
 	case <-time.After(timeUntilNextBuild):
-		return vm.Message{Type: vm.PendingTxs}, nil
+		return block.Message{Type: block.PendingTxs}, nil
 	}
 }
 
