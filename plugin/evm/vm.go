@@ -367,7 +367,8 @@ func (v *VM) Initialize(
 	v.logger = corethLogger
 
 	log.Info("Initializing Coreth VM", "Version", Version, "Config", v.config)
-	log.Info("CORETH_BUILD_2026_01_01_0115", "marker", "PLUGIN_LOADED_FROM_PLUGINS_DIR")
+	log.Info("CORETH_BUILD_2026_01_01_1605", "marker", "PLUGIN_LOADED_FROM_PLUGINS_DIR")
+	log.Info("DEBUG upgradeBytes received", "length", len(upgradeBytes), "content", string(upgradeBytes))
 
 	// Store toEngine channel for notifying consensus about pending transactions
 	// The manager passes chan block.Message (bidirectional), we store it as send-only.

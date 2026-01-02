@@ -109,7 +109,9 @@ func (api *AdminAPI) ImportChain(file string) (bool, error) {
 	}
 
 	// Ensure genesis state is accessible before import
+	log.Info("ImportChain: beginning import", "file", file)
 	chain := api.eth.BlockChain()
+	log.Info("ImportChain: calling EnsureGenesisState")
 	if err := chain.EnsureGenesisState(); err != nil {
 		log.Error("ImportChain: failed to ensure genesis state", "error", err)
 		return false, fmt.Errorf("failed to ensure genesis state: %w", err)

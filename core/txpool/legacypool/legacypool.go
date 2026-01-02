@@ -188,10 +188,11 @@ func (config *Config) sanitize() Config {
 		log.Warn("Sanitizing invalid txpool journal time", "provided", conf.Rejournal, "updated", time.Second)
 		conf.Rejournal = time.Second
 	}
-	if conf.PriceLimit < 1 {
-		log.Warn("Sanitizing invalid txpool price limit", "provided", conf.PriceLimit, "updated", DefaultConfig.PriceLimit)
-		conf.PriceLimit = DefaultConfig.PriceLimit
-	}
+	// Allow tx-pool-price-limit:0 for testing with skip-block-fee
+	// if conf.PriceLimit < 1 {
+	// 	log.Warn("Sanitizing invalid txpool price limit", "provided", conf.PriceLimit, "updated", DefaultConfig.PriceLimit)
+	// 	conf.PriceLimit = DefaultConfig.PriceLimit
+	// }
 	if conf.PriceBump < 1 {
 		log.Warn("Sanitizing invalid txpool price bump", "provided", conf.PriceBump, "updated", DefaultConfig.PriceBump)
 		conf.PriceBump = DefaultConfig.PriceBump
