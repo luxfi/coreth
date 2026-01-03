@@ -10,18 +10,17 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus/engine/chain/chaintest"
 	consensustest "github.com/luxfi/consensus/test/helpers"
-	agoUtils "github.com/luxfi/node/utils"
-	"github.com/luxfi/math/set"
-	"github.com/luxfi/warp"
-	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/coreth/precompile/precompiletest"
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/math/set"
+	agoUtils "github.com/luxfi/node/utils"
+	"github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 	"github.com/stretchr/testify/require"
 )
 

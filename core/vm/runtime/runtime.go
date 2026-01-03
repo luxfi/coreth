@@ -31,9 +31,11 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
@@ -41,8 +43,6 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/triedb"
-	"github.com/luxfi/crypto"
-	"github.com/holiman/uint256"
 )
 
 // Config is a basic type specifying certain configuration flags for running

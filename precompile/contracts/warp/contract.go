@@ -7,11 +7,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/warp"
-	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/accounts/abi"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 
 	_ "embed"
 

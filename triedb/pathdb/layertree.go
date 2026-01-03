@@ -33,7 +33,6 @@ import (
 	"sync"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/trie/triestate"
 )
@@ -74,7 +73,7 @@ func (tree *layerTree) get(root common.Hash) layer {
 	tree.lock.RLock()
 	defer tree.lock.RUnlock()
 
-	return tree.layers[types.TrieRootHash(root)]
+	return tree.layers[root]
 }
 
 // forEach iterates the stored layers inside and applies the
@@ -104,7 +103,7 @@ func (tree *layerTree) add(root common.Hash, parentRoot common.Hash, block uint6
 	//
 	// Although we could silently ignore this internally, it should be the caller's
 	// responsibility to avoid even attempting to insert such a layer.
-	root, parentRoot = types.TrieRootHash(root), types.TrieRootHash(parentRoot)
+	// root and parentRoot are already common.Hash
 	if root == parentRoot {
 		return errors.New("layer cycle")
 	}
@@ -124,7 +123,6 @@ func (tree *layerTree) add(root common.Hash, parentRoot common.Hash, block uint6
 // are crossed. All diffs beyond the permitted number are flattened downwards.
 func (tree *layerTree) cap(root common.Hash, layers int) error {
 	// Retrieve the head layer to cap from
-	root = types.TrieRootHash(root)
 	l := tree.get(root)
 	if l == nil {
 		return fmt.Errorf("triedb layer [%#x] missing", root)

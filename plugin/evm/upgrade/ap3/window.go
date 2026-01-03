@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/coreth/utils"
 	safemath "github.com/luxfi/geth/common/math"
+	"github.com/luxfi/node/utils/wrappers"
 )
 
 const (

@@ -4,9 +4,9 @@
 package atomictest
 
 import (
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
+	"github.com/luxfi/ids"
+	luxatomic "github.com/luxfi/node/chains/atomic"
 )
 
 func ConvertToAtomicOps(tx *atomic.Tx) (map[ids.ID]*luxatomic.Requests, error) {

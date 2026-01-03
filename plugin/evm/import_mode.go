@@ -46,10 +46,10 @@ func GetImportedChainHeight(importPath string) (uint64, common.Hash, error) {
 	// Find the last block
 	var lastBlockNumber uint64
 	var lastBlockHash common.Hash
-	
+
 	it := sourceDB.NewIterator([]byte("h"), nil)
 	defer it.Release()
-	
+
 	for it.Next() {
 		key := it.Key()
 		if len(key) == 41 && key[0] == 'h' {
@@ -60,7 +60,7 @@ func GetImportedChainHeight(importPath string) (uint64, common.Hash, error) {
 			}
 		}
 	}
-	
+
 	return lastBlockNumber, lastBlockHash, nil
 }
 

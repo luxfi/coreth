@@ -74,10 +74,10 @@ func InitLogger(alias string, level string, jsonFormat bool, writer io.Writer) (
 
 	// Create core
 	core := zapcore.NewCore(encoder, zapcore.AddSync(writer), zapLevel)
-	
+
 	// Create zap logger
 	zapLogger := zap.New(core, zap.AddCaller())
-	
+
 	// Create luxfi logger
 	luxLogger := luxlog.NewZapLogger(zapLogger)
 
@@ -88,7 +88,7 @@ func InitLogger(alias string, level string, jsonFormat bool, writer io.Writer) (
 
 	// Set as global logger
 	luxlog.SetGlobalLogger(luxLogger)
-	
+
 	return c, nil
 }
 
@@ -109,7 +109,7 @@ func (l *Logger) SetLogLevel(level string) error {
 		return fmt.Errorf("unknown log level: %s", level)
 	}
 	l.logLevel.Set(slogLevel)
-	
+
 	// Note: luxfi/log doesn't expose a SetLevel method on individual loggers
 	// The level is controlled at creation time via the zap configuration
 	return nil

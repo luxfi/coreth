@@ -9,13 +9,13 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/atomictest"
 
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
-	"github.com/luxfi/node/utils"
 	"github.com/luxfi/math/set"
+	luxatomic "github.com/luxfi/node/chains/atomic"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/stretchr/testify/assert"
 

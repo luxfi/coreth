@@ -37,15 +37,15 @@ import (
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
+	"github.com/luxfi/geth/core/stateconf"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/core/stateconf"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/trie/triestate"
 	"github.com/luxfi/geth/triedb/database"
+	"github.com/luxfi/log"
 
 	// Force geth metrics of the same name to be registered first.
 	_ "github.com/luxfi/geth/triedb/hashdb"

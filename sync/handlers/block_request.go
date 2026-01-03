@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/luxfi/node/codec"
 	"github.com/luxfi/ids"
+	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/utils/units"
 
 	"github.com/luxfi/coreth/plugin/evm/message"

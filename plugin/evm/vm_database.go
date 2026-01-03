@@ -6,10 +6,10 @@ package evm
 import (
 	"time"
 
+	"github.com/luxfi/coreth/plugin/evm/database"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
-	"github.com/luxfi/coreth/plugin/evm/database"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/log"

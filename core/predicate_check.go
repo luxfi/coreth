@@ -7,13 +7,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/math/set"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/log"
+	"github.com/luxfi/math/set"
 )
 
 var ErrMissingPredicateContext = errors.New("missing predicate context")

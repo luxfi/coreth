@@ -6,15 +6,15 @@ package evm
 import (
 	"context"
 
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	syncHandlers "github.com/luxfi/coreth/sync/handlers"
 	"github.com/luxfi/coreth/sync/handlers/stats"
 	"github.com/luxfi/coreth/warp"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/log"
+	"github.com/luxfi/node/codec"
 )
 
 var _ message.RequestHandler = (*networkHandler)(nil)

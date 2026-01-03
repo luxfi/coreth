@@ -37,16 +37,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/node/utils/timer/mockable"
-	"github.com/luxfi/node/utils/units"
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/params"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/cortina"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"
@@ -55,7 +54,8 @@ import (
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/event"
 	"github.com/luxfi/log"
-	"github.com/holiman/uint256"
+	"github.com/luxfi/node/utils/timer/mockable"
+	"github.com/luxfi/node/utils/units"
 )
 
 const (

@@ -8,12 +8,12 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic/atomictest"
 
-	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/database/versiondb"
-	"github.com/luxfi/ids"
-	"github.com/luxfi/node/utils"
 	"github.com/luxfi/geth/common"
+	"github.com/luxfi/ids"
+	luxatomic "github.com/luxfi/node/chains/atomic"
+	"github.com/luxfi/node/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

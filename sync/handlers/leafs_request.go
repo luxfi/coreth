@@ -9,8 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/sync/handlers/stats"
@@ -20,9 +18,11 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/ethdb/memorydb"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/log"
+	"github.com/luxfi/node/codec"
 )
 
 var _ LeafRequestHandler = (*leafsRequestHandler)(nil)

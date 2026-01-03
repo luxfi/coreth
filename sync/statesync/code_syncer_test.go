@@ -16,9 +16,9 @@ import (
 	"github.com/luxfi/coreth/sync/handlers"
 	handlerstats "github.com/luxfi/coreth/sync/handlers/stats"
 
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/ethdb/memorydb"
 
 	"github.com/stretchr/testify/assert"

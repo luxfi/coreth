@@ -36,16 +36,16 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/log"
-	"github.com/holiman/uint256"
 )
 
 var (

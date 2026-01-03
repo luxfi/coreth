@@ -34,11 +34,11 @@ import (
 
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/log"
 )
 

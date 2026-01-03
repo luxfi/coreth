@@ -5,8 +5,8 @@ package rpc
 import (
 	"net/http"
 
-	"github.com/luxfi/node/utils/json"
 	"github.com/gorilla/rpc/v2"
+	"github.com/luxfi/node/utils/json"
 )
 
 // NewHandler returns a new Handler for a service where:

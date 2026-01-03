@@ -32,16 +32,16 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/common"
 	cmath "github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/log"
-	"github.com/holiman/uint256"
 )
 
 // ExecutionResult includes all output after executing given evm

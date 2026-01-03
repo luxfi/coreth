@@ -10,39 +10,39 @@ import (
 	"math/big"
 	"slices"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/luxfi/geth/core/tracing"
-	"github.com/holiman/uint256"
 
-	"github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/ids"
 	consensusctx "github.com/luxfi/consensus/context"
-	"github.com/luxfi/node/utils"
 	"github.com/luxfi/crypto/secp256k1"
-	"github.com/luxfi/node/utils/math"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/log"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/node/chains/atomic"
+	"github.com/luxfi/node/utils"
+	"github.com/luxfi/node/utils/math"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/components/verify"
 	"github.com/luxfi/node/vms/secp256k1fx"
-	"github.com/luxfi/geth/common"
-	"github.com/luxfi/log"
 )
 
 var (
-	_                           UnsignedAtomicTx       = (*UnsignedImportTx)(nil)
-	_                           secp256k1fx.UnsignedTx = (*UnsignedImportTx)(nil)
+	_                          UnsignedAtomicTx       = (*UnsignedImportTx)(nil)
+	_                          secp256k1fx.UnsignedTx = (*UnsignedImportTx)(nil)
 	ErrImportNonLUXInputBanff                         = errors.New("import input cannot contain non-LUX in Banff")
 	ErrImportNonLUXOutputBanff                        = errors.New("import output cannot contain non-LUX in Banff")
-	ErrNoImportInputs                                  = errors.New("tx has no imported inputs")
-	ErrWrongChainID                                    = errors.New("tx has wrong chain ID")
-	ErrNoEVMOutputs                                    = errors.New("tx has no EVM outputs")
-	ErrInputsNotSortedUnique                           = errors.New("inputs not sorted and unique")
-	ErrOutputsNotSortedUnique                          = errors.New("outputs not sorted and unique")
-	ErrOutputsNotSorted                                = errors.New("tx outputs not sorted")
-	errNilBaseFeeApricotPhase3                         = errors.New("nil base fee is invalid after apricotPhase3")
-	errInsufficientFundsForFee                         = errors.New("insufficient LUX funds to pay transaction fee")
+	ErrNoImportInputs                                 = errors.New("tx has no imported inputs")
+	ErrWrongChainID                                   = errors.New("tx has wrong chain ID")
+	ErrNoEVMOutputs                                   = errors.New("tx has no EVM outputs")
+	ErrInputsNotSortedUnique                          = errors.New("inputs not sorted and unique")
+	ErrOutputsNotSortedUnique                         = errors.New("outputs not sorted and unique")
+	ErrOutputsNotSorted                               = errors.New("tx outputs not sorted")
+	errNilBaseFeeApricotPhase3                        = errors.New("nil base fee is invalid after apricotPhase3")
+	errInsufficientFundsForFee                        = errors.New("insufficient LUX funds to pay transaction fee")
 )
 
 // UnsignedImportTx is an unsigned ImportTx

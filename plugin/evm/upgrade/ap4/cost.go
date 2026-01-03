@@ -8,8 +8,8 @@ package ap4
 import (
 	"math"
 
-	safemath "github.com/luxfi/node/utils/math"
 	"github.com/luxfi/coreth/utils"
+	safemath "github.com/luxfi/node/utils/math"
 )
 
 const (

@@ -30,6 +30,7 @@ package core
 import (
 	"math/big"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/core/extstate"
@@ -41,7 +42,6 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/params"
-	"github.com/holiman/uint256"
 )
 
 // WrapStateDB wraps the given StateDB with coreth's extended StateDB wrapper.

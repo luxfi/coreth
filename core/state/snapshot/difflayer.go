@@ -38,10 +38,10 @@ import (
 
 	"slices"
 
+	bloomfilter "github.com/holiman/bloomfilter/v2"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/rlp"
-	bloomfilter "github.com/holiman/bloomfilter/v2"
 )
 
 var (

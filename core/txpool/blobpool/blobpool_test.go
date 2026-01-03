@@ -40,6 +40,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/holiman/billy"
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
@@ -47,19 +49,17 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/header"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	"github.com/luxfi/crypto"
+	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
-	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/ethdb/memorydb"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/triedb"
-	"github.com/holiman/billy"
-	"github.com/holiman/uint256"
+	"github.com/luxfi/log"
 )
 
 var (
@@ -186,7 +186,7 @@ func (bc *testBlockChain) CurrentFinalBlock() *types.Header {
 	}
 }
 
-func (bt *testBlockChain) GetBlock(hash common.Hash, number uint64) *types.Block {
+func (bc *testBlockChain) GetBlock(hash common.Hash, number uint64) *types.Block {
 	return nil
 }
 

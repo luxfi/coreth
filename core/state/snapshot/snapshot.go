@@ -39,11 +39,11 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	ethsnapshot "github.com/luxfi/geth/core/state/snapshot"
-	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/core/stateconf"
-	"github.com/luxfi/log"
+	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/log"
 )
 
 const (

@@ -69,7 +69,6 @@ import (
 
 	// Force geth metrics of the same name to be registered first.
 	_ "github.com/luxfi/geth/core"
-
 	// ffi "github.com/luxfi/database-go-ethhash/ffi"
 )
 
@@ -1600,14 +1599,14 @@ func (bc *BlockChain) insertBlock(block *types.Block, writes bool) error {
 	vtime := time.Since(vstart)
 
 	// Update the metrics touched during block processing and validation
-	accountReadTimer.Inc(statedb.AccountReads.Milliseconds())   // Account reads are complete(in processing)
-	storageReadTimer.Inc(statedb.StorageReads.Milliseconds())   // Storage reads are complete(in processing)
-	accountUpdateTimer.Inc(statedb.AccountUpdates.Milliseconds()) // Account updates are complete(in validation)
-	storageUpdateTimer.Inc(statedb.StorageUpdates.Milliseconds()) // Storage updates are complete(in validation)
-	accountHashTimer.Inc(statedb.AccountHashes.Milliseconds())    // Account hashes are complete(in validation)
-	triehash := statedb.AccountHashes                             // The time spent on tries hashing
-	trieUpdate := statedb.AccountUpdates + statedb.StorageUpdates // The time spent on tries update
-	trieRead := statedb.AccountReads + statedb.StorageReads       // The time spent on reads
+	accountReadTimer.Inc(statedb.AccountReads.Milliseconds())                  // Account reads are complete(in processing)
+	storageReadTimer.Inc(statedb.StorageReads.Milliseconds())                  // Storage reads are complete(in processing)
+	accountUpdateTimer.Inc(statedb.AccountUpdates.Milliseconds())              // Account updates are complete(in validation)
+	storageUpdateTimer.Inc(statedb.StorageUpdates.Milliseconds())              // Storage updates are complete(in validation)
+	accountHashTimer.Inc(statedb.AccountHashes.Milliseconds())                 // Account hashes are complete(in validation)
+	triehash := statedb.AccountHashes                                          // The time spent on tries hashing
+	trieUpdate := statedb.AccountUpdates + statedb.StorageUpdates              // The time spent on tries update
+	trieRead := statedb.AccountReads + statedb.StorageReads                    // The time spent on reads
 	blockExecutionTimer.Inc((ptime - trieRead).Milliseconds())                 // The time spent on EVM processing
 	blockValidationTimer.Inc((vtime - (triehash + trieUpdate)).Milliseconds()) // The time spent on block validation
 	blockTrieOpsTimer.Inc((triehash + trieUpdate + trieRead).Milliseconds())   // The time spent on trie operations

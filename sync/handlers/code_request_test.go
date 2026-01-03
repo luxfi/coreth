@@ -11,12 +11,12 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/sync/handlers/stats/statstest"
 
-	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/ethdb/memorydb"
+	"github.com/luxfi/ids"
 	"github.com/stretchr/testify/assert"
 )
 

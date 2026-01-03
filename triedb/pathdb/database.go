@@ -310,7 +310,6 @@ func (db *Database) Enable(root common.Hash) error {
 		return errDatabaseReadOnly
 	}
 	// Ensure the provided state root matches the stored one.
-	root = types.TrieRootHash(root)
 	blob := rawdb.ReadAccountTrieNode(db.diskdb, nil)
 	stored := common.Keccak256Hash(blob)
 	if stored != root {
@@ -356,7 +355,6 @@ func (db *Database) Recover(root common.Hash, loader triestate.TrieLoader) error
 // Recoverable returns the indicator if the specified state is recoverable.
 func (db *Database) Recoverable(root common.Hash) bool {
 	// Ensure the requested state is a known state.
-	root = types.TrieRootHash(root)
 	id := rawdb.ReadStateID(db.diskdb, root)
 	if id == nil {
 		return false

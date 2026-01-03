@@ -35,9 +35,9 @@ import (
 	"github.com/VictoriaMetrics/fastcache"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/trie/triestate"
+	"github.com/luxfi/log"
 )
 
 // diskLayer is a low level persistent layer built on top of a key-value store.

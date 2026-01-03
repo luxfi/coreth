@@ -29,7 +29,6 @@
 package miner
 
 import (
-	"github.com/luxfi/node/utils/timer/mockable"
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
@@ -38,6 +37,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
+	"github.com/luxfi/node/utils/timer/mockable"
 )
 
 // Backend wraps all methods required for mining.

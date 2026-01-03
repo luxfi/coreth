@@ -8,20 +8,20 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/ids"
-	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/sync/handlers/stats"
 	"github.com/luxfi/coreth/sync/handlers/stats/statstest"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/node/utils/units"
 	"github.com/stretchr/testify/assert"
 )
 

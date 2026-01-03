@@ -9,18 +9,18 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/luxfi/ids"
 	consensusctx "github.com/luxfi/consensus/context"
+	"github.com/luxfi/coreth/params/extras"
+	"github.com/luxfi/coreth/plugin/evm/atomic"
+	"github.com/luxfi/coreth/plugin/evm/extension"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/crypto/secp256k1"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/platformvm/fx"
 	"github.com/luxfi/node/vms/secp256k1fx"
-	"github.com/luxfi/coreth/params/extras"
-	"github.com/luxfi/coreth/plugin/evm/atomic"
-	"github.com/luxfi/coreth/plugin/evm/extension"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 )
 
 var _ atomic.Visitor = (*semanticVerifier)(nil)

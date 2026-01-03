@@ -7,9 +7,9 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/node/upgrade/upgradetest"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/node/upgrade/upgradetest"
 	"github.com/stretchr/testify/require"
 )
 

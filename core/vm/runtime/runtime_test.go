@@ -53,8 +53,8 @@ import (
 	"github.com/luxfi/geth/eth/tracers/logger"
 
 	// force-load js tracers to trigger registration
-	_ "github.com/luxfi/geth/eth/tracers/js"
 	"github.com/holiman/uint256"
+	_ "github.com/luxfi/geth/eth/tracers/js"
 )
 
 func TestDefaults(t *testing.T) {

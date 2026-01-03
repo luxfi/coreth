@@ -32,7 +32,8 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/luxfi/node/utils/timer/mockable"
+	"slices"
+
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
@@ -42,7 +43,7 @@ import (
 	"github.com/luxfi/geth/common/lru"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
-	"slices"
+	"github.com/luxfi/node/utils/timer/mockable"
 
 	"github.com/luxfi/log"
 )

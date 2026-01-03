@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/luxfi/node/api"
-	"github.com/luxfi/node/utils/profiler"
 	"github.com/luxfi/coreth/plugin/evm/client"
 	"github.com/luxfi/log"
+	"github.com/luxfi/node/api"
+	"github.com/luxfi/node/utils/profiler"
 )
 
 // Admin is the API service for admin API calls

@@ -1,7 +1,3 @@
-
-
-
-
 // Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 //
@@ -36,10 +32,10 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/holiman/uint256"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
-	"github.com/holiman/uint256"
 )
 
 // Tests that transactions can be added to strict lists and list contents and

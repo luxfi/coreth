@@ -9,11 +9,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxfi/ids"
+	warpBackend "github.com/luxfi/coreth/warp"
 	"github.com/luxfi/crypto/bls"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
-	warpBackend "github.com/luxfi/coreth/warp"
 )
 
 type apiFetcher struct {

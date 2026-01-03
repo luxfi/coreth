@@ -5,6 +5,7 @@ package eth
 
 import (
 	"encoding/binary"
+
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/ethdb"
 )
@@ -18,16 +19,16 @@ func ReadBloomBits(db ethdb.KeyValueReader, bit uint, section uint64, head commo
 	// Construct the bloom bits key
 	key := make([]byte, len(bloomBitsPrefix)+2+8+common.HashLength)
 	copy(key, bloomBitsPrefix)
-	
+
 	// Add bit index (uint16 big endian)
 	binary.BigEndian.PutUint16(key[len(bloomBitsPrefix):], uint16(bit))
-	
+
 	// Add section index (uint64 big endian)
 	binary.BigEndian.PutUint64(key[len(bloomBitsPrefix)+2:], section)
-	
+
 	// Add block hash
 	copy(key[len(bloomBitsPrefix)+2+8:], head.Bytes())
-	
+
 	// Read the bloom bits from the database
 	return db.Get(key)
 }

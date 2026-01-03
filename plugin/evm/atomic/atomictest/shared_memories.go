@@ -6,11 +6,11 @@ package atomictest
 import (
 	"testing"
 
-	"github.com/luxfi/node/chains/atomic"
+	consensustest "github.com/luxfi/consensus/test/helpers"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/ids"
-	consensustest "github.com/luxfi/consensus/test/helpers"
+	"github.com/luxfi/node/chains/atomic"
 	"github.com/stretchr/testify/require"
 )
 

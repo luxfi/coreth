@@ -15,13 +15,13 @@ import (
 	"github.com/luxfi/log"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/luxfi/const"
-	"github.com/luxfi/ids"
-	"github.com/luxfi/node/codec"
 	consensuscontext "github.com/luxfi/consensus/context"
 	validators "github.com/luxfi/consensus/validator"
 	consensusversion "github.com/luxfi/consensus/version"
+	constants "github.com/luxfi/const"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/utils"
 	"github.com/luxfi/p2p"
 

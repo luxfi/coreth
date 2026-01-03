@@ -17,8 +17,8 @@ linters:
     - revive # only certain checks enabled
     - staticcheck
     - unconvert
-    - unused
-    - usetesting
+    # - unused # too many false positives for code kept for future use
+    # - usetesting # too pedantic - context.Background() vs t.Context()
     - whitespace
     ### linters we tried and will not be using:
     ###

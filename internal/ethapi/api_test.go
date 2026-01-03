@@ -42,6 +42,8 @@ import (
 	"testing"
 	"time"
 
+	"slices"
+
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core"
@@ -51,6 +53,8 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/crypto"
+	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/accounts"
 	"github.com/luxfi/geth/accounts/keystore"
 	"github.com/luxfi/geth/common"
@@ -59,12 +63,9 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/crypto"
-	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/event"
 	gethparams "github.com/luxfi/geth/params"
-	"slices"
 
 	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
@@ -1004,10 +1005,10 @@ func TestSignTransaction(t *testing.T) {
 	t.Parallel()
 	// Initialize test accounts
 	var (
-		key, _    = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		cryptoTo  = crypto.PubkeyToAddress(key.PublicKey)
-		to        = common.BytesToAddress(cryptoTo[:])
-		genesis   = &core.Genesis{
+		key, _   = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+		cryptoTo = crypto.PubkeyToAddress(key.PublicKey)
+		to       = common.BytesToAddress(cryptoTo[:])
+		genesis  = &core.Genesis{
 			Config:  params.TestChainConfig,
 			BaseFee: big.NewInt(gethparams.InitialBaseFee),
 			Alloc:   types.GenesisAlloc{},
@@ -1047,10 +1048,10 @@ func TestSignBlobTransaction(t *testing.T) {
 	t.Parallel()
 	// Initialize test accounts
 	var (
-		key, _    = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		cryptoTo  = crypto.PubkeyToAddress(key.PublicKey)
-		to        = common.BytesToAddress(cryptoTo[:])
-		genesis   = &core.Genesis{
+		key, _   = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+		cryptoTo = crypto.PubkeyToAddress(key.PublicKey)
+		to       = common.BytesToAddress(cryptoTo[:])
+		genesis  = &core.Genesis{
 			Config:  params.TestChainConfig,
 			BaseFee: big.NewInt(gethparams.InitialBaseFee),
 			Alloc:   types.GenesisAlloc{},
@@ -1083,10 +1084,10 @@ func TestSendBlobTransaction(t *testing.T) {
 	t.Parallel()
 	// Initialize test accounts
 	var (
-		key, _    = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		cryptoTo  = crypto.PubkeyToAddress(key.PublicKey)
-		to        = common.BytesToAddress(cryptoTo[:])
-		genesis   = &core.Genesis{
+		key, _   = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+		cryptoTo = crypto.PubkeyToAddress(key.PublicKey)
+		to       = common.BytesToAddress(cryptoTo[:])
+		genesis  = &core.Genesis{
 			Config:  params.TestChainConfig,
 			BaseFee: big.NewInt(gethparams.InitialBaseFee),
 			Alloc:   types.GenesisAlloc{},
@@ -1118,10 +1119,10 @@ func TestFillBlobTransaction(t *testing.T) {
 	t.Parallel()
 	// Initialize test accounts
 	var (
-		key, _    = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		cryptoTo  = crypto.PubkeyToAddress(key.PublicKey)
-		to        = common.BytesToAddress(cryptoTo[:])
-		genesis   = &core.Genesis{
+		key, _   = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+		cryptoTo = crypto.PubkeyToAddress(key.PublicKey)
+		to       = common.BytesToAddress(cryptoTo[:])
+		genesis  = &core.Genesis{
 			Config:  params.TestChainConfig,
 			BaseFee: big.NewInt(gethparams.InitialBaseFee),
 			Alloc:   types.GenesisAlloc{},
@@ -1575,13 +1576,13 @@ func TestRPCGetBlockOrHeader(t *testing.T) {
 
 	// Initialize test accounts
 	var (
-		acc1Key, _       = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		acc2Key, _       = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
-		acc1CryptoAddr   = crypto.PubkeyToAddress(acc1Key.PublicKey)
-		acc2CryptoAddr   = crypto.PubkeyToAddress(acc2Key.PublicKey)
-		acc1Addr         = common.BytesToAddress(acc1CryptoAddr[:])
-		acc2Addr         = common.BytesToAddress(acc2CryptoAddr[:])
-		genesis          = &core.Genesis{
+		acc1Key, _     = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+		acc2Key, _     = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
+		acc1CryptoAddr = crypto.PubkeyToAddress(acc1Key.PublicKey)
+		acc2CryptoAddr = crypto.PubkeyToAddress(acc2Key.PublicKey)
+		acc1Addr       = common.BytesToAddress(acc1CryptoAddr[:])
+		acc2Addr       = common.BytesToAddress(acc2CryptoAddr[:])
+		genesis        = &core.Genesis{
 			Config:  params.TestChainConfig,
 			BaseFee: big.NewInt(gethparams.InitialBaseFee),
 			Alloc: types.GenesisAlloc{
@@ -1825,14 +1826,14 @@ func setupReceiptBackend(t *testing.T, genBlocks int) (*testBackend, []common.Ha
 	config.ShanghaiTime = new(uint64)
 	config.CancunTime = new(uint64)
 	var (
-		acc1Key, _       = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-		acc2Key, _       = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
-		acc1CryptoAddr   = crypto.PubkeyToAddress(acc1Key.PublicKey)
-		acc2CryptoAddr   = crypto.PubkeyToAddress(acc2Key.PublicKey)
-		acc1Addr         = common.BytesToAddress(acc1CryptoAddr[:])
-		acc2Addr         = common.BytesToAddress(acc2CryptoAddr[:])
-		contract         = common.HexToAddress("0000000000000000000000000000000000031ec7")
-		genesis          = &core.Genesis{
+		acc1Key, _     = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+		acc2Key, _     = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
+		acc1CryptoAddr = crypto.PubkeyToAddress(acc1Key.PublicKey)
+		acc2CryptoAddr = crypto.PubkeyToAddress(acc2Key.PublicKey)
+		acc1Addr       = common.BytesToAddress(acc1CryptoAddr[:])
+		acc2Addr       = common.BytesToAddress(acc2CryptoAddr[:])
+		contract       = common.HexToAddress("0000000000000000000000000000000000031ec7")
+		genesis        = &core.Genesis{
 			Config:        config,
 			BaseFee:       big.NewInt(gethparams.InitialBaseFee),
 			ExcessBlobGas: new(uint64),

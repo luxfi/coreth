@@ -8,8 +8,8 @@ import (
 	"reflect"
 
 	"github.com/luxfi/coreth/utils"
-	"github.com/luxfi/node/upgrade"
 	ethparams "github.com/luxfi/geth/params"
+	"github.com/luxfi/node/upgrade"
 )
 
 // NetworkUpgrades tracks the timestamps of Lux network upgrades.
@@ -90,13 +90,13 @@ func (n *NetworkUpgrades) forkOrder() []fork {
 // Legacy Apricot phase checks - always return true for mainnet compatibility
 // These phases are all active on Lux mainnet.
 
-func (n NetworkUpgrades) IsApricotPhase1(time uint64) bool { return true }
-func (n NetworkUpgrades) IsApricotPhase2(time uint64) bool { return true }
-func (n *NetworkUpgrades) IsApricotPhase3(time uint64) bool { return true }
-func (n NetworkUpgrades) IsApricotPhase4(time uint64) bool { return true }
-func (n NetworkUpgrades) IsApricotPhase5(time uint64) bool { return true }
-func (n NetworkUpgrades) IsApricotPhasePre6(time uint64) bool { return true }
-func (n NetworkUpgrades) IsApricotPhase6(time uint64) bool { return true }
+func (n NetworkUpgrades) IsApricotPhase1(time uint64) bool     { return true }
+func (n NetworkUpgrades) IsApricotPhase2(time uint64) bool     { return true }
+func (n *NetworkUpgrades) IsApricotPhase3(time uint64) bool    { return true }
+func (n NetworkUpgrades) IsApricotPhase4(time uint64) bool     { return true }
+func (n NetworkUpgrades) IsApricotPhase5(time uint64) bool     { return true }
+func (n NetworkUpgrades) IsApricotPhasePre6(time uint64) bool  { return true }
+func (n NetworkUpgrades) IsApricotPhase6(time uint64) bool     { return true }
 func (n NetworkUpgrades) IsApricotPhasePost6(time uint64) bool { return true }
 
 // IsBanff returns whether [time] represents a block

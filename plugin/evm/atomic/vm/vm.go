@@ -17,25 +17,25 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic/txpool"
 
+	consensusctx "github.com/luxfi/consensus/context"
+	"github.com/luxfi/consensus/engine/chain/block"
+	constants "github.com/luxfi/const"
+	"github.com/luxfi/crypto/secp256k1"
+	luxdatabase "github.com/luxfi/database"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/log"
+	"github.com/luxfi/math/set"
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/codec/linearcodec"
-	luxdatabase "github.com/luxfi/database"
-	"github.com/luxfi/ids"
-	"github.com/luxfi/p2p"
-	luxdssip "github.com/luxfi/p2p/gossip"
-	consensusctx "github.com/luxfi/consensus/context"
-	"github.com/luxfi/consensus/engine/chain/block"
-	luxvm "github.com/luxfi/vm"
 	luxutils "github.com/luxfi/node/utils"
-	"github.com/luxfi/const"
-	"github.com/luxfi/crypto/secp256k1"
-	"github.com/luxfi/log"
-	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/utils/timer/mockable"
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/vms/components/lux"
 	"github.com/luxfi/node/vms/secp256k1fx"
+	"github.com/luxfi/p2p"
+	luxdssip "github.com/luxfi/p2p/gossip"
+	luxvm "github.com/luxfi/vm"
 
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core/extstate"
@@ -73,7 +73,7 @@ const (
 	// into the mempool.
 	maxAtomicTxMempoolGas   = ap5.AtomicGasLimit
 	atomicTxGossipNamespace = "atomic_tx_gossip"
-	luxEndpoint            = "/lux"
+	luxEndpoint             = "/lux"
 )
 
 type VM struct {

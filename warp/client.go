@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/geth/common/hexutil"
+	"github.com/luxfi/ids"
 )
 
 var _ Client = (*client)(nil)

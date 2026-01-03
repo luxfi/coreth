@@ -9,10 +9,10 @@ import (
 
 	"github.com/luxfi/log"
 
+	warpprecompile "github.com/luxfi/coreth/precompile/contracts/warp"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/warp"
-	warpprecompile "github.com/luxfi/coreth/precompile/contracts/warp"
 )
 
 // Removed unused imports for tests/warp/aggregator

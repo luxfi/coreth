@@ -26,9 +26,9 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/log"
 
 	"github.com/luxfi/consensus/engine/chain/block"
 
@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	_ block.Block           = (*wrappedBlock)(nil)
+	_ block.Block             = (*wrappedBlock)(nil)
 	_ block.WithVerifyContext = (*wrappedBlock)(nil)
 	_ extension.ExtendedBlock = (*wrappedBlock)(nil)
 )
@@ -137,7 +137,7 @@ func (b *wrappedBlock) handlePrecompileAccept(rules extras.Rules) error {
 	}
 	acceptCtx := &precompileconfig.AcceptContext{
 		ConsensusCtx: b.vm.ctx,
-		Warp:    b.vm.warpBackend,
+		Warp:         b.vm.warpBackend,
 	}
 	for _, receipt := range receipts {
 		for logIdx, log := range receipt.Logs {
@@ -201,7 +201,7 @@ func (b *wrappedBlock) Timestamp() time.Time {
 // Verify implements the block.Block interface
 func (b *wrappedBlock) Verify(context.Context) error {
 	return b.verify(&precompileconfig.PredicateContext{
-		ConsensusCtx:            b.vm.ctx,
+		ConsensusCtx:       b.vm.ctx,
 		ProposerVMBlockCtx: nil,
 	}, true)
 }
@@ -233,7 +233,7 @@ func (b *wrappedBlock) ShouldVerifyWithContext(context.Context) (bool, error) {
 // VerifyWithContext implements the block.WithVerifyContext interface
 func (b *wrappedBlock) VerifyWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) error {
 	return b.verify(&precompileconfig.PredicateContext{
-		ConsensusCtx:            b.vm.ctx,
+		ConsensusCtx:       b.vm.ctx,
 		ProposerVMBlockCtx: proposerVMBlockCtx,
 	}, true)
 }
