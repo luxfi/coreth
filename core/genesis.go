@@ -34,10 +34,10 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
-	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/luxfi/geth/common/math"
@@ -46,10 +46,10 @@ import (
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/triedb"
-	"github.com/holiman/uint256"
+	"github.com/luxfi/geth/triedb/pathdb"
+	"github.com/luxfi/log"
 )
 
 //go:generate go run github.com/fjl/gencodec -type Genesis -field-override genesisSpecMarshaling -out gen_genesis.go

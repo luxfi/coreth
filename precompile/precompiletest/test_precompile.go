@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/holiman/uint256"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/precompile/contract"
@@ -19,7 +20,6 @@ import (
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/triedb"
 	"github.com/luxfi/ids"
-	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

@@ -9,15 +9,15 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/luxfi/geth/triedb/hashdb"
+	"github.com/holiman/uint256"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/triedb"
-	"github.com/holiman/uint256"
+	"github.com/luxfi/geth/triedb/hashdb"
 	"github.com/stretchr/testify/require"
 )
 
@@ -78,7 +78,6 @@ func newFuzzState(t *testing.T) *fuzzState {
 	t.Cleanup(func() {
 		r.NoError(hashState.TrieDB().Close())
 	})
-
 
 	return &fuzzState{
 		merkleTries: []*merkleTrie{

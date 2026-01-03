@@ -33,11 +33,11 @@ import (
 
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/triedb"
 )
 

@@ -10,13 +10,13 @@ import (
 	"log/slog"
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
-	"github.com/luxfi/node/api"
+	"github.com/luxfi/coreth/plugin/evm/config"
 	"github.com/luxfi/ids"
+	"github.com/luxfi/node/api"
 	"github.com/luxfi/node/utils/formatting"
 	"github.com/luxfi/node/utils/formatting/address"
 	"github.com/luxfi/node/utils/json"
 	"github.com/luxfi/node/utils/rpc"
-	"github.com/luxfi/coreth/plugin/evm/config"
 )
 
 // Interface compliance

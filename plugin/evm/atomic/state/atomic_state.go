@@ -8,11 +8,11 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
-	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/database"
-	"github.com/luxfi/ids"
 	"github.com/luxfi/geth/common"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
+	luxatomic "github.com/luxfi/node/chains/atomic"
 )
 
 // atomicState implements the AtomicState interface using

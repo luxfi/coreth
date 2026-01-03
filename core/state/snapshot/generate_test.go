@@ -33,18 +33,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luxfi/geth/triedb/hashdb"
-	"github.com/luxfi/geth/triedb/pathdb"
+	"github.com/holiman/uint256"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/triedb"
-	"github.com/holiman/uint256"
+	"github.com/luxfi/geth/triedb/hashdb"
+	"github.com/luxfi/geth/triedb/pathdb"
+	"github.com/luxfi/log"
 	"golang.org/x/crypto/sha3"
 )
 

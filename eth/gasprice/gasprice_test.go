@@ -37,25 +37,25 @@ import (
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/rpc"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/event"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	key, _   = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	key, _     = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	cryptoAddr = crypto.PubkeyToAddress(key.PublicKey)
-	addr     = common.BytesToAddress(cryptoAddr.Bytes()) // convert to geth common.Address
-	bal, _   = new(big.Int).SetString("100000000000000000000000", 10)
+	addr       = common.BytesToAddress(cryptoAddr.Bytes()) // convert to geth common.Address
+	bal, _     = new(big.Int).SetString("100000000000000000000000", 10)
 )
 
 type testBackend struct {

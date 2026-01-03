@@ -13,13 +13,13 @@ import (
 	big "math/big"
 	reflect "reflect"
 
+	uint256 "github.com/holiman/uint256"
 	consensusctx "github.com/luxfi/consensus/context"
 	precompileconfig "github.com/luxfi/coreth/precompile/precompileconfig"
 	common "github.com/luxfi/geth/common"
+	stateconf "github.com/luxfi/geth/core/stateconf"
 	types "github.com/luxfi/geth/core/types"
 	vm "github.com/luxfi/geth/core/vm"
-	stateconf "github.com/luxfi/geth/core/stateconf"
-	uint256 "github.com/holiman/uint256"
 	gomock "go.uber.org/mock/gomock"
 )
 

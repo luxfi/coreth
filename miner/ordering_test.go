@@ -34,11 +34,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/core/txpool"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
-	"github.com/holiman/uint256"
 )
 
 func TestTransactionPriceNonceSortLegacy(t *testing.T) {

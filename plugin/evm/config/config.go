@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxfi/const"
-	"github.com/luxfi/node/vms/components/gas"
+	constants "github.com/luxfi/const"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
+	"github.com/luxfi/node/vms/components/gas"
 	"github.com/spf13/cast"
 )
 

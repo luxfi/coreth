@@ -4,11 +4,11 @@
 package factory
 
 import (
-	"github.com/luxfi/ids"
 	"github.com/luxfi/consensus/engine/chain/block"
+	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
 	"github.com/luxfi/node/vms"
-	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"
 
 	"github.com/luxfi/coreth/plugin/evm"
 )

@@ -18,14 +18,12 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
 	"github.com/luxfi/ids"
-	"github.com/luxfi/p2p"
-	"github.com/luxfi/node/proto/pb/sdk"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/node/proto/pb/sdk"
+	"github.com/luxfi/p2p"
 	"github.com/luxfi/warp"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
-
-	commonEng "github.com/luxfi/consensus/core"
 )
 
 // show that a txID discovered from gossip is requested to the same node only if

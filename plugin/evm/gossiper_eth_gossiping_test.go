@@ -22,10 +22,8 @@ import (
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/warp"
 
-	commonEng "github.com/luxfi/consensus/core"
-
-	"github.com/luxfi/geth/common"
 	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/common"
 
 	"github.com/stretchr/testify/assert"
 

@@ -35,8 +35,8 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/trie/trienode"
+	"github.com/luxfi/log"
 )
 
 // nodebuffer is a collection of modified trie nodes to aggregate the disk

@@ -6,12 +6,12 @@ package header
 import (
 	"fmt"
 
-	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/node/vms/components/gas"
 )
 
 // feeStateBeforeBlock takes the previous header and the timestamp of its child

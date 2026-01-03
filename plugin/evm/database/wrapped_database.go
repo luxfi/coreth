@@ -49,9 +49,9 @@ func (db ethDbWrapper) NewBatchWithSize(size int) ethdb.Batch {
 // Snapshot is a minimal implementation that satisfies the interface
 type Snapshot struct{}
 
-func (s Snapshot) Has(key []byte) (bool, error) { return false, ErrSnapshotNotSupported }
+func (s Snapshot) Has(key []byte) (bool, error)   { return false, ErrSnapshotNotSupported }
 func (s Snapshot) Get(key []byte) ([]byte, error) { return nil, ErrSnapshotNotSupported }
-func (s Snapshot) Release() {}
+func (s Snapshot) Release()                       {}
 
 func (db ethDbWrapper) NewSnapshot() (Snapshot, error) {
 	return Snapshot{}, ErrSnapshotNotSupported

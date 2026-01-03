@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/luxfi/ids"
 	"github.com/luxfi/consensus/version"
 	"github.com/luxfi/coreth/network"
+	"github.com/luxfi/ids"
 )
 
 var _ network.SyncedNetworkClient = (*testNetwork)(nil)

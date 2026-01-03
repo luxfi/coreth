@@ -5,9 +5,9 @@ package atomic
 import (
 	"fmt"
 
-	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/crypto"
+	"github.com/luxfi/ids"
 )
 
 var _ message.SyncableParser = (*summaryParser)(nil)

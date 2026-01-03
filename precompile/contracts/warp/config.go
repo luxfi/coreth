@@ -7,17 +7,17 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/const"
-	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus/validator"
-	"github.com/luxfi/warp"
-	"github.com/luxfi/warp/payload"
+	validators "github.com/luxfi/consensus/validator"
+	constants "github.com/luxfi/const"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/predicate"
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
+	"github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 )
 
 const (
@@ -210,13 +210,13 @@ func (c *Config) VerifyPredicate(predicateContext *precompileconfig.PredicateCon
 	// Wrap validators.State on the chain quasar context to special case the Primary Network
 	var sourceChainID ids.ID
 	copy(sourceChainID[:], warpMsg.UnsignedMessage.SourceChainID[:])
-	
+
 	// Type assert ValidatorState to validators.State
 	validatorState, ok := predicateContext.ConsensusCtx.ValidatorState.(validators.State)
 	if !ok {
 		return fmt.Errorf("invalid validator state type")
 	}
-	
+
 	state := warpValidators.NewState(
 		validatorState,
 		constants.PrimaryNetworkID,

@@ -6,8 +6,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxfi/database"
 	"github.com/luxfi/consensus/engine/chain/block"
+	"github.com/luxfi/database"
 
 	"github.com/luxfi/coreth/core"
 	synccommon "github.com/luxfi/coreth/sync"

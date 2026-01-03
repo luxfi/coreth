@@ -7,11 +7,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/ids"
-	"github.com/luxfi/p2p/gossip"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/config"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
+	"github.com/luxfi/p2p/gossip"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

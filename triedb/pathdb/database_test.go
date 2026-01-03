@@ -34,6 +34,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
@@ -41,7 +42,6 @@ import (
 	"github.com/luxfi/geth/trie/testutil"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/trie/triestate"
-	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
 )
 

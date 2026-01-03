@@ -39,8 +39,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/log"
 	"golang.org/x/time/rate"
 )
 

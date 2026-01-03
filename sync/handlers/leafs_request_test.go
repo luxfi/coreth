@@ -9,18 +9,18 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/sync/handlers/stats/statstest"
 	"github.com/luxfi/coreth/sync/statesync/statesynctest"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/triedb"
+	"github.com/luxfi/ids"
 	"github.com/stretchr/testify/assert"
 )
 

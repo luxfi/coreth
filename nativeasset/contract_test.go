@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/core/extstate"
 	. "github.com/luxfi/coreth/nativeasset"
 	"github.com/luxfi/coreth/params"
@@ -15,7 +16,6 @@ import (
 	"github.com/luxfi/geth/core/tracing"
 	ethtypes "github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/assert"
 
 	// Force import core to register the VM hooks.

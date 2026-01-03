@@ -8,15 +8,15 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
+	consensusctx "github.com/luxfi/consensus/context"
+	"github.com/luxfi/coreth/params/extras"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/math/set"
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/codec/linearcodec"
-	"github.com/luxfi/ids"
-	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/node/utils"
-	"github.com/luxfi/math/set"
 	"github.com/luxfi/node/utils/wrappers"
-	"github.com/luxfi/coreth/params/extras"
 )
 
 // TODO: Remove this and use actual codec and transactions (export, import)
@@ -41,8 +41,8 @@ func init() {
 }
 
 type TestUnsignedTx struct {
-	GasUsedV                    uint64                    `serialize:"true"`
-	AcceptRequestsBlockchainIDV ids.ID                    `serialize:"true"`
+	GasUsedV                    uint64              `serialize:"true"`
+	AcceptRequestsBlockchainIDV ids.ID              `serialize:"true"`
 	AcceptRequestsV             *luxatomic.Requests `serialize:"true"`
 	VerifyV                     error
 	IDV                         ids.ID `serialize:"true" json:"id"`
@@ -58,7 +58,9 @@ type TestUnsignedTx struct {
 func (t *TestUnsignedTx) GasUsed(fixedFee bool) (uint64, error) { return t.GasUsedV, nil }
 
 // Verify implements the UnsignedAtomicTx interface
-func (t *TestUnsignedTx) Verify(ctx *consensusctx.Context, rules extras.Rules) error { return t.VerifyV }
+func (t *TestUnsignedTx) Verify(ctx *consensusctx.Context, rules extras.Rules) error {
+	return t.VerifyV
+}
 
 // AtomicOps implements the UnsignedAtomicTx interface
 func (t *TestUnsignedTx) AtomicOps() (ids.ID, *luxatomic.Requests, error) {

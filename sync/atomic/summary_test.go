@@ -8,10 +8,10 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/luxfi/ids"
 	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/geth/common"
+	"github.com/luxfi/ids"
 	"github.com/stretchr/testify/require"
 )
 

@@ -12,20 +12,20 @@ import (
 	syncclient "github.com/luxfi/coreth/sync/client"
 	"github.com/luxfi/coreth/sync/statesync"
 
-	"github.com/luxfi/database"
-	"github.com/luxfi/database/versiondb"
-	"github.com/luxfi/ids"
 	"github.com/luxfi/consensus/engine/chain/block"
-	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/coreth/eth"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/database"
+	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
+	"github.com/luxfi/vm/chain"
 )
 
 const (

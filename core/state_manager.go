@@ -52,10 +52,10 @@ func init() {
 const flushWindow = 768
 
 type TrieWriter interface {
-	InsertTrie(block *types.Block) error  // Handle inserted trie reference of [root]
-	AcceptTrie(block *types.Block) error  // Mark [root] as part of an accepted block
-	RejectTrie(block *types.Block) error  // Notify TrieWriter that the block containing [root] has been rejected
-	CommitAccepted() error                // Commit pending accepted roots (for path scheme)
+	InsertTrie(block *types.Block) error // Handle inserted trie reference of [root]
+	AcceptTrie(block *types.Block) error // Mark [root] as part of an accepted block
+	RejectTrie(block *types.Block) error // Notify TrieWriter that the block containing [root] has been rejected
+	CommitAccepted() error               // Commit pending accepted roots (for path scheme)
 	Shutdown() error
 }
 

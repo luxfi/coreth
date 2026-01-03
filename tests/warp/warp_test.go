@@ -19,15 +19,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/luxfi/geth/common"
 	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/common"
 
-	"github.com/luxfi/node/api/info"
+	validators "github.com/luxfi/consensus/validator"
+	constants "github.com/luxfi/const"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus/validator"
+	"github.com/luxfi/node/api/info"
 	"github.com/luxfi/node/tests/fixture/e2e"
 	"github.com/luxfi/node/tests/fixture/tmpnet"
-	"github.com/luxfi/const"
 	"github.com/luxfi/node/vms/platformvm"
 	"github.com/luxfi/node/vms/platformvm/api"
 	"github.com/luxfi/warp"

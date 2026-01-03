@@ -23,10 +23,10 @@ import (
 	"github.com/luxfi/coreth/sync/handlers"
 	handlerstats "github.com/luxfi/coreth/sync/handlers/stats"
 	"github.com/luxfi/coreth/sync/statesync/statesynctest"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/triedb"
 )
 

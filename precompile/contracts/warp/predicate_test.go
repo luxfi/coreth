@@ -6,31 +6,29 @@
 package warp
 
 import (
+	"bytes"
 	"context"
 	"errors"
-	"bytes"
 	"fmt"
 	"testing"
 
-	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus"
-	"github.com/luxfi/consensus/engine/chain/block"
-	"github.com/luxfi/consensus/engine/chain/chaintest"
-	"github.com/luxfi/consensus/validator"
-	"github.com/luxfi/consensus/validator/validatorstest"
-	consensustest "github.com/luxfi/consensus/test/helpers"
 	consensusctx "github.com/luxfi/consensus/context"
-	agoUtils "github.com/luxfi/node/utils"
-	"github.com/luxfi/const"
-	"github.com/luxfi/crypto/bls"
-	"github.com/luxfi/crypto/bls/signer/localsigner"
-	"github.com/luxfi/math/set"
-	"github.com/luxfi/warp"
-	"github.com/luxfi/warp/payload"
+	"github.com/luxfi/consensus/engine/chain/block"
+	consensustest "github.com/luxfi/consensus/test/helpers"
+	validators "github.com/luxfi/consensus/validator"
+	"github.com/luxfi/consensus/validator/validatorstest"
+	constants "github.com/luxfi/const"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/precompile/precompiletest"
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/crypto/bls"
+	"github.com/luxfi/crypto/bls/signer/localsigner"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/math/set"
+	agoUtils "github.com/luxfi/node/utils"
+	"github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 	"github.com/stretchr/testify/require"
 )
 
@@ -130,7 +128,7 @@ func newTestValidator() *testValidator {
 			PublicKey:      pk,
 			PublicKeyBytes: bls.PublicKeyToCompressedBytes(pk),
 			Weight:         3,
-			NodeID: nodeID,
+			NodeID:         nodeID,
 		},
 	}
 }

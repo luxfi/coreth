@@ -10,24 +10,24 @@ import (
 	"math/big"
 	"sort"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/tracing"
-	"github.com/holiman/uint256"
 
 	"github.com/luxfi/coreth/params/extras"
 
-	luxfiids "github.com/luxfi/ids"
-	"github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/ids"
-	"github.com/luxfi/p2p/gossip"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/crypto/secp256k1"
-	"github.com/luxfi/node/utils/hashing"
+	"github.com/luxfi/ids"
+	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/node/chains/atomic"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/utils/hashing"
 	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/node/vms/components/verify"
 	"github.com/luxfi/node/vms/secp256k1fx"
+	"github.com/luxfi/p2p/gossip"
 )
 
 var _ gossip.Gossipable = (*Tx)(nil)
@@ -94,26 +94,26 @@ func (i EVMInput) Compare(other EVMInput) int {
 }
 
 // Verify ...
-func (out *EVMOutput) Verify() error {
+func (o *EVMOutput) Verify() error {
 	switch {
-	case out == nil:
+	case o == nil:
 		return errNilOutput
-	case out.Amount == 0:
+	case o.Amount == 0:
 		return errNoValueOutput
-	case out.AssetID == ids.Empty:
+	case o.AssetID == ids.Empty:
 		return errEmptyAssetID
 	}
 	return nil
 }
 
 // Verify ...
-func (in *EVMInput) Verify() error {
+func (i *EVMInput) Verify() error {
 	switch {
-	case in == nil:
+	case i == nil:
 		return errNilInput
-	case in.Amount == 0:
+	case i.Amount == 0:
 		return ErrNoValueInput
-	case in.AssetID == ids.Empty:
+	case i.AssetID == ids.Empty:
 		return errEmptyAssetID
 	}
 	return nil

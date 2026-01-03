@@ -13,11 +13,11 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/log"
 
-	"github.com/luxfi/node/codec"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
+	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/utils/wrappers"

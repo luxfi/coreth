@@ -6,6 +6,7 @@ package extstate
 import (
 	"math/big"
 
+	"github.com/holiman/uint256"
 	corethparams "github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"
@@ -14,9 +15,7 @@ import (
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/params"
-	"github.com/holiman/uint256"
 )
-
 
 type StateDB struct {
 	*state.StateDB
@@ -140,10 +139,6 @@ func (s *StateDB) SetCode(addr common.Address, code []byte, reason tracing.CodeC
 func (s *StateDB) AddBalanceSimple(addr common.Address, amount *uint256.Int) {
 	s.StateDB.AddBalance(addr, amount, tracing.BalanceChangeUnspecified)
 }
-
-
-
-
 
 // SetNonceSimple sets nonce without specifying a reason.
 func (s *StateDB) SetNonceSimple(addr common.Address, nonce uint64) {

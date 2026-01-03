@@ -7,12 +7,12 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/node/vms/components/gas"
 	"github.com/stretchr/testify/require"
 )
 

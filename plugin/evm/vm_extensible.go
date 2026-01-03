@@ -7,14 +7,14 @@ import (
 	"context"
 	"errors"
 
-	"github.com/luxfi/database/versiondb"
-	"github.com/luxfi/ids"
-	"github.com/luxfi/p2p"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/config"
 	"github.com/luxfi/coreth/plugin/evm/extension"
 	vmsync "github.com/luxfi/coreth/sync/vm"
+	"github.com/luxfi/database/versiondb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/p2p"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

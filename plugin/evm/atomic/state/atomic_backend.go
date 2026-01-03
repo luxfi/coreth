@@ -10,14 +10,14 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
+	"github.com/luxfi/database"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/log"
 	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/codec"
-	"github.com/luxfi/database"
-	"github.com/luxfi/ids"
 	"github.com/luxfi/node/utils"
 	"github.com/luxfi/node/utils/wrappers"
-	"github.com/luxfi/geth/common"
-	"github.com/luxfi/log"
 )
 
 const (

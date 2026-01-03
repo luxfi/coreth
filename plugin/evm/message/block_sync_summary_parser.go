@@ -5,8 +5,8 @@ package message
 import (
 	"fmt"
 
-	"github.com/luxfi/ids"
 	"github.com/luxfi/crypto"
+	"github.com/luxfi/ids"
 )
 
 type BlockSyncSummaryParser struct{}

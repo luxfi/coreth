@@ -32,6 +32,6 @@ func (u moduleArray) Swap(i, j int) {
 	u[i], u[j] = u[j], u[i]
 }
 
-func (m moduleArray) Less(i, j int) bool {
-	return bytes.Compare(m[i].Address.Bytes(), m[j].Address.Bytes()) < 0
+func (u moduleArray) Less(i, j int) bool {
+	return bytes.Compare(u[i].Address.Bytes(), u[j].Address.Bytes()) < 0
 }

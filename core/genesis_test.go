@@ -37,18 +37,16 @@ import (
 	_ "embed"
 	"fmt"
 	"math/big"
-	"path/filepath"
 	"reflect"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/coreth/precompile/contracts/warp"
-	"github.com/luxfi/geth/triedb/database"
-	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
@@ -58,7 +56,7 @@ import (
 	ethparams "github.com/luxfi/geth/params"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/triedb"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/luxfi/geth/triedb/pathdb"
 	"github.com/stretchr/testify/require"
 )
 

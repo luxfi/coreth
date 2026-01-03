@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/luxfi/node/utils/math"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
@@ -15,6 +14,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/cortina"
 	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/node/utils/math"
 )
 
 var (

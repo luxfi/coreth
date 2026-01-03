@@ -6,7 +6,7 @@ package utils
 import (
 	"context"
 
-	"github.com/luxfi/consensus/validator"
+	validators "github.com/luxfi/consensus/validator"
 	"github.com/luxfi/consensus/validator/validatorstest"
 	"github.com/luxfi/ids"
 )

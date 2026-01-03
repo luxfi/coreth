@@ -22,8 +22,8 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/log"
 	ethparams "github.com/luxfi/geth/params"
+	"github.com/luxfi/log"
 	"golang.org/x/sync/errgroup"
 )
 

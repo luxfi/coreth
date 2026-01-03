@@ -8,10 +8,10 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/ids"
+	luxatomic "github.com/luxfi/node/chains/atomic"
+	"github.com/luxfi/node/codec"
 	"github.com/luxfi/node/utils/units"
 	"github.com/luxfi/node/utils/wrappers"
 
@@ -20,11 +20,11 @@ import (
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/triedb"
 	"github.com/luxfi/geth/triedb/hashdb"
+	"github.com/luxfi/log"
 )
 
 const (
@@ -37,12 +37,12 @@ var lastCommittedKey = []byte("atomicTrieLastCommittedBlock")
 
 // AtomicTrie is a trie that is used to store atomic operations.
 type AtomicTrie struct {
-	commitInterval      uint64                     // commit interval, same as commitHeightInterval by default
+	commitInterval      uint64               // commit interval, same as commitHeightInterval by default
 	metadataDB          luxdatabase.Database // Underlying database containing the atomic trie metadata
-	trieDB              *triedb.Database           // Trie database
-	lastCommittedRoot   common.Hash                // trie root of the most recent commit
-	lastCommittedHeight uint64                     // index height of the most recent commit
-	lastAcceptedRoot    common.Hash                // most recent trie root passed to accept trie or the root of the atomic trie on intialization.
+	trieDB              *triedb.Database     // Trie database
+	lastCommittedRoot   common.Hash          // trie root of the most recent commit
+	lastCommittedHeight uint64               // index height of the most recent commit
+	lastAcceptedRoot    common.Hash          // most recent trie root passed to accept trie or the root of the atomic trie on intialization.
 	codec               codec.Manager
 	memoryCap           common.StorageSize
 }

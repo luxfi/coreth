@@ -7,13 +7,13 @@ package contract
 import (
 	"math/big"
 
+	"github.com/holiman/uint256"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/tracing"
 	ethtypes "github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/holiman/uint256"
 )
 
 // StatefulPrecompiledContract is the interface for executing a precompiled contract

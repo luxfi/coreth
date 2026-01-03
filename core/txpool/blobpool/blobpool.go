@@ -40,6 +40,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/holiman/billy"
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
@@ -49,11 +51,9 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/log"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/rlp"
-	"github.com/holiman/billy"
-	"github.com/holiman/uint256"
+	"github.com/luxfi/log"
 )
 
 const (
@@ -1544,13 +1544,13 @@ func (p *BlobPool) Pending(filter txpool.PendingFilter) map[common.Address][]*tx
 
 // IteratePending iterates over [pool.pending] until [f] returns false.
 // The caller must not modify [tx]. Returns false if iteration was interrupted.
-func (pool *BlobPool) IteratePending(f func(tx *types.Transaction) bool) bool {
-	pool.lock.RLock()
-	defer pool.lock.RUnlock()
+func (p *BlobPool) IteratePending(f func(tx *types.Transaction) bool) bool {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
 
-	for _, list := range pool.index {
+	for _, list := range p.index {
 		for _, txId := range list {
-			tx := pool.Get(txId.hash)
+			tx := p.Get(txId.hash)
 			if tx == nil {
 				continue
 			}

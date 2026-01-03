@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/params"
@@ -18,7 +19,6 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
 )
 

@@ -9,8 +9,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/luxfi/node/utils/timer/mockable"
-	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/params"
@@ -21,6 +19,8 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/node/utils/timer/mockable"
+	"github.com/luxfi/node/vms/components/gas"
 
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
 )

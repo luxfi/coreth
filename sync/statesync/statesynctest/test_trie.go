@@ -8,13 +8,13 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/luxfi/node/utils/wrappers"
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/utils/utilstest"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/triedb"
-	"github.com/holiman/uint256"
+	"github.com/luxfi/node/utils/wrappers"
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/ethdb"

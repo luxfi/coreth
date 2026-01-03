@@ -28,6 +28,7 @@ import (
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
+	"github.com/luxfi/metric"
 	"github.com/luxfi/node/cache/lru"
 	"github.com/luxfi/node/cache/metercacher"
 	"github.com/luxfi/node/codec"
@@ -36,12 +37,11 @@ import (
 	"github.com/luxfi/node/utils/profiler"
 	"github.com/luxfi/node/utils/timer/mockable"
 	"github.com/luxfi/node/utils/units"
-	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/p2p"
 	p2pgossip "github.com/luxfi/p2p/gossip"
-	"github.com/luxfi/metric"
 	"github.com/luxfi/vm"
+	"github.com/luxfi/vm/chain"
 	luxwarp "github.com/luxfi/warp"
 
 	"github.com/luxfi/coreth/consensus/dummy"
@@ -98,8 +98,8 @@ import (
 
 var (
 	// Interface compliance checks removed - EVM doesn't implement network interfaces
-	_ statesyncclient.EthBlockParser     = (*VM)(nil)
-	_ vmsync.BlockAcceptor               = (*VM)(nil)
+	_ statesyncclient.EthBlockParser = (*VM)(nil)
+	_ vmsync.BlockAcceptor           = (*VM)(nil)
 )
 
 const (
@@ -1178,7 +1178,7 @@ func (v *VM) buildBlockWithContext(ctx context.Context, proposerVMBlockCtx *bloc
 		log.Debug("Building block without context")
 	}
 	predicateCtx := &precompileconfig.PredicateContext{
-		ConsensusCtx:            v.ctx,
+		ConsensusCtx:       v.ctx,
 		ProposerVMBlockCtx: proposerVMBlockCtx,
 	}
 
@@ -1517,11 +1517,11 @@ func (v *VM) importChainData(dataPath string) error {
 	// Find the last block in the source database
 	var lastBlockNumber uint64
 	var lastBlockHash common.Hash
-	
+
 	// Iterate through the source database to find the highest block
 	it := sourceDB.NewIterator([]byte("h"), nil)
 	defer it.Release()
-	
+
 	for it.Next() {
 		// Block header keys are prefixed with 'h' followed by block number (8 bytes) and hash (32 bytes)
 		key := it.Key()
@@ -1533,35 +1533,35 @@ func (v *VM) importChainData(dataPath string) error {
 			}
 		}
 	}
-	
+
 	if lastBlockNumber == 0 {
 		log.Warn("No blocks found in import database")
 		return nil
 	}
-	
+
 	log.Info("Found last block in import database", "number", lastBlockNumber, "hash", lastBlockHash)
-	
+
 	// Get the block header to verify
 	headerData := rawdb.ReadHeaderRLP(sourceDB, lastBlockHash, lastBlockNumber)
 	if len(headerData) == 0 {
 		return fmt.Errorf("could not read header for block %d", lastBlockNumber)
 	}
-	
+
 	// Copy all data from source to destination
 	log.Info("Copying blockchain data...")
-	
+
 	batch := v.chaindb.NewBatch()
 	count := 0
-	
+
 	// Use a new iterator to copy all data
 	copyIt := sourceDB.NewIterator(nil, nil)
 	defer copyIt.Release()
-	
+
 	for copyIt.Next() {
 		if err := batch.Put(copyIt.Key(), copyIt.Value()); err != nil {
 			return fmt.Errorf("failed to write key: %w", err)
 		}
-		
+
 		count++
 		if count%10000 == 0 {
 			if err := batch.Write(); err != nil {
@@ -1571,23 +1571,23 @@ func (v *VM) importChainData(dataPath string) error {
 			log.Info("Import progress", "keys", count)
 		}
 	}
-	
+
 	// Write final batch
 	if err := batch.Write(); err != nil {
 		return fmt.Errorf("failed to write final batch: %w", err)
 	}
-	
+
 	// Set the last accepted block
 	if err := v.acceptedBlockDB.Put(lastAcceptedKey, lastBlockHash[:]); err != nil {
 		return fmt.Errorf("failed to set last accepted: %w", err)
 	}
-	
-	log.Info("Chain data import complete", 
+
+	log.Info("Chain data import complete",
 		"totalKeys", count,
 		"lastBlock", lastBlockNumber,
 		"lastHash", lastBlockHash,
 	)
-	
+
 	return nil
 }
 

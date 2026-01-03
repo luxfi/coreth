@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/ids"
 
 	"github.com/luxfi/consensus/engine/chain/block"
 
-	"github.com/luxfi/geth/common"
 	"github.com/luxfi/crypto"
+	"github.com/luxfi/geth/common"
 )
 
 var _ message.Syncable = (*Summary)(nil)

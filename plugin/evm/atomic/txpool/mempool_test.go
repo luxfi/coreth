@@ -6,10 +6,10 @@ package txpool
 import (
 	"testing"
 
-	"github.com/luxfi/ids"
 	consensustest "github.com/luxfi/consensus/test/helpers"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/atomictest"
+	"github.com/luxfi/ids"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 )

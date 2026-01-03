@@ -14,20 +14,20 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
+	consensustest "github.com/luxfi/consensus/test/helpers"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/badgerdb"
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
-	"github.com/luxfi/ids"
-	consensustest "github.com/luxfi/consensus/test/helpers"
-	"github.com/luxfi/node/utils/wrappers"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie/trienode"
+	"github.com/luxfi/ids"
+	luxatomic "github.com/luxfi/node/chains/atomic"
+	"github.com/luxfi/node/codec"
+	"github.com/luxfi/node/utils/wrappers"
 )
 
 const testCommitInterval = 100

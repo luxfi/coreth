@@ -13,6 +13,6 @@ func (g *TxMarshaller) MarshalGossip(tx *Tx) ([]byte, error) {
 	return tx.SignedBytes(), nil
 }
 
-func (_ *TxMarshaller) UnmarshalGossip(bytes []byte) (*Tx, error) {
+func (*TxMarshaller) UnmarshalGossip(bytes []byte) (*Tx, error) {
 	return ExtractAtomicTx(bytes, Codec)
 }

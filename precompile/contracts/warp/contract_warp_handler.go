@@ -6,14 +6,14 @@ package warp
 import (
 	"fmt"
 
-	"github.com/luxfi/math/set"
-	"github.com/luxfi/warp"
-	"github.com/luxfi/warp/payload"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/coreth/predicate"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/math"
 	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/math/set"
+	"github.com/luxfi/warp"
+	"github.com/luxfi/warp/payload"
 )
 
 var (

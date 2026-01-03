@@ -18,8 +18,8 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"
 
-	commonEng "github.com/luxfi/consensus/core"
 	consensusctx "github.com/luxfi/consensus/context"
+	commonEng "github.com/luxfi/consensus/core"
 
 	"github.com/stretchr/testify/require"
 
@@ -29,10 +29,8 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/utils"
 
-	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/consensus"
-	consensustest "github.com/luxfi/consensus/test/helpers"
+	luxatomic "github.com/luxfi/node/chains/atomic"
 	"github.com/luxfi/node/upgrade/upgradetest"
 )
 

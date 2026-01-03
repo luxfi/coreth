@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/luxfi/ids"
-	"github.com/luxfi/math/set"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	synccommon "github.com/luxfi/coreth/sync"
@@ -18,6 +16,8 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/ethdb"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/math/set"
 )
 
 const (

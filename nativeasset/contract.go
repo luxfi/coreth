@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/log"
-	"github.com/holiman/uint256"
 )
 
 // PrecompiledContractsApricot contains the default set of pre-compiled Ethereum

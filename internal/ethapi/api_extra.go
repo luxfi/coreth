@@ -29,8 +29,8 @@ type DetailedExecutionResult struct {
 }
 
 // CallDetailed performs the same call as Call, but returns the full context
-func (s *BlockChainAPI) CallDetailed(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (*DetailedExecutionResult, error) {
-	result, err := DoCall(ctx, s.b, args, blockNrOrHash, overrides, nil, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
+func (api *BlockChainAPI) CallDetailed(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (*DetailedExecutionResult, error) {
+	result, err := DoCall(ctx, api.b, args, blockNrOrHash, overrides, nil, api.b.RPCEVMTimeout(), api.b.RPCGasCap())
 	if err != nil {
 		return nil, err
 	}
@@ -68,9 +68,9 @@ type BadBlockArgs struct {
 
 // GetBadBlocks returns a list of the last 'bad blocks' that the client has seen on the network
 // and returns them as a JSON list of block hashes.
-func (s *BlockChainAPI) GetBadBlocks(ctx context.Context) ([]*BadBlockArgs, error) {
+func (api *BlockChainAPI) GetBadBlocks(ctx context.Context) ([]*BadBlockArgs, error) {
 	var (
-		badBlocks, reasons = s.b.BadBlocks()
+		badBlocks, reasons = api.b.BadBlocks()
 		results            = make([]*BadBlockArgs, 0, len(badBlocks))
 	)
 	for i, block := range badBlocks {
@@ -83,7 +83,7 @@ func (s *BlockChainAPI) GetBadBlocks(ctx context.Context) ([]*BadBlockArgs, erro
 		} else {
 			blockRlp = fmt.Sprintf("%#x", rlpBytes)
 		}
-		blockJSON = RPCMarshalBlock(block, true, true, s.b.ChainConfig())
+		blockJSON = RPCMarshalBlock(block, true, true, api.b.ChainConfig())
 		results = append(results, &BadBlockArgs{
 			Hash:   block.Hash(),
 			RLP:    blockRlp,
@@ -100,19 +100,19 @@ func (s *BlockChainAPI) GetBadBlocks(ctx context.Context) ([]*BadBlockArgs, erro
 //     This query window is set to [core.TipBufferSize] when running in a non-archive mode.
 //
 // Otherwise, it returns a non-nil error containing block number information.
-func (s *BlockChainAPI) stateQueryBlockNumberAllowed(blockNumOrHash rpc.BlockNumberOrHash) (err error) {
-	queryWindow := s.b.HistoricalProofQueryWindow()
-	if s.b.IsArchive() && queryWindow == 0 {
+func (api *BlockChainAPI) stateQueryBlockNumberAllowed(blockNumOrHash rpc.BlockNumberOrHash) (err error) {
+	queryWindow := api.b.HistoricalProofQueryWindow()
+	if api.b.IsArchive() && queryWindow == 0 {
 		return nil
 	}
 
-	lastAcceptedNumber := s.b.LastAcceptedBlock().NumberU64()
+	lastAcceptedNumber := api.b.LastAcceptedBlock().NumberU64()
 
 	var number uint64
 	if blockNumOrHash.BlockNumber != nil {
 		number = uint64(blockNumOrHash.BlockNumber.Int64())
 	} else if blockHash, ok := blockNumOrHash.Hash(); ok {
-		block, err := s.b.BlockByHash(context.Background(), blockHash)
+		block, err := api.b.BlockByHash(context.Background(), blockHash)
 		if err != nil {
 			return fmt.Errorf("failed to get block from hash: %s", err)
 		} else if block == nil {

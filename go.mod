@@ -187,7 +187,7 @@ require (
 	github.com/luxfi/math v1.2.0
 	github.com/luxfi/p2p v1.18.2
 	github.com/luxfi/precompile v0.4.0
-	github.com/luxfi/vm v1.0.1
+	github.com/luxfi/vm v1.0.2
 	github.com/luxfi/warp v1.18.2
 )
 
@@ -199,5 +199,3 @@ require (
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
 )
-
-replace github.com/luxfi/vm => ../vm

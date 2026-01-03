@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/ids"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/sync/handlers"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/rlp"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/node/codec"
 )
 
 var (
