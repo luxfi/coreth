@@ -1,5 +1,12 @@
 .PHONY: all build test test-race clean fmt lint mod-tidy help
 
+# Configuration - CGO enabled by default for C++/GPU acceleration
+CGO_ENABLED ?= 1
+export CGO_ENABLED
+
+# Build directory
+BUILD_DIR := build
+
 # Default target
 all: clean build test
 
@@ -31,7 +38,7 @@ test-warp:
 # Clean build artifacts
 clean:
 	@echo "Cleaning build artifacts..."
-	@rm -rf bin/
+	@rm -rf $(BUILD_DIR)/
 	@rm -f coverage.out test.out
 
 # Format code
