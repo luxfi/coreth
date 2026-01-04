@@ -40,7 +40,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/geth/common/math"
+	"github.com/luxfi/math/math"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/tracing"
