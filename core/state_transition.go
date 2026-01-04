@@ -37,7 +37,7 @@ import (
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/common"
-	cmath "github.com/luxfi/geth/common/math"
+	cmath "github.com/luxfi/math/math"
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"

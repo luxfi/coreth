@@ -13,7 +13,7 @@ import (
 	"github.com/luxfi/coreth/predicate"
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/common/math"
+	"github.com/luxfi/math/math"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
 	"github.com/luxfi/warp"
