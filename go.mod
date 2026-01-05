@@ -17,12 +17,12 @@ require (
 	github.com/holiman/billy v0.0.0-20250707135307-f2f9b9aae7db
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.3.2
-	github.com/luxfi/crypto v1.17.31
-	github.com/luxfi/geth v1.16.66
+	github.com/luxfi/crypto v1.17.36
+	github.com/luxfi/geth v1.16.68
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/log v1.2.1
 	github.com/luxfi/metric v1.4.8
-	github.com/luxfi/node v1.22.77
+	github.com/luxfi/node v1.22.80
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.27.3
@@ -113,8 +113,8 @@ require (
 	github.com/luxfi/address v1.0.0 // indirect
 	github.com/luxfi/cache v1.1.0 // indirect
 	github.com/luxfi/const v1.4.0
-	github.com/luxfi/fhe v1.4.1 // indirect
-	github.com/luxfi/genesis v1.5.17 // indirect
+	github.com/luxfi/fhe v1.7.1 // indirect
+	github.com/luxfi/genesis v1.5.19 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
 	github.com/luxfi/keychain v1.0.1 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
@@ -178,27 +178,22 @@ require (
 )
 
 require (
-	github.com/luxfi/consensus v1.22.47
-	github.com/luxfi/database v1.2.17
-	github.com/luxfi/ids v1.2.5
+	github.com/luxfi/consensus v1.22.50
+	github.com/luxfi/database v1.17.35
+	github.com/luxfi/ids v1.2.7
 	github.com/luxfi/math v1.2.0
 	github.com/luxfi/p2p v1.18.2
-	github.com/luxfi/precompile v0.4.0
+	github.com/luxfi/precompile v0.4.1
 	github.com/luxfi/vm v1.0.2
 	github.com/luxfi/warp v1.18.2
 )
 
 require (
 	github.com/crate-crypto/go-kzg-4844 v1.1.0 // indirect
+	github.com/luxfi/gpu v0.29.4 // indirect
 	github.com/luxfi/lattice/v7 v7.0.0 // indirect
-	github.com/luxfi/math/big v0.0.0-00010101000000-000000000000 // indirect
+	github.com/luxfi/math/big v0.1.0 // indirect
 	github.com/luxfi/ringtail v0.2.0 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
 )
-
-replace github.com/luxfi/geth => ../geth
-
-replace github.com/luxfi/crypto => ../crypto
-
-replace github.com/luxfi/math/big => ../math/big
