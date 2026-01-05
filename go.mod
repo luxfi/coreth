@@ -17,12 +17,12 @@ require (
 	github.com/holiman/billy v0.0.0-20250707135307-f2f9b9aae7db
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.3.2
-	github.com/luxfi/crypto v1.17.36
+	github.com/luxfi/crypto v1.17.37
 	github.com/luxfi/geth v1.16.68
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/log v1.2.1
 	github.com/luxfi/metric v1.4.8
-	github.com/luxfi/node v1.22.80
+	github.com/luxfi/node v1.22.81
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.27.3
@@ -178,11 +178,11 @@ require (
 )
 
 require (
-	github.com/luxfi/consensus v1.22.50
+	github.com/luxfi/consensus v1.22.51
 	github.com/luxfi/database v1.17.35
 	github.com/luxfi/ids v1.2.7
-	github.com/luxfi/math v1.2.0
-	github.com/luxfi/p2p v1.18.2
+	github.com/luxfi/math v1.2.2
+	github.com/luxfi/p2p v1.18.4
 	github.com/luxfi/precompile v0.4.1
 	github.com/luxfi/vm v1.0.2
 	github.com/luxfi/warp v1.18.2
@@ -190,7 +190,7 @@ require (
 
 require (
 	github.com/crate-crypto/go-kzg-4844 v1.1.0 // indirect
-	github.com/luxfi/gpu v0.29.4 // indirect
+	github.com/luxfi/gpu v0.30.0 // indirect
 	github.com/luxfi/lattice/v7 v7.0.0 // indirect
 	github.com/luxfi/math/big v0.1.0 // indirect
 	github.com/luxfi/ringtail v0.2.0 // indirect
