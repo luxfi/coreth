@@ -149,7 +149,6 @@ func Estimate(ctx context.Context, call *core.Message, opts *Options, gasCap uin
 		if err != nil {
 			// This should not happen under normal conditions since if we make it this far the
 			// transaction had run without error at least once before.
-			log.Error("Execution error in estimate gas", "err", err)
 			return 0, nil, err
 		}
 		if failed {
@@ -180,7 +179,6 @@ func Estimate(ctx context.Context, call *core.Message, opts *Options, gasCap uin
 		if err != nil {
 			// This should not happen under normal conditions since if we make it this far the
 			// transaction had run without error at least once before.
-			log.Error("Execution error in estimate gas", "err", err)
 			return 0, nil, err
 		}
 		if failed {
