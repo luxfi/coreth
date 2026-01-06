@@ -6,6 +6,7 @@ package eth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
 	"sync"
 	"time"
@@ -52,10 +53,8 @@ func (api *DevAPI) SetBalance(ctx context.Context, address common.Address, balan
 	log.Info("SetBalance: got current block", "number", header.Number, "root", header.Root.Hex())
 	statedb, err := api.eth.blockchain.StateAt(header.Root)
 	if err != nil {
-		log.Error("SetBalance: StateAt failed", "err", err)
-		return err
+		return fmt.Errorf("SetBalance: StateAt failed: %w", err)
 	}
-	log.Info("SetBalance: got statedb")
 
 	// Set the balance
 	u256Balance, overflow := uint256.FromBig((*big.Int)(&balance))
@@ -271,7 +270,8 @@ func (api *DevAPI) IncreaseTime(ctx context.Context, seconds hexutil.Uint64) (he
 	if err := api.eth.blockchain.Accept(block); err != nil {
 		return 0, err
 	}
-	api.eth.blockchain.DrainAcceptorQueue()
+	// Note: We don't call DrainAcceptorQueue() here because it triggers
+	// snapshot flatten which isn't supported in PathDB mode.
 
 	return hexutil.Uint64(newTime), nil
 }
