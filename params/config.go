@@ -30,7 +30,7 @@ package params
 import (
 	"math/big"
 
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/utils"
 	ethparams "github.com/luxfi/geth/params"

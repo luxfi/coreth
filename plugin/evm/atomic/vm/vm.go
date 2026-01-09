@@ -21,7 +21,7 @@ import (
 	"github.com/luxfi/codec/linearcodec"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/ids"

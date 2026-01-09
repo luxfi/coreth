@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	validators "github.com/luxfi/consensus/validator"
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/predicate"
 	warpValidators "github.com/luxfi/coreth/warp/validators"

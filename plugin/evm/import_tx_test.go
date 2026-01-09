@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"github.com/holiman/uint256"
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/vm"

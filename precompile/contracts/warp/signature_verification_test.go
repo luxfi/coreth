@@ -12,7 +12,7 @@ import (
 
 	validators "github.com/luxfi/consensus/validator"
 	"github.com/luxfi/consensus/validator/validatorsmock"
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"

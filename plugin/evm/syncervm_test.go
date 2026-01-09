@@ -32,7 +32,7 @@ import (
 	commonEng "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/consensus/engine/enginetest"
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/database/prefixdb"
@@ -43,7 +43,7 @@ import (
 	"github.com/luxfi/upgrade/upgradetest"
 	"github.com/luxfi/warp"
 
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/coretest"

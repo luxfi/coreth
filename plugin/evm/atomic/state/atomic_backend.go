@@ -17,7 +17,7 @@ import (
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/codec"
 	"github.com/luxfi/sdk/utils"
-	"github.com/luxfi/sdk/utils/wrappers"
+	"github.com/luxfi/vm/utils/wrappers"
 )
 
 const (

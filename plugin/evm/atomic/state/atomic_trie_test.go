@@ -27,7 +27,7 @@ import (
 	"github.com/luxfi/ids"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/codec"
-	"github.com/luxfi/sdk/utils/wrappers"
+	"github.com/luxfi/vm/utils/wrappers"
 )
 
 const testCommitInterval = 100
