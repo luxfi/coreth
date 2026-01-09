@@ -5,7 +5,7 @@ package evm
 
 import (
 	"github.com/luxfi/log"
-	"github.com/luxfi/node/utils/timer/mockable"
+	"github.com/luxfi/vm/utils/timer/mockable"
 
 	"github.com/luxfi/coreth/plugin/evm/extension"
 	"github.com/luxfi/coreth/plugin/evm/message"

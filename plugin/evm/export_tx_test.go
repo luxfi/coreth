@@ -23,19 +23,19 @@ import (
 	"github.com/holiman/uint256"
 	commonEng "github.com/luxfi/consensus/core"
 	consensustest "github.com/luxfi/consensus/test/helpers"
-	constants "github.com/luxfi/const"
+	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/upgrade/upgradetest"
-	luxutils "github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/units"
-	"github.com/luxfi/node/vms/components/lux"
-	"github.com/luxfi/node/vms/secp256k1fx"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/vm/vms/components/lux"
+	"github.com/luxfi/vm/vms/secp256k1fx"
+	luxutils "github.com/luxfi/sdk/utils"
+	"github.com/luxfi/upgrade/upgradetest"
 )
 
 // createExportTxOptions adds funds to shared memory, imports them, and returns a list of export transactions
@@ -125,7 +125,7 @@ func TestExportTxEVMStateTransfer(t *testing.T) {
 	addr := key.Address()
 	ethAddr := key.EthAddress()
 
-	luxAmount := 50 * units.MilliLux
+	luxAmount := 50 * constants.MilliLux
 	luxUTXOID := lux.UTXOID{
 		OutputIndex: 0,
 	}
@@ -481,7 +481,7 @@ func TestExportTxSemanticVerify(t *testing.T) {
 	ethAddr := testEthAddrs[0]
 
 	var (
-		luxBalance            = 10 * units.Lux
+		luxBalance            = 10 * constants.Lux
 		custom0Balance uint64 = 100
 		custom0AssetID        = ids.ID{1, 2, 3, 4, 5}
 		custom1Balance uint64 = 1000
@@ -973,7 +973,7 @@ func TestExportTxAccept(t *testing.T) {
 	ethAddr := testEthAddrs[0]
 
 	var (
-		luxBalance            = 10 * units.Lux
+		luxBalance            = 10 * constants.Lux
 		custom0Balance uint64 = 100
 		custom0AssetID        = ids.ID{1, 2, 3, 4, 5}
 	)
@@ -1826,8 +1826,8 @@ func TestNewExportTx(t *testing.T) {
 			}
 
 			addr := common.Address(testKeys[0].EthAddress())
-			if wrappedStateDB.GetBalance(addr).Cmp(uint256.NewInt(test.bal*units.Lux)) != 0 {
-				t.Fatalf("address balance %s equal %s not %s", addr.String(), wrappedStateDB.GetBalance(addr), new(big.Int).SetUint64(test.bal*units.Lux))
+			if wrappedStateDB.GetBalance(addr).Cmp(uint256.NewInt(test.bal*constants.Lux)) != 0 {
+				t.Fatalf("address balance %s equal %s not %s", addr.String(), wrappedStateDB.GetBalance(addr), new(big.Int).SetUint64(test.bal*constants.Lux))
 			}
 		})
 	}
@@ -2012,8 +2012,8 @@ func TestNewExportTxMulticoin(t *testing.T) {
 			}
 
 			addr := common.Address(testKeys[0].EthAddress())
-			if wrappedStateDB.GetBalance(addr).Cmp(uint256.NewInt(test.bal*units.Lux)) != 0 {
-				t.Fatalf("address balance %s equal %s not %s", addr.String(), wrappedStateDB.GetBalance(addr), new(big.Int).SetUint64(test.bal*units.Lux))
+			if wrappedStateDB.GetBalance(addr).Cmp(uint256.NewInt(test.bal*constants.Lux)) != 0 {
+				t.Fatalf("address balance %s equal %s not %s", addr.String(), wrappedStateDB.GetBalance(addr), new(big.Int).SetUint64(test.bal*constants.Lux))
 			}
 			if wrappedStateDB.GetBalanceMultiCoin(addr, common.BytesToHash(tid[:])).Cmp(new(big.Int).SetUint64(test.balmc)) != 0 {
 				t.Fatalf("address balance multicoin %s equal %s not %s", addr.String(), wrappedStateDB.GetBalanceMultiCoin(addr, common.BytesToHash(tid[:])), new(big.Int).SetUint64(test.balmc))

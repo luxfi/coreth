@@ -12,11 +12,11 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/codec/linearcodec"
-	"github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/wrappers"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/codec"
+	"github.com/luxfi/codec/linearcodec"
+	"github.com/luxfi/sdk/utils"
+	"github.com/luxfi/sdk/utils/wrappers"
 )
 
 // TODO: Remove this and use actual codec and transactions (export, import)

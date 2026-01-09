@@ -37,8 +37,8 @@ import (
 	commonEng "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/enginetest"
 	consensustest "github.com/luxfi/consensus/test/helpers"
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/coreth/consensus/dummy"
-	"github.com/luxfi/coreth/constants"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/eth"
 	"github.com/luxfi/coreth/eth/filters"
@@ -56,6 +56,7 @@ import (
 	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/coreth/utils/utilstest"
+	hashing "github.com/luxfi/crypto/hash"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/memdb"
@@ -68,14 +69,12 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/node/api/metrics"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/upgrade"
-	"github.com/luxfi/node/upgrade/upgradetest"
-	"github.com/luxfi/node/utils/hashing"
-	"github.com/luxfi/node/utils/units"
-	"github.com/luxfi/node/vms/components/lux"
-	"github.com/luxfi/node/vms/secp256k1fx"
+	"github.com/luxfi/vm/api/metrics"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/vm/vms/components/lux"
+	"github.com/luxfi/vm/vms/secp256k1fx"
+	"github.com/luxfi/upgrade"
+	"github.com/luxfi/upgrade/upgradetest"
 	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/warp"
 	"github.com/stretchr/testify/assert"
@@ -1007,7 +1006,7 @@ func testReissueAtomicTxHigherGasPrice(t *testing.T, scheme string) {
 	kc := secp256k1fx.NewKeychain(testKeys...)
 	tests := map[string]func(t *testing.T, vm *atomicvm.VM, sharedMemory *luxatomic.Memory) (issued []*atomic.Tx, discarded []*atomic.Tx){
 		"single UTXO override": func(t *testing.T, vm *atomicvm.VM, sharedMemory *luxatomic.Memory) (issued []*atomic.Tx, evicted []*atomic.Tx) {
-			utxo, err := addUTXO(sharedMemory, vm.Ctx, ids.GenerateTestID(), 0, vm.Ctx.XAssetID, units.Lux, testShortIDAddrs[0])
+			utxo, err := addUTXO(sharedMemory, vm.Ctx, ids.GenerateTestID(), 0, vm.Ctx.XAssetID, constants.Lux, testShortIDAddrs[0])
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1030,11 +1029,11 @@ func testReissueAtomicTxHigherGasPrice(t *testing.T, scheme string) {
 			return []*atomic.Tx{tx2}, []*atomic.Tx{tx1}
 		},
 		"one of two UTXOs overrides": func(t *testing.T, vm *atomicvm.VM, sharedMemory *luxatomic.Memory) (issued []*atomic.Tx, evicted []*atomic.Tx) {
-			utxo1, err := addUTXO(sharedMemory, vm.Ctx, ids.GenerateTestID(), 0, vm.Ctx.XAssetID, units.Lux, testShortIDAddrs[0])
+			utxo1, err := addUTXO(sharedMemory, vm.Ctx, ids.GenerateTestID(), 0, vm.Ctx.XAssetID, constants.Lux, testShortIDAddrs[0])
 			if err != nil {
 				t.Fatal(err)
 			}
-			utxo2, err := addUTXO(sharedMemory, vm.Ctx, ids.GenerateTestID(), 0, vm.Ctx.XAssetID, units.Lux, testShortIDAddrs[0])
+			utxo2, err := addUTXO(sharedMemory, vm.Ctx, ids.GenerateTestID(), 0, vm.Ctx.XAssetID, constants.Lux, testShortIDAddrs[0])
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1057,11 +1056,11 @@ func testReissueAtomicTxHigherGasPrice(t *testing.T, scheme string) {
 			return []*atomic.Tx{tx2}, []*atomic.Tx{tx1}
 		},
 		"hola": func(t *testing.T, vm *atomicvm.VM, sharedMemory *luxatomic.Memory) (issued []*atomic.Tx, evicted []*atomic.Tx) {
-			utxo1, err := addUTXO(sharedMemory, vm.Ctx, ids.GenerateTestID(), 0, vm.Ctx.XAssetID, units.Lux, testShortIDAddrs[0])
+			utxo1, err := addUTXO(sharedMemory, vm.Ctx, ids.GenerateTestID(), 0, vm.Ctx.XAssetID, constants.Lux, testShortIDAddrs[0])
 			if err != nil {
 				t.Fatal(err)
 			}
-			utxo2, err := addUTXO(sharedMemory, vm.Ctx, ids.GenerateTestID(), 0, vm.Ctx.XAssetID, units.Lux, testShortIDAddrs[0])
+			utxo2, err := addUTXO(sharedMemory, vm.Ctx, ids.GenerateTestID(), 0, vm.Ctx.XAssetID, constants.Lux, testShortIDAddrs[0])
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3243,14 +3242,14 @@ func testBuildInvalidBlockHead(t *testing.T, scheme string) {
 		BlockchainID: tvm.vm.ctx.ChainID,
 		Outs: []atomic.EVMOutput{{
 			Address: common.Address(addr0),
-			Amount:  1 * units.Lux,
+			Amount:  1 * constants.Lux,
 			AssetID: tvm.vm.ctx.XAssetID,
 		}},
 		ImportedInputs: []*lux.TransferableInput{
 			{
 				Asset: lux.Asset{ID: tvm.vm.ctx.XAssetID},
 				In: &secp256k1fx.TransferInput{
-					Amt: 1 * units.Lux,
+					Amt: 1 * constants.Lux,
 					Input: secp256k1fx.Input{
 						SigIndices: []uint32{0},
 					},

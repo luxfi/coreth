@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/luxfi/coreth/constants"
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 )

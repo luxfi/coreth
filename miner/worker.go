@@ -38,6 +38,7 @@ import (
 	"time"
 
 	"github.com/holiman/uint256"
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/core"
@@ -54,14 +55,13 @@ import (
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/event"
 	"github.com/luxfi/log"
-	"github.com/luxfi/node/utils/timer/mockable"
-	"github.com/luxfi/node/utils/units"
+	"github.com/luxfi/vm/utils/timer/mockable"
 )
 
 const (
 	// Leaves 256 KBs for other sections of the block (limit is 2MB).
 	// This should suffice for atomic txs, proposervm header, and serialization overhead.
-	targetTxsSize = 1792 * units.KiB
+	targetTxsSize = 1792 * constants.KiB
 )
 
 var ErrInsufficientGasCapacityToBuild = errors.New("insufficient gas capacity to build block")

@@ -45,7 +45,7 @@ import (
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/eth/tracers/logger"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/node/upgrade"
+	"github.com/luxfi/upgrade"
 )
 
 var (

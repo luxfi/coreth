@@ -8,14 +8,14 @@ import (
 	"fmt"
 
 	validators "github.com/luxfi/consensus/validator"
-	constants "github.com/luxfi/const"
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/predicate"
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/math"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
+	"github.com/luxfi/math"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 )

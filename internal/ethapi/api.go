@@ -51,7 +51,6 @@ import (
 	"github.com/luxfi/geth/accounts/scwallet"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	gethmath "github.com/luxfi/math"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
@@ -61,6 +60,7 @@ import (
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/go-bip39"
 	"github.com/luxfi/log"
+	gethmath "github.com/luxfi/math"
 )
 
 // estimateGasErrorRatio is the amount of overestimation eth_estimateGas is

@@ -12,8 +12,8 @@ import (
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/utils"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/sdk/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

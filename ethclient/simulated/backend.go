@@ -24,8 +24,8 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/coreth/consensus/dummy"
-	"github.com/luxfi/coreth/constants"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/eth"
 	"github.com/luxfi/coreth/eth/ethconfig"
@@ -38,7 +38,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/node/utils/timer/mockable"
+	"github.com/luxfi/vm/utils/timer/mockable"
 )
 
 var _ eth.PushGossiper = (*fakePushGossiper)(nil)

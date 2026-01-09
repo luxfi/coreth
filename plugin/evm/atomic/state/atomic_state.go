@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
-	luxatomic "github.com/luxfi/node/chains/atomic"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
 )
 
 // atomicState implements the AtomicState interface using

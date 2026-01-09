@@ -36,12 +36,12 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/math"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/ethdb/badgerdb"
+	"github.com/luxfi/math"
 )
 
 func BenchmarkInsertChain_empty_memdb(b *testing.B) {

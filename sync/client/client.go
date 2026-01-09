@@ -18,7 +18,7 @@ import (
 	"github.com/luxfi/coreth/sync/client/stats"
 
 	"github.com/luxfi/consensus/version"
-	"github.com/luxfi/node/codec"
+	"github.com/luxfi/codec"
 
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"

@@ -25,9 +25,9 @@ import (
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/ids"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/utils/wrappers"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/codec"
+	"github.com/luxfi/sdk/utils/wrappers"
 )
 
 const testCommitInterval = 100

@@ -17,12 +17,12 @@ require (
 	github.com/holiman/billy v0.0.0-20250707135307-f2f9b9aae7db
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.3.2
+	github.com/luxfi/codec v1.1.0
 	github.com/luxfi/crypto v1.17.37
 	github.com/luxfi/geth v1.16.68
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/log v1.2.1
 	github.com/luxfi/metric v1.4.8
-	github.com/luxfi/node v1.22.81
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.27.3
@@ -37,7 +37,7 @@ require (
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
 	go.uber.org/zap v1.27.1
-	golang.org/x/crypto v0.46.0
+	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
 	golang.org/x/sync v0.19.0
 	golang.org/x/time v0.14.0
@@ -112,16 +112,15 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/luxfi/address v1.0.0 // indirect
 	github.com/luxfi/cache v1.1.0 // indirect
-	github.com/luxfi/const v1.4.0
+	github.com/luxfi/constants v1.4.2
 	github.com/luxfi/fhe v1.7.1 // indirect
 	github.com/luxfi/genesis v1.5.19 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
 	github.com/luxfi/keychain v1.0.1 // indirect
 	github.com/luxfi/mock v0.1.0 // indirect
 	github.com/luxfi/sampler v1.0.0 // indirect
-	github.com/luxfi/staking v1.0.0 // indirect
+	github.com/luxfi/sdk v1.16.40
 	github.com/luxfi/trace v0.1.4 // indirect
-	github.com/luxfi/utils v1.1.0 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/pointerstructure v1.2.1 // indirect
@@ -184,16 +183,43 @@ require (
 	github.com/luxfi/math v1.2.2
 	github.com/luxfi/p2p v1.18.4
 	github.com/luxfi/precompile v0.4.1
+	github.com/luxfi/upgrade v1.0.0
 	github.com/luxfi/vm v1.0.2
 	github.com/luxfi/warp v1.18.2
 )
 
 require (
+	github.com/chelnak/ysmrr v0.6.0 // indirect
+	github.com/clipperhouse/stringish v0.1.1 // indirect
+	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/crate-crypto/go-kzg-4844 v1.1.0 // indirect
+	github.com/fatih/color v1.18.0 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213 // indirect
+	github.com/kr/fs v0.1.0 // indirect
+	github.com/luxfi/evm v0.8.28 // indirect
 	github.com/luxfi/gpu v0.30.0 // indirect
 	github.com/luxfi/lattice/v7 v7.0.0 // indirect
 	github.com/luxfi/math/big v0.1.0 // indirect
+	github.com/luxfi/math/safe v0.0.0-20260105093802-21b7243e9ffb // indirect
+	github.com/luxfi/netrunner v1.14.35 // indirect
 	github.com/luxfi/ringtail v0.2.0 // indirect
+	github.com/luxfi/staking v1.0.0 // indirect
+	github.com/luxfi/units v1.0.0 // indirect
+	github.com/luxfi/utils v1.1.0 // indirect
+	github.com/mattn/go-runewidth v0.0.19 // indirect
+	github.com/melbahja/goph v1.4.0 // indirect
+	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
+	github.com/olekukonko/errors v1.1.0 // indirect
+	github.com/olekukonko/ll v0.0.9 // indirect
+	github.com/olekukonko/tablewriter v1.0.9 // indirect
+	github.com/pkg/sftp v1.13.5 // indirect
+	github.com/posthog/posthog-go v1.6.1 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/schollz/progressbar/v3 v3.18.0 // indirect
+	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
+	golang.org/x/term v0.38.0 // indirect
 )

@@ -10,8 +10,8 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
 	"github.com/luxfi/database"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	safemath "github.com/luxfi/node/utils/math"
+	safemath "github.com/luxfi/math"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
 
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"

@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"github.com/holiman/uint256"
-	constants "github.com/luxfi/const"
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/vm"
@@ -27,11 +27,11 @@ import (
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/upgrade/upgradetest"
-	luxutils "github.com/luxfi/node/utils"
-	"github.com/luxfi/node/vms/components/lux"
-	"github.com/luxfi/node/vms/secp256k1fx"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/vm/vms/components/lux"
+	"github.com/luxfi/vm/vms/secp256k1fx"
+	luxutils "github.com/luxfi/sdk/utils"
+	"github.com/luxfi/upgrade/upgradetest"
 )
 
 // createImportTxOptions adds a UTXO to shared memory and generates a list of import transactions sending this UTXO

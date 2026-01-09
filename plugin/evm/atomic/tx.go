@@ -17,17 +17,17 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 
 	consensusctx "github.com/luxfi/consensus/context"
+	hashing "github.com/luxfi/crypto/hash"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/ids"
 	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/utils/hashing"
-	"github.com/luxfi/node/utils/wrappers"
-	"github.com/luxfi/node/vms/components/verify"
-	"github.com/luxfi/node/vms/secp256k1fx"
+	"github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/codec"
+	"github.com/luxfi/vm/vms/components/verify"
+	"github.com/luxfi/vm/vms/secp256k1fx"
 	"github.com/luxfi/p2p/gossip"
+	"github.com/luxfi/sdk/utils/wrappers"
 )
 
 var _ gossip.Gossipable = (*Tx)(nil)

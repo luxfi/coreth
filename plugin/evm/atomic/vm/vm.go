@@ -17,25 +17,24 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic/txpool"
 
+	"github.com/luxfi/codec"
+	"github.com/luxfi/codec/linearcodec"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
-	constants "github.com/luxfi/const"
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/crypto/secp256k1"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
 	"github.com/luxfi/math/set"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/codec/linearcodec"
-	luxutils "github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/timer/mockable"
-	"github.com/luxfi/node/utils/units"
-	"github.com/luxfi/node/vms/components/lux"
-	"github.com/luxfi/node/vms/secp256k1fx"
 	"github.com/luxfi/p2p"
 	luxdssip "github.com/luxfi/p2p/gossip"
+	luxutils "github.com/luxfi/sdk/utils"
 	luxvm "github.com/luxfi/vm"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/vm/utils/timer/mockable"
+	"github.com/luxfi/vm/vms/components/lux"
+	"github.com/luxfi/vm/vms/secp256k1fx"
 
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core/extstate"
@@ -66,7 +65,7 @@ var (
 const (
 	secpCacheSize       = 1024
 	defaultMempoolSize  = 4096
-	targetAtomicTxsSize = 40 * units.KiB
+	targetAtomicTxsSize = 40 * constants.KiB
 	// maxAtomicTxMempoolGas is the maximum amount of gas that is allowed to be
 	// used by an atomic transaction in the mempool. It is allowed to build
 	// blocks with larger atomic transactions, but they will not be accepted

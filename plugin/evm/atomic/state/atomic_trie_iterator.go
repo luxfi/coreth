@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/luxfi/ids"
-	"github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/utils/wrappers"
+	"github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/codec"
+	"github.com/luxfi/sdk/utils/wrappers"
 
 	"github.com/luxfi/geth/trie"
 )

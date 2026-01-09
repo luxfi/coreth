@@ -16,8 +16,8 @@ import (
 	_ "embed"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/math"
 	"github.com/luxfi/geth/core/vm"
+	"github.com/luxfi/math"
 )
 
 const (

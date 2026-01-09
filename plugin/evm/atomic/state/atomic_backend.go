@@ -14,10 +14,10 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/wrappers"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/codec"
+	"github.com/luxfi/sdk/utils"
+	"github.com/luxfi/sdk/utils/wrappers"
 )
 
 const (

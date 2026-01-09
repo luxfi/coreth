@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
@@ -21,7 +22,6 @@ import (
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/triedb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/node/utils/units"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -173,9 +173,9 @@ func TestBlockRequestHandlerLargeBlocks(t *testing.T) {
 		var data []byte
 		switch {
 		case i <= 32:
-			data = make([]byte, units.MiB)
+			data = make([]byte, constants.MiB)
 		default:
-			data = make([]byte, units.MiB/16)
+			data = make([]byte, constants.MiB/16)
 		}
 		tx, err := types.SignTx(types.NewTransaction(b.TxNonce(addr1), addr1, big.NewInt(10000), 4_215_304, nil, data), signer, key1)
 		if err != nil {

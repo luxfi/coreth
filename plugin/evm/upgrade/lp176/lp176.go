@@ -14,9 +14,9 @@ import (
 	"sort"
 
 	"github.com/holiman/uint256"
-	safemath "github.com/luxfi/node/utils/math"
-	"github.com/luxfi/node/utils/wrappers"
-	"github.com/luxfi/node/vms/components/gas"
+	safemath "github.com/luxfi/math"
+	"github.com/luxfi/vm/vms/components/gas"
+	"github.com/luxfi/sdk/utils/wrappers"
 )
 
 const (

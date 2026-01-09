@@ -4,9 +4,10 @@
 package utils
 
 import (
-	"github.com/luxfi/node/config"
-	"github.com/luxfi/node/tests/fixture/tmpnet"
+	"github.com/luxfi/vm/tests/fixture/tmpnet"
 )
+
+const proposerVMUseCurrentHeightKey = "proposervm-use-current-height"
 
 var DefaultChainConfig = map[string]any{
 	"log-level":         "debug",
@@ -21,8 +22,8 @@ func NewTmpnetNetwork(owner string, nodes []*tmpnet.Node, flags tmpnet.Flags) *t
 		defaultFlags[k] = v
 	}
 	// Set default proposer VM flag
-	if _, exists := defaultFlags[config.ProposerVMUseCurrentHeightKey]; !exists {
-		defaultFlags[config.ProposerVMUseCurrentHeightKey] = "true"
+	if _, exists := defaultFlags[proposerVMUseCurrentHeightKey]; !exists {
+		defaultFlags[proposerVMUseCurrentHeightKey] = "true"
 	}
 	return &tmpnet.Network{
 		Owner:        owner,
