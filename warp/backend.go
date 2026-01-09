@@ -8,12 +8,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/luxfi/cache"
+	"github.com/luxfi/cache/lru"
 	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/database"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
-	"github.com/luxfi/cache"
-	"github.com/luxfi/cache/lru"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 )

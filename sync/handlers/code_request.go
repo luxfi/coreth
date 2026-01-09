@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/luxfi/ids"
 	"github.com/luxfi/codec"
+	"github.com/luxfi/ids"
 
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/sync/handlers/stats"

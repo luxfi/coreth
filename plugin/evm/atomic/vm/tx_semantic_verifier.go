@@ -18,9 +18,9 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/vms/components/lux"
-	"github.com/luxfi/vm/vms/platformvm/fx"
-	"github.com/luxfi/vm/vms/secp256k1fx"
+	"github.com/luxfi/vm/components/lux"
+	"github.com/luxfi/vm/platformvm/fx"
+	"github.com/luxfi/vm/secp256k1fx"
 )
 
 var _ atomic.Visitor = (*semanticVerifier)(nil)

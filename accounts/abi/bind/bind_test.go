@@ -2123,11 +2123,19 @@ func golangBindings(t *testing.T, overload bool) {
 	}
 	// Create a temporary workspace for the test suite
 	ws := t.TempDir()
-
 	pkg := filepath.Join(ws, "bindtest")
+
 	if err := os.MkdirAll(pkg, 0700); err != nil {
 		t.Fatalf("failed to create package: %v", err)
 	}
+	goEnv := os.Environ()
+	filteredEnv := make([]string, 0, len(goEnv))
+	for _, entry := range goEnv {
+		if !strings.HasPrefix(entry, "GOWORK=") {
+			filteredEnv = append(filteredEnv, entry)
+		}
+	}
+	goEnv = append(filteredEnv, "GOWORK=off")
 	// Generate the test suite for all the contracts
 	for i, tt := range bindTests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -2174,29 +2182,20 @@ func golangBindings(t *testing.T, overload bool) {
 	// Convert the package to go modules and use the current source for go-ethereum
 	moder := exec.Command(gocmd, "mod", "init", "bindtest")
 	moder.Dir = pkg
+	moder.Env = goEnv
 	if out, err := moder.CombinedOutput(); err != nil {
 		t.Fatalf("failed to convert binding test to modules: %v\n%s", err, out)
 	}
-	pwd, _ := os.Getwd()
-	replacer := exec.Command(gocmd, "mod", "edit", "-x", "-require", "github.com/luxfi/coreth@v0.0.0", "-replace", "github.com/luxfi/coreth="+filepath.Join(pwd, "..", "..", "..")) // Repo root
-	replacer.Dir = pkg
-	if out, err := replacer.CombinedOutput(); err != nil {
-		t.Fatalf("failed to replace binding test dependency to current source tree: %v\n%s", err, out)
-	}
-	// Also replace geth with local version to pick up any changes
-	gethReplacer := exec.Command(gocmd, "mod", "edit", "-x", "-require", "github.com/luxfi/geth@v0.0.0", "-replace", "github.com/luxfi/geth="+filepath.Join(pwd, "..", "..", "..", "..", "geth"))
-	gethReplacer.Dir = pkg
-	if out, err := gethReplacer.CombinedOutput(); err != nil {
-		t.Fatalf("failed to replace geth dependency to local source tree: %v\n%s", err, out)
-	}
 	tidier := exec.Command(gocmd, "mod", "tidy", "-compat=1.23")
 	tidier.Dir = pkg
+	tidier.Env = goEnv
 	if out, err := tidier.CombinedOutput(); err != nil {
 		t.Fatalf("failed to tidy Go module file: %v\n%s", err, out)
 	}
 	// Test the entire package and report any failures
 	cmd := exec.Command(gocmd, "test", "-v", "-count", "1")
 	cmd.Dir = pkg
+	cmd.Env = goEnv
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("failed to run binding test: %v\n%s", err, out)
 	}

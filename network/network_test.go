@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luxfi/codec"
+	"github.com/luxfi/codec/linearcodec"
 	consensustest "github.com/luxfi/consensus/test/helpers"
 	consensusversion "github.com/luxfi/consensus/version"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/linearcodec"
 	"github.com/luxfi/p2p"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"

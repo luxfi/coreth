@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/luxfi/constants"
-	"github.com/luxfi/geth/common"
 	"github.com/luxfi/codec"
 	"github.com/luxfi/codec/linearcodec"
+	"github.com/luxfi/constants"
+	"github.com/luxfi/geth/common"
 	"github.com/luxfi/vm/utils/wrappers"
 )
 

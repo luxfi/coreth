@@ -19,8 +19,8 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/trie"
+	"github.com/luxfi/vm/components/gas"
 	"github.com/luxfi/vm/utils/timer/mockable"
-	"github.com/luxfi/vm/vms/components/gas"
 
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
 )

@@ -24,18 +24,17 @@ import (
 	commonEng "github.com/luxfi/consensus/core"
 	consensustest "github.com/luxfi/consensus/test/helpers"
 	"github.com/luxfi/constants"
-	"github.com/luxfi/constants"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
-	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/vms/components/lux"
-	"github.com/luxfi/vm/vms/secp256k1fx"
-	luxutils "github.com/luxfi/sdk/utils"
 	"github.com/luxfi/upgrade/upgradetest"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/vm/components/lux"
+	"github.com/luxfi/vm/secp256k1fx"
+	luxutils "github.com/luxfi/vm/utils"
 )
 
 // createExportTxOptions adds funds to shared memory, imports them, and returns a list of export transactions

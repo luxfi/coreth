@@ -7,16 +7,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/luxfi/formatting"
 	"log/slog"
 
 	"github.com/luxfi/address"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/config"
-	"github.com/luxfi/formatting"
 	"github.com/luxfi/ids"
+	"github.com/luxfi/rpc"
 	"github.com/luxfi/vm/api"
 	"github.com/luxfi/vm/utils/json"
-	"github.com/luxfi/rpc"
 )
 
 // Interface compliance

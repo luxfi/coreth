@@ -16,17 +16,17 @@ import (
 
 	"github.com/luxfi/coreth/params/extras"
 
+	"github.com/luxfi/codec"
 	consensusctx "github.com/luxfi/consensus/context"
 	hashing "github.com/luxfi/crypto/hash"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/ids"
 	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/codec"
-	"github.com/luxfi/vm/vms/components/verify"
-	"github.com/luxfi/vm/vms/secp256k1fx"
 	"github.com/luxfi/p2p/gossip"
+	"github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/vm/components/verify"
+	"github.com/luxfi/vm/secp256k1fx"
 	"github.com/luxfi/vm/utils/wrappers"
 )
 
