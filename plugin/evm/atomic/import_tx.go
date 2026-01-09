@@ -21,13 +21,13 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
+	"github.com/luxfi/math"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/math"
-	"github.com/luxfi/node/vms/components/lux"
-	"github.com/luxfi/node/vms/components/verify"
-	"github.com/luxfi/node/vms/secp256k1fx"
+	"github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/vm/vms/components/lux"
+	"github.com/luxfi/vm/vms/components/verify"
+	"github.com/luxfi/vm/vms/secp256k1fx"
+	"github.com/luxfi/sdk/utils"
 )
 
 var (

@@ -8,12 +8,12 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
+	"github.com/luxfi/constantsants"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/ids"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/utils/units"
-	"github.com/luxfi/node/utils/wrappers"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/codec"
+	"github.com/luxfi/sdk/utils/wrappers"
 
 	"github.com/luxfi/coreth/plugin/evm/database"
 	"github.com/luxfi/geth/common"
@@ -30,7 +30,7 @@ import (
 const (
 	TrieKeyLength = wrappers.LongLen + common.HashLength
 
-	atomicTrieMemoryCap = 64 * units.MiB
+	atomicTrieMemoryCap = 64 * constants.MiB
 )
 
 var lastCommittedKey = []byte("atomicTrieLastCommittedBlock")
@@ -75,7 +75,7 @@ func newAtomicTrie(
 		rawdb.NewDatabase(database.WrapDatabase(atomicTrieDB)),
 		&triedb.Config{
 			HashDB: &hashdb.Config{
-				CleanCacheSize: 64 * units.MiB, // Allocate 64MB of memory for clean cache
+				CleanCacheSize: 64 * constants.MiB, // Allocate 64MB of memory for clean cache
 			},
 		},
 	)

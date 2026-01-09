@@ -3,10 +3,10 @@
 
 package atomic
 
-import "github.com/luxfi/node/utils/units"
+import "github.com/luxfi/constantsants"
 
 const (
-	LuxAtomicTxFee = units.MilliLux
+	LuxAtomicTxFee = constants.MilliLux
 
 	// The base cost to charge per atomic transaction. Added in Apricot Phase 5.
 	AtomicTxBaseCost uint64 = 10_000

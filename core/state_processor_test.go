@@ -56,7 +56,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/trie"
-	"github.com/luxfi/node/upgrade"
+	"github.com/luxfi/upgrade"
 	"golang.org/x/crypto/sha3"
 )
 

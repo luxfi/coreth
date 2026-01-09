@@ -6,7 +6,7 @@ package atomictest
 import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/ids"
-	luxatomic "github.com/luxfi/node/chains/atomic"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
 )
 
 func ConvertToAtomicOps(tx *atomic.Tx) (map[ids.ID]*luxatomic.Requests, error) {

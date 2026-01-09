@@ -9,8 +9,8 @@ import (
 	"os"
 
 	"github.com/luxfi/log"
-	"github.com/luxfi/node/utils/ulimit"
-	"github.com/luxfi/node/vms/rpcchainvm"
+	"github.com/luxfi/vm/vms/rpcchainvm"
+	"github.com/luxfi/sdk/utils/ulimit"
 
 	"github.com/luxfi/coreth/plugin/evm"
 	"github.com/luxfi/coreth/plugin/factory"

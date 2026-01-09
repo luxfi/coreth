@@ -7,9 +7,9 @@ import (
 	"fmt"
 
 	consensusctx "github.com/luxfi/consensus/context"
-	constants "github.com/luxfi/const"
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/node/utils/formatting/address"
+	"github.com/luxfi/address/address"
 )
 
 // ParseServiceAddress get address ID from address string, being it either localized (using address manager,

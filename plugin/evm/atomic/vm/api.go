@@ -11,14 +11,14 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/txpool"
 	"github.com/luxfi/coreth/plugin/evm/client"
+	"github.com/luxfi/formatting"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/node/api"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/utils/formatting"
-	"github.com/luxfi/node/utils/json"
-	"github.com/luxfi/node/vms/components/lux"
+	"github.com/luxfi/vm/api"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/vm/utils/json"
+	"github.com/luxfi/vm/vms/components/lux"
 )
 
 const (

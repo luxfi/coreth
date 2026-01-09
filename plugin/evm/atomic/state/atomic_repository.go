@@ -13,18 +13,18 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/log"
 
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/units"
-	"github.com/luxfi/node/utils/wrappers"
+	"github.com/luxfi/codec"
+	"github.com/luxfi/sdk/utils"
+	"github.com/luxfi/sdk/utils/wrappers"
 )
 
 const (
-	repoCommitSizeCap = 10 * units.MiB
+	repoCommitSizeCap = 10 * constants.MiB
 )
 
 var (

@@ -19,7 +19,7 @@ import (
 
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/node/proto/pb/sdk"
+	"github.com/luxfi/vm/proto/pb/sdk"
 	"github.com/luxfi/p2p"
 	"github.com/luxfi/warp"
 	"github.com/stretchr/testify/assert"

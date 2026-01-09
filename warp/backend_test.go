@@ -11,8 +11,8 @@ import (
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/node/cache/lru"
-	"github.com/luxfi/node/utils"
+	"github.com/luxfi/cache/lru"
+	"github.com/luxfi/sdk/utils"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 

@@ -30,8 +30,8 @@ import (
 	"github.com/luxfi/coreth/utils"
 
 	"github.com/luxfi/ids"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/upgrade/upgradetest"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/upgrade/upgradetest"
 )
 
 func TestCalculateDynamicFee(t *testing.T) {

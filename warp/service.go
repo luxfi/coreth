@@ -10,7 +10,7 @@ import (
 
 	consensusctx "github.com/luxfi/consensus/context"
 	validators "github.com/luxfi/consensus/validator"
-	constants "github.com/luxfi/const"
+	"github.com/luxfi/constantsants"
 	warpprecompile "github.com/luxfi/coreth/precompile/contracts/warp"
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/geth/common/hexutil"

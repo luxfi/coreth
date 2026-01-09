@@ -5,8 +5,8 @@
 package ap0
 
 import (
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/coreth/utils"
-	"github.com/luxfi/node/utils/units"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 	// AtomicTxFee is the amount of LUX that must be burned by an atomic tx.
 	//
 	// This value was replaced with the Apricot Phase 3 dynamic fee mechanism.
-	AtomicTxFee = units.MilliLux
+	AtomicTxFee = constants.MilliLux
 
 	// Note: MaximumExtraDataSize has been reduced to 32 in Geth, but is kept the same in Coreth for
 	// backwards compatibility.

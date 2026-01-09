@@ -11,8 +11,8 @@ import (
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/node/utils/timer/mockable"
 	"github.com/luxfi/p2p"
+	"github.com/luxfi/vm/utils/timer/mockable"
 
 	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/prometheus/client_golang/prometheus"

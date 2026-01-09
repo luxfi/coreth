@@ -20,32 +20,31 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/luxfi/cache/lru"
+	"github.com/luxfi/cache/metercacher"
+	"github.com/luxfi/codec"
 	"github.com/luxfi/consensus"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
 	consensusversion "github.com/luxfi/consensus/version"
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/log"
 	"github.com/luxfi/metric"
-	"github.com/luxfi/node/cache/lru"
-	"github.com/luxfi/node/cache/metercacher"
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/utils"
-	"github.com/luxfi/node/utils/perms"
-	"github.com/luxfi/node/utils/profiler"
-	"github.com/luxfi/node/utils/timer/mockable"
-	"github.com/luxfi/node/utils/units"
-	"github.com/luxfi/node/vms/components/gas"
 	"github.com/luxfi/p2p"
 	p2pgossip "github.com/luxfi/p2p/gossip"
+	"github.com/luxfi/sdk/utils"
+	"github.com/luxfi/sdk/utils/perms"
+	"github.com/luxfi/sdk/utils/profiler"
 	"github.com/luxfi/vm"
 	"github.com/luxfi/vm/chain"
+	"github.com/luxfi/vm/utils/timer/mockable"
+	"github.com/luxfi/vm/vms/components/gas"
 	luxwarp "github.com/luxfi/warp"
 
 	"github.com/luxfi/coreth/consensus/dummy"
-	"github.com/luxfi/coreth/constants"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/eth"
@@ -108,10 +107,10 @@ const (
 	maxFutureBlockTime = 10 * time.Second
 
 	secpCacheSize          = 1024
-	decidedCacheSize       = 10 * units.MiB
+	decidedCacheSize       = 10 * constants.MiB
 	missingCacheSize       = 50
-	unverifiedCacheSize    = 5 * units.MiB
-	bytesToIDCacheSize     = 5 * units.MiB
+	unverifiedCacheSize    = 5 * constants.MiB
+	bytesToIDCacheSize     = 5 * constants.MiB
 	warpSignatureCacheSize = 500
 
 	// Prefixes for metrics gatherers
@@ -823,7 +822,7 @@ func (v *VM) initializeStateSync(lastAcceptedHeight uint64) error {
 			v.chaindb,
 			&triedb.Config{
 				HashDB: &hashdb.Config{
-					CleanCacheSize: v.config.StateSyncServerTrieCache * units.MiB,
+					CleanCacheSize: v.config.StateSyncServerTrieCache * constants.MiB,
 				},
 			},
 		)

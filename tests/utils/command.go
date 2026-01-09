@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-cmd/cmd"
 	"github.com/luxfi/log"
-	"github.com/luxfi/node/api/health"
+	"github.com/luxfi/vm/api/health"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/require"
 )

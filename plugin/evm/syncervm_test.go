@@ -32,19 +32,19 @@ import (
 	commonEng "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/consensus/engine/enginetest"
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/crypto/secp256k1"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/node/api/metrics"
-	luxatomic "github.com/luxfi/node/chains/atomic"
-	"github.com/luxfi/node/upgrade/upgradetest"
-	"github.com/luxfi/node/utils/units"
+	"github.com/luxfi/vm/api/metrics"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/upgrade/upgradetest"
 	"github.com/luxfi/warp"
 
+	"github.com/luxfi/constantsants"
 	"github.com/luxfi/coreth/consensus/dummy"
-	"github.com/luxfi/coreth/constants"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/coretest"
 	"github.com/luxfi/coreth/params"
@@ -292,7 +292,7 @@ func TestVMShutdownWhileSyncing(t *testing.T) {
 func createSyncServerAndClientVMs(t *testing.T, test syncTest, numBlocks int) *syncVMSetup {
 	var (
 		require      = require.New(t)
-		importAmount = 2000000 * units.Lux // 2M lux
+		importAmount = 2000000 * constants.Lux // 2M lux
 		alloc        = map[ids.ShortID]uint64{
 			testShortIDAddrs[0]: importAmount,
 		}

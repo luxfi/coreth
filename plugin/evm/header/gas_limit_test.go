@@ -12,8 +12,8 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/node/utils/math"
-	"github.com/luxfi/node/vms/components/gas"
+	"github.com/luxfi/math"
+	"github.com/luxfi/vm/vms/components/gas"
 	"github.com/stretchr/testify/require"
 )
 

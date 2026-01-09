@@ -43,7 +43,7 @@ import (
 	"github.com/luxfi/geth/common/lru"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/node/utils/timer/mockable"
+	"github.com/luxfi/vm/utils/timer/mockable"
 
 	"github.com/luxfi/log"
 )

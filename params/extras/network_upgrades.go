@@ -9,7 +9,7 @@ import (
 
 	"github.com/luxfi/coreth/utils"
 	ethparams "github.com/luxfi/geth/params"
-	"github.com/luxfi/node/upgrade"
+	"github.com/luxfi/upgrade"
 )
 
 // NetworkUpgrades tracks the timestamps of Lux network upgrades.

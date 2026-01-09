@@ -37,11 +37,11 @@ import (
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/common"
-	cmath "github.com/luxfi/math"
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/log"
+	cmath "github.com/luxfi/math"
 )
 
 // ExecutionResult includes all output after executing given evm

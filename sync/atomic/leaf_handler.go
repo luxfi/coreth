@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/coreth/sync/handlers"
 	"github.com/luxfi/coreth/sync/handlers/stats"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/node/codec"
+	"github.com/luxfi/codec"
 
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/triedb"

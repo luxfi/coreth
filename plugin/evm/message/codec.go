@@ -4,15 +4,15 @@
 package message
 
 import (
-	"github.com/luxfi/node/codec"
-	"github.com/luxfi/node/codec/linearcodec"
-	"github.com/luxfi/node/utils/units"
-	"github.com/luxfi/node/utils/wrappers"
+	"github.com/luxfi/constantsants"
+	"github.com/luxfi/codec"
+	"github.com/luxfi/codec/linearcodec"
+	"github.com/luxfi/sdk/utils/wrappers"
 )
 
 const (
 	Version        = uint16(0)
-	maxMessageSize = 2*units.MiB - 64*units.KiB // Subtract 64 KiB from p2p network cap to leave room for encoding overhead from Luxd
+	maxMessageSize = 2*constants.MiB - 64*constants.KiB // Subtract 64 KiB from p2p network cap to leave room for encoding overhead from Luxd
 )
 
 var Codec codec.Manager

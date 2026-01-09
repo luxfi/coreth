@@ -11,8 +11,8 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/log"
-	utils_math "github.com/luxfi/node/utils/math"
-	"github.com/luxfi/node/utils/timer"
+	utils_math "github.com/luxfi/math"
+	"github.com/luxfi/sdk/utils/timer"
 )
 
 const (
