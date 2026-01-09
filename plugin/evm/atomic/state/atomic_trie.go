@@ -8,12 +8,12 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/ids"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/codec"
-	"github.com/luxfi/sdk/utils/wrappers"
+	"github.com/luxfi/vm/utils/wrappers"
 
 	"github.com/luxfi/coreth/plugin/evm/database"
 	"github.com/luxfi/geth/common"

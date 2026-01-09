@@ -16,7 +16,7 @@ import (
 	"github.com/luxfi/geth/core/tracing"
 
 	consensusctx "github.com/luxfi/consensus/context"
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
@@ -28,7 +28,7 @@ import (
 	"github.com/luxfi/vm/vms/components/lux"
 	"github.com/luxfi/vm/vms/secp256k1fx"
 	luxutils "github.com/luxfi/sdk/utils"
-	"github.com/luxfi/sdk/utils/wrappers"
+	"github.com/luxfi/vm/utils/wrappers"
 )
 
 // luxfiidsEqual compares a luxfi/ids.ID with a node/ids.ID

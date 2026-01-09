@@ -23,7 +23,7 @@ import (
 	"github.com/luxfi/geth/common"
 
 	validators "github.com/luxfi/consensus/validator"
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/vm/tests/fixture/e2e"
 	"github.com/luxfi/vm/tests/fixture/tmpnet"

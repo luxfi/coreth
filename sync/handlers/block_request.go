@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/codec"
 

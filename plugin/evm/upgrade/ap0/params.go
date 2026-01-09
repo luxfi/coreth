@@ -5,7 +5,7 @@
 package ap0
 
 import (
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/coreth/utils"
 )
 

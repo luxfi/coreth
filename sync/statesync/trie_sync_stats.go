@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/log"
 	utils_math "github.com/luxfi/math"
-	"github.com/luxfi/sdk/utils/timer"
+	"github.com/luxfi/vm/utils/timer"
 )
 
 const (

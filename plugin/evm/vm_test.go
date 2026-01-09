@@ -37,7 +37,7 @@ import (
 	commonEng "github.com/luxfi/consensus/core"
 	"github.com/luxfi/consensus/engine/enginetest"
 	consensustest "github.com/luxfi/consensus/test/helpers"
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/eth"

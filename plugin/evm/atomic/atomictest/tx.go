@@ -16,7 +16,7 @@ import (
 	"github.com/luxfi/codec"
 	"github.com/luxfi/codec/linearcodec"
 	"github.com/luxfi/sdk/utils"
-	"github.com/luxfi/sdk/utils/wrappers"
+	"github.com/luxfi/vm/utils/wrappers"
 )
 
 // TODO: Remove this and use actual codec and transactions (export, import)

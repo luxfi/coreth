@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"

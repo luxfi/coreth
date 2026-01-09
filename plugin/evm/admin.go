@@ -10,7 +10,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/client"
 	"github.com/luxfi/log"
 	"github.com/luxfi/vm/api"
-	"github.com/luxfi/sdk/utils/profiler"
+	"github.com/luxfi/vm/utils/profiler"
 )
 
 // Admin is the API service for admin API calls

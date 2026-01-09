@@ -3,7 +3,7 @@
 
 package atomic
 
-import "github.com/luxfi/constantsants"
+import "github.com/luxfi/constants"
 
 const (
 	LuxAtomicTxFee = constants.MilliLux

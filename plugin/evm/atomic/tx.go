@@ -27,7 +27,7 @@ import (
 	"github.com/luxfi/vm/vms/components/verify"
 	"github.com/luxfi/vm/vms/secp256k1fx"
 	"github.com/luxfi/p2p/gossip"
-	"github.com/luxfi/sdk/utils/wrappers"
+	"github.com/luxfi/vm/utils/wrappers"
 )
 
 var _ gossip.Gossipable = (*Tx)(nil)

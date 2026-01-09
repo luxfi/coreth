@@ -25,7 +25,7 @@ import (
 	"github.com/luxfi/consensus/engine/enginetest"
 	validators "github.com/luxfi/consensus/validator"
 	"github.com/luxfi/consensus/validator/validatorstest"
-	"github.com/luxfi/constantsants"
+	"github.com/luxfi/constants"
 	"github.com/luxfi/coreth/eth/tracers"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/params/extras"
