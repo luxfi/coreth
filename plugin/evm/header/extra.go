@@ -13,7 +13,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/vm/vms/components/gas"
+	"github.com/luxfi/vm/components/gas"
 )
 
 var (

@@ -17,8 +17,8 @@ import (
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/vm/api"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/vm/components/lux"
 	"github.com/luxfi/vm/utils/json"
-	"github.com/luxfi/vm/vms/components/lux"
 )
 
 const (

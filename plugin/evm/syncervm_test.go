@@ -38,9 +38,9 @@ import (
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/upgrade/upgradetest"
 	"github.com/luxfi/vm/api/metrics"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/upgrade/upgradetest"
 	"github.com/luxfi/warp"
 
 	"github.com/luxfi/constants"

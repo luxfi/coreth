@@ -8,14 +8,14 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
+	"github.com/luxfi/codec"
+	"github.com/luxfi/codec/linearcodec"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/linearcodec"
-	"github.com/luxfi/sdk/utils"
+	"github.com/luxfi/vm/utils"
 	"github.com/luxfi/vm/utils/wrappers"
 )
 
@@ -44,14 +44,14 @@ type TestUnsignedTx struct {
 	GasUsedV                    uint64              `serialize:"true"`
 	AcceptRequestsBlockchainIDV ids.ID              `serialize:"true"`
 	AcceptRequestsV             *luxatomic.Requests `serialize:"true"`
-	VerifyV                     error
-	IDV                         ids.ID `serialize:"true" json:"id"`
-	BurnedV                     uint64 `serialize:"true"`
-	UnsignedBytesV              []byte
-	SignedBytesV                []byte
-	InputUTXOsV                 set.Set[ids.ID]
-	VisitV                      error
-	EVMStateTransferV           error
+	VerifyV                     error               `serialize:"-"`
+	IDV                         ids.ID              `serialize:"true" json:"id"`
+	BurnedV                     uint64              `serialize:"true"`
+	UnsignedBytesV              []byte              `serialize:"-"`
+	SignedBytesV                []byte              `serialize:"-"`
+	InputUTXOsV                 set.Set[ids.ID]     `serialize:"-"`
+	VisitV                      error               `serialize:"-"`
+	EVMStateTransferV           error               `serialize:"-"`
 }
 
 // GasUsed implements the UnsignedAtomicTx interface

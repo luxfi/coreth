@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
-	"github.com/luxfi/vm/vms/components/gas"
+	"github.com/luxfi/vm/components/gas"
 	"github.com/spf13/cast"
 )
 

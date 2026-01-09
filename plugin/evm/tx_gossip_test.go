@@ -30,16 +30,16 @@ import (
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
-	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/proto/pb/sdk"
 	"github.com/luxfi/p2p"
 	"github.com/luxfi/p2p/gossip"
-	agoUtils "github.com/luxfi/sdk/utils"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+	"github.com/luxfi/vm/proto/pb/sdk"
+	agoUtils "github.com/luxfi/vm/utils"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
-	"github.com/luxfi/vm/vms/components/lux"
-	"github.com/luxfi/vm/vms/secp256k1fx"
+	"github.com/luxfi/vm/components/lux"
+	"github.com/luxfi/vm/secp256k1fx"
 
 	"google.golang.org/protobuf/proto"
 

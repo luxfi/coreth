@@ -7,8 +7,8 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/luxfi/ids"
 	"github.com/luxfi/cache/lru"
+	"github.com/luxfi/ids"
 
 	consensusctx "github.com/luxfi/consensus/context"
 

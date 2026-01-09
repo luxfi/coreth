@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/luxfi/codec"
 	consensustest "github.com/luxfi/consensus/test/helpers"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/badgerdb"
@@ -26,7 +27,6 @@ import (
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/ids"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/codec"
 	"github.com/luxfi/vm/utils/wrappers"
 )
 

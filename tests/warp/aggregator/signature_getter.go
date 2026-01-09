@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/luxfi/codec"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/codec"
 	"github.com/luxfi/vm/proto/pb/sdk"
 	"github.com/luxfi/warp"
 	"google.golang.org/protobuf/proto"

@@ -7,9 +7,9 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"github.com/luxfi/codec"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/codec"
 	"github.com/luxfi/vm/utils/wrappers"
 
 	"github.com/luxfi/geth/trie"
