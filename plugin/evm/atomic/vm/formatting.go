@@ -38,7 +38,11 @@ func ParseLocalAddress(ctx *consensusctx.Context, addrStr string) (ids.ShortID, 
 
 // FormatLocalAddress takes in a raw address and produces the formatted address
 func FormatLocalAddress(ctx *consensusctx.Context, addr ids.ShortID) (string, error) {
-	chainIDAlias, err := ctx.BCLookup.PrimaryAlias(ctx.ChainID)
+	bcLookup := ctx.AsBCLookup()
+	if bcLookup == nil {
+		return "", fmt.Errorf("BCLookup not available")
+	}
+	chainIDAlias, err := bcLookup.PrimaryAlias(ctx.ChainID)
 	if err != nil {
 		return "", err
 	}
@@ -54,7 +58,11 @@ func ParseAddress(ctx *consensusctx.Context, addrStr string) (ids.ID, ids.ShortI
 		return ids.ID{}, ids.ShortID{}, err
 	}
 
-	chainID, err := ctx.BCLookup.Lookup(chainIDAlias)
+	bcLookup := ctx.AsBCLookup()
+	if bcLookup == nil {
+		return ids.ID{}, ids.ShortID{}, fmt.Errorf("BCLookup not available")
+	}
+	chainID, err := bcLookup.Lookup(chainIDAlias)
 	if err != nil {
 		return ids.ID{}, ids.ShortID{}, err
 	}

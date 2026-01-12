@@ -19,8 +19,9 @@ var _ contract.Configurator = (*configurator)(nil)
 // must be unique across all precompiles.
 const ConfigKey = "warpConfig"
 
-// LP-aligned address: P=6 (LP-6xxx Bridges), C=2 (C-Chain), II=01 (Warp)
-var ContractAddress = common.HexToAddress("0x16201")
+// Canonical warp precompile address for backward compatibility with historic genesis.
+// This address matches the C-Chain genesis alloc for mainnet/testnet.
+var ContractAddress = common.HexToAddress("0x0200000000000000000000000000000000000005")
 
 // Module is the precompile module. It is used to register the precompile contract.
 var Module = modules.Module{

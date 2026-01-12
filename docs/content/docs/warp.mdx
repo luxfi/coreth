@@ -28,7 +28,7 @@ Subnet A                          Subnet B
          v                                |
 +------------------+             +------------------+
 | Warp Precompile  |             | Warp Precompile  |
-|   (0x16201)      |             |   (0x16201)      |
+|   (0x0200000000000000000000000000000000000005)      |             |   (0x0200000000000000000000000000000000000005)      |
 +--------+---------+             +--------+---------+
          |                                ^
          v                                |
@@ -40,7 +40,7 @@ Subnet A                          Subnet B
 
 ## Warp Precompile
 
-The Warp precompile is deployed at address `0x16201` (LP-aligned: P=6 Bridges, C=2 C-Chain, II=01).
+The Warp precompile is deployed at the canonical address `0x0200000000000000000000000000000000000005`.
 
 ### Interface
 
@@ -104,9 +104,9 @@ interface IWarpMessenger {
 }
 
 contract WarpSender {
-    // LP-aligned: P=6 (Bridges), C=2 (C-Chain), II=01 (Warp)
+    // Canonical warp precompile address
     IWarpMessenger constant WARP = IWarpMessenger(
-        0x0000000000000000000000000000000000016201
+        0x0200000000000000000000000000000000000005
     );
 
     event MessageSent(bytes32 indexed messageID, bytes payload);
@@ -168,9 +168,9 @@ struct WarpMessage {
 }
 
 contract WarpReceiver {
-    // LP-aligned: P=6 (Bridges), C=2 (C-Chain), II=01 (Warp)
+    // Canonical warp precompile address
     IWarpMessenger constant WARP = IWarpMessenger(
-        0x0000000000000000000000000000000000016201
+        0x0200000000000000000000000000000000000005
     );
 
     bytes32 public immutable trustedSourceChain;

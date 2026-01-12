@@ -339,9 +339,9 @@ func (v *VM) Initialize(
 
 	// Get chain alias from BCLookup with defensive nil check
 	var alias string
-	if v.ctx.BCLookup != nil {
+	if bcLookup := v.ctx.AsBCLookup(); bcLookup != nil {
 		var err error
-		alias, err = v.ctx.BCLookup.PrimaryAlias(v.ctx.ChainID)
+		alias, err = bcLookup.PrimaryAlias(v.ctx.ChainID)
 		if err != nil {
 			// fallback to ChainID string instead of erroring
 			alias = v.ctx.ChainID.String()

@@ -2081,8 +2081,38 @@ func (bc *BlockChain) reprocessState(current *types.Block, reexec uint64) error 
 		}
 		current = parent
 	}
+	// If no state found within reexec blocks, walk all the way back to genesis
+	// This is necessary when blocks were imported without state (e.g., via admin.importChain)
 	if !hasState {
-		return fmt.Errorf("required historical state unavailable (reexec=%d)", reexec)
+		log.Warn("No historical state found within reexec limit, searching back to genesis",
+			"reexec", reexec, "currentBlock", current.NumberU64())
+
+		for current.NumberU64() > 0 {
+			if bc.HasState(current.Root()) {
+				hasState = true
+				log.Info("Found state during genesis search",
+					"block", current.NumberU64(), "root", current.Root())
+				break
+			}
+			parent := bc.GetBlock(current.ParentHash(), current.NumberU64()-1)
+			if parent == nil {
+				return fmt.Errorf("missing block %s:%d", current.ParentHash().Hex(), current.NumberU64()-1)
+			}
+			current = parent
+		}
+
+		// Check genesis block
+		if !hasState && current.NumberU64() == 0 {
+			if bc.HasState(current.Root()) {
+				hasState = true
+				log.Info("Found state at genesis block, will re-execute all blocks",
+					"genesisRoot", current.Root(), "targetBlock", origin)
+			}
+		}
+	}
+
+	if !hasState {
+		return errors.New("genesis state is missing - cannot recover")
 	}
 
 	// State was available at historical point, regenerate

@@ -65,7 +65,11 @@ func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *
 		return errNoSourceChain
 	}
 
-	sourceChainID, err := service.vm.Ctx.BCLookup.Lookup(args.SourceChain)
+	bcLookup := service.vm.Ctx.AsBCLookup()
+	if bcLookup == nil {
+		return fmt.Errorf("BCLookup not available")
+	}
+	sourceChainID, err := bcLookup.Lookup(args.SourceChain)
 	if err != nil {
 		return fmt.Errorf("problem parsing source chainID %q: %w", args.SourceChain, err)
 	}
