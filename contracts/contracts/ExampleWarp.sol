@@ -5,8 +5,9 @@ pragma experimental ABIEncoderV2;
 import "./interfaces/IWarpMessenger.sol";
 
 contract ExampleWarp {
-  // LP-aligned address: P=6 (LP-6xxx Bridges), C=2 (C-Chain), II=01 (Warp)
-  address constant WARP_ADDRESS = 0x0000000000000000000000000000000000016201;
+  // Canonical warp precompile address for backward compatibility with historic genesis.
+  // This address matches the C-Chain genesis alloc for mainnet/testnet.
+  address constant WARP_ADDRESS = 0x0200000000000000000000000000000000000005;
   IWarpMessenger warp = IWarpMessenger(WARP_ADDRESS);
 
   // sendWarpMessage sends a warp message containing the payload

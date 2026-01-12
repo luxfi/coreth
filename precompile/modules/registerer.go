@@ -19,6 +19,11 @@ var (
 
 	// Reserved address ranges for stateful precompiles
 	//
+	// HIGH-BYTE RANGES (canonical/historic addresses):
+	// 0x0100-0x01FF: Warp/Teleport messaging (unused, kept for compatibility)
+	// 0x0200-0x02FF: Chain config (AllowLists, FeeManager, Warp at 0x0200...0005)
+	// 0x0300-0x03FF: AI Mining
+	//
 	// LP-ALIGNED ADDRESSING (LP-9015):
 	// BASE = 0x10000, address = BASE + (P << 12) | (C << 8) | II
 	// P = Family (LP range first digit), C = Chain slot, II = Item index
@@ -37,6 +42,22 @@ var (
 	// 0=P-Chain, 1=X-Chain, 2=C-Chain, 3=Q-Chain, 4=A-Chain
 	// 5=B-Chain, 6=Z-Chain, 7=M-Chain, 8=Zoo, 9=Hanzo, A=SPC
 	reservedRanges = []utils.AddressRange{
+		// HIGH-BYTE RANGES (canonical addresses for backward compatibility)
+		// Warp/Teleport range (0x0100-0x01FF)
+		{
+			Start: common.HexToAddress("0x0100000000000000000000000000000000000000"),
+			End:   common.HexToAddress("0x01000000000000000000000000000000000000ff"),
+		},
+		// Chain Config range (0x0200-0x02FF) - includes canonical Warp at 0x0200...0005
+		{
+			Start: common.HexToAddress("0x0200000000000000000000000000000000000000"),
+			End:   common.HexToAddress("0x02000000000000000000000000000000000000ff"),
+		},
+		// AI Mining range (0x0300-0x03FF)
+		{
+			Start: common.HexToAddress("0x0300000000000000000000000000000000000000"),
+			End:   common.HexToAddress("0x03000000000000000000000000000000000000ff"),
+		},
 		// LP-aligned precompile range: 0x10000-0x1FFFF
 		{
 			Start: common.HexToAddress("0x0000000000000000000000000000000000010000"),
