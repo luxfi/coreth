@@ -9,7 +9,7 @@
 - Demoted unnecessary error log in `core/txpool/legacypool.go` to warning, displaying unexpected but valid behavior.
 - Removed the `quasarman-api-enabled` flag and the corresponding API implementation.
 - Enable expermiental `state-scheme` flag to specify Database as a state database.
-- Added prometheus metrics for Database if it is enabled and expensive metrics are being used.
+- Added metrics for Database when enabled and expensive metrics are in use.
 - Disable incompatible APIs for Database.
 
 ## [v0.15.1](https://github.com/luxfi/coreth/releases/tag/v0.15.1)

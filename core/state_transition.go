@@ -40,7 +40,7 @@ import (
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	cmath "github.com/luxfi/math"
 )
 
@@ -117,7 +117,7 @@ func IntrinsicGas(data []byte, accessList types.AccessList, isContractCreation b
 
 		// EIP-3860: Init code gas is charged when Shanghai is active.
 		// For Lux networks, Shanghai is enabled via shanghaiTime in chain config
-		// OR via Durango upgrade (which brings Shanghai EIPs to SubnetEVM chains).
+		// OR via Durango upgrade (which brings Shanghai EIPs to ChainEVM chains).
 		if isContractCreation && rules.IsShanghai {
 			lenWords := toWordSize(dataLen)
 			if (math.MaxUint64-gas)/params.InitCodeWordGas < lenWords {

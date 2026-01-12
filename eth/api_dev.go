@@ -19,7 +19,7 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/tracing"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 // DevAPI provides Anvil/Hardhat-compatible RPC methods for dev mode.

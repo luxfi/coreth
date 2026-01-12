@@ -12,11 +12,11 @@ import (
 	"github.com/luxfi/codec/linearcodec"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/params/extras"
+	"github.com/luxfi/codec/wrappers"
+	"github.com/luxfi/crypto"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/utils"
-	"github.com/luxfi/vm/utils/wrappers"
 )
 
 // TODO: Remove this and use actual codec and transactions (export, import)
@@ -106,8 +106,8 @@ func GenerateTestImportTxWithGas(gasUsed uint64, burned uint64) *atomic.Tx {
 			AcceptRequestsBlockchainIDV: TestBlockchainID,
 			AcceptRequestsV: &luxatomic.Requests{
 				RemoveRequests: [][]byte{
-					utils.RandomBytes(32),
-					utils.RandomBytes(32),
+					crypto.RandomBytes(32),
+					crypto.RandomBytes(32),
 				},
 			},
 		},
@@ -121,8 +121,8 @@ func GenerateTestImportTx() *atomic.Tx {
 			AcceptRequestsBlockchainIDV: TestBlockchainID,
 			AcceptRequestsV: &luxatomic.Requests{
 				RemoveRequests: [][]byte{
-					utils.RandomBytes(32),
-					utils.RandomBytes(32),
+					crypto.RandomBytes(32),
+					crypto.RandomBytes(32),
 				},
 			},
 		},
@@ -137,11 +137,11 @@ func GenerateTestExportTx() *atomic.Tx {
 			AcceptRequestsV: &luxatomic.Requests{
 				PutRequests: []*luxatomic.Element{
 					{
-						Key:   utils.RandomBytes(16),
-						Value: utils.RandomBytes(24),
+						Key:   crypto.RandomBytes(16),
+						Value: crypto.RandomBytes(24),
 						Traits: [][]byte{
-							utils.RandomBytes(32),
-							utils.RandomBytes(32),
+							crypto.RandomBytes(32),
+							crypto.RandomBytes(32),
 						},
 					},
 				},

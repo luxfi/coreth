@@ -8,7 +8,7 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 var (

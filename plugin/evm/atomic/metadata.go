@@ -4,7 +4,7 @@
 package atomic
 
 import (
-	hashing "github.com/luxfi/crypto/hash"
+	"github.com/luxfi/crypto/hash"
 	"github.com/luxfi/ids"
 )
 
@@ -16,7 +16,7 @@ type Metadata struct {
 
 // Initialize set the bytes and ID
 func (md *Metadata) Initialize(unsignedBytes, bytes []byte) {
-	md.id = hashing.ComputeHash256Array(bytes)
+	md.id = hash.ComputeHash256Array(bytes)
 	md.unsignedBytes = unsignedBytes
 	md.bytes = bytes
 }

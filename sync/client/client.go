@@ -22,7 +22,7 @@ import (
 
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/geth/core/rawdb"

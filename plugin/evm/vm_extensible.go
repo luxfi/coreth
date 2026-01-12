@@ -14,8 +14,8 @@ import (
 	vmsync "github.com/luxfi/coreth/sync/vm"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
+	"github.com/luxfi/metric"
 	"github.com/luxfi/p2p"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Interface compliance check removed - EVM doesn't implement network interfaces
@@ -73,7 +73,7 @@ func (vm *VM) Config() config.Config {
 	return vm.config
 }
 
-func (vm *VM) MetricRegistry() *prometheus.Registry {
+func (vm *VM) MetricRegistry() metric.Registry {
 	return vm.sdkMetrics
 }
 

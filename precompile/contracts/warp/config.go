@@ -14,7 +14,7 @@ import (
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"github.com/luxfi/math"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"

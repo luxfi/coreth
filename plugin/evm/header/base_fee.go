@@ -62,10 +62,10 @@ func BaseFee(
 		return baseFeeFromWindow(config, parent, timestamp)
 	default:
 		// Prior to AP3 the expected base fee is nil, unless we're dealing with
-		// historic SubnetEVM blocks which always had dynamic fees.
-		// SubnetEVM blocks have a base fee in the header, so check if parent has one.
+		// historic ChainEVM blocks which always had dynamic fees.
+		// ChainEVM blocks have a base fee in the header, so check if parent has one.
 		if parent != nil && parent.BaseFee != nil && parent.BaseFee.Sign() > 0 {
-			// This is a SubnetEVM block - calculate base fee using the same
+			// This is a ChainEVM block - calculate base fee using the same
 			// algorithm as AP3 (dynamic fee window).
 			return baseFeeFromWindow(config, parent, timestamp)
 		}

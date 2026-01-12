@@ -40,7 +40,7 @@ import (
 	"github.com/luxfi/coreth/internal/flags"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common/compiler"
-	"github.com/luxfi/geth/log"
+	log "github.com/luxfi/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -243,7 +243,7 @@ func abigen(c *cli.Context) error {
 }
 
 func main() {
-	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelInfo, true)))
+	log.SetSlogDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.SlogLevelInfo, true)))
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)

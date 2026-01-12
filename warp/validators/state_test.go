@@ -20,28 +20,28 @@ func TestGetValidatorSetPrimaryNetwork(t *testing.T) {
 	require := require.New(t)
 	ctrl := gomock.NewController(t)
 
-	mySubnetID := ids.GenerateTestID()
-	otherSubnetID := ids.GenerateTestID()
+	myChainID := ids.GenerateTestID()
+	otherChainID := ids.GenerateTestID()
 	chainID := ids.GenerateTestID()
 
 	mockState := validatorsmock.NewState(ctrl)
-	state := NewState(mockState, mySubnetID, chainID, false)
+	state := NewState(mockState, myChainID, chainID, false)
 
 	// Expect that requesting my validator set returns my validator set
-	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), mySubnetID).Return(make(map[ids.NodeID]*validators.GetValidatorOutput), nil)
-	output, err := state.GetValidatorSet(context.Background(), 10, mySubnetID)
+	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), myChainID).Return(make(map[ids.NodeID]*validators.GetValidatorOutput), nil)
+	output, err := state.GetValidatorSet(context.Background(), 10, myChainID)
 	require.NoError(err)
 	require.Len(output, 0)
 
 	// Expect that requesting the Primary Network validator set overrides and returns my validator set
-	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), mySubnetID).Return(make(map[ids.NodeID]*validators.GetValidatorOutput), nil)
+	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), myChainID).Return(make(map[ids.NodeID]*validators.GetValidatorOutput), nil)
 	output, err = state.GetValidatorSet(context.Background(), 10, constants.PrimaryNetworkID)
 	require.NoError(err)
 	require.Len(output, 0)
 
 	// Expect that requesting other validator set returns that validator set
-	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), otherSubnetID).Return(make(map[ids.NodeID]*validators.GetValidatorOutput), nil)
-	output, err = state.GetValidatorSet(context.Background(), 10, otherSubnetID)
+	mockState.EXPECT().GetValidatorSet(gomock.Any(), gomock.Any(), otherChainID).Return(make(map[ids.NodeID]*validators.GetValidatorOutput), nil)
+	output, err = state.GetValidatorSet(context.Background(), 10, otherChainID)
 	require.NoError(err)
 	require.Len(output, 0)
 }

@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 
 	ethcommon "github.com/luxfi/geth/common"
-	"github.com/luxfi/log"
-	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/luxfi/log"
+	"github.com/luxfi/metric"
 
 	"github.com/luxfi/ids"
 	"github.com/luxfi/p2p/gossip"
@@ -35,7 +35,7 @@ var (
 	_ eth.PushGossiper = (*EthPushGossiper)(nil)
 )
 
-func NewGossipEthTxPool(mempool *txpool.TxPool, registerer prometheus.Registerer) (*GossipEthTxPool, error) {
+func NewGossipEthTxPool(mempool *txpool.TxPool, registerer metric.Registerer) (*GossipEthTxPool, error) {
 	bloom, err := gossip.NewBloomFilter(
 		registerer,
 		"eth_tx_bloom_filter",

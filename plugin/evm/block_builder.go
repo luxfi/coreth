@@ -15,8 +15,8 @@ import (
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/plugin/evm/extension"
-	"github.com/luxfi/log"
-	"github.com/luxfi/vm/utils/lock"
+	log "github.com/luxfi/log"
+	"github.com/luxfi/concurrent/lock"
 )
 
 const (

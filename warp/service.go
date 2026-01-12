@@ -15,12 +15,12 @@ import (
 	warpValidators "github.com/luxfi/coreth/warp/validators"
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 )
 
-var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")
+var errNoValidators = errors.New("cannot aggregate signatures from chain with no validators")
 
 // API introduces quasarman specific functionality to the evm
 type API struct {
@@ -71,16 +71,16 @@ func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (hexutil.By
 }
 
 // GetMessageAggregateSignature fetches the aggregate signature for the requested [messageID]
-func (a *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.ID, quorumNum uint64, subnetIDStr string) (signedMessageBytes hexutil.Bytes, err error) {
+func (a *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.ID, quorumNum uint64, chainIDStr string) (signedMessageBytes hexutil.Bytes, err error) {
 	unsignedMessage, err := a.backend.GetMessage(messageID)
 	if err != nil {
 		return nil, err
 	}
-	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, subnetIDStr)
+	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, chainIDStr)
 }
 
 // GetBlockAggregateSignature fetches the aggregate signature for the requested [blockID]
-func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, quorumNum uint64, subnetIDStr string) (signedMessageBytes hexutil.Bytes, err error) {
+func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, quorumNum uint64, chainIDStr string) (signedMessageBytes hexutil.Bytes, err error) {
 	blockHashPayload, err := payload.NewHash(blockID[:])
 	if err != nil {
 		return nil, err
@@ -90,17 +90,17 @@ func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, qu
 		return nil, err
 	}
 
-	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, subnetIDStr)
+	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, chainIDStr)
 }
 
-func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.UnsignedMessage, quorumNum uint64, subnetIDStr string) (hexutil.Bytes, error) {
-	subnetID := constants.PrimaryNetworkID
-	if len(subnetIDStr) > 0 {
-		sid, err := ids.FromString(subnetIDStr)
+func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.UnsignedMessage, quorumNum uint64, chainIDStr string) (hexutil.Bytes, error) {
+	chainID := constants.PrimaryNetworkID
+	if len(chainIDStr) > 0 {
+		sid, err := ids.FromString(chainIDStr)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse subnetID: %q", subnetIDStr)
+			return nil, fmt.Errorf("failed to parse chainID: %q", chainIDStr)
 		}
-		subnetID = sid
+		chainID = sid
 	}
 
 	// Get validator state from chain context
@@ -117,12 +117,12 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.Uns
 	state := warpValidators.NewState(validatorState, constants.PrimaryNetworkID, a.chainContext.ChainID, a.requirePrimaryNetworkSigners())
 
 	// Get validator set from the wrapped state
-	validatorMap, err := state.GetValidatorSet(ctx, pChainHeight, subnetID)
+	validatorMap, err := state.GetValidatorSet(ctx, pChainHeight, chainID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get validator set: %w", err)
 	}
 	if len(validatorMap) == 0 {
-		return nil, fmt.Errorf("%w (SubnetID: %s, Height: %d)", errNoValidators, subnetID, pChainHeight)
+		return nil, fmt.Errorf("%w (ChainID: %s, Height: %d)", errNoValidators, chainID, pChainHeight)
 	}
 
 	// Convert to warp.Validator slice
@@ -138,7 +138,7 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.Uns
 	}
 
 	log.Debug("Fetching signature",
-		"sourceSubnetID", subnetID,
+		"sourceChainID", chainID,
 		"height", pChainHeight,
 		"numValidators", len(warpValidatorList),
 		"totalWeight", totalWeight,

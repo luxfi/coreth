@@ -10,7 +10,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/atomictest"
 	"github.com/luxfi/ids"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/luxfi/metric"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +20,7 @@ func TestMempoolAddTx(t *testing.T) {
 	ctx := consensustest.Context(t, consensustest.CChainID)
 	m, err := NewMempool(
 		NewTxs(ctx, 5_000),
-		prometheus.NewRegistry(),
+		metric.NewRegistry(),
 		nil,
 	)
 	require.NoError(err)
@@ -49,7 +49,7 @@ func TestMempoolAdd(t *testing.T) {
 	ctx := consensustest.Context(t, consensustest.CChainID)
 	m, err := NewMempool(
 		NewTxs(ctx, 5_000),
-		prometheus.NewRegistry(),
+		metric.NewRegistry(),
 		nil,
 	)
 	require.NoError(err)
@@ -118,7 +118,7 @@ func TestAtomicMempoolIterate(t *testing.T) {
 			ctx := consensustest.Context(t, consensustest.CChainID)
 			m, err := NewMempool(
 				NewTxs(ctx, 10),
-				prometheus.NewRegistry(),
+				metric.NewRegistry(),
 				nil,
 			)
 			require.NoError(err)
@@ -153,7 +153,7 @@ func TestMempoolMaxSizeHandling(t *testing.T) {
 	ctx := consensustest.Context(t, consensustest.CChainID)
 	mempool, err := NewMempool(
 		NewTxs(ctx, 1),
-		prometheus.NewRegistry(),
+		metric.NewRegistry(),
 		nil,
 	)
 	require.NoError(err)
@@ -181,7 +181,7 @@ func TestMempoolPriorityDrop(t *testing.T) {
 	ctx := consensustest.Context(t, consensustest.CChainID)
 	mempool, err := NewMempool(
 		NewTxs(ctx, 1),
-		prometheus.NewRegistry(),
+		metric.NewRegistry(),
 		nil,
 	)
 	require.NoError(err)

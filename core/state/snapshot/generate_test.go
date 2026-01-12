@@ -44,7 +44,7 @@ import (
 	"github.com/luxfi/geth/triedb"
 	"github.com/luxfi/geth/triedb/hashdb"
 	"github.com/luxfi/geth/triedb/pathdb"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"golang.org/x/crypto/sha3"
 )
 

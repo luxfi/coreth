@@ -14,9 +14,9 @@ import (
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/utils"
+	"github.com/luxfi/codec/wrappers"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/utils"
-	"github.com/luxfi/vm/utils/wrappers"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/luxfi/database/memdb"

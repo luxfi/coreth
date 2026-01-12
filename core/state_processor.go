@@ -37,7 +37,7 @@ import (
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning

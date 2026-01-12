@@ -9,8 +9,8 @@ import (
 
 	"github.com/luxfi/codec"
 	"github.com/luxfi/codec/linearcodec"
-	"github.com/luxfi/vm/secp256k1fx"
-	"github.com/luxfi/vm/utils/wrappers"
+	"github.com/luxfi/codec/wrappers"
+	"github.com/luxfi/utxo/secp256k1fx"
 )
 
 const CodecVersion = uint16(0)

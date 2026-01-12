@@ -39,7 +39,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/event"
 	"github.com/luxfi/geth/metrics"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 var (

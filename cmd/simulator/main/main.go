@@ -13,7 +13,7 @@ import (
 
 	"github.com/luxfi/coreth/cmd/simulator/config"
 	"github.com/luxfi/coreth/cmd/simulator/load"
-	"github.com/luxfi/geth/log"
+	log "github.com/luxfi/log"
 	"github.com/spf13/pflag"
 )
 
@@ -45,7 +45,7 @@ func main() {
 		os.Exit(1)
 	}
 	gethLogger := log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, logLevel, true))
-	log.SetDefault(gethLogger)
+	log.SetSlogDefault(gethLogger)
 
 	config, err := config.BuildConfig(v)
 	if err != nil {
@@ -62,7 +62,7 @@ func main() {
 func lvlFromString(s string) (slog.Level, error) {
 	switch strings.ToLower(s) {
 	case "trace", "trce":
-		return log.LevelTrace, nil
+		return log.SlogLevelTrace, nil
 	case "debug", "dbug":
 		return slog.LevelDebug, nil
 	case "info":
@@ -72,7 +72,7 @@ func lvlFromString(s string) (slog.Level, error) {
 	case "error", "eror":
 		return slog.LevelError, nil
 	case "crit":
-		return log.LevelCrit, nil
+		return log.SlogLevelCrit, nil
 	default:
 		return slog.LevelDebug, fmt.Errorf("unknown level: %s", s)
 	}

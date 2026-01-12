@@ -8,9 +8,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/luxfi/database"
+	"github.com/luxfi/database/manager"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/geth/ethdb/pebble"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 // CheckImportMode checks if we should run in import mode
@@ -36,8 +37,8 @@ func CheckImportMode(importPath string, chainDataDir string) (bool, error) {
 
 // GetImportedChainHeight reads the last block height from the import database
 func GetImportedChainHeight(importPath string) (uint64, common.Hash, error) {
-	// Open the source database using pebble directly
-	sourceDB, err := pebble.New(importPath, 16, 16, "", true)
+	// Open the source database using luxfi/database (pebbledb build tag).
+	sourceDB, err := openImportDatabase(importPath, true)
 	if err != nil {
 		return 0, common.Hash{}, fmt.Errorf("failed to open source database: %w", err)
 	}
@@ -47,7 +48,7 @@ func GetImportedChainHeight(importPath string) (uint64, common.Hash, error) {
 	var lastBlockNumber uint64
 	var lastBlockHash common.Hash
 
-	it := sourceDB.NewIterator([]byte("h"), nil)
+	it := sourceDB.NewIteratorWithPrefix([]byte("h"))
 	defer it.Release()
 
 	for it.Next() {
@@ -62,6 +63,15 @@ func GetImportedChainHeight(importPath string) (uint64, common.Hash, error) {
 	}
 
 	return lastBlockNumber, lastBlockHash, nil
+}
+
+func openImportDatabase(path string, readOnly bool) (database.Database, error) {
+	mgr := manager.NewManager("", nil)
+	return mgr.New(&manager.Config{
+		Type:     "pebbledb",
+		Path:     path,
+		ReadOnly: readOnly,
+	})
 }
 
 // CreateImportMarker creates a marker file to indicate import is in progress

@@ -10,18 +10,18 @@ import (
 	"sync"
 )
 
-type SubnetSuite struct {
+type ChainSuite struct {
 	blockchainIDs map[string]string
 	lock          sync.RWMutex
 }
 
-func (s *SubnetSuite) GetBlockchainID(alias string) string {
+func (s *ChainSuite) GetBlockchainID(alias string) string {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	return s.blockchainIDs[alias]
 }
 
-func (s *SubnetSuite) SetBlockchainIDs(blockchainIDs map[string]string) {
+func (s *ChainSuite) SetBlockchainIDs(blockchainIDs map[string]string) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.blockchainIDs = blockchainIDs

@@ -13,7 +13,7 @@ import (
 	consensusctx "github.com/luxfi/consensus/context"
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 const discardedTxsCacheSize = 50

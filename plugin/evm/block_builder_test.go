@@ -12,8 +12,8 @@ import (
 
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
-	"github.com/luxfi/log"
-	"github.com/luxfi/vm/utils/lock"
+	log "github.com/luxfi/log"
+	"github.com/luxfi/concurrent/lock"
 )
 
 // TestNotifyConsensusEngine verifies that notifyConsensusEngine sends PendingTxs

@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/vm/utils"
+	"github.com/luxfi/utils"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 
@@ -23,7 +23,7 @@ import (
 var (
 	networkID           uint32 = 54321
 	sourceChainID              = ids.GenerateTestID()
-	testSourceAddress          = utils.RandomBytes(20)
+	testSourceAddress          = crypto.RandomBytes(20)
 	testPayload                = []byte("test")
 	testUnsignedMessage *warp.UnsignedMessage
 )

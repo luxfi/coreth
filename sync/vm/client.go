@@ -24,7 +24,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"github.com/luxfi/vm/chain"
 )
 

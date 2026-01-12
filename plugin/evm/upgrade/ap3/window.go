@@ -12,7 +12,7 @@ import (
 
 	"github.com/luxfi/coreth/utils"
 	safemath "github.com/luxfi/math"
-	"github.com/luxfi/vm/utils/wrappers"
+	"github.com/luxfi/codec/wrappers"
 )
 
 const (
@@ -33,7 +33,7 @@ const (
 
 	// InitialBaseFee is the base fee that is used for the first Apricot Phase 3
 	// block.
-	// Note: SubnetEVM historic blocks used 25 GWei as initial base fee.
+	// Note: ChainEVM historic blocks used 25 GWei as initial base fee.
 	InitialBaseFee = 25 * utils.GWei
 
 	// TargetGas is the target amount of gas to be included in the window. The

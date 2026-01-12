@@ -8,9 +8,9 @@ import (
 	"net/http"
 
 	"github.com/luxfi/coreth/plugin/evm/client"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
+	"github.com/luxfi/metric/profiler"
 	"github.com/luxfi/vm/api"
-	"github.com/luxfi/vm/utils/profiler"
 )
 
 // Admin is the API service for admin API calls

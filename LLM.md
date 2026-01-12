@@ -20,7 +20,7 @@ cmd/simulator
 cmd/utils
 metrics
 metrics/metricstest
-metrics/prometheus
+metrics/gatherer
 precompile
 precompile/contract
 precompile/contracts

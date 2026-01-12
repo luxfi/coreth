@@ -54,8 +54,8 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/event"
-	"github.com/luxfi/log"
-	"github.com/luxfi/vm/utils/timer/mockable"
+	log "github.com/luxfi/log"
+	"github.com/luxfi/timer/mockable"
 )
 
 const (

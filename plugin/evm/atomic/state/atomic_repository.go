@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 
 	"github.com/luxfi/codec"
 	"github.com/luxfi/constants"
@@ -19,8 +19,8 @@ import (
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/vm/utils"
-	"github.com/luxfi/vm/utils/wrappers"
+	"github.com/luxfi/utils"
+	"github.com/luxfi/codec/wrappers"
 )
 
 const (

@@ -20,14 +20,14 @@ import (
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"github.com/luxfi/math"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/utils"
+	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/components/lux"
 	"github.com/luxfi/vm/components/verify"
-	"github.com/luxfi/vm/secp256k1fx"
-	"github.com/luxfi/vm/utils"
+	"github.com/luxfi/utxo/secp256k1fx"
 )
 
 var (
@@ -89,9 +89,9 @@ func (utx *UnsignedImportTx) Verify(
 
 	// Make sure that the tx has a valid peer chain ID
 	if rules.IsApricotPhase5 {
-		// Note that SameSubnet verifies that [tx.SourceChain] isn't this
+		// Note that SameChain verifies that [tx.SourceChain] isn't this
 		// chain's ID
-		if err := verify.SameSubnet(context.TODO(), ctx, utx.SourceChain); err != nil {
+		if err := verify.SameChain(context.TODO(), ctx, utx.SourceChain); err != nil {
 			return ErrWrongChainID
 		}
 	} else {

@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 // initializeDBs initializes the databases used by the VM.

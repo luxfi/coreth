@@ -40,7 +40,7 @@ import (
 	"log/slog"
 
 	"github.com/luxfi/coreth/internal/flags"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"
@@ -274,7 +274,7 @@ func Setup(ctx *cli.Context) error {
 	}
 	glogger.Vmodule(vmodule)
 
-	log.SetDefault(log.NewLoggerFromHandler(glogger))
+	log.SetSlogDefault(log.NewLoggerFromHandler(glogger))
 
 	// profiling, tracing
 	runtime.MemProfileRate = memprofilerateFlag.Value
