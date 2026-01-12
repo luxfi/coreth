@@ -26,7 +26,7 @@ import (
 	"github.com/luxfi/crypto/bls/signer/localsigner"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
-	agoUtils "github.com/luxfi/vm/utils"
+	agoUtils "github.com/luxfi/utils"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 	"github.com/stretchr/testify/require"
@@ -37,9 +37,9 @@ const pChainHeight uint64 = 1337
 var (
 	_ agoUtils.Sortable[*testValidator] = (*testValidator)(nil)
 
-	errTest        = errors.New("non-nil error")
-	sourceChainID  = ids.GenerateTestID()
-	sourceSubnetID = ids.GenerateTestID()
+	errTest       = errors.New("non-nil error")
+	sourceChainID = ids.GenerateTestID()
+	sourceChainID = ids.GenerateTestID()
 
 	// valid unsigned warp message used throughout testing
 	unsignedMsg *warp.UnsignedMessage
@@ -191,10 +191,10 @@ func createConsensusCtx(tb testing.TB, validatorRanges []validatorRange) *consen
 
 	quasarCtx := consensustest.Context(tb, consensustest.CChainID)
 	state := &validatorstest.State{
-		GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
-			return sourceSubnetID, nil
+		GetChainIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
+			return sourceChainID, nil
 		},
-		GetValidatorSetF: func(ctx context.Context, height uint64, subnetID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
+		GetValidatorSetF: func(ctx context.Context, height uint64, chainID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
 			return getValidatorsOutput, nil
 		},
 	}
@@ -263,19 +263,19 @@ func testWarpMessageFromPrimaryNetwork(t *testing.T, requirePrimaryNetworkSigner
 	predicateBytes := predicate.PackPredicate(warpMsg.Bytes())
 
 	quasarCtx := consensustest.Context(t, ids.GenerateTestID())
-	quasarCtx.SubnetID = ids.GenerateTestID()
+	quasarCtx.ChainID = ids.GenerateTestID()
 	quasarCtx.CChainID = cChainID
 	quasarCtx.ValidatorState = &validatorstest.State{
-		GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
+		GetChainIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
 			require.Equal(chainID, cChainID)
-			return constants.PrimaryNetworkID, nil // Return Primary Network SubnetID
+			return constants.PrimaryNetworkID, nil // Return Primary Network ChainID
 		},
-		GetValidatorSetF: func(ctx context.Context, height uint64, subnetID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
-			expectedSubnetID := quasarCtx.SubnetID
+		GetValidatorSetF: func(ctx context.Context, height uint64, chainID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
+			expectedChainID := quasarCtx.ChainID
 			if requirePrimaryNetworkSigners {
-				expectedSubnetID = constants.PrimaryNetworkID
+				expectedChainID = constants.PrimaryNetworkID
 			}
-			require.Equal(expectedSubnetID, subnetID)
+			require.Equal(expectedChainID, chainID)
 			return getValidatorsOutput, nil
 		},
 	}
@@ -670,10 +670,10 @@ func makeWarpPredicateTests(tb testing.TB) map[string]precompiletest.PredicateTe
 
 		quasarCtx := consensustest.Context(tb, consensustest.CChainID)
 		state := &validatorstest.State{
-			GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
-				return sourceSubnetID, nil
+			GetChainIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
+				return sourceChainID, nil
 			},
-			GetValidatorSetF: func(ctx context.Context, height uint64, subnetID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
+			GetValidatorSetF: func(ctx context.Context, height uint64, chainID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
 				return getValidatorsOutput, nil
 			},
 		}

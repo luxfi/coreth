@@ -1,14 +1,14 @@
 // Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
-package prometheus_test
+package gatherer_test
 
 import (
 	"testing"
 
 	// NOTE: This test assumes that there are no imported packages that might
 	// change the default value of [metrics.Enabled]. It is therefore in package
-	// `prometheus_test` in case any other tests modify the variable. If any
+	// `gatherer_test` in case any other tests modify the variable. If any
 	// imports here or in the implementation do actually do so then this test
 	// may have false negatives.
 	"github.com/stretchr/testify/assert"

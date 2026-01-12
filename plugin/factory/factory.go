@@ -7,8 +7,8 @@ import (
 	"github.com/luxfi/consensus/engine/chain/block"
 	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/log"
-	"github.com/luxfi/vm/vms"
+	log "github.com/luxfi/log"
+	"github.com/luxfi/vm/manager"
 
 	"github.com/luxfi/coreth/plugin/evm"
 )
@@ -17,7 +17,7 @@ var (
 	// ID this VM should be referenced by
 	ID = ids.ID{'e', 'v', 'm'}
 
-	_ vms.Factory = (*Factory)(nil)
+	_ manager.Factory = (*Factory)(nil)
 )
 
 type Factory struct{}

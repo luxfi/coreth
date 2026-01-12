@@ -53,7 +53,7 @@ import (
 	"github.com/luxfi/geth/event"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/rlp"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 const (

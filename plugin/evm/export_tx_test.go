@@ -31,10 +31,10 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/upgrade/upgradetest"
+	luxutils "github.com/luxfi/utils"
+	lux "github.com/luxfi/utxo"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/components/lux"
-	"github.com/luxfi/vm/secp256k1fx"
-	luxutils "github.com/luxfi/vm/utils"
+	"github.com/luxfi/utxo/secp256k1fx"
 )
 
 // createExportTxOptions adds funds to shared memory, imports them, and returns a list of export transactions

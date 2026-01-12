@@ -49,7 +49,7 @@ import (
 	"log/slog"
 
 	"github.com/hashicorp/go-bexpr"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 // Handler is the global debugging handler.

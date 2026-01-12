@@ -56,7 +56,7 @@ import (
 	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/coreth/utils/utilstest"
-	hashing "github.com/luxfi/crypto/hash"
+	"github.com/luxfi/crypto/hash"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/memdb"
@@ -67,15 +67,15 @@ import (
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/upgrade"
 	"github.com/luxfi/upgrade/upgradetest"
+	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/vm/api/metrics"
 	"github.com/luxfi/vm/chain"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/components/lux"
-	"github.com/luxfi/vm/secp256k1fx"
+	"github.com/luxfi/utxo/secp256k1fx"
 	"github.com/luxfi/warp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -247,7 +247,7 @@ func newVM(t *testing.T, config testVMConfig) *testVM {
 	}
 
 	for addr, luxAmount := range config.utxos {
-		txID, err := ids.ToID(hashing.ComputeHash256(addr.Bytes()))
+		txID, err := ids.ToID(hash.ComputeHash256(addr.Bytes()))
 		if err != nil {
 			t.Fatalf("Failed to generate txID from addr: %s", err)
 		}
@@ -3785,7 +3785,7 @@ func TestBuildBlockDoesNotExceedAtomicGasLimit(t *testing.T) {
 
 	kc := secp256k1fx.NewKeychain()
 	kc.Add(testKeys[0])
-	txID, err := ids.ToID(hashing.ComputeHash256(testShortIDAddrs[0][:]))
+	txID, err := ids.ToID(hash.ComputeHash256(testShortIDAddrs[0][:]))
 	assert.NoError(t, err)
 
 	mempoolTxs := 200
@@ -3842,7 +3842,7 @@ func TestExtraStateChangeAtomicGasLimitExceeded(t *testing.T) {
 
 	kc := secp256k1fx.NewKeychain()
 	kc.Add(testKeys[0])
-	txID, err := ids.ToID(hashing.ComputeHash256(testShortIDAddrs[0][:]))
+	txID, err := ids.ToID(hash.ComputeHash256(testShortIDAddrs[0][:]))
 	assert.NoError(t, err)
 
 	// Add enough UTXOs, such that the created import transaction will attempt to consume more gas than allowed

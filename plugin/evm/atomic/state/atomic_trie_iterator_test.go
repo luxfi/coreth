@@ -12,8 +12,8 @@ import (
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
+	"github.com/luxfi/utils"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -86,7 +86,7 @@ func TestIteratorHandlesInvalidData(t *testing.T) {
 	// handles an error when it runs into an unexpected key-value pair in the trie.
 	atomicTrieSnapshot, err := atomicTrie.OpenTrie(lastCommittedHash)
 	require.NoError(err)
-	require.NoError(atomicTrieSnapshot.Update(utils.RandomBytes(50), utils.RandomBytes(50)))
+	require.NoError(atomicTrieSnapshot.Update(crypto.RandomBytes(50), crypto.RandomBytes(50)))
 
 	nextRoot, nodes := atomicTrieSnapshot.Commit(false)
 	require.NoError(atomicTrie.InsertTrie(nodes, nextRoot))

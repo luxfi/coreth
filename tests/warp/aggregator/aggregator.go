@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 
 	warpprecompile "github.com/luxfi/coreth/precompile/contracts/warp"
 	"github.com/luxfi/crypto/bls"
@@ -20,7 +20,7 @@ import (
 type AggregateSignatureResult struct {
 	// Weight of validators included in the aggregate signature.
 	SignatureWeight uint64
-	// Total weight of all validators in the subnet.
+	// Total weight of all validators in the chain.
 	TotalWeight uint64
 	// The message with the aggregate signature.
 	Message *warp.Message

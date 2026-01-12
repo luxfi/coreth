@@ -43,7 +43,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 var errDatabaseNotSupported = errors.New("database triedb scheme does not yet support this operation")

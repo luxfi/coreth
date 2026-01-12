@@ -17,10 +17,10 @@ import (
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/protocol/p/fx"
+	lux "github.com/luxfi/utxo"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/components/lux"
-	"github.com/luxfi/vm/platformvm/fx"
-	"github.com/luxfi/vm/secp256k1fx"
+	"github.com/luxfi/utxo/secp256k1fx"
 )
 
 var _ atomic.Visitor = (*semanticVerifier)(nil)

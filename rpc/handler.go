@@ -40,7 +40,7 @@ import (
 	"time"
 
 	"github.com/luxfi/geth/metrics"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"golang.org/x/time/rate"
 )
 

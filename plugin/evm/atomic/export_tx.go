@@ -21,14 +21,14 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
 	luxfiids "github.com/luxfi/ids"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"github.com/luxfi/math"
 	"github.com/luxfi/math/set"
+	luxutils "github.com/luxfi/utils"
+	"github.com/luxfi/codec/wrappers"
+	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/components/lux"
-	"github.com/luxfi/vm/secp256k1fx"
-	luxutils "github.com/luxfi/vm/utils"
-	"github.com/luxfi/vm/utils/wrappers"
+	"github.com/luxfi/utxo/secp256k1fx"
 )
 
 // luxfiidsEqual compares a luxfi/ids.ID with a node/ids.ID
@@ -113,8 +113,8 @@ func (utx *UnsignedExportTx) Verify(
 		if luxfiidsEqual(ctx.ChainID, utx.DestinationChain) {
 			return ErrWrongChainID
 		}
-		// Note: We skip subnet validation here as we don't have access to ValidatorState
-		// TODO: Add proper subnet validation when consensus.Context is available
+		// Note: We skip chain validation here as we don't have access to ValidatorState
+		// TODO: Add proper chain validation when consensus.Context is available
 	} else {
 		if !luxfiidsEqual(ctx.XChainID, utx.DestinationChain) {
 			return ErrWrongChainID

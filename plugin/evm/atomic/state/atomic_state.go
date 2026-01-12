@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/database"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 )
 

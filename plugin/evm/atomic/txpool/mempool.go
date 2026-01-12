@@ -10,9 +10,9 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/config"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
+	"github.com/luxfi/metric"
 	"github.com/luxfi/p2p/gossip"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -34,7 +34,7 @@ type Mempool struct {
 
 func NewMempool(
 	txs *Txs,
-	registerer prometheus.Registerer,
+	registerer metric.Registerer,
 	verify func(tx *atomic.Tx) error,
 ) (*Mempool, error) {
 	bloom, err := gossip.NewBloomFilter(registerer, "atomic_mempool_bloom_filter",

@@ -1,20 +1,19 @@
 // Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
-package prometheus
+package gatherer
 
 import (
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/prometheus/common/expfmt"
-	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/luxfi/coreth/metrics/metricstest"
 	"github.com/luxfi/geth/metrics"
+	"github.com/luxfi/metric"
 )
 
 func TestGatherer_Gather(t *testing.T) {
@@ -109,20 +108,20 @@ test_timer{quantile="0.95"} 1.2e+08
 test_timer{quantile="0.99"} 1.2e+08
 test_timer{quantile="0.999"} 1.2e+08
 test_timer{quantile="0.9999"} 1.2e+08
-test_timer_sum 2.3e+08
-test_timer_count 6
+	test_timer_sum 2.3e+08
+	test_timer_count 6
 `
 	stringReader := strings.NewReader(expectedString)
-	parser := expfmt.NewTextParser(model.LegacyValidation)
-	expectedMetrics, err := parser.TextToMetricFamilies(stringReader)
+	expectedMetrics, err := metric.ParseText(stringReader)
 	require.NoError(t, err)
 
 	assert.Len(t, families, len(expectedMetrics))
-	for i, got := range families {
-		require.NotNil(t, *got.Name)
-
-		want := expectedMetrics[*got.Name]
-		assert.Equal(t, want, got, i)
+	for _, got := range families {
+		want, ok := expectedMetrics[got.Name]
+		require.True(t, ok, "unexpected metric family: %s", got.Name)
+		assert.Equal(t, want.Type, got.Type)
+		assert.Equal(t, want.Help, got.Help)
+		assert.Equal(t, want.Metrics, got.Metrics)
 	}
 
 	register(t, "unsupported", metrics.NewHealthcheck(nil))

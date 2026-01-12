@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 var errPebbleNotSupported = errors.New("import mode requires pebble database support (build with -tags=pebble)")

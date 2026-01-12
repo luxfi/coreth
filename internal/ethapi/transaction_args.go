@@ -45,7 +45,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 var (

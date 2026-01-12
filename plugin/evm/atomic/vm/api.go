@@ -8,17 +8,17 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/luxfi/codec/jsonrpc"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/txpool"
 	"github.com/luxfi/coreth/plugin/evm/client"
 	"github.com/luxfi/formatting"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"github.com/luxfi/math/set"
+	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/vm/api"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/components/lux"
-	"github.com/luxfi/vm/utils/json"
 )
 
 const (

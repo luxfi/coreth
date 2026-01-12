@@ -28,7 +28,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/rlp"
 	"github.com/luxfi/geth/trie"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 
 	"github.com/luxfi/consensus/engine/chain/block"
 

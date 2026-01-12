@@ -114,8 +114,8 @@ func VerifyGasLimit(
 			)
 		}
 	case config.IsCortina(header.Time):
-		// Accept both Cortina gas limit (15M) and legacy SubnetEVM gas limits (8M, 12M)
-		// to support importing historic blocks from SubnetEVM-based networks.
+		// Accept both Cortina gas limit (15M) and legacy ChainEVM gas limits (8M, 12M)
+		// to support importing historic blocks from ChainEVM-based networks.
 		validGasLimits := []uint64{cortina.GasLimit, ap1.GasLimit, 12_000_000}
 		isValid := false
 		for _, limit := range validGasLimits {
@@ -125,7 +125,7 @@ func VerifyGasLimit(
 			}
 		}
 		if !isValid {
-			return fmt.Errorf("%w: expected to be %d in Cortina (or %d/%d for legacy SubnetEVM), but found %d",
+			return fmt.Errorf("%w: expected to be %d in Cortina (or %d/%d for legacy ChainEVM), but found %d",
 				errInvalidGasLimit,
 				cortina.GasLimit,
 				ap1.GasLimit,
@@ -135,7 +135,7 @@ func VerifyGasLimit(
 		}
 	case config.IsApricotPhase1(header.Time):
 		// Accept both ApricotPhase1 gas limit (8M) and Genesis EVM gas limit (12M)
-		// to support importing historic blocks from SubnetEVM-based Genesis networks.
+		// to support importing historic blocks from ChainEVM-based Genesis networks.
 		validGasLimits := []uint64{ap1.GasLimit, 12_000_000}
 		isValid := false
 		for _, limit := range validGasLimits {
@@ -153,19 +153,19 @@ func VerifyGasLimit(
 			)
 		}
 	default:
-		// For historic SubnetEVM blocks, accept common gas limits (8M, 12M) without
+		// For historic ChainEVM blocks, accept common gas limits (8M, 12M) without
 		// requiring the gas limit bound check. This allows importing historic blocks
 		// that were created before Lux upgrades were active.
-		commonSubnetEVMGasLimits := []uint64{ap1.GasLimit, 12_000_000}
+		commonChainEVMGasLimits := []uint64{ap1.GasLimit, 12_000_000}
 		isCommonLimit := false
-		for _, limit := range commonSubnetEVMGasLimits {
+		for _, limit := range commonChainEVMGasLimits {
 			if header.GasLimit == limit {
 				isCommonLimit = true
 				break
 			}
 		}
 		if isCommonLimit {
-			// Accept common SubnetEVM gas limits without bound check
+			// Accept common ChainEVM gas limits without bound check
 			return nil
 		}
 

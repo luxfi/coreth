@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/go-cmd/cmd"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"github.com/luxfi/vm/api/health"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/require"
@@ -90,7 +90,7 @@ func RegisterNodeRun() {
 	ginkgo.AfterSuite(func() {
 		require.NotNil(startCmd)
 		require.NoError(startCmd.Stop())
-		// TODO add a new node to bootstrap off of the existing node and ensure it can bootstrap all subnets
+		// TODO add a new node to bootstrap off of the existing node and ensure it can bootstrap all chains
 		// created during the test
 	})
 }

@@ -30,16 +30,16 @@ import (
 	"github.com/luxfi/database/memdb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/metric"
 	"github.com/luxfi/p2p"
 	"github.com/luxfi/p2p/gossip"
+	agoUtils "github.com/luxfi/utils"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/vm/proto/pb/sdk"
-	agoUtils "github.com/luxfi/vm/utils"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
-	"github.com/luxfi/vm/components/lux"
-	"github.com/luxfi/vm/secp256k1fx"
+	lux "github.com/luxfi/utxo"
+	"github.com/luxfi/utxo/secp256k1fx"
 
 	"google.golang.org/protobuf/proto"
 
@@ -90,7 +90,7 @@ func TestEthTxGossip(t *testing.T) {
 		SentAppRequest: make(chan []byte, 1),
 	}
 
-	network, err := p2p.NewNetwork(logging.NoLog{}, peerSender, prometheus.NewRegistry(), "")
+	network, err := p2p.NewNetwork(logging.NoLog{}, peerSender, metric.NewRegistry(), "")
 	require.NoError(err)
 	client := network.NewClient(p2p.TxGossipHandlerID)
 
@@ -111,7 +111,7 @@ func TestEthTxGossip(t *testing.T) {
 
 	// Ask the VM for any new transactions. We should get nothing at first.
 	emptyBloomFilter, err := gossip.NewBloomFilter(
-		prometheus.NewRegistry(),
+		metric.NewRegistry(),
 		"",
 		config.TxGossipBloomMinTargetElements,
 		config.TxGossipBloomTargetFalsePositiveRate,
@@ -219,7 +219,7 @@ func TestAtomicTxGossip(t *testing.T) {
 	peerSender := &enginetest.SenderStub{
 		SentAppRequest: make(chan []byte, 1),
 	}
-	network, err := p2p.NewNetwork(logging.NoLog{}, peerSender, prometheus.NewRegistry(), "")
+	network, err := p2p.NewNetwork(logging.NoLog{}, peerSender, metric.NewRegistry(), "")
 	require.NoError(err)
 	client := network.NewClient(p2p.AtomicTxGossipHandlerID)
 
@@ -240,7 +240,7 @@ func TestAtomicTxGossip(t *testing.T) {
 
 	// Ask the VM for any new transactions. We should get nothing at first.
 	emptyBloomFilter, err := gossip.NewBloomFilter(
-		prometheus.NewRegistry(),
+		metric.NewRegistry(),
 		"",
 		config.TxGossipBloomMinTargetElements,
 		config.TxGossipBloomTargetFalsePositiveRate,

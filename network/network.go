@@ -12,18 +12,18 @@ import (
 
 	"golang.org/x/sync/semaphore"
 
-	"github.com/luxfi/log"
-	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/luxfi/log"
+	"github.com/luxfi/metric"
 
 	"github.com/luxfi/codec"
 	consensuscontext "github.com/luxfi/consensus/context"
 	validators "github.com/luxfi/consensus/validator"
 	consensusversion "github.com/luxfi/consensus/version"
+	"github.com/luxfi/atomic"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/p2p"
-	"github.com/luxfi/vm/utils"
 
 	"github.com/luxfi/coreth/network/stats"
 	"github.com/luxfi/coreth/plugin/evm/message"
@@ -136,7 +136,7 @@ type network struct {
 	// during these calls. This is because closing the network cancels all
 	// outstanding requests, which means we must guarantee never to register a
 	// request that will never be fulfilled or cancelled.
-	closed utils.Atomic[bool]
+	closed atomic.Atomic[bool]
 
 	p2pValidators *p2p.Validators
 }
@@ -146,7 +146,7 @@ func NewNetwork(
 	appSender AppSender,
 	codec codec.Manager,
 	maxActiveAppRequests int64,
-	registerer prometheus.Registerer,
+	registerer metric.Registerer,
 ) (Network, error) {
 	// Create a wrapper that implements p2p.Sender
 	p2pSender := &appSenderWrapper{appSender: appSender}

@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/coreth/core"
 	synccommon "github.com/luxfi/coreth/sync"
 
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 var errProviderNotSet = fmt.Errorf("provider not set")

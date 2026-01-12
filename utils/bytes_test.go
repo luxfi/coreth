@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/vm/utils"
+	"github.com/luxfi/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -57,7 +57,7 @@ func testBytesToHashSlice(t testing.TB, b []byte) {
 
 func FuzzHashSliceToBytes(f *testing.F) {
 	for i := 0; i < 100; i++ {
-		f.Add(utils.RandomBytes(i))
+		f.Add(crypto.RandomBytes(i))
 	}
 
 	f.Fuzz(func(t *testing.T, b []byte) {

@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/luxfi/vm/utils"
+	"github.com/luxfi/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +20,7 @@ func testPackPredicate(t testing.TB, b []byte) {
 
 func FuzzPackPredicate(f *testing.F) {
 	for i := 0; i < 100; i++ {
-		f.Add(utils.RandomBytes(i))
+		f.Add(crypto.RandomBytes(i))
 	}
 
 	f.Fuzz(func(t *testing.T, b []byte) {
@@ -39,7 +39,7 @@ func TestUnpackInvalidPredicate(t *testing.T) {
 	}
 
 	for _, l := range []int{0, 1, 31, 32, 33, 63, 64, 65} {
-		validPredicate := PackPredicate(utils.RandomBytes(l))
+		validPredicate := PackPredicate(crypto.RandomBytes(l))
 
 		for _, padding := range paddingCases {
 			invalidPredicate := append(validPredicate, padding...)

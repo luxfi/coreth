@@ -18,7 +18,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/luxfi/metric"
 
 	"github.com/luxfi/cache/lru"
 	"github.com/luxfi/cache/metercacher"
@@ -31,17 +31,17 @@ import (
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/log"
-	"github.com/luxfi/metric"
+	log "github.com/luxfi/log"
+	corethlog "github.com/luxfi/log"
 	"github.com/luxfi/p2p"
 	p2pgossip "github.com/luxfi/p2p/gossip"
+	"github.com/luxfi/timer/mockable"
+	"github.com/luxfi/atomic"
+	"github.com/luxfi/filesystem/perms"
+	"github.com/luxfi/metric/profiler"
 	"github.com/luxfi/vm"
 	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/vm/components/gas"
-	"github.com/luxfi/vm/utils"
-	"github.com/luxfi/vm/utils/perms"
-	"github.com/luxfi/vm/utils/profiler"
-	"github.com/luxfi/vm/utils/timer/mockable"
 	luxwarp "github.com/luxfi/warp"
 
 	"github.com/luxfi/coreth/consensus/dummy"
@@ -49,7 +49,7 @@ import (
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/eth"
 	"github.com/luxfi/coreth/eth/ethconfig"
-	corethprometheus "github.com/luxfi/coreth/metrics/prometheus"
+	corethmetrics "github.com/luxfi/coreth/metrics/gatherer"
 	"github.com/luxfi/coreth/miner"
 	"github.com/luxfi/coreth/network"
 	"github.com/luxfi/coreth/node"
@@ -59,7 +59,6 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/extension"
 	"github.com/luxfi/coreth/plugin/evm/gossip"
-	corethlog "github.com/luxfi/coreth/plugin/evm/log"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/plugin/evm/vmerrors"
@@ -237,13 +236,13 @@ type VM struct {
 	networkCodec codec.Manager
 
 	// Metrics
-	sdkMetrics      *prometheus.Registry
+	sdkMetrics      metric.Registry
 	metricsGatherer metric.MultiGatherer // Type-asserted from ctx.Metrics
 
 	// Type-asserted context interfaces
 	ctxLogger log.Logger // Type-asserted from ctx.Log
 
-	bootstrapped utils.Atomic[bool]
+	bootstrapped atomic.Atomic[bool]
 	IsPlugin     bool
 
 	// toEngine is used to notify the consensus engine about pending transactions
@@ -263,7 +262,7 @@ type VM struct {
 
 	// Initialize only sets these if nil so they can be overridden in tests
 	ethTxGossipHandler p2p.Handler
-	ethTxPushGossiper  utils.Atomic[*p2pgossip.PushGossiper[*GossipEthTx]]
+	ethTxPushGossiper  atomic.Atomic[*p2pgossip.PushGossiper[*GossipEthTx]]
 	ethTxPullGossiper  p2pgossip.Gossiper
 
 	chainAlias string
@@ -667,8 +666,8 @@ func parseGenesis(ctx *consensusctx.Context, bytes []byte) (*core.Genesis, error
 
 func (v *VM) initializeMetrics() error {
 	metrics.Enable()
-	v.sdkMetrics = prometheus.NewRegistry()
-	gatherer := corethprometheus.NewGatherer(metrics.DefaultRegistry)
+	v.sdkMetrics = metric.NewRegistry()
+	gatherer := corethmetrics.NewGatherer(metrics.DefaultRegistry)
 
 	if err := v.metricsGatherer.Register(ethMetricsPrefix, gatherer); err != nil {
 		return err
@@ -930,7 +929,7 @@ func (v *VM) initChainState(lastAcceptedBlock *types.Block) error {
 	}
 
 	// Register chain state metrics
-	chainStateRegisterer := prometheus.NewRegistry()
+	chainStateRegisterer := metric.NewRegistry()
 	state, err := chain.NewMeteredState(chainStateRegisterer, config)
 	if err != nil {
 		return fmt.Errorf("could not create metered state: %w", err)
@@ -1387,7 +1386,7 @@ func (v *VM) currentRules() extras.Rules {
 
 // requirePrimaryNetworkSigners returns true if warp messages from the primary
 // network must be signed by the primary network validators.
-// This is necessary when the subnet is not validating the primary network.
+// This is necessary when the chain is not validating the primary network.
 func (v *VM) requirePrimaryNetworkSigners() bool {
 	switch c := v.currentRules().Precompiles[warpcontract.ContractAddress].(type) {
 	case *warpcontract.Config:

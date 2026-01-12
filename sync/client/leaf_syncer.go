@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	"golang.org/x/sync/errgroup"
 )
 

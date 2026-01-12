@@ -12,10 +12,10 @@ import (
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/p2p"
-	"github.com/luxfi/vm/utils/timer/mockable"
+	"github.com/luxfi/timer/mockable"
 
 	"github.com/luxfi/consensus/engine/chain/block"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/luxfi/metric"
 
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core"
@@ -58,7 +58,7 @@ type ExtensibleVM interface {
 	// Config returns the configuration for the VM
 	Config() config.Config
 	// MetricRegistry returns the metric registry for the VM
-	MetricRegistry() *prometheus.Registry
+	MetricRegistry() metric.Registry
 	// ReadLastAccepted returns the last accepted block hash and height
 	ReadLastAccepted() (common.Hash, uint64, error)
 	// VersionDB returns the versioned database for the VM

@@ -63,7 +63,7 @@ import (
 	"github.com/luxfi/geth/triedb"
 	"github.com/luxfi/geth/triedb/hashdb"
 	"github.com/luxfi/geth/triedb/pathdb"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 
 	"github.com/holiman/uint256"
 
@@ -175,7 +175,7 @@ const (
 	statsReportLimit = 8 * time.Second
 
 	// trieCleanCacheStatsNamespace is the namespace to surface stats from the trie
-	// clean cache's underlying fastcache.
+	// clean cache's underlying cache.
 	trieCleanCacheStatsNamespace = "hashdb/memcache/clean/fastcache"
 
 	databaseFileName = "database_state"

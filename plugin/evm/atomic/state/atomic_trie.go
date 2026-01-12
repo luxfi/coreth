@@ -12,8 +12,8 @@ import (
 	"github.com/luxfi/constants"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/ids"
+	"github.com/luxfi/codec/wrappers"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/vm/utils/wrappers"
 
 	"github.com/luxfi/coreth/plugin/evm/database"
 	"github.com/luxfi/geth/common"
@@ -24,7 +24,7 @@ import (
 	"github.com/luxfi/geth/trie/trienode"
 	"github.com/luxfi/geth/triedb"
 	"github.com/luxfi/geth/triedb/hashdb"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 const (

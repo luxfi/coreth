@@ -51,7 +51,7 @@ import (
 	"github.com/luxfi/geth/eth/tracers/logger"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/rlp"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 const (

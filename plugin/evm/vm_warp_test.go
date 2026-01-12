@@ -48,9 +48,9 @@ import (
 	"github.com/luxfi/p2p"
 	"github.com/luxfi/upgrade"
 	"github.com/luxfi/upgrade/upgradetest"
+	avagoUtils "github.com/luxfi/utils"
 	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/vm/proto/pb/sdk"
-	avagoUtils "github.com/luxfi/vm/utils"
 	"github.com/luxfi/warp"
 	luxwarp "github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
@@ -68,14 +68,14 @@ var (
 type warpMsgFrom int
 
 const (
-	fromSubnet warpMsgFrom = iota
+	fromChain warpMsgFrom = iota
 	fromPrimary
 )
 
 type useWarpMsgSigners int
 
 const (
-	signersSubnet useWarpMsgSigners = iota
+	signersChain useWarpMsgSigners = iota
 	signersPrimary
 )
 
@@ -350,10 +350,10 @@ func testWarpVMTransaction(t *testing.T, scheme string, unsignedMessage *warp.Un
 
 	tvm.vm.ctx.ValidatorState = &validatorstest.State{
 		// TODO: test both Primary Network / C-Chain and non-Primary Network
-		GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
+		GetChainIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
 			return ids.Empty, nil
 		},
-		GetValidatorSetF: func(ctx context.Context, height uint64, subnetID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
+		GetValidatorSetF: func(ctx context.Context, height uint64, chainID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
 			if height < minimumValidPChainHeight {
 				return nil, getValidatorSetTestErr
 			}
@@ -521,40 +521,40 @@ func testReceiveWarpMessageWithScheme(t *testing.T, scheme string) {
 	blockGap := 2 * time.Second // Build blocks with a gap. Blocks built too quickly will have high fees.
 	tests := []test{
 		{
-			name:          "subnet message should be signed by subnet without RequirePrimaryNetworkSigners",
+			name:          "chain message should be signed by chain without RequirePrimaryNetworkSigners",
 			sourceChainID: tvm.vm.ctx.ChainID,
-			msgFrom:       fromSubnet,
-			useSigners:    signersSubnet,
+			msgFrom:       fromChain,
+			useSigners:    signersChain,
 			blockTime:     upgrade.InitiallyActiveTime,
 		},
 		{
-			name:          "P-Chain message should be signed by subnet without RequirePrimaryNetworkSigners",
+			name:          "P-Chain message should be signed by chain without RequirePrimaryNetworkSigners",
 			sourceChainID: constants.PlatformChainID,
 			msgFrom:       fromPrimary,
-			useSigners:    signersSubnet,
+			useSigners:    signersChain,
 			blockTime:     upgrade.InitiallyActiveTime.Add(blockGap),
 		},
 		{
-			name:          "C-Chain message should be signed by subnet without RequirePrimaryNetworkSigners",
+			name:          "C-Chain message should be signed by chain without RequirePrimaryNetworkSigners",
 			sourceChainID: tvm.vm.ctx.CChainID,
 			msgFrom:       fromPrimary,
-			useSigners:    signersSubnet,
+			useSigners:    signersChain,
 			blockTime:     upgrade.InitiallyActiveTime.Add(2 * blockGap),
 		},
 		// Note here we disable warp and re-enable it with RequirePrimaryNetworkSigners
 		// by using reEnableTime.
 		{
-			name:          "subnet message should be signed by subnet with RequirePrimaryNetworkSigners (unimpacted)",
+			name:          "chain message should be signed by chain with RequirePrimaryNetworkSigners (unimpacted)",
 			sourceChainID: tvm.vm.ctx.ChainID,
-			msgFrom:       fromSubnet,
-			useSigners:    signersSubnet,
+			msgFrom:       fromChain,
+			useSigners:    signersChain,
 			blockTime:     reEnableTime,
 		},
 		{
-			name:          "P-Chain message should be signed by subnet with RequirePrimaryNetworkSigners (unimpacted)",
+			name:          "P-Chain message should be signed by chain with RequirePrimaryNetworkSigners (unimpacted)",
 			sourceChainID: constants.PlatformChainID,
 			msgFrom:       fromPrimary,
-			useSigners:    signersSubnet,
+			useSigners:    signersChain,
 			blockTime:     reEnableTime.Add(blockGap),
 		},
 		{
@@ -590,7 +590,7 @@ func testReceiveWarpMessage(
 	)
 	require.NoError(err)
 
-	vm.ctx.SubnetID = ids.GenerateTestID()
+	vm.ctx.ChainID = ids.GenerateTestID()
 	vm.ctx.NetworkID = constants.UnitTestID
 	unsignedMessage, err := warp.NewUnsignedMessage(
 		vm.ctx.NetworkID,
@@ -623,11 +623,11 @@ func testReceiveWarpMessage(
 		newSigner(50),
 		newSigner(50),
 	}
-	subnetSigners := []signer{
+	chainSigners := []signer{
 		newSigner(50),
 		newSigner(50),
 	}
-	signers := subnetSigners
+	signers := chainSigners
 	if useSigners == signersPrimary {
 		signers = primarySigners
 	}
@@ -643,18 +643,18 @@ func testReceiveWarpMessage(
 	getValidatorSetTestErr := errors.New("can't get validator set test error")
 
 	vm.ctx.ValidatorState = &validatorstest.State{
-		GetSubnetIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
+		GetChainIDF: func(ctx context.Context, chainID ids.ID) (ids.ID, error) {
 			if msgFrom == fromPrimary {
 				return constants.PrimaryNetworkID, nil
 			}
-			return vm.ctx.SubnetID, nil
+			return vm.ctx.ChainID, nil
 		},
-		GetValidatorSetF: func(ctx context.Context, height uint64, subnetID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
+		GetValidatorSetF: func(ctx context.Context, height uint64, chainID ids.ID) (map[ids.NodeID]*validators.GetValidatorOutput, error) {
 			if height < minimumValidPChainHeight {
 				return nil, getValidatorSetTestErr
 			}
-			signers := subnetSigners
-			if subnetID == constants.PrimaryNetworkID {
+			signers := chainSigners
+			if chainID == constants.PrimaryNetworkID {
 				signers = primarySigners
 			}
 

@@ -18,16 +18,16 @@ import (
 
 	"github.com/luxfi/codec"
 	consensusctx "github.com/luxfi/consensus/context"
-	hashing "github.com/luxfi/crypto/hash"
+	"github.com/luxfi/crypto/hash"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/ids"
 	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/p2p/gossip"
+	"github.com/luxfi/codec/wrappers"
 	"github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/vm/components/verify"
-	"github.com/luxfi/vm/secp256k1fx"
-	"github.com/luxfi/vm/utils/wrappers"
+	"github.com/luxfi/utxo/secp256k1fx"
 )
 
 var _ gossip.Gossipable = (*Tx)(nil)
@@ -52,8 +52,8 @@ var (
 // Constants for calculating the gas consumed by atomic transactions
 var (
 	TxBytesGas   uint64 = 1
-	EVMOutputGas uint64 = (common.AddressLength + wrappers.LongLen + hashing.HashLen) * TxBytesGas
-	EVMInputGas  uint64 = (common.AddressLength+wrappers.LongLen+hashing.HashLen+wrappers.LongLen)*TxBytesGas + secp256k1fx.CostPerSignature
+	EVMOutputGas uint64 = (common.AddressLength + wrappers.LongLen + hash.HashLen) * TxBytesGas
+	EVMInputGas  uint64 = (common.AddressLength+wrappers.LongLen+hash.HashLen+wrappers.LongLen)*TxBytesGas + secp256k1fx.CostPerSignature
 	// X2CRate is the conversion rate between the smallest denomination on the X-Chain
 	// 1 nLUX and the smallest denomination on the C-Chain 1 wei. Where 1 nLUX = 1 gWei.
 	// This is only required for LUX because the denomination of 1 LUX is 9 decimal
@@ -203,7 +203,7 @@ func (tx *Tx) Sign(c codec.Manager, signers [][]*secp256k1.PrivateKey) error {
 	}
 
 	// Attach credentials
-	hash := hashing.ComputeHash256(unsignedBytes)
+	hash := hash.ComputeHash256(unsignedBytes)
 	for _, keys := range signers {
 		cred := &secp256k1fx.Credential{
 			Sigs: make([][secp256k1.SignatureLen]byte, len(keys)),

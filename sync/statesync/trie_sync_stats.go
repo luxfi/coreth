@@ -10,9 +10,9 @@ import (
 
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/metrics"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 	utils_math "github.com/luxfi/math"
-	"github.com/luxfi/vm/utils/timer"
+	"github.com/luxfi/timer"
 )
 
 const (

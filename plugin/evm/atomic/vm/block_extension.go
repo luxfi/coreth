@@ -20,7 +20,7 @@ import (
 	"github.com/luxfi/coreth/utils"
 
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 var (

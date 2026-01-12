@@ -15,7 +15,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	ethparams "github.com/luxfi/geth/params"
-	"github.com/luxfi/log"
+	log "github.com/luxfi/log"
 )
 
 const expectedBlockHeight = 2
@@ -36,7 +36,7 @@ func IssueTxsToActivateProposerVMFork(
 		return err
 	}
 
-	gasPrice := big.NewInt(ap1.MinGasPrice) // should be pretty generous for c-chain and subnets
+	gasPrice := big.NewInt(ap1.MinGasPrice) // should be pretty generous for c-chain and chains
 	txSigner := types.LatestSignerForChainID(chainID)
 
 	// Send exactly 2 transactions, waiting for each to be included in a block

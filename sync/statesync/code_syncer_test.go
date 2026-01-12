@@ -8,7 +8,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/luxfi/vm/utils"
+	"github.com/luxfi/utils"
 
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/message"
@@ -94,7 +94,7 @@ func testCodeSyncer(t *testing.T, test codeSyncerTest) {
 }
 
 func TestCodeSyncerSingleCodeHash(t *testing.T) {
-	codeBytes := utils.RandomBytes(100)
+	codeBytes := crypto.RandomBytes(100)
 	cryptoHash := crypto.Keccak256Hash(codeBytes)
 	codeHash := common.BytesToHash(cryptoHash.Bytes())
 	testCodeSyncer(t, codeSyncerTest{
@@ -108,7 +108,7 @@ func TestCodeSyncerManyCodeHashes(t *testing.T) {
 	codeHashes := make([]common.Hash, 0, numCodeSlices)
 	codeByteSlices := make([][]byte, 0, numCodeSlices)
 	for i := 0; i < numCodeSlices; i++ {
-		codeBytes := utils.RandomBytes(100)
+		codeBytes := crypto.RandomBytes(100)
 		cryptoHash := crypto.Keccak256Hash(codeBytes)
 		codeHash := common.BytesToHash(cryptoHash.Bytes())
 		codeHashes = append(codeHashes, codeHash)
@@ -125,7 +125,7 @@ func TestCodeSyncerManyCodeHashes(t *testing.T) {
 }
 
 func TestCodeSyncerRequestErrors(t *testing.T) {
-	codeBytes := utils.RandomBytes(100)
+	codeBytes := crypto.RandomBytes(100)
 	cryptoCodeHash := crypto.Keccak256Hash(codeBytes)
 	codeHash := common.BytesToHash(cryptoCodeHash.Bytes())
 	err := errors.New("dummy error")
@@ -140,7 +140,7 @@ func TestCodeSyncerRequestErrors(t *testing.T) {
 }
 
 func TestCodeSyncerAddsInProgressCodeHashes(t *testing.T) {
-	codeBytes := utils.RandomBytes(100)
+	codeBytes := crypto.RandomBytes(100)
 	cryptoCodeHash := crypto.Keccak256Hash(codeBytes)
 	codeHash := common.BytesToHash(cryptoCodeHash.Bytes())
 	testCodeSyncer(t, codeSyncerTest{
@@ -157,7 +157,7 @@ func TestCodeSyncerAddsMoreInProgressThanQueueSize(t *testing.T) {
 	codeHashes := make([]common.Hash, 0, numCodeSlices)
 	codeByteSlices := make([][]byte, 0, numCodeSlices)
 	for i := 0; i < numCodeSlices; i++ {
-		codeBytes := utils.RandomBytes(100)
+		codeBytes := crypto.RandomBytes(100)
 		cryptoCodeHash := crypto.Keccak256Hash(codeBytes)
 		codeHash := common.BytesToHash(cryptoCodeHash.Bytes())
 		codeHashes = append(codeHashes, codeHash)
