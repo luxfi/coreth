@@ -1800,6 +1800,10 @@ func SubmitTransaction(ctx context.Context, b Backend, tx *types.Transaction) (c
 	}
 	// Print a log with full tx details for manual investigations and interventions
 	head := b.CurrentBlock()
+	if head == nil {
+		log.Info("Submitted transaction (no head yet)", "hash", tx.Hash().Hex(), "type", tx.Type(), "nonce", tx.Nonce())
+		return tx.Hash(), nil
+	}
 	signer := types.MakeSigner(b.ChainConfig(), head.Number, head.Time)
 	from, err := types.Sender(signer, tx)
 	if err != nil {
