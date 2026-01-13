@@ -1,4 +1,17 @@
-# Coreth and the C-Chain
+# ⚠️ DEPRECATED - Use github.com/luxfi/evm
+
+> **This repository has been deprecated and merged into [github.com/luxfi/evm](https://github.com/luxfi/evm).**
+>
+> All future development will occur in the EVM repository. This repository is archived for historical reference only.
+>
+> **Migration Guide:**
+> - Replace `github.com/luxfi/coreth` imports with `github.com/luxfi/evm`
+> - The EVM package provides unified C-Chain and L1/L2 EVM implementation
+> - See [EVM README](https://github.com/luxfi/evm) for updated documentation
+
+---
+
+# Coreth and the C-Chain (ARCHIVED)
 
 [Lux](https://www.lux.network/) is a network composed of multiple blockchains.
 Each blockchain is an instance of a Virtual Machine (VM), much like an object in an object-oriented language is an instance of a class.
