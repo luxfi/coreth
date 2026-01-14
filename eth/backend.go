@@ -51,6 +51,7 @@ import (
 	"github.com/luxfi/coreth/node"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
+	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/geth/accounts"
 	"github.com/luxfi/geth/common"
@@ -250,6 +251,9 @@ func New(
 	if err != nil {
 		return nil, err
 	}
+	// Rehydrate header extras from stored headers after import/snapshot resume.
+	// This ensures BlockGasCost/ExtData fields are available for block building.
+	hydrateHeaderExtras(eth.blockchain)
 
 	if err := eth.handleOfflinePruning(cacheConfig, config.Genesis, vmConfig, lastAcceptedHash); err != nil {
 		return nil, err
@@ -311,6 +315,35 @@ func New(
 	eth.shutdownTracker.MarkStartup()
 
 	return eth, nil
+}
+
+func hydrateHeaderExtras(chain *core.BlockChain) {
+	if chain == nil {
+		return
+	}
+	head := chain.CurrentBlock()
+	if head == nil {
+		return
+	}
+	headNum := head.NumberU64()
+	var start uint64
+	if headNum > 4096 {
+		start = headNum - 4096
+	}
+	for i := start; i <= headNum; i++ {
+		h := chain.GetHeaderByNumber(i)
+		if h == nil {
+			continue
+		}
+		extra := &customtypes.HeaderExtra{
+			ExtDataGasUsed: h.ExtDataGasUsed,
+			BlockGasCost:   h.BlockGasCost,
+		}
+		if h.ExtDataHash != nil {
+			extra.ExtDataHash = *h.ExtDataHash
+		}
+		customtypes.SetHeaderExtra(h, extra)
+	}
 }
 
 // APIs return the collection of RPC services the ethereum package offers.
