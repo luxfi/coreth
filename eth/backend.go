@@ -268,6 +268,11 @@ func New(
 	if err != nil {
 		return nil, err
 	}
+	// Force a one-time txpool sync against the current head to clear any
+	// stale pending txs after import/snapshot resume.
+	if err := eth.txPool.Sync(); err != nil {
+		log.Warn("txpool sync failed", "err", err)
+	}
 
 	eth.miner = miner.New(eth, &config.Miner, eth.blockchain.Config(), eth.EventMux(), eth.engine, clock)
 
