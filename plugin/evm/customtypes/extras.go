@@ -75,6 +75,9 @@ var extras = extrasType{
 			if h.ExtDataHash != nil {
 				extra.ExtDataHash = *h.ExtDataHash
 			}
+			// Cache the derived extra by header hash so subsequent lookups
+			// remain consistent across header copies.
+			headerExtras.Store(key, extra)
 			return extra
 		},
 		Set: func(h *ethtypes.Header, extra *HeaderExtra) {
