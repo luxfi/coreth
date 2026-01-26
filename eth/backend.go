@@ -325,7 +325,7 @@ func hydrateHeaderExtras(chain *core.BlockChain) {
 	if head == nil {
 		return
 	}
-	headNum := head.NumberU64()
+	headNum := head.Number.Uint64()
 	var start uint64
 	if headNum > 4096 {
 		start = headNum - 4096

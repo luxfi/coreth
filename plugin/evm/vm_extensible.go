@@ -26,7 +26,7 @@ var (
 )
 
 func (vm *VM) SetExtensionConfig(config *extension.Config) error {
-	if vm.ctx != nil {
+	if vm.runtime != nil {
 		return errVMAlreadyInitialized
 	}
 	if vm.extensionConfig != nil {

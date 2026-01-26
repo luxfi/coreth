@@ -136,7 +136,7 @@ func (b *wrappedBlock) handlePrecompileAccept(rules extras.Rules) error {
 		return fmt.Errorf("failed to fetch receipts for accepted block with non-empty root hash (%s) (Block: %s, Height: %d)", b.ethBlock.ReceiptHash(), b.ethBlock.Hash(), b.ethBlock.NumberU64())
 	}
 	acceptCtx := &precompileconfig.AcceptContext{
-		ConsensusCtx: b.vm.ctx,
+		ConsensusCtx: b.vm.runtime,
 		Warp:         b.vm.warpBackend,
 	}
 	for _, receipt := range receipts {
@@ -201,7 +201,7 @@ func (b *wrappedBlock) Timestamp() time.Time {
 // Verify implements the block.Block interface
 func (b *wrappedBlock) Verify(context.Context) error {
 	return b.verify(&precompileconfig.PredicateContext{
-		ConsensusCtx:       b.vm.ctx,
+		ConsensusCtx:       b.vm.runtime,
 		ProposerVMBlockCtx: nil,
 	}, true)
 }
@@ -233,7 +233,7 @@ func (b *wrappedBlock) ShouldVerifyWithContext(context.Context) (bool, error) {
 // VerifyWithContext implements the block.WithVerifyContext interface
 func (b *wrappedBlock) VerifyWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) error {
 	return b.verify(&precompileconfig.PredicateContext{
-		ConsensusCtx:       b.vm.ctx,
+		ConsensusCtx:       b.vm.runtime,
 		ProposerVMBlockCtx: proposerVMBlockCtx,
 	}, true)
 }

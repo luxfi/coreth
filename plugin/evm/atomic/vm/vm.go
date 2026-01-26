@@ -19,8 +19,8 @@ import (
 
 	"github.com/luxfi/codec"
 	"github.com/luxfi/codec/linearcodec"
-	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
+	"github.com/luxfi/runtime"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
 	luxdatabase "github.com/luxfi/database"
@@ -77,9 +77,8 @@ const (
 
 type VM struct {
 	extension.InnerVM
-	Ctx *consensusctx.Context
+	Runtime *runtime.Runtime
 
-	// TODO: unexport these fields
 	SecpCache     secp256k1.RecoverCacheType
 	Fx            secp256k1fx.Fx
 	baseCodec     codec.Registry
@@ -88,7 +87,6 @@ type VM struct {
 	// [atomicTxRepository] maintains two indexes on accepted atomic txs.
 	// - txID to accepted atomic tx
 	// - block height to list of atomic txs accepted on block at that height
-	// TODO: unexport these fields
 	AtomicTxRepository *atomicstate.AtomicRepository
 	// [atomicBackend] abstracts verification and processing of atomic transactions
 	AtomicBackend *atomicstate.AtomicBackend
@@ -109,28 +107,17 @@ func WrapVM(vm extension.InnerVM) *VM {
 	return &VM{InnerVM: vm}
 }
 
-// Initialize implements the quasarman.ChainVM interface
+// Initialize implements the block.ChainVM interface
 func (vm *VM) Initialize(
 	ctx context.Context,
-	chainCtxIntf interface{},
-	dbIntf interface{},
-	genesisBytes []byte,
-	upgradeBytes []byte,
-	configBytes []byte,
-	toEngineIntf interface{},
-	fxsIntf []interface{},
-	appSenderIntf interface{},
+	init block.Init,
 ) error {
-	// Type assert chainCtx to *consensusctx.Context
-	consensusCtx, ok := chainCtxIntf.(*consensusctx.Context)
-	if !ok {
-		return fmt.Errorf("expected *consensusctx.Context, got %T", chainCtxIntf)
-	}
-	vm.Ctx = consensusCtx
+	rt := init.Runtime
+	vm.Runtime = rt
 
 	var extDataHashes map[common.Hash]common.Hash
 	// Set the chain config for mainnet/testnet chain IDs
-	switch consensusCtx.NetworkID {
+	switch rt.NetworkID {
 	case constants.MainnetID:
 		extDataHashes = mainnetExtDataHashes
 	case constants.TestnetID:
@@ -154,7 +141,7 @@ func (vm *VM) Initialize(
 		Handler:    leafHandler,
 	}
 
-	atomicTxs := txpool.NewTxs(consensusCtx, defaultMempoolSize)
+	atomicTxs := txpool.NewTxs(rt, defaultMempoolSize)
 	extensionConfig := &extension.Config{
 		ConsensusCallbacks:         vm.createConsensusCallbacks(),
 		BlockExtender:              blockExtender,
@@ -170,17 +157,7 @@ func (vm *VM) Initialize(
 	}
 
 	// Initialize inner vm with the provided parameters
-	if err := vm.InnerVM.Initialize(
-		ctx,
-		chainCtxIntf,
-		dbIntf,
-		genesisBytes,
-		upgradeBytes,
-		configBytes,
-		toEngineIntf,
-		fxsIntf,
-		appSenderIntf,
-	); err != nil {
+	if err := vm.InnerVM.Initialize(ctx, init); err != nil {
 		return fmt.Errorf("failed to initialize inner VM: %w", err)
 	}
 
@@ -194,7 +171,7 @@ func (vm *VM) Initialize(
 	var (
 		bonusBlockHeights map[uint64]ids.ID
 	)
-	if vm.Ctx.NetworkID == constants.MainnetID {
+	if vm.Runtime.NetworkID == constants.MainnetID {
 		var err error
 		bonusBlockHeights, err = readMainnetBonusBlocks()
 		if err != nil {
@@ -211,9 +188,9 @@ func (vm *VM) Initialize(
 	if err != nil {
 		return fmt.Errorf("failed to create atomic repository: %w", err)
 	}
-	sharedMemory, ok := vm.Ctx.SharedMemory.(luxatomic.SharedMemory)
+	sharedMemory, ok := vm.Runtime.SharedMemory.(luxatomic.SharedMemory)
 	if !ok {
-		return fmt.Errorf("expected luxatomic.SharedMemory, got %T", vm.Ctx.SharedMemory)
+		return fmt.Errorf("expected luxatomic.SharedMemory, got %T", vm.Runtime.SharedMemory)
 	}
 	vm.AtomicBackend, err = atomicstate.NewAtomicBackend(
 		sharedMemory, bonusBlockHeights,
@@ -272,9 +249,9 @@ func (vm *VM) onNormalOperationsStarted() error {
 	}
 
 	// Type assert Log from context
-	logger, ok := vm.Ctx.Log.(log.Logger)
+	logger, ok := vm.Runtime.Log.(log.Logger)
 	if !ok {
-		return fmt.Errorf("expected log.Logger, got %T", vm.Ctx.Log)
+		return fmt.Errorf("expected log.Logger, got %T", vm.Runtime.Log)
 	}
 
 	ctx, cancel := context.WithCancel(context.TODO())
@@ -339,7 +316,7 @@ func (vm *VM) onNormalOperationsStarted() error {
 
 	vm.AtomicTxPullGossiper = &luxdssip.ValidatorGossiper{
 		Gossiper:   atomicTxPullGossiper,
-		NodeID:     vm.Ctx.NodeID,
+		NodeID:     vm.Runtime.NodeID,
 		Validators: vm.InnerVM.P2PValidators(),
 	}
 
@@ -359,7 +336,7 @@ func (vm *VM) onNormalOperationsStarted() error {
 }
 
 func (vm *VM) Shutdown(context.Context) error {
-	if vm.Ctx == nil {
+	if vm.Runtime == nil {
 		return nil
 	}
 	if vm.cancel != nil {
@@ -447,7 +424,7 @@ func (vm *VM) verifyTx(tx *atomic.Tx, parentHash common.Hash, baseFee *big.Int, 
 	}
 	wrappedStateDB := extstate.New(statedb)
 	atomicStateDB := newStateDBWrapper(wrappedStateDB)
-	return tx.UnsignedAtomicTx.EVMStateTransfer(vm.Ctx, atomicStateDB)
+	return tx.UnsignedAtomicTx.EVMStateTransfer(vm.Runtime, atomicStateDB)
 }
 
 // verifyTxs verifies that [txs] are valid to be issued into a block with parent block [parentHash]
@@ -494,7 +471,7 @@ func (vm *VM) CodecRegistry() codec.Registry { return vm.baseCodec }
 func (vm *VM) Clock() *mockable.Clock { return &vm.clock }
 
 // Logger implements the secp256k1fx interface
-func (vm *VM) Logger() log.Logger { return vm.Ctx.Log.(log.Logger) }
+func (vm *VM) Logger() log.Logger { return vm.Runtime.Log.(log.Logger) }
 
 func (vm *VM) createConsensusCallbacks() dummy.ConsensusCallbacks {
 	return dummy.ConsensusCallbacks{
@@ -533,7 +510,7 @@ func (vm *VM) preBatchOnFinalizeAndAssemble(header *types.Header, state *state.S
 		}
 		var contribution, gasUsed *big.Int
 		if rules.IsApricotPhase4 {
-			contribution, gasUsed, err = tx.BlockFeeContribution(rules.IsApricotPhase5, vm.Ctx.XAssetID, header.BaseFee)
+			contribution, gasUsed, err = tx.BlockFeeContribution(rules.IsApricotPhase5, vm.Runtime.XAssetID, header.BaseFee)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -591,7 +568,7 @@ func (vm *VM) postBatchOnFinalizeAndAssemble(
 		// Note: we do not need to check if we are in at least ApricotPhase4 here because
 		// we assume that this function will only be called when the block is in at least
 		// ApricotPhase5.
-		txContribution, txGasUsed, err = tx.BlockFeeContribution(true, vm.Ctx.XAssetID, header.BaseFee)
+		txContribution, txGasUsed, err = tx.BlockFeeContribution(true, vm.Runtime.XAssetID, header.BaseFee)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -716,12 +693,12 @@ func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, state
 	wrappedStateDB := extstate.New(statedb)
 	atomicStateDB := newStateDBWrapper(wrappedStateDB)
 	for _, tx := range txs {
-		if err := tx.UnsignedAtomicTx.EVMStateTransfer(vm.Ctx, atomicStateDB); err != nil {
+		if err := tx.UnsignedAtomicTx.EVMStateTransfer(vm.Runtime, atomicStateDB); err != nil {
 			return nil, nil, err
 		}
 		// If ApricotPhase4 is enabled, calculate the block fee contribution
 		if rulesExtra.IsApricotPhase4 {
-			contribution, gasUsed, err := tx.BlockFeeContribution(rulesExtra.IsApricotPhase5, vm.Ctx.XAssetID, block.BaseFee())
+			contribution, gasUsed, err := tx.BlockFeeContribution(rulesExtra.IsApricotPhase5, vm.Runtime.XAssetID, block.BaseFee())
 			if err != nil {
 				return nil, nil, err
 			}
@@ -817,7 +794,7 @@ func (vm *VM) NewImportTx(
 		kc.Add(key)
 	}
 
-	sharedMemory, ok := vm.Ctx.SharedMemory.(luxatomic.SharedMemory)
+	sharedMemory, ok := vm.Runtime.SharedMemory.(luxatomic.SharedMemory)
 	if !ok {
 		return nil, errors.New("shared memory not available")
 	}
@@ -826,7 +803,7 @@ func (vm *VM) NewImportTx(
 		return nil, fmt.Errorf("problem retrieving atomic UTXOs: %w", err)
 	}
 
-	return atomic.NewImportTx(vm.Ctx, vm.CurrentRules(), vm.clock.Unix(), chainID, to, baseFee, kc, atomicUTXOs)
+	return atomic.NewImportTx(vm.Runtime, vm.CurrentRules(), vm.clock.Unix(), chainID, to, baseFee, kc, atomicUTXOs)
 }
 
 // newExportTx returns a new ExportTx
@@ -845,7 +822,7 @@ func (vm *VM) NewExportTx(
 
 	// Create the transaction
 	tx, err := atomic.NewExportTx(
-		vm.Ctx,            // Context
+		vm.Runtime,            // Context
 		vm.CurrentRules(), // VM rules
 		newStateDBWrapper(extstate.New(statedb)),
 		assetID, // AssetID

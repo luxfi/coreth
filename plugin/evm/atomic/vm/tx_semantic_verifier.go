@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"math/big"
 
-	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/extension"
@@ -18,6 +17,7 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/protocol/p/fx"
+	"github.com/luxfi/runtime"
 	lux "github.com/luxfi/utxo"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/utxo/secp256k1fx"
@@ -40,7 +40,7 @@ type BlockFetcher interface {
 }
 
 type VerifierBackend struct {
-	Ctx          *consensusctx.Context
+	Runtime      *runtime.Runtime
 	Fx           fx.Fx
 	Rules        extras.Rules
 	Bootstrapped bool
@@ -50,7 +50,7 @@ type VerifierBackend struct {
 
 func NewVerifierBackend(vm *VM, rules extras.Rules) *VerifierBackend {
 	return &VerifierBackend{
-		Ctx:          vm.Ctx,
+		Runtime:      vm.Runtime,
 		Fx:           &vm.Fx,
 		Rules:        rules,
 		Bootstrapped: vm.bootstrapped.Get(),
@@ -80,7 +80,7 @@ type semanticVerifier struct {
 // ImportTx verifies this transaction is valid.
 func (s *semanticVerifier) ImportTx(utx *atomic.UnsignedImportTx) error {
 	backend := s.backend
-	ctx := backend.Ctx
+	ctx := backend.Runtime
 	rules := backend.Rules
 	stx := s.tx
 	if err := utx.Verify(ctx, rules); err != nil {
@@ -210,7 +210,7 @@ func conflicts(backend *VerifierBackend, inputs set.Set[ids.ID], ancestor extens
 // ExportTx verifies this transaction is valid.
 func (s *semanticVerifier) ExportTx(utx *atomic.UnsignedExportTx) error {
 	backend := s.backend
-	ctx := backend.Ctx
+	ctx := backend.Runtime
 	rules := backend.Rules
 	stx := s.tx
 	if err := utx.Verify(ctx, rules); err != nil {

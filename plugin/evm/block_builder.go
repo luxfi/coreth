@@ -56,7 +56,7 @@ func (b *blockBuilder) Logger() log.Logger {
 // can be used to add transactions to the block builder, in addition to the txPool.
 func (vm *VM) NewBlockBuilder(extraMempool extension.BuilderMempool) *blockBuilder {
 	b := &blockBuilder{
-		ctx:          vm.ctx,
+		ctx:          vm.runtime,
 		txPool:       vm.txPool,
 		extraMempool: extraMempool,
 		shutdownChan: vm.shutdownChan,
