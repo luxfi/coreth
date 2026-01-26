@@ -4,10 +4,10 @@
 package factory
 
 import (
-	"github.com/luxfi/consensus/engine/chain/block"
 	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"
 	"github.com/luxfi/ids"
 	log "github.com/luxfi/log"
+	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/vm/manager"
 
 	"github.com/luxfi/coreth/plugin/evm"
@@ -26,6 +26,6 @@ func (*Factory) New(log.Logger) (interface{}, error) {
 	return atomicvm.WrapVM(&evm.VM{}), nil
 }
 
-func NewPluginVM() block.ChainVM {
+func NewPluginVM() chain.ChainVM {
 	return atomicvm.WrapVM(&evm.VM{IsPlugin: true})
 }

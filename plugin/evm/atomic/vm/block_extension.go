@@ -254,9 +254,9 @@ func (be *blockExtension) verifyUTXOsPresent(atomicTxs []*atomic.Tx) error {
 	}
 
 	// verify UTXOs named in import txs are present in shared memory.
-	sharedMemory, ok := vm.Ctx.SharedMemory.(luxatomic.SharedMemory)
+	sharedMemory, ok := vm.Runtime.SharedMemory.(luxatomic.SharedMemory)
 	if !ok {
-		return fmt.Errorf("expected luxatomic.SharedMemory, got %T", vm.Ctx.SharedMemory)
+		return fmt.Errorf("expected luxatomic.SharedMemory, got %T", vm.Runtime.SharedMemory)
 	}
 	for _, atomicTx := range atomicTxs {
 		utx := atomicTx.UnsignedAtomicTx

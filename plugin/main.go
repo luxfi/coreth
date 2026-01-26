@@ -10,7 +10,7 @@ import (
 
 	log "github.com/luxfi/log"
 	"github.com/luxfi/sys/ulimit"
-	"github.com/luxfi/vm/rpc/chain"
+	"github.com/luxfi/vm/rpc"
 
 	"github.com/luxfi/coreth/plugin/evm"
 	"github.com/luxfi/coreth/plugin/factory"
@@ -30,7 +30,7 @@ func main() {
 		fmt.Printf("failed to set fd limit correctly due to: %s\n", err)
 		os.Exit(1)
 	}
-	if err := chain.Serve(context.Background(), log.NoLog{}, factory.NewPluginVM()); err != nil {
+	if err := rpc.Serve(context.Background(), log.NoLog{}, factory.NewPluginVM()); err != nil {
 		fmt.Printf("failed to serve vm: %s\n", err)
 		os.Exit(1)
 	}

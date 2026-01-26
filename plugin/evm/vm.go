@@ -24,9 +24,9 @@ import (
 	"github.com/luxfi/cache/metercacher"
 	"github.com/luxfi/codec"
 	"github.com/luxfi/consensus"
-	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
-	consensusversion "github.com/luxfi/consensus/version"
+	"github.com/luxfi/runtime"
+	"github.com/luxfi/version"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/versiondb"
@@ -174,9 +174,9 @@ func init() {
 	originalStderr = os.Stderr
 }
 
-// VM implements the quasarman.ChainVM interface
+// VM implements the block.ChainVM interface
 type VM struct {
-	ctx *consensusctx.Context
+	runtime *runtime.Runtime
 	// [cancel] may be nil until [quasar.NormalOp] starts
 	cancel context.CancelFunc
 	// *chain.State helps to implement the VM interface by wrapping blocks
@@ -240,7 +240,7 @@ type VM struct {
 	metricsGatherer metric.MultiGatherer // Type-asserted from ctx.Metrics
 
 	// Type-asserted context interfaces
-	ctxLogger log.Logger // Type-asserted from ctx.Log
+	runtimeLogger log.Logger // Type-asserted from runtime.Log
 
 	bootstrapped atomic.Atomic[bool]
 	IsPlugin     bool
@@ -270,38 +270,23 @@ type VM struct {
 	rpcHandlers []interface{ Stop() }
 }
 
-// Initialize implements the quasarman.ChainVM interface
+// Initialize implements the block.ChainVM interface
 func (v *VM) Initialize(
 	_ context.Context,
-	chainCtx interface{},
-	db interface{},
-	genesisBytes []byte,
-	upgradeBytes []byte,
-	configBytes []byte,
-	toEngine interface{},
-	_ []interface{},
-	appSenderIface interface{},
+	init block.Init,
 ) error {
-	// Type assert appSender - node provides p2p.Sender
+	vmCtx := init.Runtime
+	vmDB := init.DB
+	genesisBytes := init.Genesis
+	upgradeBytes := init.Upgrade
+	configBytes := init.Config
+	toEngine := init.ToEngine
+	sender := init.Sender
+
+	// Wrap sender with network adapter
 	var appSender network.AppSender
-	if appSenderIface != nil {
-		if p2pSender, ok := appSenderIface.(p2p.Sender); ok {
-			appSender = network.NewP2PSenderAdapter(p2pSender)
-		} else if networkSender, ok := appSenderIface.(network.AppSender); ok {
-			appSender = networkSender
-		} else {
-			return fmt.Errorf("expected p2p.Sender or network.AppSender, got %T", appSenderIface)
-		}
-	}
-	// Type assert chainCtx
-	vmCtx, ok := chainCtx.(*consensusctx.Context)
-	if !ok {
-		return fmt.Errorf("expected *consensusctx.Context, got %T", chainCtx)
-	}
-	// Type assert database
-	vmDB, ok := db.(database.Database)
-	if !ok {
-		return fmt.Errorf("expected database.Database, got %T", db)
+	if sender != nil {
+		appSender = network.NewP2PSenderAdapter(sender)
 	}
 	if err := v.extensionConfig.Validate(); err != nil {
 		return fmt.Errorf("failed to validate extension config: %w", err)
@@ -315,21 +300,21 @@ func (v *VM) Initialize(
 			return fmt.Errorf("failed to unmarshal config %s: %w", string(configBytes), err)
 		}
 	}
-	v.ctx = vmCtx
+	v.runtime = vmCtx
 
 	// Type assert and store context interfaces for use throughout VM
-	if ctxLogger, ok := v.ctx.Log.(log.Logger); ok {
-		v.ctxLogger = ctxLogger
+	if ctxLogger, ok := v.runtime.Log.(log.Logger); ok {
+		v.runtimeLogger = ctxLogger
 	} else {
-		return fmt.Errorf("expected log.Logger for ctx.Log, got %T", v.ctx.Log)
+		return fmt.Errorf("expected log.Logger for ctx.Log, got %T", v.runtime.Log)
 	}
-	if metricsGatherer, ok := v.ctx.Metrics.(metric.MultiGatherer); ok {
+	if metricsGatherer, ok := v.runtime.Metrics.(metric.MultiGatherer); ok {
 		v.metricsGatherer = metricsGatherer
 	} else {
-		return fmt.Errorf("expected metric.MultiGatherer for ctx.Metrics, got %T", v.ctx.Metrics)
+		return fmt.Errorf("expected metric.MultiGatherer for ctx.Metrics, got %T", v.runtime.Metrics)
 	}
 
-	if err := v.config.Validate(v.ctx.NetworkID); err != nil {
+	if err := v.config.Validate(v.runtime.NetworkID); err != nil {
 		return err
 	}
 	// We should deprecate config flags as the first thing, before we do anything else
@@ -339,22 +324,22 @@ func (v *VM) Initialize(
 
 	// Get chain alias from BCLookup with defensive nil check
 	var alias string
-	if bcLookup := v.ctx.AsBCLookup(); bcLookup != nil {
+	if bcLookup := v.runtime.AsBCLookup(); bcLookup != nil {
 		var err error
-		alias, err = bcLookup.PrimaryAlias(v.ctx.ChainID)
+		alias, err = bcLookup.PrimaryAlias(v.runtime.ChainID)
 		if err != nil {
 			// fallback to ChainID string instead of erroring
-			alias = v.ctx.ChainID.String()
+			alias = v.runtime.ChainID.String()
 		}
 	} else {
 		// BCLookup is nil - use ChainID string as fallback
 		// This can happen with plugin VMs if context is not properly propagated
-		alias = v.ctx.ChainID.String()
+		alias = v.runtime.ChainID.String()
 	}
 	v.chainAlias = alias
 
 	var writer io.Writer = originalStderr
-	if logWriter, ok := v.ctx.Log.(io.Writer); ok && !v.IsPlugin {
+	if logWriter, ok := v.runtime.Log.(io.Writer); ok && !v.IsPlugin {
 		writer = logWriter
 	}
 
@@ -369,24 +354,7 @@ func (v *VM) Initialize(
 	log.Info("DEBUG upgradeBytes received", "length", len(upgradeBytes), "content", string(upgradeBytes))
 
 	// Store toEngine channel for notifying consensus about pending transactions
-	// The manager passes chan block.Message (bidirectional), we store it as send-only.
-	// IMPORTANT: Must use block.Message type exactly to match chains/manager.go channel type.
-	log.Info("toEngine dynamic type", "type", fmt.Sprintf("%T", toEngine))
-	switch ch := toEngine.(type) {
-	case chan<- block.Message:
-		v.toEngine = ch
-		log.Info("toEngine stored", "as", "chan<- block.Message")
-	case chan block.Message:
-		// Cast bidirectional channel to send-only
-		v.toEngine = (chan<- block.Message)(ch)
-		log.Info("toEngine stored", "as", "chan block.Message (cast to send-only)")
-	default:
-		if toEngine == nil {
-			log.Warn("toEngine is nil - cannot notify consensus on PendingTxs")
-		} else {
-			log.Warn("unexpected toEngine type", "type", fmt.Sprintf("%T", toEngine))
-		}
-	}
+	v.toEngine = toEngine
 
 	if deprecateMsg != "" {
 		log.Warn("Deprecation Warning", "msg", deprecateMsg)
@@ -543,7 +511,7 @@ func (v *VM) Initialize(
 	v.chainConfig = g.Config
 
 	v.networkCodec = message.Codec
-	v.Network, err = network.NewNetwork(v.ctx, appSender, v.networkCodec, v.config.MaxOutboundActiveRequests, v.sdkMetrics)
+	v.Network, err = network.NewNetwork(v.runtime, appSender, v.networkCodec, v.config.MaxOutboundActiveRequests, v.sdkMetrics)
 	if err != nil {
 		return fmt.Errorf("failed to create network: %w", err)
 	}
@@ -567,15 +535,15 @@ func (v *VM) Initialize(
 	}
 
 	// Type assert WarpSigner from context - may be nil for plugin VMs
-	if v.ctx.WarpSigner != nil {
-		warpSigner, ok := v.ctx.WarpSigner.(luxwarp.Signer)
+	if v.runtime.WarpSigner != nil {
+		warpSigner, ok := v.runtime.WarpSigner.(luxwarp.Signer)
 		if !ok {
-			return fmt.Errorf("expected luxwarp.Signer, got %T", v.ctx.WarpSigner)
+			return fmt.Errorf("expected luxwarp.Signer, got %T", v.runtime.WarpSigner)
 		}
 
 		v.warpBackend, err = warp.NewBackend(
-			v.ctx.NetworkID,
-			v.ctx.ChainID,
+			v.runtime.NetworkID,
+			v.runtime.ChainID,
 			warpSigner,
 			v,
 			v.warpDB,
@@ -601,13 +569,13 @@ func (v *VM) Initialize(
 	}
 
 	// Use stored ctxLogger for RecoverAndPanic
-	go v.ctxLogger.RecoverAndPanic(v.startContinuousProfiler)
+	go v.runtimeLogger.RecoverAndPanic(v.startContinuousProfiler)
 
 	// Add p2p warp message handler if WarpSigner is available
-	if v.ctx.WarpSigner != nil {
-		warpSigner, ok := v.ctx.WarpSigner.(luxwarp.Signer)
+	if v.runtime.WarpSigner != nil {
+		warpSigner, ok := v.runtime.WarpSigner.(luxwarp.Signer)
 		if !ok {
-			return fmt.Errorf("expected warp.Signer, got %T", v.ctx.WarpSigner)
+			return fmt.Errorf("expected warp.Signer, got %T", v.runtime.WarpSigner)
 		}
 
 		// Add p2p warp message handler
@@ -620,7 +588,7 @@ func (v *VM) Initialize(
 	return v.initializeStateSync(lastAcceptedHeight)
 }
 
-func parseGenesis(ctx *consensusctx.Context, bytes []byte) (*core.Genesis, error) {
+func parseGenesis(ctx *runtime.Runtime, bytes []byte) (*core.Genesis, error) {
 	g := new(core.Genesis)
 	if err := json.Unmarshal(bytes, g); err != nil {
 		return nil, fmt.Errorf("parsing genesis: %w", err)
@@ -924,7 +892,7 @@ func (v *VM) initChainState(lastAcceptedBlock *types.Block) error {
 		GetBlock:              v.getBlock,
 		UnmarshalBlock:        v.parseBlock,
 		BuildBlock:            v.buildBlock,
-		BuildBlockWithContext: v.buildBlockWithContext,
+		BuildBlockWithContext: v.BuildBlockWithContext,
 		LastAcceptedBlock:     block,
 	}
 
@@ -1051,7 +1019,7 @@ func (v *VM) initBlockBuilding() error {
 	v.builderLock.Unlock()
 
 	v.ethTxGossipHandler = gossip.NewTxGossipHandler[*GossipEthTx](
-		v.ctxLogger,
+		v.runtimeLogger,
 		ethTxGossipMarshaller,
 		ethTxPool,
 		ethTxGossipMetrics,
@@ -1067,7 +1035,7 @@ func (v *VM) initBlockBuilding() error {
 	}
 
 	ethTxPullGossiper := p2pgossip.NewPullGossiper[*GossipEthTx](
-		v.ctxLogger,
+		v.runtimeLogger,
 		ethTxGossipMarshaller,
 		ethTxPool,
 		ethTxGossipClient,
@@ -1077,36 +1045,36 @@ func (v *VM) initBlockBuilding() error {
 
 	v.ethTxPullGossiper = p2pgossip.ValidatorGossiper{
 		Gossiper:   ethTxPullGossiper,
-		NodeID:     v.ctx.NodeID,
+		NodeID:     v.runtime.NodeID,
 		Validators: v.P2PValidators(),
 	}
 
 	v.shutdownWg.Add(1)
 	go func() {
-		p2pgossip.Every(ctx, v.ctxLogger, ethTxPushGossiper, v.config.PushGossipFrequency.Duration)
+		p2pgossip.Every(ctx, v.runtimeLogger, ethTxPushGossiper, v.config.PushGossipFrequency.Duration)
 		v.shutdownWg.Done()
 	}()
 	v.shutdownWg.Add(1)
 	go func() {
-		p2pgossip.Every(ctx, v.ctxLogger, v.ethTxPullGossiper, v.config.PullGossipFrequency.Duration)
+		p2pgossip.Every(ctx, v.runtimeLogger, v.ethTxPullGossiper, v.config.PullGossipFrequency.Duration)
 		v.shutdownWg.Done()
 	}()
 
 	v.shutdownWg.Add(1)
 	go func() {
-		p2pgossip.Every(ctx, v.ctxLogger, ethTxPushGossiper, v.config.PushGossipFrequency.Duration)
+		p2pgossip.Every(ctx, v.runtimeLogger, ethTxPushGossiper, v.config.PushGossipFrequency.Duration)
 		v.shutdownWg.Done()
 	}()
 	v.shutdownWg.Add(1)
 	go func() {
-		p2pgossip.Every(ctx, v.ctxLogger, v.ethTxPullGossiper, v.config.PullGossipFrequency.Duration)
+		p2pgossip.Every(ctx, v.runtimeLogger, v.ethTxPullGossiper, v.config.PullGossipFrequency.Duration)
 		v.shutdownWg.Done()
 	}()
 
 	return nil
 }
 
-func (v *VM) WaitForEvent(ctx context.Context) (interface{}, error) {
+func (v *VM) WaitForEvent(ctx context.Context) (block.Message, error) {
 	v.builderLock.Lock()
 	builder := v.builder
 	v.builderLock.Unlock()
@@ -1115,11 +1083,11 @@ func (v *VM) WaitForEvent(ctx context.Context) (interface{}, error) {
 	if builder == nil {
 		select {
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return block.Message{}, ctx.Err()
 		case <-v.stateSyncDone:
-			return vm.Message{Type: vm.StateSyncDone}, nil
+			return block.Message{Type: block.StateSyncDone}, nil
 		case <-v.shutdownChan:
-			return nil, errShuttingDownVM
+			return block.Message{}, errShuttingDownVM
 		}
 	}
 
@@ -1128,7 +1096,7 @@ func (v *VM) WaitForEvent(ctx context.Context) (interface{}, error) {
 
 // Shutdown implements the quasarman.ChainVM interface
 func (v *VM) Shutdown(context.Context) error {
-	if v.ctx == nil {
+	if v.runtime == nil {
 		return nil
 	}
 	if v.cancel != nil {
@@ -1148,15 +1116,9 @@ func (v *VM) Shutdown(context.Context) error {
 	return nil
 }
 
-// Connected handles a peer connecting to the VM. This shadows the embedded
-// Network.Connected method to satisfy the block.ChainVM interface which
-// expects interface{} for the version parameter.
-func (v *VM) Connected(ctx context.Context, nodeID ids.NodeID, nodeVersion interface{}) error {
-	ver, ok := nodeVersion.(*consensusversion.Application)
-	if !ok && nodeVersion != nil {
-		return fmt.Errorf("expected *consensusversion.Application, got %T", nodeVersion)
-	}
-	return v.Network.Connected(ctx, nodeID, ver)
+// Connected handles a peer connecting to the VM.
+func (v *VM) Connected(ctx context.Context, nodeID ids.NodeID, nodeVersion *version.Application) error {
+	return v.Network.Connected(ctx, nodeID, nodeVersion)
 }
 
 // Disconnected handles a peer disconnecting from the VM.
@@ -1166,17 +1128,17 @@ func (v *VM) Disconnected(ctx context.Context, nodeID ids.NodeID) error {
 
 // buildBlock builds a block to be wrapped by ChainState
 func (v *VM) buildBlock(ctx context.Context) (block.Block, error) {
-	return v.buildBlockWithContext(ctx, nil)
+	return v.BuildBlockWithContext(ctx, nil)
 }
 
-func (v *VM) buildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (block.Block, error) {
+func (v *VM) BuildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (block.Block, error) {
 	if proposerVMBlockCtx != nil {
 		log.Debug("Building block with context", "pChainBlockHeight", proposerVMBlockCtx.PChainHeight)
 	} else {
 		log.Debug("Building block without context")
 	}
 	predicateCtx := &precompileconfig.PredicateContext{
-		ConsensusCtx:       v.ctx,
+		ConsensusCtx:       v.runtime,
 		ProposerVMBlockCtx: proposerVMBlockCtx,
 	}
 
@@ -1342,9 +1304,9 @@ func (v *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 
 	if v.config.WarpAPIEnabled {
 		warpSDKClient := v.Network.NewClient(p2p.SignatureRequestHandlerID)
-		signatureAggregator := luxwarp.NewSignatureAggregator(v.ctxLogger, warpSDKClient)
+		signatureAggregator := luxwarp.NewSignatureAggregator(v.runtimeLogger, warpSDKClient)
 
-		if err := handler.RegisterName("warp", warp.NewAPI(v.ctx, v.warpBackend, signatureAggregator, v.requirePrimaryNetworkSigners)); err != nil {
+		if err := handler.RegisterName("warp", warp.NewAPI(v.runtime, v.warpBackend, signatureAggregator, v.requirePrimaryNetworkSigners)); err != nil {
 			return nil, err
 		}
 		enabledAPIs = append(enabledAPIs, "warp")
@@ -1365,7 +1327,7 @@ func (v *VM) CreateHandlers(context.Context) (map[string]http.Handler, error) {
 	return apis, nil
 }
 
-func (*VM) NewHTTPHandler(context.Context) (interface{}, error) {
+func (*VM) NewHTTPHandler(context.Context) (http.Handler, error) {
 	return nil, nil
 }
 

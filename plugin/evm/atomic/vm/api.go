@@ -65,7 +65,7 @@ func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *
 		return errNoSourceChain
 	}
 
-	bcLookup := service.vm.Ctx.AsBCLookup()
+	bcLookup := service.vm.Runtime.AsBCLookup()
 	if bcLookup == nil {
 		return fmt.Errorf("BCLookup not available")
 	}
@@ -76,7 +76,7 @@ func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *
 
 	addrSet := set.Set[ids.ShortID]{}
 	for _, addrStr := range args.Addresses {
-		addr, err := ParseServiceAddress(service.vm.Ctx, addrStr)
+		addr, err := ParseServiceAddress(service.vm.Runtime, addrStr)
 		if err != nil {
 			return fmt.Errorf("couldn't parse address %q: %w", addrStr, err)
 		}
@@ -86,7 +86,7 @@ func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *
 	startAddr := ids.ShortEmpty
 	startUTXO := ids.Empty
 	if args.StartIndex.Address != "" || args.StartIndex.UTXO != "" {
-		startAddr, err = ParseServiceAddress(service.vm.Ctx, args.StartIndex.Address)
+		startAddr, err = ParseServiceAddress(service.vm.Runtime, args.StartIndex.Address)
 		if err != nil {
 			return fmt.Errorf("couldn't parse start index address %q: %w", args.StartIndex.Address, err)
 		}
@@ -96,8 +96,8 @@ func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *
 		}
 	}
 
-	service.vm.Ctx.Lock.Lock()
-	defer service.vm.Ctx.Lock.Unlock()
+	service.vm.Runtime.Lock.Lock()
+	defer service.vm.Runtime.Lock.Unlock()
 
 	limit := int(args.Limit)
 
@@ -106,7 +106,7 @@ func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *
 	}
 
 	utxos, endAddr, endUTXOID, err := lux.GetAtomicUTXOs(
-		service.vm.Ctx.SharedMemory.(luxatomic.SharedMemory),
+		service.vm.Runtime.SharedMemory.(luxatomic.SharedMemory),
 		atomic.Codec,
 		sourceChainID,
 		addrSet,
@@ -131,7 +131,7 @@ func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *
 		reply.UTXOs[i] = str
 	}
 
-	endAddress, err := FormatLocalAddress(service.vm.Ctx, endAddr)
+	endAddress, err := FormatLocalAddress(service.vm.Runtime, endAddr)
 	if err != nil {
 		return fmt.Errorf("problem formatting address: %w", err)
 	}
@@ -161,8 +161,8 @@ func (service *LuxAPI) IssueTx(r *http.Request, args *api.FormattedTx, response 
 
 	response.TxID = tx.ID()
 
-	service.vm.Ctx.Lock.Lock()
-	defer service.vm.Ctx.Lock.Unlock()
+	service.vm.Runtime.Lock.Lock()
+	defer service.vm.Runtime.Lock.Unlock()
 
 	err = service.vm.AtomicMempool.AddLocalTx(tx)
 	if err != nil && !errors.Is(err, txpool.ErrAlreadyKnown) {
@@ -185,8 +185,8 @@ func (service *LuxAPI) GetAtomicTxStatus(r *http.Request, args *api.JSONTxID, re
 		return errNilTxID
 	}
 
-	service.vm.Ctx.Lock.Lock()
-	defer service.vm.Ctx.Lock.Unlock()
+	service.vm.Runtime.Lock.Lock()
+	defer service.vm.Runtime.Lock.Unlock()
 
 	_, status, height, _ := service.vm.GetAtomicTx(args.TxID)
 
@@ -220,8 +220,8 @@ func (service *LuxAPI) GetAtomicTx(r *http.Request, args *api.GetTxArgs, reply *
 		return errNilTxID
 	}
 
-	service.vm.Ctx.Lock.Lock()
-	defer service.vm.Ctx.Lock.Unlock()
+	service.vm.Runtime.Lock.Lock()
+	defer service.vm.Runtime.Lock.Unlock()
 
 	tx, status, height, err := service.vm.GetAtomicTx(args.TxID)
 	if err != nil {

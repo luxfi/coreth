@@ -4,7 +4,6 @@
 package atomic
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math/big"
@@ -91,7 +90,7 @@ func (utx *UnsignedImportTx) Verify(
 	if rules.IsApricotPhase5 {
 		// Note that SameChain verifies that [tx.SourceChain] isn't this
 		// chain's ID
-		if err := verify.SameChain(context.TODO(), ctx, utx.SourceChain); err != nil {
+		if err := verify.SameChain(ctx.ChainID, utx.SourceChain); err != nil {
 			return ErrWrongChainID
 		}
 	} else {
