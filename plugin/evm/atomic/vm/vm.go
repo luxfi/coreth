@@ -20,7 +20,6 @@ import (
 	"github.com/luxfi/codec"
 	"github.com/luxfi/codec/linearcodec"
 	"github.com/luxfi/consensus/engine/chain/block"
-	"github.com/luxfi/runtime"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
 	luxdatabase "github.com/luxfi/database"
@@ -29,12 +28,13 @@ import (
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/p2p"
 	luxdssip "github.com/luxfi/p2p/gossip"
+	"github.com/luxfi/runtime"
 	"github.com/luxfi/timer/mockable"
 	luxutils "github.com/luxfi/utils"
 	lux "github.com/luxfi/utxo"
+	"github.com/luxfi/utxo/secp256k1fx"
 	luxvm "github.com/luxfi/vm"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
-	"github.com/luxfi/utxo/secp256k1fx"
 
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core/extstate"
@@ -822,7 +822,7 @@ func (vm *VM) NewExportTx(
 
 	// Create the transaction
 	tx, err := atomic.NewExportTx(
-		vm.Runtime,            // Context
+		vm.Runtime,        // Context
 		vm.CurrentRules(), // VM rules
 		newStateDBWrapper(extstate.New(statedb)),
 		assetID, // AssetID

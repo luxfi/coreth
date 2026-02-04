@@ -12,8 +12,8 @@ import (
 
 	atomicstate "github.com/luxfi/coreth/plugin/evm/atomic/state"
 
-	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/codec/wrappers"
+	"github.com/luxfi/database/versiondb"
 
 	"github.com/luxfi/geth/common"
 

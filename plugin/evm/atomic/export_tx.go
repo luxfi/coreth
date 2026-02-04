@@ -15,6 +15,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/luxfi/geth/core/tracing"
 
+	"github.com/luxfi/codec/wrappers"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
@@ -25,10 +26,9 @@ import (
 	"github.com/luxfi/math"
 	"github.com/luxfi/math/set"
 	luxutils "github.com/luxfi/utils"
-	"github.com/luxfi/codec/wrappers"
 	lux "github.com/luxfi/utxo"
-	"github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/utxo/secp256k1fx"
+	"github.com/luxfi/vm/chains/atomic"
 )
 
 // luxfiidsEqual compares a luxfi/ids.ID with a node/ids.ID

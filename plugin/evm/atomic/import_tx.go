@@ -24,9 +24,9 @@ import (
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/utils"
 	lux "github.com/luxfi/utxo"
+	"github.com/luxfi/utxo/secp256k1fx"
 	"github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/vm/components/verify"
-	"github.com/luxfi/utxo/secp256k1fx"
 )
 
 var (

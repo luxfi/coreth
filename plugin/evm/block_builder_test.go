@@ -10,10 +10,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/luxfi/concurrent/lock"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/consensus/engine/chain/block"
 	log "github.com/luxfi/log"
-	"github.com/luxfi/concurrent/lock"
 )
 
 // TestNotifyConsensusEngine verifies that notifyConsensusEngine sends PendingTxs

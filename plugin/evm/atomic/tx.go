@@ -17,6 +17,7 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 
 	"github.com/luxfi/codec"
+	"github.com/luxfi/codec/wrappers"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/crypto/hash"
 	"github.com/luxfi/crypto/secp256k1"
@@ -24,10 +25,9 @@ import (
 	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/p2p/gossip"
-	"github.com/luxfi/codec/wrappers"
+	"github.com/luxfi/utxo/secp256k1fx"
 	"github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/vm/components/verify"
-	"github.com/luxfi/utxo/secp256k1fx"
 )
 
 var _ gossip.Gossipable = (*Tx)(nil)

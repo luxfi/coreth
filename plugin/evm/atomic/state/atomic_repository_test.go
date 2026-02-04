@@ -10,12 +10,12 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic/atomictest"
 
 	"github.com/luxfi/codec"
+	"github.com/luxfi/codec/wrappers"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/utils"
-	"github.com/luxfi/codec/wrappers"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/stretchr/testify/assert"
 
