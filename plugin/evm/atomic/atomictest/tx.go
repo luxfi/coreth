@@ -10,9 +10,9 @@ import (
 
 	"github.com/luxfi/codec"
 	"github.com/luxfi/codec/linearcodec"
+	"github.com/luxfi/codec/wrappers"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/coreth/params/extras"
-	"github.com/luxfi/codec/wrappers"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"

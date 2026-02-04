@@ -11,12 +11,12 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
 	"github.com/luxfi/codec"
+	"github.com/luxfi/codec/wrappers"
 	"github.com/luxfi/database"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
 	log "github.com/luxfi/log"
 	"github.com/luxfi/utils"
-	"github.com/luxfi/codec/wrappers"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 )
 

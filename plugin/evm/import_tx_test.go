@@ -30,8 +30,8 @@ import (
 	"github.com/luxfi/upgrade/upgradetest"
 	luxutils "github.com/luxfi/utils"
 	lux "github.com/luxfi/utxo"
-	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/utxo/secp256k1fx"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
 )
 
 // createImportTxOptions adds a UTXO to shared memory and generates a list of import transactions sending this UTXO

@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	"github.com/luxfi/codec"
-	"github.com/luxfi/ids"
 	"github.com/luxfi/codec/wrappers"
+	"github.com/luxfi/ids"
 	"github.com/luxfi/vm/chains/atomic"
 
 	"github.com/luxfi/geth/trie"

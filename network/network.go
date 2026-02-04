@@ -15,11 +15,11 @@ import (
 	log "github.com/luxfi/log"
 	"github.com/luxfi/metric"
 
+	"github.com/luxfi/atomic"
 	"github.com/luxfi/codec"
 	consensuscontext "github.com/luxfi/consensus/context"
 	validators "github.com/luxfi/consensus/validator"
 	consensusversion "github.com/luxfi/consensus/version"
-	"github.com/luxfi/atomic"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"

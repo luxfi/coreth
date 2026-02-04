@@ -14,8 +14,8 @@ import (
 	"sort"
 
 	"github.com/holiman/uint256"
-	safemath "github.com/luxfi/math"
 	"github.com/luxfi/codec/wrappers"
+	safemath "github.com/luxfi/math"
 	"github.com/luxfi/vm/components/gas"
 )
 
