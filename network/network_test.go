@@ -57,7 +57,7 @@ var (
 )
 
 func TestNetworkDoesNotConnectToItself(t *testing.T) {
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	n, err := NewNetwork(ctx, nil, nil, 1, metric.NewRegistry())
 	require.NoError(t, err)
 	assert.NoError(t, n.Connected(context.Background(), ctx.NodeID, defaultPeerVersion))
@@ -93,7 +93,7 @@ func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
 	}
 
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	net, err := NewNetwork(ctx, sender, codecManager, 16, metric.NewRegistry())
 	require.NoError(t, err)
 	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
@@ -144,7 +144,7 @@ func TestAppRequestOnCtxCancellation(t *testing.T) {
 		},
 	}
 
-	quasarCtx := consensustest.Context(t, consensustest.CChainID)
+	quasarCtx := consensustest.Runtime(t, consensustest.CChainID)
 	net, err := NewNetwork(quasarCtx, sender, codecManager, 1, metric.NewRegistry())
 	require.NoError(t, err)
 	handler := &HelloGreetingRequestHandler{codec: codecManager}
@@ -196,7 +196,7 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 	}
 
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	net, err := NewNetwork(ctx, sender, codecManager, 16, metric.NewRegistry())
 	require.NoError(t, err)
 	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
@@ -277,7 +277,7 @@ func TestAppRequestOnShutdown(t *testing.T) {
 	}
 
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	net, err := NewNetwork(ctx, sender, codecManager, 1, metric.NewRegistry())
 	require.NoError(t, err)
 	nodeID := ids.GenerateTestNodeID()
@@ -320,7 +320,7 @@ func TestSyncedAppRequestAnyOnCtxCancellation(t *testing.T) {
 		},
 	}
 
-	quasarCtx := consensustest.Context(t, consensustest.CChainID)
+	quasarCtx := consensustest.Runtime(t, consensustest.CChainID)
 	net, err := NewNetwork(quasarCtx, sender, codecManager, 1, metric.NewRegistry())
 	require.NoError(t, err)
 	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
@@ -398,7 +398,7 @@ func TestRequestMinVersion(t *testing.T) {
 	}
 
 	// passing nil as codec works because the net.AppRequest is never called
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	net, err := NewNetwork(ctx, sender, codecManager, 1, metric.NewRegistry())
 	require.NoError(t, err)
 	requestMessage := TestMessage{Message: "this is a request"}
@@ -463,7 +463,7 @@ func TestOnRequestHonoursDeadline(t *testing.T) {
 		processingDuration: 500 * time.Millisecond,
 	}
 
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	net, err = NewNetwork(ctx, sender, codecManager, 1, metric.NewRegistry())
 	require.NoError(t, err)
 	net.SetRequestHandler(requestHandler)
@@ -486,7 +486,7 @@ func TestHandleInvalidMessages(t *testing.T) {
 	nodeID := ids.GenerateTestNodeID()
 	requestID := uint32(1)
 	sender := testAppSender{}
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	clientNetwork, err := NewNetwork(ctx, sender, codecManager, 1, metric.NewRegistry())
 	require.NoError(t, err)
 	clientNetwork.SetRequestHandler(&testRequestHandler{})
@@ -535,7 +535,7 @@ func TestNetworkPropagatesRequestHandlerError(t *testing.T) {
 	requestID := uint32(0)
 	sender := testAppSender{}
 
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	clientNetwork, err := NewNetwork(ctx, sender, codecManager, 1, metric.NewRegistry())
 	require.NoError(t, err)
 	clientNetwork.SetRequestHandler(&testRequestHandler{err: errors.New("fail")}) // Return an error from the request handler
@@ -555,7 +555,7 @@ func TestNetworkPropagatesRequestHandlerError(t *testing.T) {
 func TestNetworkAppRequestAfterShutdown(t *testing.T) {
 	require := require.New(t)
 
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	net, err := NewNetwork(ctx, nil, nil, 16, metric.NewRegistry())
 	require.NoError(err)
 	net.Shutdown()
@@ -578,7 +578,7 @@ func TestNetworkRouting(t *testing.T) {
 	handler := &testSDKHandler{}
 
 	networkCodec := codec.NewManager(0)
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	network, err := NewNetwork(ctx, sender, networkCodec, 1, metric.NewRegistry())
 	require.NoError(err)
 	require.NoError(network.AddHandler(uint64(protocol), handler))
