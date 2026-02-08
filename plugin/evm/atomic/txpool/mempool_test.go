@@ -17,7 +17,7 @@ import (
 func TestMempoolAddTx(t *testing.T) {
 	require := require.New(t)
 
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	m, err := NewMempool(
 		NewTxs(ctx, 5_000),
 		metric.NewRegistry(),
@@ -46,7 +46,7 @@ func TestMempoolAddTx(t *testing.T) {
 func TestMempoolAdd(t *testing.T) {
 	require := require.New(t)
 
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	m, err := NewMempool(
 		NewTxs(ctx, 5_000),
 		metric.NewRegistry(),
@@ -115,7 +115,7 @@ func TestAtomicMempoolIterate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
 
-			ctx := consensustest.Context(t, consensustest.CChainID)
+			ctx := consensustest.Runtime(t, consensustest.CChainID)
 			m, err := NewMempool(
 				NewTxs(ctx, 10),
 				metric.NewRegistry(),
@@ -150,7 +150,7 @@ func TestAtomicMempoolIterate(t *testing.T) {
 func TestMempoolMaxSizeHandling(t *testing.T) {
 	require := require.New(t)
 
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	mempool, err := NewMempool(
 		NewTxs(ctx, 1),
 		metric.NewRegistry(),
@@ -178,7 +178,7 @@ func TestMempoolMaxSizeHandling(t *testing.T) {
 func TestMempoolPriorityDrop(t *testing.T) {
 	require := require.New(t)
 
-	ctx := consensustest.Context(t, consensustest.CChainID)
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	mempool, err := NewMempool(
 		NewTxs(ctx, 1),
 		metric.NewRegistry(),
