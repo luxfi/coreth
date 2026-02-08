@@ -8,8 +8,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/luxfi/utils"
-
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	statesyncclient "github.com/luxfi/coreth/sync/client"
