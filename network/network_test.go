@@ -428,7 +428,7 @@ func TestRequestMinVersion(t *testing.T) {
 		},
 		requestBytes,
 	)
-	assert.Equal(t, "no peers found matching version luxd-2.0.0 out of 1 peers", err.Error())
+	assert.Equal(t, "no peers found matching version luxd/2.0.0 out of 1 peers", err.Error())
 	assert.Nil(t, responseBytes)
 
 	// ensure version matches and the request goes through
