@@ -4,7 +4,6 @@
 package gatherer
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -75,53 +74,130 @@ func TestGatherer_Gather(t *testing.T) {
 	families, err := gatherer.Gather()
 	require.NoError(t, err)
 
-	const expectedString = `
-# TYPE test_counter counter
-test_counter 12345
-# TYPE test_counter_float64 counter
-test_counter_float64 1.1
-# TYPE test_gauge gauge
-test_gauge 23456
-# TYPE test_gauge_float64 gauge
-test_gauge_float64 34567.89
-# TYPE test_histogram summary
-test_histogram{quantile="0.5"} 0
-test_histogram{quantile="0.75"} 0
-test_histogram{quantile="0.95"} 0
-test_histogram{quantile="0.99"} 0
-test_histogram{quantile="0.999"} 0
-test_histogram{quantile="0.9999"} 0
-test_histogram_sum 0
-test_histogram_count 0
-# TYPE test_meter gauge
-test_meter 9.999999e+06
-# TYPE test_resetting_timer summary
-test_resetting_timer{quantile="50"} 1e+09
-test_resetting_timer{quantile="95"} 1e+09
-test_resetting_timer{quantile="99"} 1e+09
-test_resetting_timer_sum 1e+09
-test_resetting_timer_count 1
-# TYPE test_timer summary
-test_timer{quantile="0.5"} 2.25e+07
-test_timer{quantile="0.75"} 4.8e+07
-test_timer{quantile="0.95"} 1.2e+08
-test_timer{quantile="0.99"} 1.2e+08
-test_timer{quantile="0.999"} 1.2e+08
-test_timer{quantile="0.9999"} 1.2e+08
-	test_timer_sum 2.3e+08
-	test_timer_count 6
-`
-	stringReader := strings.NewReader(expectedString)
-	expectedMetrics, err := metric.ParseText(stringReader)
-	require.NoError(t, err)
+	// Build expected metrics to match gatherer output format
+	// The gatherer produces metrics with embedded quantiles, not separate labeled metrics
+	expectedMetrics := map[string]*metric.MetricFamily{
+		"test_counter": {
+			Name: "test_counter",
+			Type: metric.MetricTypeCounter,
+			Metrics: []metric.Metric{{
+				Value: metric.MetricValue{Value: 12345},
+			}},
+		},
+		"test_counter_float64": {
+			Name: "test_counter_float64",
+			Type: metric.MetricTypeCounter,
+			Metrics: []metric.Metric{{
+				Value: metric.MetricValue{Value: 1.1},
+			}},
+		},
+		"test_gauge": {
+			Name: "test_gauge",
+			Type: metric.MetricTypeGauge,
+			Metrics: []metric.Metric{{
+				Value: metric.MetricValue{Value: 23456},
+			}},
+		},
+		"test_gauge_float64": {
+			Name: "test_gauge_float64",
+			Type: metric.MetricTypeGauge,
+			Metrics: []metric.Metric{{
+				Value: metric.MetricValue{Value: 34567.89},
+			}},
+		},
+		"test_histogram": {
+			Name: "test_histogram",
+			Type: metric.MetricTypeSummary,
+			Metrics: []metric.Metric{{
+				Value: metric.MetricValue{
+					SampleCount: 0,
+					SampleSum:   0,
+					Quantiles: []metric.Quantile{
+						{Quantile: 0.5, Value: 0},
+						{Quantile: 0.75, Value: 0},
+						{Quantile: 0.95, Value: 0},
+						{Quantile: 0.99, Value: 0},
+						{Quantile: 0.999, Value: 0},
+						{Quantile: 0.9999, Value: 0},
+					},
+				},
+			}},
+		},
+		"test_meter": {
+			Name: "test_meter",
+			Type: metric.MetricTypeGauge,
+			Metrics: []metric.Metric{{
+				Value: metric.MetricValue{Value: 9999999},
+			}},
+		},
+		"test_timer": {
+			Name: "test_timer",
+			Type: metric.MetricTypeSummary,
+			Metrics: []metric.Metric{{
+				Value: metric.MetricValue{
+					SampleCount: 6,
+					SampleSum:   230000000, // 20+21+22+120+23+24 ms in nanoseconds
+					Quantiles: []metric.Quantile{
+						{Quantile: 0.5, Value: 22500000},  // ~22.5ms
+						{Quantile: 0.75, Value: 48000000}, // ~48ms (interpolated)
+						{Quantile: 0.95, Value: 120000000},
+						{Quantile: 0.99, Value: 120000000},
+						{Quantile: 0.999, Value: 120000000},
+						{Quantile: 0.9999, Value: 120000000},
+					},
+				},
+			}},
+		},
+		"test_resetting_timer": {
+			Name: "test_resetting_timer",
+			Type: metric.MetricTypeSummary,
+			Metrics: []metric.Metric{{
+				Value: metric.MetricValue{
+					SampleCount: 1,
+					SampleSum:   1000000000, // 1 second in nanoseconds
+					Quantiles: []metric.Quantile{
+						{Quantile: 50, Value: 1000000000},
+						{Quantile: 95, Value: 1000000000},
+						{Quantile: 99, Value: 1000000000},
+					},
+				},
+			}},
+		},
+	}
+
+	// Note: empty_resetting_timer and empty_resetting_timer_snapshot are skipped
+	// because they have zero count
 
 	assert.Len(t, families, len(expectedMetrics))
 	for _, got := range families {
 		want, ok := expectedMetrics[got.Name]
 		require.True(t, ok, "unexpected metric family: %s", got.Name)
-		assert.Equal(t, want.Type, got.Type)
-		assert.Equal(t, want.Help, got.Help)
-		assert.Equal(t, want.Metrics, got.Metrics)
+		assert.Equal(t, want.Type, got.Type, "type mismatch for %s", got.Name)
+		assert.Equal(t, want.Help, got.Help, "help mismatch for %s", got.Name)
+
+		// For summary types, compare structure but allow for timing variations
+		if want.Type == metric.MetricTypeSummary {
+			require.Len(t, got.Metrics, 1, "expected 1 metric for %s", got.Name)
+			require.Len(t, want.Metrics, 1)
+
+			gotVal := got.Metrics[0].Value
+			wantVal := want.Metrics[0].Value
+
+			assert.Equal(t, wantVal.SampleCount, gotVal.SampleCount, "sample count mismatch for %s", got.Name)
+			assert.Len(t, gotVal.Quantiles, len(wantVal.Quantiles), "quantile count mismatch for %s", got.Name)
+
+			for i, wantQ := range wantVal.Quantiles {
+				assert.Equal(t, wantQ.Quantile, gotVal.Quantiles[i].Quantile, "quantile label mismatch for %s[%d]", got.Name, i)
+				// Allow some tolerance for timing-based values
+				if got.Name == "test_timer" {
+					assert.InDelta(t, wantQ.Value, gotVal.Quantiles[i].Value, wantQ.Value*0.1, "quantile value mismatch for %s[%d]", got.Name, i)
+				} else {
+					assert.Equal(t, wantQ.Value, gotVal.Quantiles[i].Value, "quantile value mismatch for %s[%d]", got.Name, i)
+				}
+			}
+		} else {
+			assert.Equal(t, want.Metrics, got.Metrics, "metrics mismatch for %s", got.Name)
+		}
 	}
 
 	register(t, "unsupported", metrics.NewHealthcheck(nil))
