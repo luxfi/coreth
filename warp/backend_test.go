@@ -23,7 +23,7 @@ import (
 var (
 	networkID           uint32 = 54321
 	sourceChainID              = ids.GenerateTestID()
-	testSourceAddress          = crypto.RandomBytes(20)
+	testSourceAddress          = utils.RandomBytes(20)
 	testPayload                = []byte("test")
 	testUnsignedMessage *warp.UnsignedMessage
 )
