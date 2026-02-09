@@ -21,7 +21,7 @@ require (
 	github.com/luxfi/crypto v1.17.40
 	github.com/luxfi/geth v1.16.73
 	github.com/luxfi/go-bip39 v1.1.2
-	github.com/luxfi/metric v1.4.11
+	github.com/luxfi/metric v1.5.0
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.27.5
@@ -140,13 +140,13 @@ require (
 	github.com/luxfi/concurrent v0.0.3
 	github.com/luxfi/consensus v1.22.63
 	github.com/luxfi/constants v1.4.4
-	github.com/luxfi/database v1.17.40
+	github.com/luxfi/database v1.17.42
 	github.com/luxfi/filesystem v0.0.1
 	github.com/luxfi/ids v1.2.9
 	github.com/luxfi/log v1.4.1
-	github.com/luxfi/math v1.2.3
-	github.com/luxfi/node v1.23.2
-	github.com/luxfi/p2p v1.18.9
+	github.com/luxfi/math v1.2.4
+	github.com/luxfi/node v1.23.4
+	github.com/luxfi/p2p v1.19.2-zap
 	github.com/luxfi/precompile v0.4.7
 	github.com/luxfi/protocol v0.0.2
 	github.com/luxfi/rpc v1.0.0
@@ -157,7 +157,7 @@ require (
 	github.com/luxfi/utils v1.1.4
 	github.com/luxfi/utxo v0.2.4
 	github.com/luxfi/version v1.0.1
-	github.com/luxfi/vm v1.0.30
+	github.com/luxfi/vm v1.0.33
 	github.com/luxfi/warp v1.18.5
 )
 
@@ -200,6 +200,7 @@ require (
 	github.com/luxfi/tls v1.0.3 // indirect
 	github.com/luxfi/trace v0.1.4 // indirect
 	github.com/luxfi/validators v1.0.0 // indirect
+	github.com/luxfi/zapdb/v4 v4.9.1 // indirect
 	github.com/pires/go-proxyproto v0.8.1 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/cors v1.11.1 // indirect
