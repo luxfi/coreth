@@ -25,6 +25,8 @@ var (
 // BlockGasCost calculates the required block gas cost based on the parent
 // header and the timestamp of the new block.
 // Prior to AP4, the returned block gas cost will be nil.
+// After Fortuna (ACP-176), the block gas cost is always 0 because the LP176
+// capacity-based gas model replaces the legacy AP4/AP5 block gas cost mechanism.
 func BlockGasCost(
 	config *extras.ChainConfig,
 	parent *types.Header,
@@ -32,6 +34,11 @@ func BlockGasCost(
 ) *big.Int {
 	if !config.IsApricotPhase4(timestamp) {
 		return nil
+	}
+	// Fortuna (ACP-176) replaces the legacy block gas cost with a
+	// capacity-based model. Return 0 so verifyBlockFee always passes.
+	if config.IsFortuna(timestamp) {
+		return common.Big0
 	}
 	step := uint64(ap4.BlockGasCostStep)
 	if config.IsApricotPhase5(timestamp) {

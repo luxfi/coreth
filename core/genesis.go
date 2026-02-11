@@ -346,19 +346,21 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 		if err := triedb.Commit(root, true); err != nil {
 			panic(fmt.Sprintf("unable to commit genesis block: %v", err))
 		}
-		// Verify the state was committed properly by attempting to read it back
-		if _, err := triedb.NodeReader(root); err != nil {
-			log.Warn("Genesis state committed but not immediately accessible - forcing sync",
-				"root", root.Hex(), "error", err)
-			// Try to force a sync/flush if supported by the underlying database
-			if syncer, ok := db.(interface{ Sync() error }); ok {
-				if syncErr := syncer.Sync(); syncErr != nil {
-					log.Error("Failed to sync database after genesis commit", "error", syncErr)
-				}
-			}
-		} else {
-			log.Info("Genesis state verified accessible", "root", root.Hex())
+		// Force-flush all dirty trie nodes from hashdb memory cache to the
+		// underlying database. Without this, genesis trie nodes live only in
+		// the dirty cache and can be evicted before badgerdb persists them,
+		// causing "missing trie node" errors on BuildBlock.
+		if err := triedb.Cap(0); err != nil {
+			// Cap is only supported on hashdb; ignore errors for pathdb.
+			log.Debug("triedb.Cap(0) after genesis commit", "err", err)
 		}
+		// Always sync the underlying database to ensure data hits disk.
+		if syncer, ok := db.(interface{ Sync() error }); ok {
+			if syncErr := syncer.Sync(); syncErr != nil {
+				log.Error("Failed to sync database after genesis commit", "error", syncErr)
+			}
+		}
+		log.Info("Genesis state committed and flushed to disk", "root", root.Hex())
 	}
 	return block
 }

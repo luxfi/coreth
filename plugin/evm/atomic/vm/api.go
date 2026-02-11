@@ -105,8 +105,12 @@ func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *
 		limit = maxUTXOsToFetch
 	}
 
+	sharedMemory, ok := service.vm.Runtime.SharedMemory.(luxatomic.SharedMemory)
+	if !ok {
+		return fmt.Errorf("atomic UTXOs unavailable: SharedMemory not provided")
+	}
 	utxos, endAddr, endUTXOID, err := lux.GetAtomicUTXOs(
-		service.vm.Runtime.SharedMemory.(luxatomic.SharedMemory),
+		sharedMemory,
 		atomic.Codec,
 		sourceChainID,
 		addrSet,

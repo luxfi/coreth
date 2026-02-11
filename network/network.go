@@ -154,6 +154,15 @@ func NewNetwork(
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize p2p network: %w", err)
 	}
+
+	// ValidatorState may be nil when using ZAP transport (default)
+	// which doesn't pass full Runtime context. Use ok-pattern to
+	// avoid panic on nil interface assertion.
+	var p2pVals *p2p.Validators
+	if validatorState, ok := ctx.ValidatorState.(validators.State); ok {
+		p2pVals = p2p.NewValidators(p2pNetwork.Peers, ctx.Log.(log.Logger), constants.PrimaryNetworkID, validatorState, maxValidatorSetStaleness)
+	}
+
 	return &network{
 		appSender:                  appSender,
 		codec:                      codec,
@@ -164,7 +173,7 @@ func NewNetwork(
 		appRequestHandler:          message.NoopRequestHandler{},
 		peers:                      NewPeerTracker(),
 		appStats:                   stats.NewRequestHandlerStats(),
-		p2pValidators:              p2p.NewValidators(p2pNetwork.Peers, ctx.Log.(log.Logger), constants.PrimaryNetworkID, ctx.ValidatorState.(validators.State), maxValidatorSetStaleness),
+		p2pValidators:              p2pVals,
 	}, nil
 }
 
