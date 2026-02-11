@@ -138,7 +138,7 @@ require (
 require (
 	github.com/luxfi/atomic v1.0.0
 	github.com/luxfi/concurrent v0.0.3
-	github.com/luxfi/consensus v1.22.63
+	github.com/luxfi/consensus v1.22.67
 	github.com/luxfi/constants v1.4.4
 	github.com/luxfi/database v1.17.42
 	github.com/luxfi/filesystem v0.0.1

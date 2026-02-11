@@ -27,11 +27,12 @@ func main() {
 		os.Exit(0)
 	}
 	if err := ulimit.Set(ulimit.DefaultFDLimit, log.NoLog{}); err != nil {
-		fmt.Printf("failed to set fd limit correctly due to: %s\n", err)
+		fmt.Printf("failed to set fd limit: %s\n", err)
 		os.Exit(1)
 	}
+
 	if err := rpc.Serve(context.Background(), log.NoLog{}, factory.NewPluginVM()); err != nil {
-		fmt.Printf("failed to serve vm: %s\n", err)
+		fmt.Printf("rpc.Serve failed: %s\n", err)
 		os.Exit(1)
 	}
 }

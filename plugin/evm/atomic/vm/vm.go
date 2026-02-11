@@ -190,7 +190,12 @@ func (vm *VM) Initialize(
 	}
 	sharedMemory, ok := vm.Runtime.SharedMemory.(luxatomic.SharedMemory)
 	if !ok {
-		return fmt.Errorf("expected luxatomic.SharedMemory, got %T", vm.Runtime.SharedMemory)
+		// SharedMemory is nil when running as a plugin via ZAP transport,
+		// which doesn't proxy SharedMemory across processes. Use a no-op
+		// implementation so the VM can start; import/export txs will fail
+		// at verification time rather than preventing chain startup.
+		log.Warn("SharedMemory unavailable, using no-op implementation; cross-chain atomic txs will not work")
+		sharedMemory = &noopSharedMemory{}
 	}
 	vm.AtomicBackend, err = atomicstate.NewAtomicBackend(
 		sharedMemory, bonusBlockHeights,
@@ -837,4 +842,26 @@ func (vm *VM) NewExportTx(
 	}
 
 	return tx, nil
+}
+
+// noopSharedMemory implements luxatomic.SharedMemory as a no-op.
+// Used when SharedMemory is unavailable (e.g. ZAP transport plugin mode)
+// so the chain can start; atomic import/export txs will fail at verification.
+type noopSharedMemory struct{}
+
+func (*noopSharedMemory) Get(_ ids.ID, keys [][]byte) ([][]byte, error) {
+	return make([][]byte, len(keys)), nil
+}
+
+func (*noopSharedMemory) Indexed(_ ids.ID, _ [][]byte, _, _ []byte, _ int) ([][]byte, []byte, []byte, error) {
+	return nil, nil, nil, nil
+}
+
+func (*noopSharedMemory) Apply(_ map[ids.ID]*luxatomic.Requests, batches ...luxdatabase.Batch) error {
+	// Skip atomic operations but still write the database batches
+	// (commitBatch, atomicChangesBatch) to avoid data loss on restart.
+	if len(batches) == 0 {
+		return nil
+	}
+	return luxatomic.WriteAll(batches[0], batches[1:]...)
 }

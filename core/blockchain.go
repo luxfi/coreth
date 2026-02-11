@@ -924,6 +924,16 @@ func (bc *BlockChain) EnsureGenesisState() error {
 	if err := freshTriedb.Commit(root, true); err != nil {
 		return fmt.Errorf("failed to commit genesis triedb: %w", err)
 	}
+	// Force-flush all dirty trie nodes from hashdb memory cache to disk.
+	if err := freshTriedb.Cap(0); err != nil {
+		log.Debug("freshTriedb.Cap(0) after genesis regeneration", "err", err)
+	}
+	// Sync the underlying database to ensure persistence.
+	if syncer, ok := bc.db.(interface{ Sync() error }); ok {
+		if syncErr := syncer.Sync(); syncErr != nil {
+			log.Error("Failed to sync database after genesis regeneration", "error", syncErr)
+		}
+	}
 
 	log.Info("Successfully regenerated genesis state to disk",
 		"root", root.Hex())

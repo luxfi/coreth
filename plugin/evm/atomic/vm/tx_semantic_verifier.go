@@ -131,10 +131,10 @@ func (s *semanticVerifier) ImportTx(utx *atomic.UnsignedImportTx) error {
 		inputID := in.UTXOID.InputID()
 		utxoIDs[i] = inputID[:]
 	}
-	// Type assert SharedMemory
+	// Type assert SharedMemory; return error if unavailable (ZAP transport)
 	sharedMemory, ok := ctx.SharedMemory.(luxatomic.SharedMemory)
 	if !ok {
-		return fmt.Errorf("expected luxatomic.SharedMemory, got %T", ctx.SharedMemory)
+		return fmt.Errorf("atomic import unavailable: SharedMemory not provided (ZAP transport)")
 	}
 	// allUTXOBytes is guaranteed to be the same length as utxoIDs
 	allUTXOBytes, err := sharedMemory.Get(utx.SourceChain, utxoIDs)
