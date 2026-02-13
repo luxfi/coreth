@@ -31,8 +31,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	fmt.Fprintf(os.Stderr, "[EVM-PLUGIN] starting rpc.Serve (transport=%s)\n", os.Getenv("LUX_VM_TRANSPORT"))
 	if err := rpc.Serve(context.Background(), log.NoLog{}, factory.NewPluginVM()); err != nil {
-		fmt.Printf("rpc.Serve failed: %s\n", err)
+		fmt.Fprintf(os.Stderr, "[EVM-PLUGIN] rpc.Serve FAILED: %s\n", err)
 		os.Exit(1)
 	}
+	fmt.Fprintf(os.Stderr, "[EVM-PLUGIN] rpc.Serve returned nil - subprocess exiting normally\n")
 }
