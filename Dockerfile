@@ -1,5 +1,5 @@
 # ============= Compilation Stage ================
-FROM golang:1.23.6-bullseye AS builder
+FROM golang:1.26-bullseye AS builder
 
 ARG LUX_VERSION
 
