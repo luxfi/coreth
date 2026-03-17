@@ -201,7 +201,7 @@ require (
 	github.com/luxfi/tls v1.0.3 // indirect
 	github.com/luxfi/trace v0.1.4 // indirect
 	github.com/luxfi/validators v1.0.0 // indirect
-	github.com/luxfi/zapdb/v4 v4.9.1 // indirect
+	github.com/luxfi/zapdb/v4 v4.9.3 // indirect
 	github.com/onsi/gomega v1.39.1 // indirect
 	github.com/pires/go-proxyproto v0.8.1 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
