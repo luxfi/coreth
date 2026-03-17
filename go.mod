@@ -147,7 +147,7 @@ require (
 	github.com/luxfi/math v1.2.4
 	github.com/luxfi/node v1.23.4
 	github.com/luxfi/p2p v1.19.2-zap
-	github.com/luxfi/precompile v0.4.9
+	github.com/luxfi/precompile v0.4.10
 	github.com/luxfi/protocol v0.0.2
 	github.com/luxfi/rpc v1.0.0
 	github.com/luxfi/runtime v1.0.1
