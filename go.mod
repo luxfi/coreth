@@ -18,7 +18,7 @@ require (
 	github.com/holiman/uint256 v1.3.2
 	github.com/luxfi/cache v1.2.1
 	github.com/luxfi/codec v1.1.4
-	github.com/luxfi/crypto v1.17.40
+	github.com/luxfi/crypto v1.17.44
 	github.com/luxfi/geth v1.16.73
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/metric v1.5.0
@@ -36,11 +36,11 @@ require (
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
 	go.uber.org/zap v1.27.1 // indirect
-	golang.org/x/crypto v0.48.0
-	golang.org/x/exp v0.0.0-20260212183809-81e46e3db34a // indirect
-	golang.org/x/sync v0.19.0
+	golang.org/x/crypto v0.49.0
+	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
+	golang.org/x/sync v0.20.0
 	golang.org/x/time v0.14.0
-	golang.org/x/tools v0.42.0
+	golang.org/x/tools v0.43.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
@@ -51,7 +51,7 @@ require (
 	github.com/ALTree/bigfloat v0.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20260215031811-a0ab0b218a81 // indirect
+	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20260311194731-d5b7577c683d // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.24.4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -60,7 +60,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/crate-crypto/go-eth-kzg v1.5.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/dgraph-io/badger/v4 v4.9.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
@@ -126,11 +126,11 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/mod v0.33.0 // indirect
-	golang.org/x/net v0.50.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
-	gonum.org/v1/gonum v0.16.0 // indirect
+	golang.org/x/mod v0.34.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
+	gonum.org/v1/gonum v0.17.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
@@ -139,7 +139,7 @@ require (
 	github.com/luxfi/atomic v1.0.0
 	github.com/luxfi/concurrent v0.0.3
 	github.com/luxfi/consensus v1.22.67
-	github.com/luxfi/constants v1.4.4
+	github.com/luxfi/constants v1.4.6
 	github.com/luxfi/database v1.17.42
 	github.com/luxfi/filesystem v0.0.1
 	github.com/luxfi/ids v1.2.9
@@ -148,7 +148,7 @@ require (
 	github.com/luxfi/node v1.23.4
 	github.com/luxfi/p2p v1.19.2-zap
 	github.com/luxfi/precompile v0.4.10
-	github.com/luxfi/protocol v0.0.2
+	github.com/luxfi/protocol v0.0.3
 	github.com/luxfi/rpc v1.0.0
 	github.com/luxfi/runtime v1.0.1
 	github.com/luxfi/sys v0.0.0-20260110090042-50187ec5ffd8
@@ -190,7 +190,7 @@ require (
 	github.com/luxfi/compress v0.0.5 // indirect
 	github.com/luxfi/container v0.0.4 // indirect
 	github.com/luxfi/fhe v1.7.6 // indirect
-	github.com/luxfi/genesis v1.6.1 // indirect
+	github.com/luxfi/genesis v1.7.1 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
 	github.com/luxfi/keychain v1.0.2 // indirect
 	github.com/luxfi/lattice/v7 v7.0.0 // indirect
