@@ -37,6 +37,7 @@ import (
 	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/plugin/evm/customrawdb"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
@@ -153,26 +154,56 @@ func SetupGenesisBlock(
 	if header == nil {
 		return genesis.Config, common.Hash{}, fmt.Errorf("genesis block header not found in database for hash %s", stored)
 	}
-	// Check if the state is initialized by attempting to get a node reader
-	_, nodeReaderErr := triedb.NodeReader(header.Root)
-	if header.Root != types.EmptyRootHash && nodeReaderErr != nil {
-		// Ensure the stored genesis matches with the given one.
-		hash := genesis.ToBlock().Hash()
-		if hash != stored {
-			return genesis.Config, common.Hash{}, &GenesisMismatchError{stored, hash}
+	if header != nil && header.Root != types.EmptyRootHash {
+		if _, err := triedb.NodeReader(header.Root); err != nil {
+			// Genesis state root is not accessible. Two possible reasons:
+			//
+			// 1. Fresh chain with external ancient store: genesis block exists but
+			//    state was never committed. Recommit is needed and safe.
+			//
+			// 2. Established chain after RLP import or long operation: genesis state
+			//    root has been pruned by pathdb (which only maintains recent state).
+			//    Recommitting would PANIC because pathdb's layer tree doesn't contain
+			//    the parent layer needed for genesis state creation.
+			//
+			// We distinguish these by checking if the chain has progressed past genesis.
+			block1Hash := rawdb.ReadCanonicalHash(db, 1)
+			if (block1Hash != common.Hash{}) {
+				// Chain has blocks beyond genesis — genesis state was pruned.
+				// This is expected. Skip recommit.
+				log.Info("Genesis state pruned (expected for established chain)",
+					"genesisRoot", header.Root.Hex(),
+					"block1", block1Hash.Hex())
+			} else {
+				// Chain hasn't progressed past genesis.
+				// For PathDB: check AcceptorTip to decide if recommit is safe.
+				if triedb.Scheme() == rawdb.PathScheme {
+					acceptorTip, _ := customrawdb.ReadAcceptorTip(db)
+					if acceptorTip != (common.Hash{}) && acceptorTip != stored {
+						log.Warn("Genesis state not accessible with PathDB - skipping recommit",
+							"root", header.Root.Hex(), "acceptorTip", acceptorTip.Hex())
+						return genesis.Config, stored, nil
+					}
+				}
+				// Recommit genesis state
+				log.Info("Genesis state not found, recommitting", "root", header.Root.Hex())
+				block, commitErr := genesis.Commit(db, triedb)
+				if commitErr != nil {
+					return genesis.Config, common.Hash{}, fmt.Errorf("failed to recommit genesis: %w", commitErr)
+				}
+				// Verify state is now accessible
+				if _, verifyErr := triedb.NodeReader(header.Root); verifyErr != nil {
+					if header.Root != block.Root() {
+						return genesis.Config, stored, fmt.Errorf(
+							"genesis alloc mismatch: expected stateRoot %s but got %s",
+							header.Root.Hex(), block.Root().Hex())
+					}
+					return genesis.Config, stored, fmt.Errorf("genesis state not accessible after recommit: %w", verifyErr)
+				}
+				log.Info("Successfully recommitted genesis state", "root", header.Root.Hex())
+				return genesis.Config, stored, nil
+			}
 		}
-		// For path scheme, if we can't access the genesis state via NodeReader,
-		// it means later blocks have been committed and the genesis state has been
-		// superseded. The genesis block data still exists in the raw database.
-		// We should NOT try to re-commit genesis because:
-		// 1. The genesis block is already stored
-		// 2. pathdb.Commit would fail (parent layer doesn't exist)
-		// 3. The state we need is already persisted in the disk layer
-		if triedb.Scheme() == rawdb.PathScheme {
-			return genesis.Config, stored, nil
-		}
-		_, err := genesis.Commit(db, triedb)
-		return genesis.Config, common.Hash{}, err
 	}
 	// Check whether the genesis block is already written.
 	hash := genesis.ToBlock().Hash()
