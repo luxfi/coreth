@@ -13,6 +13,8 @@ Coreth can be configured through command-line flags, configuration files, and ge
 
 Create a JSON configuration file for the C-Chain:
 
+> Note: `snowman-api-enabled` is the legacy luxd config key name. Current luxd builds also accept `consensus-api-enabled` as the canonical alias; both refer to the same toggle.
+
 ```json
 {
   "snowman-api-enabled": false,
