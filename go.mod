@@ -18,7 +18,7 @@ require (
 	github.com/holiman/uint256 v1.3.2
 	github.com/luxfi/cache v1.2.1
 	github.com/luxfi/codec v1.1.4
-	github.com/luxfi/crypto v1.18.1
+	github.com/luxfi/crypto v1.18.4
 	github.com/luxfi/geth v1.16.88
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/metric v1.5.1
@@ -59,9 +59,7 @@ require (
 	github.com/consensys/gnark-crypto v0.20.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/crate-crypto/go-eth-kzg v1.5.0 // indirect
-	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
-	github.com/dgraph-io/badger/v4 v4.9.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/dop251/goja v0.0.0-20260311135729-065cd970411c // indirect
@@ -69,7 +67,6 @@ require (
 	github.com/emicklei/dot v1.11.0 // indirect
 	github.com/ethereum/c-kzg-4844/v2 v2.1.7 // indirect
 	github.com/ethereum/go-bigmodexpfix v0.0.0-20250911101455-f9e208c548ab // indirect
-	github.com/ethereum/go-verkle v0.2.2 // indirect
 	github.com/ferranbt/fastssz v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/garslo/gogen v0.0.0-20170306192744-1d203ffc1f61 // indirect
@@ -138,9 +135,9 @@ require (
 require (
 	github.com/luxfi/atomic v1.0.0
 	github.com/luxfi/concurrent v0.0.3
-	github.com/luxfi/consensus v1.22.84
+	github.com/luxfi/consensus v1.23.9
 	github.com/luxfi/constants v1.4.7
-	github.com/luxfi/database v1.17.44
+	github.com/luxfi/database v1.18.3
 	github.com/luxfi/filesystem v0.0.1
 	github.com/luxfi/ids v1.2.9
 	github.com/luxfi/log v1.4.1
@@ -162,8 +159,9 @@ require (
 )
 
 require (
+	filippo.io/edwards25519 v1.2.0 // indirect
+	filippo.io/hpke v0.4.0 // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
-	github.com/VictoriaMetrics/fastcache v1.13.2 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.6 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cockroachdb/errors v1.12.0 // indirect
@@ -175,6 +173,7 @@ require (
 	github.com/cronokirby/saferith v0.33.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/getsentry/sentry-go v0.44.1 // indirect
+	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/mock v1.7.0-rc.1 // indirect
@@ -183,9 +182,13 @@ require (
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
+	github.com/gtank/merlin v0.1.1 // indirect
+	github.com/gtank/ristretto255 v0.2.0 // indirect
+	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/luxfi/accel v1.0.8 // indirect
+	github.com/luxfi/age v1.4.0 // indirect
 	github.com/luxfi/api v1.0.4 // indirect
 	github.com/luxfi/compress v0.0.5 // indirect
 	github.com/luxfi/container v0.0.4 // indirect
@@ -193,20 +196,26 @@ require (
 	github.com/luxfi/genesis v1.7.1 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
 	github.com/luxfi/keychain v1.0.2 // indirect
-	github.com/luxfi/lattice/v7 v7.0.0 // indirect
+	github.com/luxfi/lattice/v7 v7.1.0 // indirect
 	github.com/luxfi/net v0.0.2 // indirect
 	github.com/luxfi/resource v0.0.1 // indirect
 	github.com/luxfi/staking v1.1.0 // indirect
-	github.com/luxfi/threshold v1.5.5 // indirect
+	github.com/luxfi/threshold v1.6.7 // indirect
 	github.com/luxfi/tls v1.0.3 // indirect
 	github.com/luxfi/trace v0.1.4 // indirect
 	github.com/luxfi/validators v1.0.0 // indirect
-	github.com/luxfi/zapdb/v4 v4.9.3 // indirect
-	github.com/onsi/gomega v1.39.1 // indirect
+	github.com/luxfi/zapdb v1.8.0 // indirect
+	github.com/mimoo/StrobeGo v0.0.0-20220103164710-9a04d6ca976b // indirect
+	github.com/minio/crc64nvme v1.1.1 // indirect
+	github.com/minio/md5-simd v1.1.2 // indirect
+	github.com/minio/minio-go/v7 v7.0.100 // indirect
+	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pires/go-proxyproto v0.8.1 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/cors v1.11.1 // indirect
+	github.com/rs/xid v1.6.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	github.com/tinylib/msgp v1.6.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.39.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.39.0 // indirect
@@ -224,7 +233,7 @@ require (
 	github.com/luxfi/formatting v1.0.1
 	github.com/luxfi/math/big v0.1.0 // indirect
 	github.com/luxfi/ringtail v0.2.0 // indirect
-	github.com/montanaflynn/stats v0.8.2 // indirect
+	github.com/montanaflynn/stats v0.9.0 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
 )
 
