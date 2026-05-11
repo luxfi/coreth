@@ -6,6 +6,7 @@ package evm
 import (
 	"context"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,6 +26,7 @@ import (
 	"github.com/luxfi/cache/metercacher"
 	"github.com/luxfi/codec"
 	"github.com/luxfi/consensus"
+	consensusconfig "github.com/luxfi/consensus/config"
 	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/database"
@@ -269,6 +271,114 @@ type VM struct {
 	chainAlias string
 	// RPC handlers (should be stopped before closing chaindb)
 	rpcHandlers []interface{ Stop() }
+
+	// securityProfile is the resolved chain-wide ChainSecurityProfile,
+	// installed once during Initialize from the genesis pin propagated
+	// across the rpcchainvm plugin boundary inside Config.LuxSecurityProfile.
+	// Nil under classical-compat or pre-locked-profile chains. Closes
+	// red-team finding F118.
+	securityProfile *consensusconfig.ChainSecurityProfile
+}
+
+// SecurityProfile returns the resolved chain-wide ChainSecurityProfile
+// installed during Initialize from the genesis pin. Returns nil if the
+// chain runs in classical-compat mode (no profile pin in genesis).
+// Closes red-team finding F118.
+func (v *VM) SecurityProfile() *consensusconfig.ChainSecurityProfile {
+	return v.securityProfile
+}
+
+// installSecurityProfile resolves the genesis-level ChainSecurityProfile
+// pin from Config.LuxSecurityProfile, validates it, and stamps it onto
+// the VM. Also wires the EVM precompile layer with the resolved
+// posture so ecrecover (0x01) honours ForbidECDSAContractAuth.
+//
+// Honoured precedence:
+//  1. Structured Config.LuxSecurityProfile pin — authoritative, with
+//     mandatory hash check.
+//  2. Legacy Config.LuxStrictPQ bool — retained for one release. When
+//     true and the structured pin is absent, installs LuxStrictPQ.
+//  3. Neither present — classical-compat (nil profile, legacy gas/auth
+//     semantics on every precompile).
+//
+// Closes red-team finding F118 at the coreth plugin layer.
+func (v *VM) installSecurityProfile() error {
+	pin := v.config.LuxSecurityProfile
+	if pin == nil {
+		if v.config.LuxStrictPQ {
+			// Legacy bool path — preserve the F102 behaviour for callers
+			// that still flip the bool manually (tests). Installs the
+			// canonical LuxStrictPQ profile without hash verification —
+			// callers that need hash binding MUST use the structured pin.
+			profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileLuxStrictPQ)
+			if err != nil {
+				return fmt.Errorf("legacy LuxStrictPQ bool: ProfileByID: %w", err)
+			}
+			if err := profile.Validate(); err != nil {
+				return fmt.Errorf("legacy LuxStrictPQ bool: Validate: %w", err)
+			}
+			v.securityProfile = profile
+			gethvm.SetActiveSecurityProfile(&gethvm.LuxSecurityProfile{
+				ForbidECDSAContractAuth: profile.ForbidECDSAContractAuth,
+			})
+			log.Info("Coreth strict-PQ active (legacy bool path): ecrecover (0x01) refuses classical contract-auth")
+			return nil
+		}
+		// Classical-compat. Leave precompile profile nil; geth keeps
+		// upstream semantics on every precompile call.
+		return nil
+	}
+
+	pinned, err := hex.DecodeString(pin.ProfileHashHex)
+	if err != nil || len(pinned) != 48 {
+		return fmt.Errorf("plugin config LuxSecurityProfile.ProfileHashHex must be 48 bytes of hex, have %d bytes (%v)", len(pinned), err)
+	}
+
+	profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileID(pin.ProfileID))
+	if err != nil {
+		return fmt.Errorf("plugin config LuxSecurityProfile.ProfileID 0x%02x is not a known consensus profile: %w", pin.ProfileID, err)
+	}
+	if err := profile.Validate(); err != nil {
+		return fmt.Errorf("plugin config LuxSecurityProfile canonical profile failed Validate(): %w", err)
+	}
+	live, err := profile.ComputeHash()
+	if err != nil {
+		return fmt.Errorf("plugin config LuxSecurityProfile canonical profile ComputeHash failed: %w", err)
+	}
+	if !constantTimeEqual48(live[:], pinned) {
+		return fmt.Errorf("plugin config LuxSecurityProfile hash mismatch: pinned=%s live=%x — forked binary or stale pin", pin.ProfileHashHex, live[:])
+	}
+	profile.ProfileHash = live
+	v.securityProfile = profile
+
+	// Wire the precompile layer with the resolved posture. ecrecover
+	// (0x01) is the only classical contract-auth path exposed to
+	// strict-PQ chains; the bit is true under every locked PQ profile.
+	gethvm.SetActiveSecurityProfile(&gethvm.LuxSecurityProfile{
+		ForbidECDSAContractAuth: profile.ForbidECDSAContractAuth,
+	})
+	log.Info("Coreth chain-security profile installed",
+		"profileID", fmt.Sprintf("0x%02x", profile.ProfileID),
+		"profileName", profile.ProfileName,
+		"profileHash", fmt.Sprintf("%x", profile.ProfileHash[:]),
+		"forbidECDSAWallets", profile.ForbidECDSAWallets,
+		"forbidECDSAContractAuth", profile.ForbidECDSAContractAuth,
+	)
+	return nil
+}
+
+// constantTimeEqual48 compares two 48-byte hashes in constant time.
+// Mirrors the helper in genesis/pkg/genesis/security_profile.go;
+// duplicated here so the coreth plugin doesn't import luxfi/genesis.
+func constantTimeEqual48(a, b []byte) bool {
+	if len(a) != 48 || len(b) != 48 {
+		return false
+	}
+	var v byte
+	for i := 0; i < 48; i++ {
+		v |= a[i] ^ b[i]
+	}
+	return v == 0
 }
 
 // Initialize implements the block.ChainVM interface
@@ -354,17 +464,19 @@ func (v *VM) Initialize(
 	log.Info("CORETH_BUILD_2026_01_01_1605", "marker", "PLUGIN_LOADED_FROM_PLUGINS_DIR")
 	log.Info("DEBUG upgradeBytes received", "length", len(upgradeBytes), "content", string(upgradeBytes))
 
-	// F102 close-out — install the chain-wide strict-PQ posture into the
-	// EVM precompile layer. Once installed, the ecrecover precompile at
-	// 0x01 returns ErrClassicalAuthForbidden under strict-PQ (gas is
-	// still charged per EIP-150). Default (config false) preserves
-	// classical-compat semantics for legacy chains and the Lux-Permissive
-	// profile.
-	if v.config.LuxStrictPQ {
-		gethvm.SetActiveSecurityProfile(&gethvm.LuxSecurityProfile{
-			ForbidECDSAContractAuth: true,
-		})
-		log.Info("Coreth strict-PQ active: ecrecover (0x01) refuses classical contract-auth")
+	// F118 close-out — install the chain-wide ChainSecurityProfile
+	// resolved from the genesis pin propagated across the rpcchainvm
+	// plugin boundary inside Config.LuxSecurityProfile. The structured
+	// pin is the source of truth; Config.LuxStrictPQ is the legacy
+	// boolean shim retained for one release.
+	//
+	// Resolve() decodes the pinned ProfileID, runs Validate(), recomputes
+	// ComputeHash(), and constant-time-compares against the pinned hash.
+	// A mismatch (forked binary swapped canonical profile content) fails
+	// the VM Initialize — the chain refuses to start rather than admit
+	// classical credentials under a name it cannot enforce.
+	if err := v.installSecurityProfile(); err != nil {
+		return fmt.Errorf("install chain security profile: %w", err)
 	}
 
 	// Store toEngine channel for notifying consensus about pending transactions
@@ -977,7 +1089,10 @@ func (v *VM) initBlockBuilding() error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize eth tx gossip metrics: %w", err)
 	}
-	ethTxPool, err := NewGossipEthTxPool(v.txPool, v.sdkMetrics)
+	// F118: pass the resolved chain security profile into the gossip
+	// tx pool so its Add() refuses classical ECDSA tx types under a
+	// strict-PQ ForbidECDSAWallets posture.
+	ethTxPool, err := NewGossipEthTxPoolWithProfile(v.txPool, v.sdkMetrics, v.securityProfile)
 	if err != nil {
 		return fmt.Errorf("failed to initialize gossip eth tx pool: %w", err)
 	}

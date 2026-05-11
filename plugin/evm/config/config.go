@@ -266,19 +266,47 @@ type Config struct {
 	// transactions that pay sufficient fees to cover block costs.
 	SkipBlockFee bool `json:"skip-block-fee"`
 
-	// LuxStrictPQ activates the chain-wide strict-PQ posture inside the
-	// EVM precompile layer. When true, the ecrecover precompile at 0x01
-	// refuses every input with ErrClassicalAuthForbidden (gas is still
-	// charged per EIP-150). Default false preserves classical-compat
-	// semantics — required for legacy chains and the Lux-Permissive
-	// profile.
+	// LuxStrictPQ is the legacy boolean shim for the strict-PQ posture.
+	// New deployments should use LuxSecurityProfile (below) which carries
+	// the full ChainSecurityProfile pin from genesis. When the structured
+	// pin is present, this bool is ignored — the resolved profile is the
+	// source of truth.
 	//
-	// The node populates this from its resolved
-	// consensusconfig.ChainSecurityProfile (F102 close-out) so the C-
-	// chain plugin process inherits the chain-wide posture without
-	// re-resolving genesis. One way only: install once at chain
-	// bootstrap inside VM.Initialize, never per-tx.
+	// Retained for one release so callers that flip the bool manually
+	// keep working under classical-compat tests.
 	LuxStrictPQ bool `json:"lux-strict-pq,omitempty"`
+
+	// LuxSecurityProfile is the genesis-pin for the chain-wide
+	// ChainSecurityProfile, propagated across the rpcchainvm plugin
+	// boundary inside this JSON config (F118). The node stamps it onto
+	// the C-chain config bytes during chain creation; the coreth plugin
+	// resolves it through consensusconfig.ProfileByID + ComputeHash and
+	// fails to start if the live hash does not match the genesis pin.
+	//
+	// Wire form mirrors genesis.SecurityProfile so the same Resolve()
+	// path is reused; no new RPC surface.
+	//
+	// One way only: install once at chain bootstrap inside VM.Initialize,
+	// never per-tx. Downstream consumers (tx admission gate, precompile
+	// gate) read from the resolved *ChainSecurityProfile on the VM.
+	LuxSecurityProfile *LuxSecurityProfilePin `json:"lux-security-profile,omitempty"`
+}
+
+// LuxSecurityProfilePin is the wire form of the genesis-level
+// ChainSecurityProfile pin as it appears inside the coreth plugin
+// config. Identical in shape to genesis.SecurityProfile — kept here
+// instead of importing genesis directly because plugin/evm/config is a
+// leaf package consumed by external integrators.
+type LuxSecurityProfilePin struct {
+	// ProfileID is the wire byte that names the canonical profile.
+	// 0x01 = LuxStrictPQ, 0x02 = LuxPermissive, 0x03 = LuxFIPS.
+	ProfileID uint8 `json:"profileID"`
+
+	// ProfileHashHex is the SHA3-384 ComputeHash of the canonical
+	// ChainSecurityProfile at the time genesis was sealed, hex-encoded
+	// (96 hex chars, no 0x prefix). Coreth recomputes the hash at
+	// Initialize and rejects the chain if it does not match.
+	ProfileHashHex string `json:"profileHashHex"`
 }
 
 // TxPoolConfig contains the transaction pool config to be passed
