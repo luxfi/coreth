@@ -76,6 +76,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
+	gethvm "github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/ethdb"
 	"github.com/luxfi/geth/metrics"
 	"github.com/luxfi/geth/rlp"
@@ -352,6 +353,19 @@ func (v *VM) Initialize(
 	log.Info("Initializing Coreth VM", "Version", Version, "Config", v.config)
 	log.Info("CORETH_BUILD_2026_01_01_1605", "marker", "PLUGIN_LOADED_FROM_PLUGINS_DIR")
 	log.Info("DEBUG upgradeBytes received", "length", len(upgradeBytes), "content", string(upgradeBytes))
+
+	// F102 close-out — install the chain-wide strict-PQ posture into the
+	// EVM precompile layer. Once installed, the ecrecover precompile at
+	// 0x01 returns ErrClassicalAuthForbidden under strict-PQ (gas is
+	// still charged per EIP-150). Default (config false) preserves
+	// classical-compat semantics for legacy chains and the Lux-Permissive
+	// profile.
+	if v.config.LuxStrictPQ {
+		gethvm.SetActiveSecurityProfile(&gethvm.LuxSecurityProfile{
+			ForbidECDSAContractAuth: true,
+		})
+		log.Info("Coreth strict-PQ active: ecrecover (0x01) refuses classical contract-auth")
+	}
 
 	// Store toEngine channel for notifying consensus about pending transactions
 	v.toEngine = toEngine
