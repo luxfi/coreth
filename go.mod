@@ -48,7 +48,6 @@ require (
 // Local replace directives removed for v1 genesis launch.
 // Decomplect rip in flight — pin to local working tree for the in-place
 // removal of upgrade-gate methods (e.g. IsDurango) on shared interfaces.
-replace github.com/luxfi/precompile => ../precompile
 
 require (
 	github.com/ALTree/bigfloat v0.2.0 // indirect
@@ -147,7 +146,7 @@ require (
 	github.com/luxfi/math v1.4.0
 	github.com/luxfi/node v1.23.36
 	github.com/luxfi/p2p v1.19.2
-	github.com/luxfi/precompile v0.5.17
+	github.com/luxfi/precompile v0.5.20
 	github.com/luxfi/proto v1.0.0
 	github.com/luxfi/rpc v1.0.2
 	github.com/luxfi/runtime v1.0.1
@@ -189,7 +188,7 @@ require (
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/luxfi/accel v1.0.8 // indirect
+	github.com/luxfi/accel v1.1.0 // indirect
 	github.com/luxfi/age v1.4.0 // indirect
 	github.com/luxfi/api v1.0.4 // indirect
 	github.com/luxfi/compress v0.0.5 // indirect
