@@ -323,21 +323,14 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 	}
 	if conf := g.Config; conf != nil {
 		num := new(big.Int).SetUint64(g.Number)
-		extra := params.GetExtra(conf)
-		// Check if this is a Lux chain (has Lux-specific upgrades configured)
-		isLuxChain := extra.BanffBlockTimestamp != nil ||
-			extra.CortinaBlockTimestamp != nil ||
-			extra.DurangoBlockTimestamp != nil ||
-			extra.EtnaTimestamp != nil ||
-			extra.FortunaTimestamp != nil ||
-			extra.GraniteTimestamp != nil
-		// Set BaseFee if London fork is enabled (geth chains) or this is a Lux chain
-		if conf.IsLondon(num) || isLuxChain {
-			if g.BaseFee != nil {
-				head.BaseFee = g.BaseFee
-			} else {
-				head.BaseFee = big.NewInt(ap3.InitialBaseFee)
-			}
+		// Activate-all-implicitly: every Lux chain has dynamic fees from
+		// genesis. Pin BaseFee unconditionally (upstream London-vs-pre-London
+		// distinction is irrelevant on Lux).
+		_ = num
+		if g.BaseFee != nil {
+			head.BaseFee = g.BaseFee
+		} else {
+			head.BaseFee = big.NewInt(ap3.InitialBaseFee)
 		}
 		// Shanghai: set WithdrawalsHash to empty (no withdrawals on C-Chain)
 		if conf.IsShanghai(num, g.Timestamp) {

@@ -46,9 +46,9 @@ var PQCryptoPrecompiles = map[common.Address]contract.StatefulPrecompiledContrac
 }
 
 func init() {
-	// Add PQ crypto precompiles to Banff and later upgrade phases
+	// PQ crypto precompiles are part of the canonical Lux built-in set under
+	// activate-all-implicitly.
 	for addr, precompile := range PQCryptoPrecompiles {
-		PrecompiledContractsBanff[addr] = precompile
-		PrecompiledContractsApricotPhase6[addr] = precompile
+		PrecompiledContractsLux[addr] = precompile
 	}
 }

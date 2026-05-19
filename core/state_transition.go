@@ -455,22 +455,13 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 		contractCreation = msg.To == nil
 	)
 
-	// Detect Genesis blocks: historic Lux mainnet blocks with dynamic fees (base fee of 25 GWei).
-	// Genesis blocks are identified by having a baseFee but Fortuna/Granite not being active.
-	// After Fortuna/Granite, base fee is removed, so blocks with baseFee must be Genesis blocks.
-	if st.evm.Context.BaseFee != nil && st.evm.Context.BaseFee.Sign() > 0 && !rulesExtra.IsFortuna && !rulesExtra.IsGranite {
-		rulesExtra.IsGenesis = true
-	}
-
 	// DEBUG: Log refund decision factors for first blocks
 	if st.evm.Context.BlockNumber != nil && st.evm.Context.BlockNumber.Uint64() <= 10 {
 		log.Debug("TransitionDb gas calculation",
 			"block", st.evm.Context.BlockNumber.Uint64(),
 			"baseFee", st.evm.Context.BaseFee,
-			"isApricotPhase1", rulesExtra.IsApricotPhase1,
 			"isGenesis", rulesExtra.IsGenesis,
 			"isShanghai", rules.IsShanghai,
-			"isDurango", rulesExtra.IsDurango,
 			"contractCreation", contractCreation,
 		)
 	}

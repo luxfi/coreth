@@ -22,10 +22,11 @@ const (
 	IsMergeTODO = true
 )
 
-var (
-	initiallyActive       = uint64(upgrade.InitiallyActiveTime.Unix())
-	unscheduledActivation = uint64(upgrade.UnscheduledActivationTime.Unix())
-)
+// initiallyActive is the canonical Lux C-Chain genesis-activation timestamp.
+// Tests in this package reference it; production paths under
+// activate-all-implicitly do not need to read it directly because every
+// upgrade is unconditionally live.
+var initiallyActive = uint64(upgrade.InitiallyActiveTime.Unix())
 
 // SetEthUpgrades enables Ethereum network upgrades using the same time as
 // the Lux network upgrade that enables them.
@@ -49,23 +50,15 @@ func SetEthUpgrades(c *ChainConfig) error {
 	c.BerlinBlock = big.NewInt(0)
 	c.LondonBlock = big.NewInt(0)
 
-	extra := GetExtra(c)
+	_ = GetExtra(c)
 
-	// For Lux networks: respect the explicit shanghaiTime from genesis config.
-	// If shanghaiTime is already set (e.g., to 0 for genesis activation), keep it.
-	// Only use Durango to set Shanghai if shanghaiTime was not set in genesis.
+	// Under activate-all-implicitly: Shanghai and Cancun are live from
+	// genesis. If the genesis JSON pinned an explicit timestamp, preserve it.
 	if c.ShanghaiTime == nil {
-		if durango := extra.DurangoBlockTimestamp; durango != nil && *durango < unscheduledActivation {
-			c.ShanghaiTime = utils.NewUint64(*durango)
-		}
+		c.ShanghaiTime = utils.NewUint64(0)
 	}
-
-	// Cancun activation is tied to Etna - the node's upgrade config is authoritative.
-	if etna := extra.EtnaTimestamp; etna != nil && *etna < unscheduledActivation {
-		c.CancunTime = utils.NewUint64(*etna)
-	} else {
-		// If Etna is unscheduled, Cancun should also be unscheduled
-		c.CancunTime = nil
+	if c.CancunTime == nil {
+		c.CancunTime = utils.NewUint64(0)
 	}
 	return nil
 }
