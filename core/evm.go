@@ -34,7 +34,6 @@ import (
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/consensus/misc/eip4844"
 	"github.com/luxfi/coreth/core/extstate"
-	corethparams "github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/state"
@@ -45,15 +44,9 @@ import (
 )
 
 // WrapStateDB wraps the given StateDB with coreth's extended StateDB wrapper.
-// This is used to process historical pre-AP1 blocks with the
-// [StateDbAP1.GetCommittedState] method as it was historically.
-// Callers should use this when creating a new EVM to ensure proper state handling.
-func WrapStateDB(rules params.Rules, statedb *state.StateDB) vm.StateDB {
-	wrappedStateDB := extstate.New(statedb)
-	if corethparams.GetRulesExtra(rules).IsApricotPhase1 {
-		return wrappedStateDB
-	}
-	return &StateDBAP0{wrappedStateDB}
+// Under activate-all-implicitly the post-AP1 wrapper is the only wrapper.
+func WrapStateDB(_ params.Rules, statedb *state.StateDB) vm.StateDB {
+	return extstate.New(statedb)
 }
 
 // PrepareBlockContext adjusts the block context for coreth-specific requirements.

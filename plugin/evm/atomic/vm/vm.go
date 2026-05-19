@@ -46,7 +46,6 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/gossip"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
 	"github.com/luxfi/coreth/plugin/evm/message"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/luxfi/coreth/plugin/evm/vmerrors"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/coreth/utils/rpc"
@@ -70,7 +69,7 @@ const (
 	// used by an atomic transaction in the mempool. It is allowed to build
 	// blocks with larger atomic transactions, but they will not be accepted
 	// into the mempool.
-	maxAtomicTxMempoolGas   = ap5.AtomicGasLimit
+	maxAtomicTxMempoolGas   = atomic.AtomicGasLimit
 	atomicTxGossipNamespace = "atomic_tx_gossip"
 	luxEndpoint             = "/lux"
 )
@@ -397,14 +396,12 @@ func (vm *VM) verifyTxAtTip(tx *atomic.Tx) error {
 	extraConfig := params.GetExtra(vm.InnerVM.ChainConfig())
 	extraRules := params.GetRulesExtra(vm.InnerVM.ChainConfig().Rules(preferredBlock.Number, params.IsMergeTODO, preferredBlock.Time))
 	parentHeader := preferredBlock
-	var nextBaseFee *big.Int
 	timestamp := uint64(vm.clock.Time().Unix())
-	if extraConfig.IsApricotPhase3(timestamp) {
-		nextBaseFee, err = customheader.EstimateNextBaseFee(extraConfig, parentHeader, timestamp)
-		if err != nil {
-			// Return extremely detailed error since CalcBaseFee should never encounter an issue here
-			return fmt.Errorf("failed to calculate base fee with parent timestamp (%d), parent ExtraData: (0x%x), and current timestamp (%d): %w", parentHeader.Time, parentHeader.Extra, timestamp, err)
-		}
+	// Under activate-all-implicitly dynamic fees are always live.
+	nextBaseFee, err := customheader.EstimateNextBaseFee(extraConfig, parentHeader, timestamp)
+	if err != nil {
+		// Return extremely detailed error since CalcBaseFee should never encounter an issue here
+		return fmt.Errorf("failed to calculate base fee with parent timestamp (%d), parent ExtraData: (0x%x), and current timestamp (%d): %w", parentHeader.Time, parentHeader.Extra, timestamp, err)
 	}
 
 	// We don’t need to revert the state here in case verifyTx errors, because
@@ -513,12 +510,11 @@ func (vm *VM) preBatchOnFinalizeAndAssemble(header *types.Header, state *state.S
 			vm.AtomicMempool.DiscardCurrentTx(tx.ID())
 			return nil, nil, nil, fmt.Errorf("failed to marshal atomic transaction %s due to %w", tx.ID(), err)
 		}
-		var contribution, gasUsed *big.Int
-		if rules.IsApricotPhase4 {
-			contribution, gasUsed, err = tx.BlockFeeContribution(rules.IsApricotPhase5, vm.Runtime.XAssetID, header.BaseFee)
-			if err != nil {
-				return nil, nil, nil, err
-			}
+		// Under activate-all-implicitly the fixed-fee block-fee contribution
+		// is always charged.
+		contribution, gasUsed, err := tx.BlockFeeContribution(true, vm.Runtime.XAssetID, header.BaseFee)
+		if err != nil {
+			return nil, nil, nil, err
 		}
 		return atomicTxBytes, contribution, gasUsed, nil
 	}
@@ -570,9 +566,7 @@ func (vm *VM) postBatchOnFinalizeAndAssemble(
 			err                       error
 		)
 
-		// Note: we do not need to check if we are in at least ApricotPhase4 here because
 		// we assume that this function will only be called when the block is in at least
-		// ApricotPhase5.
 		txContribution, txGasUsed, err = tx.BlockFeeContribution(true, vm.Runtime.XAssetID, header.BaseFee)
 		if err != nil {
 			return nil, nil, nil, err
@@ -648,9 +642,7 @@ func (vm *VM) onFinalizeAndAssemble(
 	state *state.StateDB,
 	txs []*types.Transaction,
 ) ([]byte, *big.Int, *big.Int, error) {
-	if !vm.chainConfigExtra().IsApricotPhase5(header.Time) {
-		return vm.preBatchOnFinalizeAndAssemble(header, state, txs)
-	}
+	// Under activate-all-implicitly the post-AP5 batch path is the only path.
 	return vm.postBatchOnFinalizeAndAssemble(header, parent, state, txs)
 }
 
@@ -665,7 +657,8 @@ func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, state
 		rulesExtra = *params.GetRulesExtra(rules)
 	)
 
-	txs, err := atomic.ExtractAtomicTxs(customtypes.BlockExtData(block), rulesExtra.IsApricotPhase5, atomic.Codec)
+	// Under activate-all-implicitly atomic-tx blobs are always batch-encoded.
+	txs, err := atomic.ExtractAtomicTxs(customtypes.BlockExtData(block), true, atomic.Codec)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -701,30 +694,24 @@ func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, state
 		if err := tx.UnsignedAtomicTx.EVMStateTransfer(vm.Runtime, atomicStateDB); err != nil {
 			return nil, nil, err
 		}
-		// If ApricotPhase4 is enabled, calculate the block fee contribution
-		if rulesExtra.IsApricotPhase4 {
-			contribution, gasUsed, err := tx.BlockFeeContribution(rulesExtra.IsApricotPhase5, vm.Runtime.XAssetID, block.BaseFee())
-			if err != nil {
-				return nil, nil, err
-			}
-
-			batchContribution.Add(batchContribution, contribution)
-			batchGasUsed.Add(batchGasUsed, gasUsed)
-		}
-	}
-
-	// If ApricotPhase5 is enabled, enforce that the atomic gas used does not exceed the
-	// atomic gas limit.
-	if rulesExtra.IsApricotPhase5 {
-		chainConfigExtra := params.GetExtra(chainConfig)
-		atomicGasLimit, err := customheader.RemainingAtomicGasCapacity(chainConfigExtra, parent, header)
+		// Under activate-all-implicitly the fixed-fee contribution is always
+		// charged.
+		contribution, gasUsed, err := tx.BlockFeeContribution(true, vm.Runtime.XAssetID, block.BaseFee())
 		if err != nil {
 			return nil, nil, err
 		}
+		batchContribution.Add(batchContribution, contribution)
+		batchGasUsed.Add(batchGasUsed, gasUsed)
+	}
 
-		if !utils.BigLessOrEqualUint64(batchGasUsed, atomicGasLimit) {
-			return nil, nil, fmt.Errorf("atomic gas used (%d) by block (%s), exceeds atomic gas limit (%d)", batchGasUsed, block.Hash().Hex(), atomicGasLimit)
-		}
+	// Atomic gas limit is always enforced.
+	chainConfigExtra := params.GetExtra(chainConfig)
+	atomicGasLimit, err := customheader.RemainingAtomicGasCapacity(chainConfigExtra, parent, header)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !utils.BigLessOrEqualUint64(batchGasUsed, atomicGasLimit) {
+		return nil, nil, fmt.Errorf("atomic gas used (%d) by block (%s), exceeds atomic gas limit (%d)", batchGasUsed, block.Hash().Hex(), atomicGasLimit)
 	}
 	return batchContribution, batchGasUsed, nil
 }

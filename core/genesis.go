@@ -38,7 +38,6 @@ import (
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/luxfi/geth/core/rawdb"
@@ -330,7 +329,7 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 		if g.BaseFee != nil {
 			head.BaseFee = g.BaseFee
 		} else {
-			head.BaseFee = big.NewInt(ap3.InitialBaseFee)
+			head.BaseFee = big.NewInt(params.LuxGenesisBaseFee)
 		}
 		// Shanghai: set WithdrawalsHash to empty (no withdrawals on C-Chain)
 		if conf.IsShanghai(num, g.Timestamp) {
@@ -435,7 +434,7 @@ func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big
 	g := Genesis{
 		Config:  params.TestChainConfig,
 		Alloc:   types.GenesisAlloc{addr: {Balance: balance}},
-		BaseFee: big.NewInt(ap3.InitialBaseFee),
+		BaseFee: big.NewInt(params.LuxGenesisBaseFee),
 	}
 	return g.MustCommit(db, triedb.NewDatabase(db, triedb.HashDefaults))
 }

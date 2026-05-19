@@ -34,15 +34,6 @@ func TestVerify(t *testing.T) {
 		"valid quorum numerator 1 more than minimum": {
 			Config: NewConfig(utils.NewUint64(3), WarpQuorumNumeratorMinimum+1, false),
 		},
-		"invalid cannot activated before Durango activation": {
-			Config: NewConfig(utils.NewUint64(3), 0, false),
-			ChainConfig: func() precompileconfig.ChainConfig {
-				config := precompileconfig.NewMockChainConfig(gomock.NewController(t))
-				config.EXPECT().IsDurango(gomock.Any()).Return(false)
-				return config
-			}(),
-			ExpectedError: errWarpCannotBeActivated.Error(),
-		},
 	}
 	precompiletest.RunVerifyTests(t, tests)
 }

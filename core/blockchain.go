@@ -1285,15 +1285,11 @@ func (bc *BlockChain) Accept(block *types.Block) error {
 	if baseFee := block.BaseFee(); baseFee != nil {
 		latestBaseFeeGauge.Update(baseFee.Int64())
 	}
-	chainConfig := bc.Config()
-	extraConfig := params.GetExtra(chainConfig)
-	if extraConfig.IsFortuna(block.Time()) {
-		s, err := lp176.ParseState(block.Extra())
-		if err != nil {
-			log.Warn("Failed to update fee metrics", "err", err)
-			return nil
-		}
-
+	// Under activate-all-implicitly the LP-176 fee state is always present
+	// in the block extra; export the canonical gauges.
+	if s, err := lp176.ParseState(block.Extra()); err != nil {
+		log.Warn("Failed to update fee metrics", "err", err)
+	} else {
 		latestGasExcessGauge.Update(int64(s.Gas.Excess))
 		latestGasCapacityGauge.Update(int64(s.Gas.Capacity))
 		latestGasTargetGauge.Update(int64(s.Target()))

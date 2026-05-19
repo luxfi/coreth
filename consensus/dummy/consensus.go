@@ -178,7 +178,6 @@ func verifyHeaderGasFields(config *extras.ChainConfig, header *types.Header, par
 		parent,
 		header.Time,
 	)
-	// For Genesis EVM blocks (pre-Fortuna/Granite with baseFee), the BlockGasCost
 	// may be nil in historic blocks. Accept nil as equivalent to 0 for these blocks.
 	blockGasCostValid := utils.BigEqual(headerExtra.BlockGasCost, expectedBlockGasCost)
 	if !blockGasCostValid {
@@ -191,7 +190,6 @@ func verifyHeaderGasFields(config *extras.ChainConfig, header *types.Header, par
 		return fmt.Errorf("invalid block gas cost: have %d, want %d", headerExtra.BlockGasCost, expectedBlockGasCost)
 	}
 
-	// Activate-all-implicitly: Fortuna and Granite are always live, so the
 	// historical "Genesis EVM" carve-out for missing ExtDataGasUsed is gone.
 
 	// ExtDataGasUsed correctness is checked during block validation
@@ -386,7 +384,6 @@ func (eng *DummyEngine) Finalize(chain consensus.ChainHeaderReader, block *types
 	config := params.GetExtra(chain.Config())
 	timestamp := block.Time()
 
-	// Detect Genesis EVM blocks (pre-Fortuna/Granite with baseFee)
 	// Verify the BlockGasCost set in the header matches the expected value.
 	blockGasCost := customtypes.BlockGasCost(block)
 	expectedBlockGasCost := customheader.BlockGasCost(
@@ -398,7 +395,6 @@ func (eng *DummyEngine) Finalize(chain consensus.ChainHeaderReader, block *types
 		return fmt.Errorf("invalid blockGasCost: have %d, want %d", blockGasCost, expectedBlockGasCost)
 	}
 
-	// Activate-all-implicitly: ApricotPhase4 is always live, so AP4 fee
 	// checks always run when a valid base fee is present.
 	baseFee := block.BaseFee()
 	hasValidBaseFee := baseFee != nil && baseFee.Sign() > 0
@@ -455,8 +451,10 @@ func (eng *DummyEngine) FinalizeAndAssemble(chain consensus.ChainHeaderReader, h
 	)
 	// Set the native header field for BlockGasCost (used by ExtraPrefix -> GetHeaderExtra fallback)
 	header.BlockGasCost = headerExtra.BlockGasCost
-	// Only perform AP4 checks when there's a valid base fee (EIP-1559 is active)
-	if configExtra.IsApricotPhase4(header.Time) && header.BaseFee != nil && header.BaseFee.Sign() > 0 {
+	// Under activate-all-implicitly dynamic fees are live; if the header
+	// carries a base fee we account for the ext-data gas and verify the
+	// block fee.
+	if header.BaseFee != nil && header.BaseFee.Sign() > 0 {
 		headerExtra.ExtDataGasUsed = extDataGasUsed
 		if headerExtra.ExtDataGasUsed == nil {
 			headerExtra.ExtDataGasUsed = new(big.Int)
@@ -490,10 +488,11 @@ func (eng *DummyEngine) FinalizeAndAssemble(chain consensus.ChainHeaderReader, h
 	// (header.Extra and header.Root are set, so hash is stable)
 	customtypes.SetHeaderExtra(header, headerExtra)
 
-	// Header seems complete, assemble into a block and return
+	// Header seems complete, assemble into a block and return. Under
+	// activate-all-implicitly the ext-data hash is always present.
 	return customtypes.NewBlockWithExtData(
 		header, txs, uncles, receipts, trie.NewStackTrie(nil),
-		extraData, configExtra.IsApricotPhase1(header.Time),
+		extraData, true,
 	), nil
 }
 

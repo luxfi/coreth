@@ -169,71 +169,9 @@ var Forks = map[string]*params.ChainConfig{
 		PetersburgBlock:     big.NewInt(0),
 		IstanbulBlock:       big.NewInt(5),
 	},
-	// Lux mainnet configs - all legacy Apricot phases are always active
-	"Banff": params.WithExtra(
-		&params.ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		&extras.ChainConfig{
-			NetworkUpgrades: extras.NetworkUpgrades{
-				BanffBlockTimestamp: utils.NewUint64(0),
-			},
-		},
-	),
-	"Cortina": params.WithExtra(
-		&params.ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		&extras.ChainConfig{
-			NetworkUpgrades: extras.NetworkUpgrades{
-				BanffBlockTimestamp:   utils.NewUint64(0),
-				CortinaBlockTimestamp: utils.NewUint64(0),
-			},
-		},
-	),
-	"Durango": params.WithExtra(
-		&params.ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-		},
-		&extras.ChainConfig{
-			NetworkUpgrades: extras.NetworkUpgrades{
-				BanffBlockTimestamp:   utils.NewUint64(0),
-				CortinaBlockTimestamp: utils.NewUint64(0),
-				DurangoBlockTimestamp: utils.NewUint64(0),
-			},
-		},
-	),
-	"Cancun": params.WithExtra(
+	// Lux canonical: under activate-all-implicitly every chain runs the
+	// legacy upgrade.
+	"Lux": params.WithExtra(
 		&params.ChainConfig{
 			ChainID:             big.NewInt(1),
 			HomesteadBlock:      big.NewInt(0),
@@ -249,13 +187,7 @@ var Forks = map[string]*params.ChainConfig{
 			ShanghaiTime:        utils.NewUint64(0),
 			CancunTime:          utils.NewUint64(0),
 		},
-		&extras.ChainConfig{
-			NetworkUpgrades: extras.NetworkUpgrades{
-				BanffBlockTimestamp:   utils.NewUint64(0),
-				CortinaBlockTimestamp: utils.NewUint64(0),
-				DurangoBlockTimestamp: utils.NewUint64(0),
-			},
-		},
+		&extras.ChainConfig{},
 	),
 }
 

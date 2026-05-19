@@ -45,7 +45,6 @@ import (
 	"github.com/luxfi/coreth/core/txpool"
 	"github.com/luxfi/coreth/params"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/cortina"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/predicate"
@@ -62,6 +61,11 @@ const (
 	// Leaves 256 KBs for other sections of the block (limit is 2MB).
 	// This should suffice for atomic txs, proposervm header, and serialization overhead.
 	targetTxsSize = 1792 * constants.KiB
+
+	// legacyStaticGasLimit is the fixed gas limit guaranteed prior to LP-176
+	// dynamic capacity. Used as a wait-cap so block-build waits never scale
+	// beyond what the pre-LP176 era already guaranteed.
+	legacyStaticGasLimit = 15_000_000
 )
 
 var ErrInsufficientGasCapacityToBuild = errors.New("insufficient gas capacity to build block")
@@ -272,27 +276,18 @@ func (w *worker) createCurrentEnvironment(predicateContext *precompileconfig.Pre
 	if err != nil {
 		return nil, fmt.Errorf("calculating gas capacity: %w", err)
 	}
-	// If Fortuna has activated, enforce we only build a block when there is a minimum
-	// built up gas capacity.
-	if chainConfigExtra.IsFortuna(header.Time) {
-		// ACP-176 maintains a gas capacity bucket that fills up over time separate from the gas limit.
-		// Since smaller transactions can consume the available gas capacity every second, this can lead
-		// to transactions above this size stalling.
-		// To mitigate this, the block builder returns an error and waits until the gas capacity bucket
-		// has refilled to the desired minimum.
-		// We set that minimum to MaxCapacity - GasCapacityPerSecond to be available before building a block.
-		// This avoids waiting past the point where the gas capacity bucket is already full. If we waited
-		// until the MaxCapacity, then waiting beyond that point would "overflow" the bucket. Since we do
-		// not allow the bucket to overflow, this would waste potential gas capacity.
-		capacityPerSecond := header.GasLimit / lp176.TimeToFillCapacity
-		minimumBuildableCapacity := header.GasLimit - capacityPerSecond
-
-		// Since the GasLimit is configurable, only wait up to the GasLimit as of the Cortina upgrade.
-		// There is no need to continue scaling up beyond the GasLimit guaranteed prior to ACP-176 activation.
-		minimumBuildableCapacity = min(minimumBuildableCapacity, cortina.GasLimit)
-		if capacity < minimumBuildableCapacity {
-			return nil, fmt.Errorf("%w: %d waiting for %d", ErrInsufficientGasCapacityToBuild, capacity, minimumBuildableCapacity)
-		}
+	// Under activate-all-implicitly the LP-176 capacity bucket is always live.
+	// LP-176 maintains a gas-capacity bucket that fills over time separate from
+	// the gas limit. Smaller transactions can consume the available capacity
+	// every second, so larger ones can stall. The block builder waits until
+	// the bucket has refilled to a minimum threshold.
+	capacityPerSecond := header.GasLimit / lp176.TimeToFillCapacity
+	minimumBuildableCapacity := header.GasLimit - capacityPerSecond
+	// Cap the wait threshold at the legacy fixed-gas-limit (15M) — there is no
+	// reason to scale the wait beyond what was the static pre-LP176 limit.
+	minimumBuildableCapacity = min(minimumBuildableCapacity, legacyStaticGasLimit)
+	if capacity < minimumBuildableCapacity {
+		return nil, fmt.Errorf("%w: %d waiting for %d", ErrInsufficientGasCapacityToBuild, capacity, minimumBuildableCapacity)
 	}
 	currentState.StartPrefetcher("miner", nil, nil)
 	return &environment{
@@ -355,23 +350,20 @@ func (w *worker) applyTransaction(env *environment, tx *types.Transaction, coinb
 		blockContext vm.BlockContext
 	)
 
+	// Under activate-all-implicitly predicates are always live.
 	rulesExtra := params.GetRulesExtra(env.rules)
-	if rulesExtra.IsDurango {
-		results, err := core.CheckPredicates(env.rules, env.predicateContext, tx)
-		if err != nil {
-			log.Debug("Transaction predicate failed verification in miner", "tx", tx.Hash(), "err", err)
-			return nil, err
-		}
-		env.predicateResults.SetTxResults(tx.Hash(), results)
-
-		predicateResultsBytes, err := env.predicateResults.Bytes()
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal predicate results: %w", err)
-		}
-		blockContext = core.NewEVMBlockContextWithPredicateResults(rulesExtra.LuxRules, env.header, w.chain, &coinbase, predicateResultsBytes)
-	} else {
-		blockContext = core.NewEVMBlockContext(env.header, w.chain, &coinbase)
+	results, err := core.CheckPredicates(env.rules, env.predicateContext, tx)
+	if err != nil {
+		log.Debug("Transaction predicate failed verification in miner", "tx", tx.Hash(), "err", err)
+		return nil, err
 	}
+	env.predicateResults.SetTxResults(tx.Hash(), results)
+
+	predicateResultsBytes, err := env.predicateResults.Bytes()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal predicate results: %w", err)
+	}
+	blockContext = core.NewEVMBlockContextWithPredicateResults(rulesExtra.LuxRules, env.header, w.chain, &coinbase, predicateResultsBytes)
 
 	receipt, err := core.ApplyTransaction(w.chainConfig, w.chain, blockContext, env.gasPool, env.state, env.header, tx, &env.header.GasUsed, *w.chain.GetVMConfig())
 	if err != nil {
@@ -488,15 +480,15 @@ func (w *worker) commitTransactions(env *environment, plainTxs, blobTxs *transac
 }
 
 // commit runs any post-transaction state modifications, assembles the final block
-// and commits new work if consensus engine is running.
+// and commits new work if consensus engine is running. Under
+// activate-all-implicitly predicates are always live, so the predicate-result
+// bytes are always appended to the header extra.
 func (w *worker) commit(env *environment) (*types.Block, error) {
-	if params.GetRulesExtra(env.rules).IsDurango {
-		predicateResultsBytes, err := env.predicateResults.Bytes()
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal predicate results: %w", err)
-		}
-		env.header.Extra = append(env.header.Extra, predicateResultsBytes...)
+	predicateResultsBytes, err := env.predicateResults.Bytes()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal predicate results: %w", err)
 	}
+	env.header.Extra = append(env.header.Extra, predicateResultsBytes...)
 	// Deep copy receipts here to avoid interaction between different tasks.
 	receipts := copyReceipts(env.receipts)
 	block, err := w.engine.FinalizeAndAssemble(w.chain, env.header, env.parent, env.state, env.txs, nil, receipts)

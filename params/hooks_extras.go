@@ -34,7 +34,6 @@ func GetRulesExtra(r Rules) *extras.Rules {
 		return extra
 	}
 	// Return an empty Rules struct to prevent nil pointer dereference.
-	// This means Lux-specific features (Apricot phases, Durango, etc.) won't be enabled
 	// unless properly configured via chain config.
 	return &extras.Rules{
 		Precompiles:         make(map[common.Address]precompileconfig.Config),

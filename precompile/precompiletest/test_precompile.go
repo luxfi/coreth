@@ -97,9 +97,7 @@ func (test PrecompileTest) setup(t testing.TB, module modules.Module, state *tes
 
 	chainConfig := test.ChainConfig
 	if chainConfig == nil {
-		mockChainConfig := precompileconfig.NewMockChainConfig(ctrl)
-		mockChainConfig.EXPECT().IsDurango(gomock.Any()).AnyTimes().Return(true)
-		chainConfig = mockChainConfig
+		chainConfig = precompileconfig.NewMockChainConfig(ctrl)
 	}
 
 	blockContext := contract.NewMockBlockContext(ctrl)

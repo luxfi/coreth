@@ -13,7 +13,6 @@ import (
 
 // BaseFee takes the previous header and the timestamp of its child block and
 // calculates the expected base fee for the child block. Under
-// activate-all-implicitly the Fortuna dynamic-fee state machine is always
 // live.
 func BaseFee(
 	config *extras.ChainConfig,

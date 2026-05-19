@@ -12,7 +12,6 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/extension"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
@@ -87,25 +86,18 @@ func (s *semanticVerifier) ImportTx(utx *atomic.UnsignedImportTx) error {
 		return err
 	}
 
-	// Check the transaction consumes and produces the right amounts
+	// Under activate-all-implicitly every atomic import tx pays a dynamic fee
+	// computed from its fixed-fee gas charge (Apricot Phase 5 path).
 	fc := lux.NewFlowChecker()
-	switch {
-	// Apply dynamic fees to import transactions as of Apricot Phase 3
-	case rules.IsApricotPhase3:
-		gasUsed, err := stx.GasUsed(rules.IsApricotPhase5)
-		if err != nil {
-			return err
-		}
-		txFee, err := atomic.CalculateDynamicFee(gasUsed, s.baseFee)
-		if err != nil {
-			return err
-		}
-		fc.Produce(ctx.XAssetID, txFee)
-
-	// Apply fees to import transactions as of Apricot Phase 2
-	case rules.IsApricotPhase2:
-		fc.Produce(ctx.XAssetID, ap0.AtomicTxFee)
+	gasUsed, err := stx.GasUsed(true)
+	if err != nil {
+		return err
 	}
+	txFee, err := atomic.CalculateDynamicFee(gasUsed, s.baseFee)
+	if err != nil {
+		return err
+	}
+	fc.Produce(ctx.XAssetID, txFee)
 	for _, out := range utx.Outs {
 		fc.Produce(out.AssetID, out.Amount)
 	}
@@ -217,24 +209,18 @@ func (s *semanticVerifier) ExportTx(utx *atomic.UnsignedExportTx) error {
 		return err
 	}
 
-	// Check the transaction consumes and produces the right amounts
+	// Under activate-all-implicitly every atomic export tx pays a dynamic fee
+	// computed from its fixed-fee gas charge (Apricot Phase 5 path).
 	fc := lux.NewFlowChecker()
-	switch {
-	// Apply dynamic fees to export transactions as of Apricot Phase 3
-	case rules.IsApricotPhase3:
-		gasUsed, err := stx.GasUsed(rules.IsApricotPhase5)
-		if err != nil {
-			return err
-		}
-		txFee, err := atomic.CalculateDynamicFee(gasUsed, s.baseFee)
-		if err != nil {
-			return err
-		}
-		fc.Produce(ctx.XAssetID, txFee)
-	// Apply fees to export transactions before Apricot Phase 3
-	default:
-		fc.Produce(ctx.XAssetID, ap0.AtomicTxFee)
+	gasUsed, err := stx.GasUsed(true)
+	if err != nil {
+		return err
 	}
+	txFee, err := atomic.CalculateDynamicFee(gasUsed, s.baseFee)
+	if err != nil {
+		return err
+	}
+	fc.Produce(ctx.XAssetID, txFee)
 	for _, out := range utx.ExportedOutputs {
 		fc.Produce(out.AssetID(), out.Output().Amount())
 	}

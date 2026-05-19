@@ -117,7 +117,6 @@ func IntrinsicGas(data []byte, accessList types.AccessList, isContractCreation b
 
 		// EIP-3860: Init code gas is charged when Shanghai is active.
 		// For Lux networks, Shanghai is enabled via shanghaiTime in chain config
-		// OR via Durango upgrade (which brings Shanghai EIPs to ChainEVM chains).
 		if isContractCreation && rules.IsShanghai {
 			lenWords := toWordSize(dataLen)
 			if (math.MaxUint64-gas)/params.InitCodeWordGas < lenWords {
@@ -486,13 +485,11 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 	}
 
 	// Check whether the init code size has been exceeded (EIP-3860).
-	// This applies when Shanghai is active (via shanghaiTime or Durango upgrade).
 	if rules.IsShanghai && contractCreation && len(msg.Data) > params.MaxInitCodeSize {
 		return nil, fmt.Errorf("%w: code size %v limit %v", vm.ErrMaxInitCodeSizeExceeded, len(msg.Data), params.MaxInitCodeSize)
 	}
 
 	// Execute the preparatory steps for state transition which includes:
-	// - prepare accessList(post-berlin/ApricotPhase2)
 	// - reset transient storage(eip 1153)
 	st.state.Prepare(rules, msg.From, st.evm.Context.Coinbase, msg.To, vm.ActivePrecompiles(rules), msg.AccessList)
 
@@ -511,9 +508,8 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 	if overflow {
 		return nil, ErrGasUintOverflow
 	}
-	// Skip gas refunds for Genesis blocks (historic Lux mainnet) or post-ApricotPhase1 blocks.
-	// Genesis blocks never applied refunds, matching the original EVM behavior.
-	gasRefund := st.refundGas(rulesExtra.IsGenesis || rulesExtra.IsApricotPhase1)
+	// Under activate-all-implicitly gas refunds are skipped on every Lux
+	gasRefund := st.refundGas(true)
 	fee := new(uint256.Int).SetUint64(st.gasUsed())
 	fee.Mul(fee, price)
 	st.state.AddBalance(st.evm.Context.Coinbase, fee, tracing.BalanceIncreaseRewardTransactionFee)
@@ -529,7 +525,6 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 func (st *StateTransition) refundGas(skipRefund bool) uint64 {
 	var refund uint64
 	// Inspired by: https://gist.github.com/holiman/460f952716a74eeb9ab358bb1836d821#gistcomment-3642048
-	// skipRefund is true for Genesis blocks (historic imports) or post-ApricotPhase1 blocks
 	if !skipRefund {
 		// Apply refund counter, capped to half of the used gas.
 		refund = st.gasUsed() / 2

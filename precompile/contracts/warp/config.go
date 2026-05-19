@@ -41,7 +41,6 @@ var (
 	errInvalidAddressedPayload    = errors.New("cannot unpack addressed payload")
 	errInvalidBlockHashPayload    = errors.New("cannot unpack block hash payload")
 	errCannotGetNumSigners        = errors.New("cannot fetch num signers from warp message")
-	errWarpCannotBeActivated      = errors.New("warp cannot be activated before Durango")
 	errFailedVerification         = errors.New("cannot verify warp signature")
 	errCannotRetrieveValidatorSet = errors.New("cannot retrieve validator set")
 )
@@ -86,15 +85,10 @@ func NewDisableConfig(blockTimestamp *uint64) *Config {
 func (*Config) Key() string { return ConfigKey }
 
 // Verify tries to verify Config and returns an error accordingly.
-func (c *Config) Verify(chainConfig precompileconfig.ChainConfig) error {
-	if c.Timestamp() != nil {
-		// If Warp attempts to activate before Durango, fail verification
-		timestamp := *c.Timestamp()
-		if !chainConfig.IsDurango(timestamp) {
-			return errWarpCannotBeActivated
-		}
-	}
-
+//
+// Under activate-all-implicitly the historical "warp cannot be activated
+// chain-config interface is no longer consulted here.
+func (c *Config) Verify(_ precompileconfig.ChainConfig) error {
 	if c.QuorumNumerator > WarpQuorumDenominator {
 		return fmt.Errorf("cannot specify quorum numerator (%d) > quorum denominator (%d)", c.QuorumNumerator, WarpQuorumDenominator)
 	}

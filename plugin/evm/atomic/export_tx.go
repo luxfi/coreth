@@ -11,8 +11,6 @@ import (
 
 	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/params/extras"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/luxfi/geth/core/tracing"
 
 	"github.com/luxfi/codec/wrappers"
@@ -107,25 +105,17 @@ func (utx *UnsignedExportTx) Verify(
 		return ErrWrongChainID
 	}
 
-	// Make sure that the tx has a valid peer chain ID
-	if rules.IsApricotPhase5 {
-		// Verify that [tx.DestinationChain] isn't this chain's ID
-		if luxfiidsEqual(ctx.ChainID, utx.DestinationChain) {
-			return ErrWrongChainID
-		}
-		// Note: We skip chain validation here as we don't have access to ValidatorState
-		// TODO: Add proper chain validation when consensus.Context is available
-	} else {
-		if !luxfiidsEqual(ctx.XChainID, utx.DestinationChain) {
-			return ErrWrongChainID
-		}
+	// from genesis, so the historical "before phase X allow same-chain
+	// destination" branches collapse to the always-strict path.
+	if luxfiidsEqual(ctx.ChainID, utx.DestinationChain) {
+		return ErrWrongChainID
 	}
 
 	for _, in := range utx.Ins {
 		if err := in.Verify(); err != nil {
 			return err
 		}
-		if rules.IsBanff && !luxfiidsEqual(ctx.XAssetID, in.AssetID) {
+		if !luxfiidsEqual(ctx.XAssetID, in.AssetID) {
 			return ErrExportNonLUXInputBanff
 		}
 	}
@@ -138,14 +128,14 @@ func (utx *UnsignedExportTx) Verify(
 		if !luxfiidsEqual(ctx.XAssetID, nodeIDToLuxfiids(assetID)) && luxfiidsEqual(constants.PlatformChainID, utx.DestinationChain) {
 			return ErrWrongChainID
 		}
-		if rules.IsBanff && !luxfiidsEqual(ctx.XAssetID, assetID) {
+		if !luxfiidsEqual(ctx.XAssetID, assetID) {
 			return ErrExportNonLUXOutputBanff
 		}
 	}
 	if !lux.IsSortedTransferableOutputs(utx.ExportedOutputs, Codec) {
 		return ErrOutputsNotSorted
 	}
-	if rules.IsApricotPhase1 && !luxutils.IsSortedAndUnique(utx.Ins) {
+	if !luxutils.IsSortedAndUnique(utx.Ins) {
 		return ErrInputsNotSortedUnique
 	}
 
@@ -164,7 +154,7 @@ func (utx *UnsignedExportTx) GasUsed(fixedFee bool) (uint64, error) {
 		return 0, err
 	}
 	if fixedFee {
-		cost, err = math.Add64(cost, ap5.AtomicTxIntrinsicGas)
+		cost, err = math.Add64(cost, AtomicTxBaseCost)
 		if err != nil {
 			return 0, err
 		}
@@ -277,35 +267,24 @@ func NewExportTx(
 		luxNeeded = amount
 	}
 
-	switch {
-	case rules.IsApricotPhase3:
-		utx := &UnsignedExportTx{
-			NetworkID:        ctx.NetworkID,
-			BlockchainID:     luxfiidsToNodeID(ctx.ChainID),
-			DestinationChain: chainID,
-			Ins:              ins,
-			ExportedOutputs:  outs,
-		}
-		tx := &Tx{UnsignedAtomicTx: utx}
-		if err := tx.Sign(Codec, nil); err != nil {
-			return nil, err
-		}
-
-		var cost uint64
-		cost, err = tx.GasUsed(rules.IsApricotPhase5)
-		if err != nil {
-			return nil, err
-		}
-
-		luxIns, luxSigners, err = getSpendableLUXWithFee(ctx, state, keys, luxNeeded, cost, baseFee)
-	default:
-		var newLuxNeeded uint64
-		newLuxNeeded, err = math.Add(luxNeeded, ap0.AtomicTxFee)
-		if err != nil {
-			return nil, errOverflowExport
-		}
-		luxIns, luxSigners, err = getSpendableFunds(ctx, state, keys, nodeIDToLuxfiids(ctx.XAssetID), newLuxNeeded)
+	// dynamic-fee branch. Build a probe tx to size the gas cost, then assemble
+	// the canonical signed tx with the full input set.
+	probe := &Tx{UnsignedAtomicTx: &UnsignedExportTx{
+		NetworkID:        ctx.NetworkID,
+		BlockchainID:     luxfiidsToNodeID(ctx.ChainID),
+		DestinationChain: chainID,
+		Ins:              ins,
+		ExportedOutputs:  outs,
+	}}
+	if err := probe.Sign(Codec, nil); err != nil {
+		return nil, err
 	}
+	cost, err := probe.GasUsed(true)
+	if err != nil {
+		return nil, err
+	}
+
+	luxIns, luxSigners, err = getSpendableLUXWithFee(ctx, state, keys, luxNeeded, cost, baseFee)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't generate tx inputs/signers: %w", err)
 	}
@@ -315,7 +294,6 @@ func NewExportTx(
 	lux.SortTransferableOutputs(outs, Codec)
 	SortEVMInputsAndSigners(ins, signers)
 
-	// Create the transaction
 	utx := &UnsignedExportTx{
 		NetworkID:        ctx.NetworkID,
 		BlockchainID:     luxfiidsToNodeID(ctx.ChainID),

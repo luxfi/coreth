@@ -4,6 +4,7 @@
 package header
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/luxfi/coreth/params/extras"
@@ -14,10 +15,14 @@ import (
 	"github.com/luxfi/vm/components/gas"
 )
 
+var errInvalidTimestamp = errors.New("invalid timestamp")
+
 // feeStateBeforeBlock takes the previous header and the timestamp of its child
-// block and calculates the fee state before the child block is executed.
+// block and calculates the fee state before the child block is executed. Under
+// activate-all-implicitly the LP-176 capacity-based fee state machine is the
+// only one.
 func feeStateBeforeBlock(
-	config *extras.ChainConfig,
+	_ *extras.ChainConfig,
 	parent *types.Header,
 	timestamp uint64,
 ) (lp176.State, error) {
@@ -30,11 +35,9 @@ func feeStateBeforeBlock(
 	}
 
 	var state lp176.State
-	if config.IsFortuna(parent.Time) && parent.Number.Cmp(common.Big0) != 0 {
-		// If the parent block was running with ACP-176, we start with the
-		// resulting fee state from the parent block. It is assumed that the
-		// parent has been verified, so the claimed fee state equals the actual
-		// fee state.
+	if parent.Number.Cmp(common.Big0) != 0 {
+		// The parent's claimed fee state IS the actual fee state — it has
+		// already been verified. The genesis block has no encoded fee state.
 		var err error
 		state, err = lp176.ParseState(parent.Extra)
 		if err != nil {

@@ -16,7 +16,6 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/extension"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/luxfi/coreth/utils"
 
 	"github.com/luxfi/geth/common"
@@ -59,15 +58,15 @@ func newBlockExtender(
 	}
 }
 
-// NewBlockExtension returns a new block extension.
+// NewBlockExtension returns a new block extension. Under
+// activate-all-implicitly the ext data is always a batch-encoded atomic-tx
+// stream (formerly Apricot Phase 5+ behaviour).
 func (be *blockExtender) NewBlockExtension(b extension.ExtendedBlock) (extension.BlockExtension, error) {
 	ethBlock := b.GetEthBlock()
 	if ethBlock == nil {
 		return nil, errNilEthBlock
 	}
-	// Extract atomic transactions from the block
-	isApricotPhase5 := be.vm.chainConfigExtra().IsApricotPhase5(ethBlock.Time())
-	atomicTxs, err := atomic.ExtractAtomicTxs(customtypes.BlockExtData(ethBlock), isApricotPhase5, atomic.Codec)
+	atomicTxs, err := atomic.ExtractAtomicTxs(customtypes.BlockExtData(ethBlock), true, atomic.Codec)
 	if err != nil {
 		return nil, err
 	}
@@ -81,53 +80,21 @@ func (be *blockExtender) NewBlockExtension(b extension.ExtendedBlock) (extension
 
 // SyntacticVerify checks the syntactic validity of the block. This is called by the wrapper
 // block manager's SyntacticVerify method.
-func (be *blockExtension) SyntacticVerify(rules extras.Rules) error {
+func (be *blockExtension) SyntacticVerify(_ extras.Rules) error {
 	b := be.block
 	ethBlock := b.GetEthBlock()
-	blockExtender := be.blockExtender
 	// should not happen
 	if ethBlock == nil {
 		return errNilEthBlock
 	}
 	ethHeader := ethBlock.Header()
-	blockHash := ethBlock.Hash()
 	headerExtra := customtypes.GetHeaderExtra(ethHeader)
 
-	if !rules.IsApricotPhase1 {
-		if blockExtender.extDataHashes != nil {
-			extData := customtypes.BlockExtData(ethBlock)
-			extDataHash := customtypes.CalcExtDataHash(extData)
-			// If there is no extra data, check that there is no extra data in the hash map either to ensure we do not
-			// have a block that is unexpectedly missing extra data.
-			expectedExtDataHash, ok := blockExtender.extDataHashes[blockHash]
-			if len(extData) == 0 {
-				if ok {
-					return fmt.Errorf("found block with unexpected missing extra data (%s, %d), expected extra data hash: %s", blockHash, b.Height(), expectedExtDataHash)
-				}
-			} else {
-				// If there is extra data, check to make sure that the extra data hash matches the expected extra data hash for this
-				// block
-				if extDataHash != expectedExtDataHash {
-					return fmt.Errorf("extra data hash in block (%s, %d): %s, did not match the expected extra data hash: %s", blockHash, b.Height(), extDataHash, expectedExtDataHash)
-				}
-			}
-		}
-	}
-
-	// Verify the ExtDataHash field
-	if rules.IsApricotPhase1 {
-		extraData := customtypes.BlockExtData(ethBlock)
-		hash := customtypes.CalcExtDataHash(extraData)
-		if headerExtra.ExtDataHash != hash {
-			return fmt.Errorf("extra data hash mismatch: have %x, want %x", headerExtra.ExtDataHash, hash)
-		}
-	} else {
-		if headerExtra.ExtDataHash != (common.Hash{}) {
-			return fmt.Errorf(
-				"expected ExtDataHash to be empty but got %x",
-				headerExtra.ExtDataHash,
-			)
-		}
+	// Under activate-all-implicitly every block carries an ExtDataHash that
+	// must match the canonical hash of its ext data.
+	extraData := customtypes.BlockExtData(ethBlock)
+	if hash := customtypes.CalcExtDataHash(extraData); headerExtra.ExtDataHash != hash {
+		return fmt.Errorf("extra data hash mismatch: have %x, want %x", headerExtra.ExtDataHash, hash)
 	}
 
 	// Block must not be empty
@@ -137,35 +104,23 @@ func (be *blockExtension) SyntacticVerify(rules extras.Rules) error {
 		return ErrEmptyBlock
 	}
 
-	// If we are in ApricotPhase4, ensure that ExtDataGasUsed is populated correctly.
-	if rules.IsApricotPhase4 {
-		// After the F upgrade, the extDataGasUsed field is validated by
-		// [header.VerifyGasUsed].
-		if !rules.IsFortuna && rules.IsApricotPhase5 {
-			if !utils.BigLessOrEqualUint64(headerExtra.ExtDataGasUsed, ap5.AtomicGasLimit) {
-				return fmt.Errorf("too large extDataGasUsed: %d", headerExtra.ExtDataGasUsed)
-			}
+	// Under activate-all-implicitly the extDataGasUsed field is validated by
+	// [header.VerifyGasUsed]; here we cross-check it equals the sum of
+	// per-atomic-tx fixed-fee gas charges.
+	var totalGasUsed uint64
+	for _, atomicTx := range atomicTxs {
+		gasUsed, err := atomicTx.GasUsed(true)
+		if err != nil {
+			return err
 		}
-		var totalGasUsed uint64
-		for _, atomicTx := range atomicTxs {
-			// We perform this check manually here to avoid the overhead of having to
-			// reparse the atomicTx in `CalcExtDataGasUsed`.
-			fixedFee := rules.IsApricotPhase5 // Charge the atomic tx fixed fee as of ApricotPhase5
-			gasUsed, err := atomicTx.GasUsed(fixedFee)
-			if err != nil {
-				return err
-			}
-			totalGasUsed, err = safemath.Add(totalGasUsed, gasUsed)
-			if err != nil {
-				return err
-			}
-		}
-
-		if !utils.BigEqualUint64(headerExtra.ExtDataGasUsed, totalGasUsed) {
-			return fmt.Errorf("invalid extDataGasUsed: have %d, want %d", headerExtra.ExtDataGasUsed, totalGasUsed)
+		totalGasUsed, err = safemath.Add(totalGasUsed, gasUsed)
+		if err != nil {
+			return err
 		}
 	}
-
+	if !utils.BigEqualUint64(headerExtra.ExtDataGasUsed, totalGasUsed) {
+		return fmt.Errorf("invalid extDataGasUsed: have %d, want %d", headerExtra.ExtDataGasUsed, totalGasUsed)
+	}
 	return nil
 }
 

@@ -70,10 +70,9 @@ type Accepter interface {
 	Accept(acceptCtx *AcceptContext, blockHash common.Hash, blockNumber uint64, txHash common.Hash, logIndex int, topics []common.Hash, logData []byte) error
 }
 
-// ChainContext defines an interface that provides information to a stateful precompile
-// about the chain configuration. The precompile can access this information to initialize
-// its state.
-type ChainConfig interface {
-	// IsDurango returns true if the time is after Durango.
-	IsDurango(time uint64) bool
-}
+// ChainConfig is the chain-configuration view available to stateful
+// precompiles. Under activate-all-implicitly there are no per-upgrade gates
+// left to ask about, so the interface is currently empty. A precompile that
+// needs to discriminate runtime behaviour should declare its own typed input,
+// not piggy-back on the chain config.
+type ChainConfig interface{}

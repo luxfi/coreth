@@ -720,33 +720,20 @@ func parseGenesis(ctx *runtime.Runtime, bytes []byte) (*core.Genesis, error) {
 		return nil, fmt.Errorf("parsing genesis: %w", err)
 	}
 
-	// Populate the Lux config extras.
+	// Populate the Lux config extras. Under activate-all-implicitly every
+	// upgrade is live from genesis, so there are no per-upgrade timestamps
+	// to copy out of the genesis blob. The Warp precompile is unconditional
+	// and is registered at activate-from-genesis (timestamp 0).
 	configExtra := params.GetExtra(g.Config)
 	configExtra.LuxContext = extras.LuxContext{
 		ConsensusCtx: ctx,
 	}
 
-	// Parse the genesis config into extras to get Lux upgrade timestamps
-	// The geth ChainConfig doesn't have these fields, so we need to parse separately
-	type genesisConfig struct {
-		Config *extras.ChainConfig `json:"config"`
-	}
-	var gc genesisConfig
-	if err := json.Unmarshal(bytes, &gc); err != nil {
-		return nil, fmt.Errorf("parsing genesis config extras: %w", err)
-	}
+	zero := uint64(0)
+	configExtra.PrecompileUpgrades = append(configExtra.PrecompileUpgrades, extras.PrecompileUpgrade{
+		Config: warpcontract.NewDefaultConfig(&zero),
+	})
 
-	// Use NetworkUpgrades from genesis config if present
-	if gc.Config != nil {
-		configExtra.NetworkUpgrades = gc.Config.NetworkUpgrades
-	}
-
-	// If Durango is scheduled, schedule the Warp Precompile at the same time.
-	if configExtra.DurangoBlockTimestamp != nil {
-		configExtra.PrecompileUpgrades = append(configExtra.PrecompileUpgrades, extras.PrecompileUpgrade{
-			Config: warpcontract.NewDefaultConfig(configExtra.DurangoBlockTimestamp),
-		})
-	}
 	if err := configExtra.Verify(); err != nil {
 		return nil, fmt.Errorf("invalid chain config: %w", err)
 	}
