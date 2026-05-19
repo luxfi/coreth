@@ -19,7 +19,7 @@ require (
 	github.com/luxfi/cache v1.2.1
 	github.com/luxfi/codec v1.1.4
 	github.com/luxfi/crypto v1.19.3
-	github.com/luxfi/geth v1.16.94
+	github.com/luxfi/geth v1.16.98
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/metric v1.5.1
 	github.com/mattn/go-colorable v0.1.14
@@ -192,7 +192,7 @@ require (
 	github.com/luxfi/api v1.0.4 // indirect
 	github.com/luxfi/compress v0.0.5 // indirect
 	github.com/luxfi/container v0.0.4 // indirect
-	github.com/luxfi/corona v0.3.1 // indirect
+	github.com/luxfi/corona v0.4.1 // indirect
 	github.com/luxfi/crypto/ipa v1.2.4 // indirect
 	github.com/luxfi/fhe v1.8.0 // indirect
 	github.com/luxfi/genesis v1.7.1 // indirect

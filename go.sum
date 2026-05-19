@@ -273,8 +273,8 @@ github.com/luxfi/constants v1.4.7 h1:e/Qs+DQP3pugle3Zncq6fZCxKgqqtbyD/z7Gm4ZjsYg
 github.com/luxfi/constants v1.4.7/go.mod h1:hOszZ2NDQ8gMZKncfcZ67PXkb5OIbnwAzXC3oFbQwW0=
 github.com/luxfi/container v0.0.4 h1:BXhF82WyfqVP5mjlNcr7tP0Fcnvl0Ap1rkiu+rq5XuM=
 github.com/luxfi/container v0.0.4/go.mod h1:Z3SpmMF5d4t77MM0nHYXURpn+EMVaeu1fhbd/3BGaek=
-github.com/luxfi/corona v0.3.1 h1:Mzhv65snVc5Z3mb7HQMTLWhSp7EWbqba4ynCWqo1dgY=
-github.com/luxfi/corona v0.3.1/go.mod h1:ggyyXItOMyv14pvfr/9CINBCMbRkqk1Y8njK705AcD8=
+github.com/luxfi/corona v0.4.1 h1:DGMdZMrENl6vmJf9CgiQMD8c5ORSTMymL0z9KgcZstk=
+github.com/luxfi/corona v0.4.1/go.mod h1:4aD7+ZqnlZ2aVuU/DBQ5aspIagv5ux45LW2sJ4+siY8=
 github.com/luxfi/crypto v1.19.3 h1:+DMXpf0FICE8QDvV4YkPBd0BdNoAyWpBx0/w6FQQghc=
 github.com/luxfi/crypto v1.19.3/go.mod h1:XuDGwoF+VassuAcuorv/XsqGV6FL7VGuHraW7zxMjAA=
 github.com/luxfi/crypto/ipa v1.2.4 h1:6xfwhI9/HrcDkF3Ti5/NxsNQIWbwYDJmRSNIHRQ/xfU=
@@ -289,8 +289,8 @@ github.com/luxfi/formatting v1.0.1 h1:ZnE1rAdEUds9yAegdVdGDOBGN6hLMPOv6E03Fp8IEY
 github.com/luxfi/formatting v1.0.1/go.mod h1:mYzNf5DJOiqSSKUPzNj5dKy4tstFbN3pZlkI5716eKc=
 github.com/luxfi/genesis v1.7.1 h1:rMzmyt9kcSmF7wSf/ajoReDz8nBAX83v2xE4EgqgPOo=
 github.com/luxfi/genesis v1.7.1/go.mod h1:k26ZZvzES8e9cep9oWUDggBX+6oa5bnIQ7MmQP7dm4A=
-github.com/luxfi/geth v1.16.94 h1:7V5cIP/NRmLjuxZJ6SA1A8lMaMVftPb5I9Q7pewhjAo=
-github.com/luxfi/geth v1.16.94/go.mod h1:O83NZHbKzSZ6lk2U1LD/IYnh+jbYSxtpGlCvF3aLxgE=
+github.com/luxfi/geth v1.16.98 h1:w187TtKuGStf3tm2bshuHVKBv2Frjx0lT54kQVXyNHA=
+github.com/luxfi/geth v1.16.98/go.mod h1:6kEzSExdk9CPQDPXALt6P3HfQqBq7KF1Jrrv9gBpxbU=
 github.com/luxfi/go-bip32 v1.0.2 h1:7vFbb+Wr4Z499q2tuCLdd7wWjtn8sH+HWBlx76mhH9Y=
 github.com/luxfi/go-bip32 v1.0.2/go.mod h1:bc7/LXDKAJQZ/F0Xjf5yXaTZxY9/ssLb4FC+Hxn/cDk=
 github.com/luxfi/go-bip39 v1.1.2 h1:p+wLMPGs6MLQh7q0YIsmy2EhHL7LHiELEGTJko6t/Jg=
