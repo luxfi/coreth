@@ -144,8 +144,8 @@ require (
 	github.com/luxfi/math v1.4.0
 	github.com/luxfi/node v1.23.4
 	github.com/luxfi/p2p v1.19.2
-	github.com/luxfi/precompile v0.5.14
-	github.com/luxfi/protocol v0.0.3
+	github.com/luxfi/precompile v0.5.17
+	github.com/luxfi/proto v0.0.0-proto-rename
 	github.com/luxfi/rpc v1.0.0
 	github.com/luxfi/runtime v1.0.1
 	github.com/luxfi/sys v0.0.0-20260110090042-50187ec5ffd8
@@ -192,6 +192,8 @@ require (
 	github.com/luxfi/api v1.0.4 // indirect
 	github.com/luxfi/compress v0.0.5 // indirect
 	github.com/luxfi/container v0.0.4 // indirect
+	github.com/luxfi/corona v0.3.1 // indirect
+	github.com/luxfi/crypto/ipa v1.2.4 // indirect
 	github.com/luxfi/fhe v1.8.0 // indirect
 	github.com/luxfi/genesis v1.7.1 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
@@ -232,9 +234,12 @@ require (
 	github.com/luxfi/address v1.0.1
 	github.com/luxfi/formatting v1.0.1
 	github.com/luxfi/math/big v0.1.0 // indirect
-	github.com/luxfi/ringtail v0.2.0 // indirect
 	github.com/montanaflynn/stats v0.9.0 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
 )
 
 exclude google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
+
+// Local-dev overlay for the protocol → proto rename.
+// Strip once GitHub admin renames luxfi/protocol → luxfi/proto and a real tag exists.
+replace github.com/luxfi/proto => ../protocol
