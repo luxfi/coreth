@@ -24,19 +24,9 @@ func TestVerifyBlockFee(t *testing.T) {
 		extraStateContribution *big.Int
 		shouldErr              bool
 	}{
-		"tx only base fee": {
-			baseFee:            big.NewInt(100),
-			parentBlockGasCost: big.NewInt(0),
-			timeElapsed:        0,
-			txs: []*types.Transaction{
-				types.NewTransaction(0, common.HexToAddress("7ef5a6135f1fd6a02593eedc869c6d41d934aef8"), big.NewInt(0), 100, big.NewInt(100), nil),
-			},
-			receipts: []*types.Receipt{
-				{GasUsed: 1000},
-			},
-			extraStateContribution: nil,
-			shouldErr:              true,
-		},
+		// "tx only base fee" subtest removed: it asserted a failure when
+		// block fee exceeded contribution. Under activate-all-implicitly the
+		// block gas cost is always zero, so this case no longer fails.
 		"tx covers exactly block fee": {
 			baseFee:            big.NewInt(100),
 			parentBlockGasCost: big.NewInt(0),
@@ -93,15 +83,9 @@ func TestVerifyBlockFee(t *testing.T) {
 			extraStateContribution: big.NewInt(5_000_000),
 			shouldErr:              false,
 		},
-		"extra state contribution insufficient": {
-			baseFee:                big.NewInt(100),
-			parentBlockGasCost:     big.NewInt(0),
-			timeElapsed:            0,
-			txs:                    nil,
-			receipts:               nil,
-			extraStateContribution: big.NewInt(9_999_999),
-			shouldErr:              true,
-		},
+		// "extra state contribution insufficient" subtest removed: like
+		// "tx only base fee", under activate-all-implicitly the block gas cost
+		// is zero so the assertion never fires.
 		"negative extra state contribution": {
 			baseFee:                big.NewInt(100),
 			parentBlockGasCost:     big.NewInt(0),

@@ -28,20 +28,20 @@
 package params
 
 import (
-	"math"
-	"math/big"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/luxfi/coreth/params/extras"
-	"github.com/luxfi/coreth/utils"
 	ethparams "github.com/luxfi/geth/params"
 )
 
 // Note: This file tests config compatibility. With the simplified Lux chain config
 // (only Genesis and Mainnet), we only need to verify that configs are compatible
-// with themselves and that rules are correctly applied.
+// with themselves. The TestConfigRules suite that exercised pre-upgrade gating
+// (IsCortina at different timestamps) was removed under the activate-all-
+// implicitly directive: all upgrades are live from genesis, so there is no
+// runtime axis left to test besides the genesis-block discriminator, which is
+// exercised by extras.GetLuxRules tests directly.
 
 func TestCheckCompatible(t *testing.T) {
 	type test struct {
@@ -62,28 +62,5 @@ func TestCheckCompatible(t *testing.T) {
 		if !reflect.DeepEqual(err, test.wantErr) {
 			t.Errorf("error mismatch:\nstored: %v\nnew: %v\nblockHeight: %v\nerr: %v\nwant: %v", test.stored, test.new, test.headBlock, err, test.wantErr)
 		}
-	}
-}
-
-func TestConfigRules(t *testing.T) {
-	c := WithExtra(
-		&ChainConfig{},
-		&extras.ChainConfig{
-			NetworkUpgrades: extras.NetworkUpgrades{
-				CortinaBlockTimestamp: utils.NewUint64(500),
-			},
-		},
-	)
-	var stamp uint64
-	if _, rulesEx := GetRules(c, big.NewInt(0), IsMergeTODO, stamp); rulesEx.IsCortina {
-		t.Errorf("expected %v to not be cortina", stamp)
-	}
-	stamp = 500
-	if _, rulesEx := GetRules(c, big.NewInt(0), IsMergeTODO, stamp); !rulesEx.IsCortina {
-		t.Errorf("expected %v to be cortina", stamp)
-	}
-	stamp = math.MaxInt64
-	if _, rulesEx := GetRules(c, big.NewInt(0), IsMergeTODO, stamp); !rulesEx.IsCortina {
-		t.Errorf("expected %v to be cortina", stamp)
 	}
 }

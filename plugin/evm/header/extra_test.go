@@ -16,10 +16,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Under activate-all-implicitly there are no per-upgrade gates left on the
+// header-extra path. All tests run against a bare *extras.ChainConfig{}.
+
 func TestExtraPrefix(t *testing.T) {
 	tests := []struct {
 		name                string
-		upgrades            extras.NetworkUpgrades
 		parent              *types.Header
 		header              *types.Header
 		desiredTargetExcess *gas.Gas
@@ -27,8 +29,7 @@ func TestExtraPrefix(t *testing.T) {
 		wantErr             error
 	}{
 		{
-			name:     "genesis_block",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "genesis_block",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -51,8 +52,7 @@ func TestExtraPrefix(t *testing.T) {
 			}).Bytes(),
 		},
 		{
-			name:     "mainnet_invalid_fee_state",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_invalid_fee_state",
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
@@ -60,8 +60,7 @@ func TestExtraPrefix(t *testing.T) {
 			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "mainnet_invalid_gas_used",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_invalid_gas_used",
 			parent: &types.Header{
 				Number: big.NewInt(1),
 				Extra:  (&lp176.State{}).Bytes(),
@@ -72,8 +71,7 @@ func TestExtraPrefix(t *testing.T) {
 			wantErr: gas.ErrInsufficientCapacity,
 		},
 		{
-			name:     "mainnet_valid",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_valid",
 			parent: &types.Header{
 				Number: big.NewInt(1),
 				Extra: (&lp176.State{
@@ -103,9 +101,7 @@ func TestExtraPrefix(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			require := require.New(t)
 
-			config := &extras.ChainConfig{
-				NetworkUpgrades: test.upgrades,
-			}
+			config := &extras.ChainConfig{}
 			got, err := ExtraPrefix(config, test.parent, test.header, test.desiredTargetExcess)
 			require.ErrorIs(err, test.wantErr)
 			require.Equal(test.want, got)
@@ -115,21 +111,18 @@ func TestExtraPrefix(t *testing.T) {
 
 func TestVerifyExtraPrefix(t *testing.T) {
 	tests := []struct {
-		name     string
-		upgrades extras.NetworkUpgrades
-		parent   *types.Header
-		header   *types.Header
-		wantErr  error
+		name    string
+		parent  *types.Header
+		header  *types.Header
+		wantErr error
 	}{
 		{
-			name:     "mainnet_invalid_header",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
-			header:   &types.Header{},
-			wantErr:  lp176.ErrStateInsufficientLength,
+			name:    "mainnet_invalid_header",
+			header:  &types.Header{},
+			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "mainnet_invalid_gas_consumed",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_invalid_gas_consumed",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -140,8 +133,7 @@ func TestVerifyExtraPrefix(t *testing.T) {
 			wantErr: gas.ErrInsufficientCapacity,
 		},
 		{
-			name:     "mainnet_wrong_fee_state",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_wrong_fee_state",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -159,8 +151,7 @@ func TestVerifyExtraPrefix(t *testing.T) {
 			wantErr: errIncorrectFeeState,
 		},
 		{
-			name:     "mainnet_valid",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_valid",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -180,9 +171,7 @@ func TestVerifyExtraPrefix(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			config := &extras.ChainConfig{
-				NetworkUpgrades: test.upgrades,
-			}
+			config := &extras.ChainConfig{}
 			err := VerifyExtraPrefix(config, test.parent, test.header)
 			require.ErrorIs(t, err, test.wantErr)
 		})
@@ -192,38 +181,28 @@ func TestVerifyExtraPrefix(t *testing.T) {
 func TestVerifyExtra(t *testing.T) {
 	tests := []struct {
 		name     string
-		rules    extras.LuxRules
 		extra    []byte
 		expected error
 	}{
 		{
-			name: "mainnet_valid_min",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
+			name:     "mainnet_valid_min",
 			extra:    make([]byte, lp176.StateSize),
 			expected: nil,
 		},
 		{
-			name: "mainnet_valid_extra",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
+			name:     "mainnet_valid_extra",
 			extra:    make([]byte, lp176.StateSize+1),
 			expected: nil,
 		},
 		{
-			name: "mainnet_invalid",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
+			name:     "mainnet_invalid",
 			extra:    make([]byte, lp176.StateSize-1),
 			expected: errInvalidExtraLength,
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := VerifyExtra(test.rules, test.extra)
+			err := VerifyExtra(extras.LuxRules{}, test.extra)
 			require.ErrorIs(t, err, test.expected)
 		})
 	}
@@ -232,39 +211,26 @@ func TestVerifyExtra(t *testing.T) {
 func TestPredicateBytesFromExtra(t *testing.T) {
 	tests := []struct {
 		name     string
-		rules    extras.LuxRules
 		extra    []byte
 		expected []byte
 	}{
 		{
-			name: "mainnet_empty_extra",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
+			name:     "mainnet_empty_extra",
 			extra:    nil,
 			expected: nil,
 		},
 		{
-			name: "mainnet_too_short",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
+			name:     "mainnet_too_short",
 			extra:    make([]byte, lp176.StateSize-1),
 			expected: nil,
 		},
 		{
-			name: "mainnet_empty_predicate",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
+			name:     "mainnet_empty_predicate",
 			extra:    make([]byte, lp176.StateSize),
 			expected: nil,
 		},
 		{
 			name: "mainnet_non_empty_predicate",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
 			extra: []byte{
 				lp176.StateSize: 5,
 			},
@@ -273,7 +239,7 @@ func TestPredicateBytesFromExtra(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := PredicateBytesFromExtra(test.rules, test.extra)
+			got := PredicateBytesFromExtra(extras.LuxRules{}, test.extra)
 			require.Equal(t, test.expected, got)
 		})
 	}
@@ -282,23 +248,16 @@ func TestPredicateBytesFromExtra(t *testing.T) {
 func TestSetPredicateBytesInExtra(t *testing.T) {
 	tests := []struct {
 		name      string
-		rules     extras.LuxRules
 		extra     []byte
 		predicate []byte
 		want      []byte
 	}{
 		{
 			name: "mainnet_empty_extra_predicate",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
 			want: make([]byte, lp176.StateSize),
 		},
 		{
-			name: "mainnet_extra_too_short",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
+			name:      "mainnet_extra_too_short",
 			extra:     []byte{1},
 			predicate: []byte{2},
 			want: []byte{
@@ -308,9 +267,6 @@ func TestSetPredicateBytesInExtra(t *testing.T) {
 		},
 		{
 			name: "mainnet_extra_too_long",
-			rules: extras.LuxRules{
-				IsFortuna: true,
-			},
 			extra: []byte{
 				lp176.StateSize: 1,
 			},
@@ -322,7 +278,7 @@ func TestSetPredicateBytesInExtra(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := SetPredicateBytesInExtra(test.rules, test.extra, test.predicate)
+			got := SetPredicateBytesInExtra(extras.LuxRules{}, test.extra, test.predicate)
 			require.Equal(t, test.want, got)
 		})
 	}

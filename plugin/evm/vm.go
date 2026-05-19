@@ -318,8 +318,12 @@ func (v *VM) installSecurityProfile() error {
 				return fmt.Errorf("legacy LuxStrictPQ bool: Validate: %w", err)
 			}
 			v.securityProfile = profile
-			gethvm.SetActiveSecurityProfile(&gethvm.LuxSecurityProfile{
-				ForbidECDSAContractAuth: profile.ForbidECDSAContractAuth,
+			// Project the strict-PQ posture onto the EVM precompile gate.
+			// Under geth v1.16.94+ the gate is a *pq.Profile aliased as
+			// gethvm.PQProfile; ForbidECDSAContractAuth (consensus axis)
+			// projects onto ForbidEcrecover (precompile 0x01).
+			gethvm.SetPQProfile(&gethvm.PQProfile{
+				ForbidEcrecover: profile.ForbidECDSAContractAuth,
 			})
 			log.Info("Coreth strict-PQ active (legacy bool path): ecrecover (0x01) refuses classical contract-auth")
 			return nil
@@ -351,11 +355,14 @@ func (v *VM) installSecurityProfile() error {
 	profile.ProfileHash = live
 	v.securityProfile = profile
 
-	// Wire the precompile layer with the resolved posture. ecrecover
-	// (0x01) is the only classical contract-auth path exposed to
-	// strict-PQ chains; the bit is true under every locked PQ profile.
-	gethvm.SetActiveSecurityProfile(&gethvm.LuxSecurityProfile{
-		ForbidECDSAContractAuth: profile.ForbidECDSAContractAuth,
+	// Wire the precompile layer with the resolved posture. Under geth
+	// v1.16.94+ the gate is *pq.Profile aliased as gethvm.PQProfile;
+	// ForbidECDSAContractAuth (consensus axis) projects onto
+	// ForbidEcrecover (precompile 0x01) — the only classical contract-auth
+	// path exposed to strict-PQ chains. The bit is true under every
+	// locked PQ profile.
+	gethvm.SetPQProfile(&gethvm.PQProfile{
+		ForbidEcrecover: profile.ForbidECDSAContractAuth,
 	})
 	log.Info("Coreth chain-security profile installed",
 		"profileID", fmt.Sprintf("0x%02x", profile.ProfileID),

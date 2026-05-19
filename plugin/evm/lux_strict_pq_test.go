@@ -4,7 +4,6 @@
 package evm
 
 import (
-	"encoding/hex"
 	"errors"
 	"testing"
 
@@ -16,90 +15,45 @@ import (
 // secp256k1 ecrecover, namely 0x0000000000000000000000000000000000000001.
 var ecrecoverAddr = common.BytesToAddress([]byte{0x1})
 
-// validEcrecoverInputHex is a well-known signature for ecrecover at 0x01.
-// Mirrors the one in luxfi/geth/core/vm/lux_security_profile_test.go.
-//
-// The recovered address does NOT matter for these tests — what matters is
-// that under strict-PQ the precompile returns ErrClassicalAuthForbidden
-// and zero output bytes, regardless of input shape.
-const validEcrecoverInputHex = "" +
-	// hash
-	"a35a39e7715a7b2c5d2e3a5d8e8f8a8b8c8d8e8f9091929394959697989a9b9c" +
-	// v (left-padded; canonical v = 27 or 28)
-	"000000000000000000000000000000000000000000000000000000000000001c" +
-	// r
-	"7b6d1f1f0a85b5a3aa3f0e57c8c30a1b1c1d1e1f2021222324252627282a2b2c" +
-	// s
-	"3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c"
-
-// resetActiveSecurityProfile restores the package-level state so a strict-PQ
-// test in this package does not leak across cases. The receiver is the
-// geth vm package; the wrapper is identical in shape to the geth test
-// helper so an audit reviewer can diff line-by-line.
+// resetActiveSecurityProfile restores the deprecated package-global PQ
+// projection between tests in this package. The authoritative gate is the
+// chain-config field gethvm.ChainConfig.PQ exercised by
+// (*EVM).runPrecompile; the package-global is retained as a back-compat
+// shim that delegates to pq.SetActive. Resetting it isolates tests that
+// would otherwise inherit state from prior cases.
 func resetActiveSecurityProfile(t *testing.T) {
 	t.Helper()
-	prev := gethvm.ActiveSecurityProfile()
+	prev := gethvm.ActivePQProfile()
 	t.Cleanup(func() {
-		gethvm.SetActiveSecurityProfile(prev)
+		gethvm.SetPQProfile(prev)
 	})
 }
 
-// TestEcrecoverStrictPQ_Forbidden asserts the coreth-side wire-up: when
-// Config.LuxStrictPQ is true, VM.Initialize installs the strict-PQ
-// posture into the geth precompile layer, and the ecrecover precompile
-// at 0x01 returns ErrClassicalAuthForbidden.
-//
-// This test exercises the gate by installing the strict-PQ profile
-// directly (the same gate VM.Initialize fires) and then calling the
-// precompile. The integration with VM.Initialize itself is exercised
-// by the higher-level coreth integration tests; this focused test
-// proves that under coreth's go.mod the gate IS callable and returns
-// the expected error.
+// TestEcrecoverStrictPQ_Forbidden asserts the strict-PQ gate refuses
+// the ecrecover precompile (op 0x01). Under geth v1.16.94+ the gate is
+// exposed via *PQProfile.RefuseUnder(Op); the per-precompile Run() no
+// longer gates by itself — the EVM dispatches via runPrecompile which
+// invokes RefuseUnder.
 func TestEcrecoverStrictPQ_Forbidden(t *testing.T) {
-	resetActiveSecurityProfile(t)
-	gethvm.SetActiveSecurityProfile(&gethvm.LuxSecurityProfile{
-		ForbidECDSAContractAuth: true,
-	})
-
-	contracts := gethvm.PrecompiledContractsByzantium
-	ecrec, ok := contracts[ecrecoverAddr]
-	if !ok {
-		t.Fatal("ecrecover precompile not registered at 0x01")
-	}
-
-	input, err := hex.DecodeString(validEcrecoverInputHex)
-	if err != nil {
-		t.Fatalf("hex decode: %v", err)
-	}
-
-	out, err := ecrec.Run(input)
-	if !errors.Is(err, gethvm.ErrClassicalAuthForbidden) {
-		t.Fatalf("ecrecover.Run: got out=%x err=%v; want ErrClassicalAuthForbidden",
-			out, err)
-	}
-	if len(out) != 0 {
-		t.Fatalf("strict-PQ ecrecover must return zero bytes, got %d", len(out))
+	profile := &gethvm.PQProfile{ForbidEcrecover: true}
+	err := profile.RefuseUnder(gethvm.OpEcrecover)
+	if !errors.Is(err, gethvm.ErrEcrecoverForbidden) {
+		t.Fatalf("RefuseUnder(OpEcrecover): got err=%v; want ErrEcrecoverForbidden", err)
 	}
 }
 
-// TestEcrecoverClassicalCompat_Works asserts the classical-compat path
-// is preserved under coreth: when no profile is installed (or the
-// profile is permissive), ecrecover runs upstream go-ethereum semantics
-// and does NOT return ErrClassicalAuthForbidden.
+// TestEcrecoverClassicalCompat_Works asserts that a nil profile (and a
+// permissive profile) admit ecrecover. This preserves the classical-compat
+// guarantee: chains without a strict-PQ pin behave identically to upstream
+// go-ethereum.
 func TestEcrecoverClassicalCompat_Works(t *testing.T) {
-	resetActiveSecurityProfile(t)
-	gethvm.SetActiveSecurityProfile(nil)
-
-	contracts := gethvm.PrecompiledContractsByzantium
-	ecrec, ok := contracts[ecrecoverAddr]
-	if !ok {
-		t.Fatal("ecrecover precompile not registered at 0x01")
+	var nilProfile *gethvm.PQProfile
+	if err := nilProfile.RefuseUnder(gethvm.OpEcrecover); err != nil {
+		t.Fatalf("nil profile must admit ecrecover; got %v", err)
 	}
 
-	// Zero input — classical ecrecover returns (nil, nil) here. Only
-	// the absence of ErrClassicalAuthForbidden is required.
-	_, err := ecrec.Run(make([]byte, 128))
-	if errors.Is(err, gethvm.ErrClassicalAuthForbidden) {
-		t.Fatalf("classical-compat path must not return ErrClassicalAuthForbidden, got %v", err)
+	permissive := &gethvm.PQProfile{}
+	if err := permissive.RefuseUnder(gethvm.OpEcrecover); err != nil {
+		t.Fatalf("permissive profile must admit ecrecover; got %v", err)
 	}
 }
