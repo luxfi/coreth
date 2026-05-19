@@ -9,8 +9,8 @@ import (
 
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/blockgascost"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/atomicgas"
 	"github.com/luxfi/geth/core/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,9 +29,9 @@ func TestBlockGasCost(t *testing.T) {
 			name:       "mainnet",
 			upgrades:   extras.TestChainConfig.NetworkUpgrades,
 			parentTime: 10,
-			parentCost: big.NewInt(ap4.MaxBlockGasCost),
-			timestamp:  10 + ap4.TargetBlockRate + 1,
-			expected:   big.NewInt(ap4.MaxBlockGasCost - ap5.BlockGasCostStep),
+			parentCost: big.NewInt(blockgascost.MaxBlockGasCost),
+			timestamp:  10 + blockgascost.TargetBlockRate + 1,
+			expected:   big.NewInt(blockgascost.MaxBlockGasCost - atomicgas.BlockGasCostStep),
 		},
 	}
 
@@ -69,19 +69,19 @@ func TestBlockGasCostWithStep(t *testing.T) {
 			name:        "nil_parentCost",
 			parentCost:  nil,
 			timeElapsed: 0,
-			expected:    ap4.MinBlockGasCost,
+			expected:    blockgascost.MinBlockGasCost,
 		},
 		{
 			name:        "at_target",
 			parentCost:  big.NewInt(900_000),
-			timeElapsed: ap4.TargetBlockRate,
+			timeElapsed: blockgascost.TargetBlockRate,
 			expected:    900_000,
 		},
 		{
 			name:        "over_target",
-			parentCost:  big.NewInt(ap4.MaxBlockGasCost),
+			parentCost:  big.NewInt(blockgascost.MaxBlockGasCost),
 			timeElapsed: 10,
-			expected:    ap4.MaxBlockGasCost - (10-ap4.TargetBlockRate)*ap4.BlockGasCostStep,
+			expected:    blockgascost.MaxBlockGasCost - (10-blockgascost.TargetBlockRate)*blockgascost.BlockGasCostStep,
 		},
 	}
 
@@ -89,7 +89,7 @@ func TestBlockGasCostWithStep(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert.Equal(t, test.expected, BlockGasCostWithStep(
 				test.parentCost,
-				ap4.BlockGasCostStep,
+				blockgascost.BlockGasCostStep,
 				test.timeElapsed,
 			))
 		})

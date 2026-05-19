@@ -40,8 +40,8 @@ import (
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/nativeasset"
 	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/genesisparams"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/gaslimit_initial"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
@@ -112,7 +112,7 @@ func executeStateTransitionTest(t *testing.T, st stateTransitionTest) {
 					Nonce:   0,
 				},
 			},
-			GasLimit: ap1.GasLimit,
+			GasLimit: gaslimit_initial.GasLimit,
 		}
 		genesis       = gspec.ToBlock()
 		engine        = dummy.NewFaker()
@@ -146,43 +146,43 @@ func TestNativeAssetContractCall(t *testing.T) {
 
 	contractAddr := crypto.CreateAddress(testAddr, 0)
 	txs := []*types.Transaction{
-		makeContractTx(0, common.Big0, 500_000, big.NewInt(ap0.MinGasPrice), data),
-		makeTx(1, contractAddr, common.Big0, 100_000, big.NewInt(ap0.MinGasPrice), nil), // No input data is necessary, since this will hit the contract's fallback function.
+		makeContractTx(0, common.Big0, 500_000, big.NewInt(genesisparams.MinGasPrice), data),
+		makeTx(1, contractAddr, common.Big0, 100_000, big.NewInt(genesisparams.MinGasPrice), nil), // No input data is necessary, since this will hit the contract's fallback function.
 	}
 
 	tests := map[string]stateTransitionTest{
 		"phase5": {
-			config:  params.TestApricotPhase5Config,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{132091, 41618},
 			want:    "",
 		},
 		"prePhase6": {
-			config:  params.TestApricotPhasePre6Config,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{132091, 21618},
 			want:    "",
 		},
 		"phase6": {
-			config:  params.TestApricotPhase6Config,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{132091, 41618},
 			want:    "",
 		},
 		"banff": {
-			config:  params.TestBanffChainConfig,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{132091, 21618},
 			want:    "",
 		},
 		"durango": {
-			config:  params.TestDurangoChainConfig,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{132117, 21618},
 			want:    "",
 		},
 		"etna": {
-			config:  params.TestEtnaChainConfig,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{132117, 21618},
 			want:    "",
@@ -203,30 +203,30 @@ func TestNativeAssetContractConstructor(t *testing.T) {
 	require.NoError(err)
 
 	txs := []*types.Transaction{
-		makeContractTx(0, common.Big0, 100_000, big.NewInt(ap0.MinGasPrice), data),
+		makeContractTx(0, common.Big0, 100_000, big.NewInt(genesisparams.MinGasPrice), data),
 	}
 
 	phase6Tests := map[string]stateTransitionTest{
 		"phase5": {
-			config:  params.TestApricotPhase5Config,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{92046},
 			want:    "",
 		},
 		"prePhase6": {
-			config:  params.TestApricotPhasePre6Config,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{72046},
 			want:    "",
 		},
 		"phase6": {
-			config:  params.TestApricotPhase6Config,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{92046},
 			want:    "",
 		},
 		"banff": {
-			config:  params.TestBanffChainConfig,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{72046},
 			want:    "",
@@ -242,12 +242,12 @@ func TestNativeAssetContractConstructor(t *testing.T) {
 
 func TestNativeAssetDirectEOACall(t *testing.T) {
 	txs := []*types.Transaction{
-		makeTx(0, nativeasset.NativeAssetCallAddr, common.Big0, 100_000, big.NewInt(ap0.MinGasPrice), nil),
+		makeTx(0, nativeasset.NativeAssetCallAddr, common.Big0, 100_000, big.NewInt(genesisparams.MinGasPrice), nil),
 	}
 
 	phase6Tests := map[string]stateTransitionTest{
 		"phase5": {
-			config:  params.TestApricotPhase5Config,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{41000},
 			want:    "",
@@ -258,19 +258,19 @@ func TestNativeAssetDirectEOACall(t *testing.T) {
 		// Therefore, there is no need for an error to be returned in this test case even though a soft error would have been
 		// returned during PrePhase6.
 		"prePhase6": {
-			config:  params.TestApricotPhasePre6Config,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{21000},
 			want:    "",
 		},
 		"phase6": {
-			config:  params.TestApricotPhase6Config,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{41000},
 			want:    "",
 		},
 		"banff": {
-			config:  params.TestBanffChainConfig,
+			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{21000},
 			want:    "",

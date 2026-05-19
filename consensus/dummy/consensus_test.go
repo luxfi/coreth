@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/blockgascost"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 )
@@ -132,7 +132,7 @@ func TestVerifyBlockFee(t *testing.T) {
 		"tx only base fee after full time window": {
 			baseFee:            big.NewInt(100),
 			parentBlockGasCost: big.NewInt(500_000),
-			timeElapsed:        ap4.TargetBlockRate + 10,
+			timeElapsed:        blockgascost.TargetBlockRate + 10,
 			txs: []*types.Transaction{
 				types.NewTransaction(0, common.HexToAddress("7ef5a6135f1fd6a02593eedc869c6d41d934aef8"), big.NewInt(0), 100, big.NewInt(100), nil),
 			},
@@ -161,7 +161,7 @@ func TestVerifyBlockFee(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			blockGasCost := header.BlockGasCostWithStep(
 				test.parentBlockGasCost,
-				ap4.BlockGasCostStep,
+				blockgascost.BlockGasCostStep,
 				test.timeElapsed,
 			)
 			bigBlockGasCost := new(big.Int).SetUint64(blockGasCost)

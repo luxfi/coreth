@@ -31,7 +31,6 @@ func BaseFee(
 // `timestamp` on top of `parent`.
 //
 // If timestamp is before parent.Time, then timestamp is set to parent.Time.
-// Apricot Phase 3 (dynamic fees) is always active on Lux mainnet.
 //
 // Warning: This function should only be used in estimation and should not be
 // used when calculating the canonical base fee for a block.

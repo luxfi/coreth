@@ -527,7 +527,6 @@ func (vm *VM) preBatchOnFinalizeAndAssemble(header *types.Header, state *state.S
 	return nil, nil, nil, nil
 }
 
-// assumes that we are in at least Apricot Phase 5.
 func (vm *VM) postBatchOnFinalizeAndAssemble(
 	header *types.Header,
 	parent *types.Header,

@@ -45,7 +45,7 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/dynamicfee"
 	"github.com/luxfi/coreth/precompile/contracts/warp"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
@@ -81,7 +81,7 @@ func TestSetupGenesis(t *testing.T) {
 }
 
 func testSetupGenesis(t *testing.T, scheme string) {
-	apricotPhase1Config := params.Copy(params.TestApricotPhase1Config)
+	apricotPhase1Config := params.Copy(params.TestChainConfig)
 	params.GetExtra(&apricotPhase1Config).ApricotPhase1BlockTimestamp = utils.NewUint64(100)
 	var (
 		customghash = common.HexToHash("0x1099a11e9e454bd3ef31d688cf21936671966407bc330f051d754b5ce401e7ed")
@@ -215,7 +215,7 @@ func testSetupGenesis(t *testing.T, scheme string) {
 func TestNetworkUpgradeBetweenHeadAndAcceptedBlock(t *testing.T) {
 	db := rawdb.NewMemoryDatabase()
 	customg := Genesis{
-		Config: params.TestApricotPhase1Config,
+		Config: params.TestChainConfig,
 		Alloc: types.GenesisAlloc{
 			{1}: {Balance: big.NewInt(1), Storage: map[common.Hash]common.Hash{{1}: {1}}},
 		},
@@ -242,7 +242,7 @@ func TestNetworkUpgradeBetweenHeadAndAcceptedBlock(t *testing.T) {
 
 	activatedGenesis := customg
 	apricotPhase2Timestamp := utils.NewUint64(51)
-	updatedApricotPhase2Config := params.Copy(params.TestApricotPhase1Config)
+	updatedApricotPhase2Config := params.Copy(params.TestChainConfig)
 	params.GetExtra(&updatedApricotPhase2Config).ApricotPhase2BlockTimestamp = apricotPhase2Timestamp
 
 	activatedGenesis.Config = &updatedApricotPhase2Config
@@ -338,7 +338,7 @@ func TestVerkleGenesisCommit(t *testing.T) {
 	}
 
 	genesis := &Genesis{
-		BaseFee:    big.NewInt(ap3.InitialBaseFee),
+		BaseFee:    big.NewInt(dynamicfee.InitialBaseFee),
 		Config:     verkleConfig,
 		Timestamp:  verkleTime,
 		Difficulty: big.NewInt(0),

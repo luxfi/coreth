@@ -23,7 +23,7 @@ import (
 
 // TestGetSenderNativeAssetCall checks that the NativeAssetCall proxies the
 // caller address This behavior is disabled on the network and is only to test
-// previous behavior. Note the test uses [params.TestApricotPhase2Config].
+// previous behavior. Note the test uses [params.TestChainConfig].
 //
 // Skip: This test is for legacy NativeAssetCall behavior that has been disabled.
 // The chain config copying mechanism makes it difficult to test older configs properly.
@@ -69,7 +69,7 @@ func TestGetSenderNativeAssetCall(t *testing.T) {
 	require.NoError(t, err, "Failed to create transactor")
 	alloc := types.GenesisAlloc{auth.From: {Balance: big.NewInt(1000000000000000000)}}
 	atApricotPhase2 := func(nodeConf *node.Config, ethConf *ethconfig.Config) {
-		chainConfig := *params.TestApricotPhase2Config
+		chainConfig := *params.TestChainConfig
 		chainConfig.ChainID = big.NewInt(1337)
 		ethConf.Genesis.Config = &chainConfig
 	}

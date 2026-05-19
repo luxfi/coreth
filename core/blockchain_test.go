@@ -37,7 +37,7 @@ import (
 	"github.com/luxfi/coreth/core/state/pruner"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/customrawdb"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/dynamicfee"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
@@ -611,7 +611,7 @@ func testCanonicalHashMarker(t *testing.T, scheme string) {
 			gspec = &Genesis{
 				Config:  params.TestChainConfig,
 				Alloc:   types.GenesisAlloc{},
-				BaseFee: big.NewInt(ap3.InitialBaseFee),
+				BaseFee: big.NewInt(dynamicfee.InitialBaseFee),
 			}
 			engine = dummy.NewCoinbaseFaker()
 		)

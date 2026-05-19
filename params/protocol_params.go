@@ -182,11 +182,11 @@ const (
 	// Lux Stateful Precompile Params
 	// Gas price for native asset balance lookup. Based on the cost of an SLOAD operation since native
 	// asset balances are kept in state storage.
-	AssetBalanceApricot uint64 = 2100
+	AssetBalanceGasCost uint64 = 2100
 	// Gas price for native asset call. This gas price reflects the additional work done for the native
 	// asset transfer itself, which is a write to state storage. The cost of creating a new account and
 	// normal value transfer is assessed separately from this cost.
-	AssetCallApricot uint64 = 20000
+	AssetCallGasCost uint64 = 20000
 )
 
 // Gas discount table for BLS12-381 G1 and G2 multi exponentiation operations

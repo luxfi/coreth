@@ -16,8 +16,6 @@ import (
 
 // PrecompiledContractsApricot contains the default set of pre-compiled Ethereum
 // contracts used in the Istanbul release and the stateful precompiled contracts
-// added for the Lux Apricot release.
-// Apricot is incompatible with the YoloV3 Release since it does not include the
 // BLS12-381 Curve Operations added to the set of precompiled contracts
 
 var (

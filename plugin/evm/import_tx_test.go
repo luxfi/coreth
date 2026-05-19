@@ -19,7 +19,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/vm"
 	atomicvm "github.com/luxfi/coreth/plugin/evm/atomic/vm"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/genesisparams"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 
@@ -117,7 +117,7 @@ func TestImportTxVerify(t *testing.T) {
 		Outs: []atomic.EVMOutput{
 			{
 				Address: testEthAddrs[0],
-				Amount:  importAmount - ap0.AtomicTxFee,
+				Amount:  importAmount - genesisparams.AtomicTxFee,
 				AssetID: ctx.XAssetID,
 			},
 			{
@@ -409,7 +409,7 @@ func TestImportTxVerify(t *testing.T) {
 			},
 			ctx:         ctx,
 			rules:       banffRules,
-			expectedErr: atomic.ErrImportNonLUXInputBanff.Error(),
+			expectedErr: atomic.ErrImportNonLUXInput.Error(),
 		},
 		"non-LUX output Banff": {
 			generate: func(t *testing.T) atomic.UnsignedAtomicTx {
@@ -425,7 +425,7 @@ func TestImportTxVerify(t *testing.T) {
 			},
 			ctx:         ctx,
 			rules:       banffRules,
-			expectedErr: atomic.ErrImportNonLUXOutputBanff.Error(),
+			expectedErr: atomic.ErrImportNonLUXOutput.Error(),
 		},
 	}
 	for name, test := range tests {

@@ -89,7 +89,6 @@ func setDefaults(cfg *Config) {
 				LondonBlock:         new(big.Int),
 				BerlinBlock:         new(big.Int),
 			},
-			// All Apricot phases are always active on mainnet
 			extras.TestChainConfig,
 		)
 	}

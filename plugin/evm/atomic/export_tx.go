@@ -51,8 +51,8 @@ func nodeIDToLuxfiids(id ids.ID) luxfiids.ID {
 var (
 	_                          UnsignedAtomicTx       = (*UnsignedExportTx)(nil)
 	_                          secp256k1fx.UnsignedTx = (*UnsignedExportTx)(nil)
-	ErrExportNonLUXInputBanff                         = errors.New("export input cannot contain non-LUX in Banff")
-	ErrExportNonLUXOutputBanff                        = errors.New("export output cannot contain non-LUX in Banff")
+	ErrExportNonLUXInput                         = errors.New("export input must be LUX")
+	ErrExportNonLUXOutput                        = errors.New("export output must be LUX")
 	ErrNoExportOutputs                                = errors.New("tx has no export outputs")
 	errOverflowExport                                 = errors.New("overflow when computing export amount + txFee")
 	errInsufficientFunds                              = errors.New("insufficient funds")
@@ -116,7 +116,7 @@ func (utx *UnsignedExportTx) Verify(
 			return err
 		}
 		if !luxfiidsEqual(ctx.XAssetID, in.AssetID) {
-			return ErrExportNonLUXInputBanff
+			return ErrExportNonLUXInput
 		}
 	}
 
@@ -129,7 +129,7 @@ func (utx *UnsignedExportTx) Verify(
 			return ErrWrongChainID
 		}
 		if !luxfiidsEqual(ctx.XAssetID, assetID) {
-			return ErrExportNonLUXOutputBanff
+			return ErrExportNonLUXOutput
 		}
 	}
 	if !lux.IsSortedTransferableOutputs(utx.ExportedOutputs, Codec) {

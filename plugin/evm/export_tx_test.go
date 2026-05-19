@@ -1365,7 +1365,7 @@ func TestExportTxVerify(t *testing.T) {
 			},
 			ctx:         ctx,
 			rules:       banffRules,
-			expectedErr: atomic.ErrExportNonLUXInputBanff.Error(),
+			expectedErr: atomic.ErrExportNonLUXInput.Error(),
 		},
 		"non-LUX output Banff": {
 			generate: func(t *testing.T) atomic.UnsignedAtomicTx {
@@ -1387,7 +1387,7 @@ func TestExportTxVerify(t *testing.T) {
 			},
 			ctx:         ctx,
 			rules:       banffRules,
-			expectedErr: atomic.ErrExportNonLUXOutputBanff.Error(),
+			expectedErr: atomic.ErrExportNonLUXOutput.Error(),
 		},
 	}
 
