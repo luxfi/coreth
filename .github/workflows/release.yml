@@ -71,7 +71,9 @@ jobs:
 
   build-darwin-amd64:
     needs: validate-version
-    runs-on: macos-15
+    # GH-hosted arm64 macos forbidden; macos-13 builds darwin/amd64 naturally
+    # and cross-compiles darwin/arm64 (see build-darwin-arm64 below).
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
 
@@ -91,7 +93,8 @@ jobs:
 
   build-darwin-arm64:
     needs: validate-version
-    runs-on: macos-14
+    # Cross-compile darwin/arm64 on macos-13 (no GH-hosted arm64 macos).
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
 
