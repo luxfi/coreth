@@ -11,7 +11,7 @@ import (
 
 	"github.com/luxfi/coreth/accounts/abi/bind"
 	"github.com/luxfi/coreth/ethclient"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
+	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 	ethparams "github.com/luxfi/geth/params"
@@ -22,7 +22,6 @@ const expectedBlockHeight = 2
 
 // IssueTxsToActivateProposerVMFork issues transactions at the current
 // timestamp, which should be after the ProposerVM activation time (aka
-// ApricotPhase4). This should generate a PostForkBlock because its parent block
 // (genesis) has a timestamp (0) that is greater than or equal to the fork
 // activation time of 0. Therefore, subsequent blocks should be built with
 // BuildBlockWithContext.
@@ -36,7 +35,7 @@ func IssueTxsToActivateProposerVMFork(
 		return err
 	}
 
-	gasPrice := big.NewInt(ap1.MinGasPrice) // should be pretty generous for c-chain and chains
+	gasPrice := big.NewInt(params.LuxGenesisBaseFee) // generous gas price for c-chain and chains
 	txSigner := types.LatestSignerForChainID(chainID)
 
 	// Send exactly 2 transactions, waiting for each to be included in a block

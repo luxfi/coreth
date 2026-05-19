@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/holiman/uint256"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/common/hexutil"
 	"github.com/luxfi/geth/core/rawdb"
@@ -362,7 +362,7 @@ func (api *DevAPI) commitStateChanges(statedb *state.StateDB) error {
 		GasLimit:    parent.GasLimit,
 		GasUsed:     0,
 		Time:        timestamp,
-		Extra:       (&ap3.Window{}).Bytes(), // 80-byte fee window (all zeros = no gas used)
+		Extra:       (&lp176.State{}).Bytes(), // canonical LP-176 fee-state prefix (all zeros = no gas used)
 		BaseFee:     parent.BaseFee,
 	}
 

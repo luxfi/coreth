@@ -5,9 +5,17 @@ package atomic
 
 import "github.com/luxfi/constants"
 
+// Canonical atomic-tx accounting constants. Under activate-all-implicitly there
+// ones (no per-upgrade variants).
 const (
+	// LuxAtomicTxFee is the LUX amount burned per atomic tx.
 	LuxAtomicTxFee = constants.MilliLux
 
-	// The base cost to charge per atomic transaction. Added in Apricot Phase 5.
+	// AtomicTxBaseCost is the base intrinsic gas charged per atomic tx.
 	AtomicTxBaseCost uint64 = 10_000
+
+	// AtomicGasLimit caps the cumulative atomic gas consumed in a block.
+	// A block may include any set of atomic txs whose total atomic gas is <=
+	// this limit (analogous to the block gas limit for EVM txs).
+	AtomicGasLimit uint64 = 100_000
 )

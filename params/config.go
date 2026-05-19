@@ -50,8 +50,6 @@ var _ = gethInit()
 
 var (
 	// TestChainConfig is the canonical Lux C-Chain test config: every upgrade
-	// is live from genesis (activate-all-implicitly). All Apricot/Banff/
-	// Cortina/Durango/Etna/Fortuna/Granite-named alias vars below are kept as
 	// pointers to TestChainConfig so existing test sites keep compiling
 	// without surfacing per-fork knobs.
 	TestChainConfig = WithExtra(

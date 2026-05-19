@@ -1092,37 +1092,14 @@ func APIs(backend Backend) []rpc.API {
 
 // overrideConfig returns a copy of [original] with network upgrades enabled by [override] enabled,
 // along with a boolean that indicates whether the copy is canonical (equivalent to the original).
+//
+// Under activate-all-implicitly the Lux upgrade timestamps no longer vary
+// (every Lux upgrade is live from genesis), so only the geth Cancun/Verkle
+// time fields remain overridable.
 func overrideConfig(original *params.ChainConfig, override *params.ChainConfig) (*params.ChainConfig, bool) {
 	copy := params.Copy(original)
 	canon := true
 
-	// Apply network upgrades to the copy.
-	// Note: All legacy Apricot phases (1-6) are always active on mainnet.
-	overrideExtra := params.GetExtra(override)
-	if timestamp := overrideExtra.BanffBlockTimestamp; timestamp != nil {
-		params.GetExtra(copy).BanffBlockTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.CortinaBlockTimestamp; timestamp != nil {
-		params.GetExtra(copy).CortinaBlockTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.DurangoBlockTimestamp; timestamp != nil {
-		params.GetExtra(copy).DurangoBlockTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.EtnaTimestamp; timestamp != nil {
-		params.GetExtra(copy).EtnaTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.FortunaTimestamp; timestamp != nil {
-		params.GetExtra(copy).FortunaTimestamp = timestamp
-		canon = false
-	}
-	if timestamp := overrideExtra.GraniteTimestamp; timestamp != nil {
-		params.GetExtra(copy).GraniteTimestamp = timestamp
-		canon = false
-	}
 	if timestamp := override.CancunTime; timestamp != nil {
 		copy.CancunTime = timestamp
 		canon = false

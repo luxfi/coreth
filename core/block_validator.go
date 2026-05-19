@@ -33,10 +33,10 @@ import (
 
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/trie"
+	gethparams "github.com/luxfi/geth/params"
 )
 
 // BlockValidator is responsible for validating block headers, uncles and
@@ -160,10 +160,10 @@ func (v *BlockValidator) ValidateState(block *types.Block, statedb *state.StateD
 // the gas allowance.
 func CalcGasLimit(parentGasUsed, parentGasLimit, gasFloor, gasCeil uint64) uint64 {
 	// contrib = (parentGasUsed * 3 / 2) / 1024
-	contrib := (parentGasUsed + parentGasUsed/2) / ap0.GasLimitBoundDivisor
+	contrib := (parentGasUsed + parentGasUsed/2) / gethparams.GasLimitBoundDivisor
 
 	// decay = parentGasLimit / 1024 -1
-	decay := parentGasLimit/ap0.GasLimitBoundDivisor - 1
+	decay := parentGasLimit/gethparams.GasLimitBoundDivisor - 1
 
 	/*
 		strategy: gasLimit of block-to-mine is set based on parent's
@@ -173,8 +173,8 @@ func CalcGasLimit(parentGasUsed, parentGasLimit, gasFloor, gasCeil uint64) uint6
 		from parentGasLimit * (2/3) parentGasUsed is.
 	*/
 	limit := parentGasLimit - decay + contrib
-	if limit < ap0.MinGasLimit {
-		limit = ap0.MinGasLimit
+	if limit < gethparams.MinGasLimit {
+		limit = gethparams.MinGasLimit
 	}
 	// If we're outside our allowed gas range, we try to hone towards them
 	if limit < gasFloor {

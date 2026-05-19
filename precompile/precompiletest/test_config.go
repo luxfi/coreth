@@ -34,9 +34,7 @@ func RunVerifyTests(t *testing.T, tests map[string]ConfigVerifyTest) {
 			chainConfig := test.ChainConfig
 			if chainConfig == nil {
 				ctrl := gomock.NewController(t)
-				mockChainConfig := precompileconfig.NewMockChainConfig(ctrl)
-				mockChainConfig.EXPECT().IsDurango(gomock.Any()).AnyTimes().Return(true)
-				chainConfig = mockChainConfig
+				chainConfig = precompileconfig.NewMockChainConfig(ctrl)
 			}
 			err := test.Config.Verify(chainConfig)
 			if test.ExpectedError == "" {

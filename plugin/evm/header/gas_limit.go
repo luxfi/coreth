@@ -39,7 +39,6 @@ func GasLimit(
 }
 
 // VerifyGasUsed verifies that the gas used is less than or equal to the gas
-// limit. Under activate-all-implicitly Fortuna's ExtDataGasUsed accounting is
 // always live.
 func VerifyGasUsed(
 	config *extras.ChainConfig,

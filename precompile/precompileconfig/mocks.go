@@ -187,20 +187,6 @@ func (m *MockChainConfig) EXPECT() *MockChainConfigMockRecorder {
 	return m.recorder
 }
 
-// IsDurango mocks base method.
-func (m *MockChainConfig) IsDurango(time uint64) bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsDurango", time)
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// IsDurango indicates an expected call of IsDurango.
-func (mr *MockChainConfigMockRecorder) IsDurango(time any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsDurango", reflect.TypeOf((*MockChainConfig)(nil).IsDurango), time)
-}
-
 // MockAccepter is a mock of Accepter interface.
 type MockAccepter struct {
 	ctrl     *gomock.Controller

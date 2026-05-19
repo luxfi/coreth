@@ -237,13 +237,11 @@ func (b *blockContextAdapter) GetPredicateResults(txHash common.Hash, precompile
 	return b.corethCtx.GetPredicateResults(txHash, precompileAddress)
 }
 
-// chainConfigAdapter adapts coreth's ChainConfig to precompile's interface
+// chainConfigAdapter adapts coreth's ChainConfig to precompile's interface.
+// Under activate-all-implicitly the chain config carries no upgrade gates
+// stateful precompiles can ask about; the adapter is a thin pass-through.
 type chainConfigAdapter struct {
 	corethConfig corethconfig.ChainConfig
-}
-
-func (c *chainConfigAdapter) IsDurango(timestamp uint64) bool {
-	return c.corethConfig.IsDurango(timestamp)
 }
 
 // precompileEnvAdapter adapts coreth's PrecompileEnvironment to precompile's interface

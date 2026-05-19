@@ -9,129 +9,57 @@ import (
 
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/types"
 )
 
 var (
-	errBaseFeeNil        = errors.New("base fee is nil")
-	errBlockGasCostNil   = errors.New("block gas cost is nil")
-	errExtDataGasUsedNil = errors.New("extDataGasUsed is nil")
-	errNoGasUsed         = errors.New("no gas used")
+	errBaseFeeNil  = errors.New("base fee is nil")
+	errNoGasUsed   = errors.New("no gas used")
 )
 
-// BlockGasCost calculates the required block gas cost based on the parent
-// header and the timestamp of the new block.
-// Prior to AP4, the returned block gas cost will be nil.
-// After Fortuna (ACP-176), the block gas cost is always 0 because the LP176
-// capacity-based gas model replaces the legacy AP4/AP5 block gas cost mechanism.
+// BlockGasCost returns the required block gas cost. Under
+// replaces the legacy AP4/AP5 block gas cost mechanism, so the value is
+// always zero.
 func BlockGasCost(
-	config *extras.ChainConfig,
-	parent *types.Header,
-	timestamp uint64,
+	_ *extras.ChainConfig,
+	_ *types.Header,
+	_ uint64,
 ) *big.Int {
-	if !config.IsApricotPhase4(timestamp) {
-		return nil
-	}
-	// Fortuna (ACP-176) replaces the legacy block gas cost with a
-	// capacity-based model. Return 0 so verifyBlockFee always passes.
-	if config.IsFortuna(timestamp) {
-		return common.Big0
-	}
-	step := uint64(ap4.BlockGasCostStep)
-	if config.IsApricotPhase5(timestamp) {
-		step = ap5.BlockGasCostStep
-	}
-	// Treat an invalid parent/current time combination as 0 elapsed time.
-	//
-	// TODO: Does it even make sense to handle this? The timestamp should be
-	// verified to ensure this never happens.
-	var timeElapsed uint64
-	if parent.Time <= timestamp {
-		timeElapsed = timestamp - parent.Time
-	}
-	return new(big.Int).SetUint64(BlockGasCostWithStep(
-		customtypes.GetHeaderExtra(parent).BlockGasCost,
-		step,
-		timeElapsed,
-	))
+	return common.Big0
 }
 
-// BlockGasCostWithStep calculates the required block gas cost based on the
-// parent cost and the time difference between the parent block and new block.
-//
-// This is a helper function that allows the caller to manually specify the step
-// value to use.
-func BlockGasCostWithStep(
-	parentCost *big.Int,
-	step uint64,
-	timeElapsed uint64,
-) uint64 {
-	// Handle AP3/AP4 boundary by returning the minimum value as the boundary.
-	if parentCost == nil {
-		return ap4.MinBlockGasCost
-	}
-
-	// [ap4.MaxBlockGasCost] is <= MaxUint64, so we know that parentCost is
-	// always going to be a valid uint64.
-	return ap4.BlockGasCost(
-		parentCost.Uint64(),
-		step,
-		timeElapsed,
-	)
+// BlockGasCostWithStep returns the required block gas cost given a parent cost,
+// step, and time elapsed. Under activate-all-implicitly the LP-176 capacity
+// model is the only fee model, so the legacy step-based cost is zero.
+func BlockGasCostWithStep(_ *big.Int, _ uint64, _ uint64) uint64 {
+	return 0
 }
 
-// EstimateRequiredTip is the estimated tip a transaction would have needed to
-// pay to be included in a given block (assuming it paid a tip proportional to
-// its gas usage).
-//
-// In reality, the consensus engine does not enforce a minimum tip on individual
-// transactions. The only correctness check performed is that the sum of all
-// tips is >= the required block fee.
-//
-// This function will return nil for all return values prior to Apricot Phase 4.
+// EstimateRequiredTip estimates the tip a transaction would have needed to
+// pay to be included in a given block. Under activate-all-implicitly the
+// block gas cost is always zero, so the required tip is sourced from the
+// header's base fee directly: there is no longer a per-block tip surcharge.
 func EstimateRequiredTip(
-	config *extras.ChainConfig,
+	_ *extras.ChainConfig,
 	header *types.Header,
 ) (*big.Int, error) {
-	extra := customtypes.GetHeaderExtra(header)
-	switch {
-	case !config.IsApricotPhase4(header.Time):
-		return nil, nil
-	case header.BaseFee == nil:
+	if header.BaseFee == nil {
 		return nil, errBaseFeeNil
 	}
 
-	// For imported blocks that predate Lux-specific fields or were exported
-	// without them, treat nil BlockGasCost and ExtDataGasUsed as 0.
-	blockGasCost := extra.BlockGasCost
-	if blockGasCost == nil {
-		blockGasCost = common.Big0
-	}
-	extDataGasUsed := extra.ExtDataGasUsed
-	if extDataGasUsed == nil {
-		extDataGasUsed = common.Big0
-	}
+	extra := customtypes.GetHeaderExtra(header)
 
 	// totalGasUsed = GasUsed + ExtDataGasUsed
 	totalGasUsed := new(big.Int).SetUint64(header.GasUsed)
-	totalGasUsed.Add(totalGasUsed, extDataGasUsed)
+	if extra.ExtDataGasUsed != nil {
+		totalGasUsed.Add(totalGasUsed, extra.ExtDataGasUsed)
+	}
 	if totalGasUsed.Sign() == 0 {
 		return nil, errNoGasUsed
 	}
 
-	// totalRequiredTips = blockGasCost * baseFee + totalGasUsed - 1
-	//
-	// We add totalGasUsed - 1 to ensure that the total required tips
-	// calculation rounds up.
-	totalRequiredTips := new(big.Int)
-	totalRequiredTips.Mul(blockGasCost, header.BaseFee)
-	totalRequiredTips.Add(totalRequiredTips, totalGasUsed)
-	totalRequiredTips.Sub(totalRequiredTips, common.Big1)
-
-	// estimatedTip = totalRequiredTips / totalGasUsed
-	estimatedTip := totalRequiredTips.Div(totalRequiredTips, totalGasUsed)
-	return estimatedTip, nil
+	// Under LP-176 the per-block fee is the base fee. There is no extra
+	// block-gas-cost tip required beyond the base fee.
+	return new(big.Int).Set(common.Big0), nil
 }

@@ -34,7 +34,7 @@ import (
 	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/params/extras"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
@@ -115,7 +115,7 @@ func setDefaults(cfg *Config) {
 		}
 	}
 	if cfg.BaseFee == nil {
-		cfg.BaseFee = big.NewInt(ap3.InitialBaseFee)
+		cfg.BaseFee = big.NewInt(params.LuxGenesisBaseFee)
 	}
 	if cfg.BlobBaseFee == nil {
 		cfg.BlobBaseFee = big.NewInt(params.BlobTxMinBlobGasprice)
@@ -144,7 +144,6 @@ func Execute(code, input []byte, cfg *Config) ([]byte, *state.StateDB, error) {
 		rules   = cfg.ChainConfig.Rules(vmenv.Context.BlockNumber, params.IsMergeTODO, vmenv.Context.Time)
 	)
 	// Execute the preparatory steps for state transition which includes:
-	// - prepare accessList(post-berlin/ApricotPhase2)
 	// - reset transient storage(eip 1153)
 	cfg.State.Prepare(rules, cfg.Origin, cfg.Coinbase, &address, vm.ActivePrecompiles(rules), nil)
 
@@ -179,7 +178,6 @@ func Create(input []byte, cfg *Config) ([]byte, common.Address, uint64, error) {
 		rules = cfg.ChainConfig.Rules(vmenv.Context.BlockNumber, params.IsMergeTODO, vmenv.Context.Time)
 	)
 	// Execute the preparatory steps for state transition which includes:
-	// - prepare accessList(post-berlin/ApricotPhase2)
 	// - reset transient storage(eip 1153)
 	cfg.State.Prepare(rules, cfg.Origin, cfg.Coinbase, nil, vm.ActivePrecompiles(rules), nil)
 
@@ -207,7 +205,6 @@ func Call(address common.Address, input []byte, cfg *Config) ([]byte, uint64, er
 		rules   = cfg.ChainConfig.Rules(vmenv.Context.BlockNumber, params.IsMergeTODO, vmenv.Context.Time)
 	)
 	// Execute the preparatory steps for state transition which includes:
-	// - prepare accessList(post-berlin/ApricotPhase2)
 	// - reset transient storage(eip 1153)
 	statedb.Prepare(rules, cfg.Origin, cfg.Coinbase, &address, vm.ActivePrecompiles(rules), nil)
 

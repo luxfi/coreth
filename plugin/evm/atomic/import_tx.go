@@ -7,12 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"slices"
 
 	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/params/extras"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap5"
 	"github.com/luxfi/geth/core/tracing"
 
 	consensusctx "github.com/luxfi/consensus/context"
@@ -68,10 +65,11 @@ func (utx *UnsignedImportTx) InputUTXOs() set.Set[ids.ID] {
 	return set
 }
 
-// Verify this transaction is well-formed
+// Verify this transaction is well-formed. Under activate-all-implicitly every
+// collapse to the strict path.
 func (utx *UnsignedImportTx) Verify(
 	ctx *consensusctx.Context,
-	rules extras.Rules,
+	_ extras.Rules,
 ) error {
 	switch {
 	case utx == nil:
@@ -82,28 +80,20 @@ func (utx *UnsignedImportTx) Verify(
 		return ErrWrongNetworkID
 	case ctx.ChainID != utx.BlockchainID:
 		return ErrWrongChainID
-	case rules.IsApricotPhase3 && len(utx.Outs) == 0:
+	case len(utx.Outs) == 0:
 		return ErrNoEVMOutputs
 	}
 
-	// Make sure that the tx has a valid peer chain ID
-	if rules.IsApricotPhase5 {
-		// Note that SameChain verifies that [tx.SourceChain] isn't this
-		// chain's ID
-		if err := verify.SameChain(ctx.ChainID, utx.SourceChain); err != nil {
-			return ErrWrongChainID
-		}
-	} else {
-		if utx.SourceChain != ctx.XChainID {
-			return ErrWrongChainID
-		}
+	// SameChain verifies that [tx.SourceChain] isn't this chain's ID.
+	if err := verify.SameChain(ctx.ChainID, utx.SourceChain); err != nil {
+		return ErrWrongChainID
 	}
 
 	for _, out := range utx.Outs {
 		if err := out.Verify(); err != nil {
 			return fmt.Errorf("EVM Output failed verification: %w", err)
 		}
-		if rules.IsBanff && out.AssetID != ctx.XAssetID {
+		if out.AssetID != ctx.XAssetID {
 			return ErrImportNonLUXOutputBanff
 		}
 	}
@@ -112,22 +102,15 @@ func (utx *UnsignedImportTx) Verify(
 		if err := in.Verify(); err != nil {
 			return fmt.Errorf("atomic input failed verification: %w", err)
 		}
-		if rules.IsBanff && in.AssetID() != ctx.XAssetID {
+		if in.AssetID() != ctx.XAssetID {
 			return ErrImportNonLUXInputBanff
 		}
 	}
 	if !utils.IsSortedAndUnique(utx.ImportedInputs) {
 		return ErrInputsNotSortedUnique
 	}
-
-	if rules.IsApricotPhase2 {
-		if !utils.IsSortedAndUnique(utx.Outs) {
-			return ErrOutputsNotSortedUnique
-		}
-	} else if rules.IsApricotPhase1 {
-		if !slices.IsSortedFunc(utx.Outs, EVMOutput.Compare) {
-			return ErrOutputsNotSorted
-		}
+	if !utils.IsSortedAndUnique(utx.Outs) {
+		return ErrOutputsNotSortedUnique
 	}
 
 	return nil
@@ -149,7 +132,7 @@ func (utx *UnsignedImportTx) GasUsed(fixedFee bool) (uint64, error) {
 		}
 	}
 	if fixedFee {
-		cost, err = math.Add(cost, ap5.AtomicTxIntrinsicGas)
+		cost, err = math.Add(cost, AtomicTxBaseCost)
 		if err != nil {
 			return 0, err
 		}
@@ -198,14 +181,14 @@ func (utx *UnsignedImportTx) AtomicOps() (ids.ID, *atomic.Requests, error) {
 	return utx.SourceChain, &atomic.Requests{RemoveRequests: utxoIDs}, nil
 }
 
-// NewImportTx returns a new ImportTx
+// NewImportTx returns a new ImportTx. Under activate-all-implicitly the
 func NewImportTx(
 	ctx *consensusctx.Context,
 	rules extras.Rules,
 	time uint64,
 	chainID ids.ID, // chain to import from
 	to common.Address, // Address of recipient
-	baseFee *big.Int, // fee to use post-AP3
+	baseFee *big.Int, // fee to use against the dynamic-fee gas cost
 	kc *secp256k1fx.Keychain, // Keychain to use for signing the atomic UTXOs
 	atomicUTXOs []*lux.UTXO, // UTXOs to spend
 ) (*Tx, error) {
@@ -253,44 +236,32 @@ func NewImportTx(
 		})
 	}
 
-	var (
-		txFeeWithoutChange uint64
-		txFeeWithChange    uint64
-	)
-	switch {
-	case rules.IsApricotPhase3:
-		if baseFee == nil {
-			return nil, errNilBaseFeeApricotPhase3
-		}
-		utx := &UnsignedImportTx{
-			NetworkID:      ctx.NetworkID,
-			BlockchainID:   ctx.ChainID,
-			Outs:           outs,
-			ImportedInputs: importedInputs,
-			SourceChain:    chainID,
-		}
-		tx := &Tx{UnsignedAtomicTx: utx}
-		if err := tx.Sign(Codec, nil); err != nil {
-			return nil, err
-		}
+	if baseFee == nil {
+		return nil, errNilBaseFeeApricotPhase3
+	}
+	probe := &Tx{UnsignedAtomicTx: &UnsignedImportTx{
+		NetworkID:      ctx.NetworkID,
+		BlockchainID:   ctx.ChainID,
+		Outs:           outs,
+		ImportedInputs: importedInputs,
+		SourceChain:    chainID,
+	}}
+	if err := probe.Sign(Codec, nil); err != nil {
+		return nil, err
+	}
+	gasUsedWithoutChange, err := probe.GasUsed(true)
+	if err != nil {
+		return nil, err
+	}
+	gasUsedWithChange := gasUsedWithoutChange + EVMOutputGas
 
-		gasUsedWithoutChange, err := tx.GasUsed(rules.IsApricotPhase5)
-		if err != nil {
-			return nil, err
-		}
-		gasUsedWithChange := gasUsedWithoutChange + EVMOutputGas
-
-		txFeeWithoutChange, err = CalculateDynamicFee(gasUsedWithoutChange, baseFee)
-		if err != nil {
-			return nil, err
-		}
-		txFeeWithChange, err = CalculateDynamicFee(gasUsedWithChange, baseFee)
-		if err != nil {
-			return nil, err
-		}
-	case rules.IsApricotPhase2:
-		txFeeWithoutChange = ap0.AtomicTxFee
-		txFeeWithChange = ap0.AtomicTxFee
+	txFeeWithoutChange, err := CalculateDynamicFee(gasUsedWithoutChange, baseFee)
+	if err != nil {
+		return nil, err
+	}
+	txFeeWithChange, err := CalculateDynamicFee(gasUsedWithChange, baseFee)
+	if err != nil {
+		return nil, err
 	}
 
 	// LUX output

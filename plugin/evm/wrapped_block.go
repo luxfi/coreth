@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/luxfi/constants"
@@ -18,8 +17,6 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/extension"
 	"github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
 	"github.com/luxfi/coreth/precompile/precompileconfig"
 	"github.com/luxfi/coreth/predicate"
 
@@ -39,11 +36,6 @@ var (
 	_ block.Block             = (*wrappedBlock)(nil)
 	_ block.WithVerifyContext = (*wrappedBlock)(nil)
 	_ extension.ExtendedBlock = (*wrappedBlock)(nil)
-)
-
-var (
-	ap0MinGasPrice = big.NewInt(ap0.MinGasPrice)
-	ap1MinGasPrice = big.NewInt(ap1.MinGasPrice)
 )
 
 // wrappedBlock implements the quasarman.wrappedBlock interface
@@ -362,43 +354,18 @@ func (b *wrappedBlock) syntacticVerify() error {
 		return errUnclesUnsupported
 	}
 
-	// Enforce minimum gas prices here prior to dynamic fees going into effect.
-	switch {
-	case !rulesExtra.IsApricotPhase1:
-		// If we are in ApricotPhase0, enforce each transaction has a minimum gas price of at least the LaunchMinGasPrice
-		for _, tx := range b.ethBlock.Transactions() {
-			if tx.GasPrice().Cmp(ap0MinGasPrice) < 0 {
-				return fmt.Errorf("block contains tx %s with gas price too low (%d < %d)", tx.Hash(), tx.GasPrice(), ap0.MinGasPrice)
-			}
-		}
-	case !rulesExtra.IsApricotPhase3:
-		// If we are prior to ApricotPhase3, enforce each transaction has a minimum gas price of at least the ApricotPhase1MinGasPrice
-		for _, tx := range b.ethBlock.Transactions() {
-			if tx.GasPrice().Cmp(ap1MinGasPrice) < 0 {
-				return fmt.Errorf("block contains tx %s with gas price too low (%d < %d)", tx.Hash(), tx.GasPrice(), ap1.MinGasPrice)
-			}
-		}
+	// Under activate-all-implicitly dynamic fees are live from genesis. The
+	// header must carry a base fee.
+	if ethHeader.BaseFee == nil {
+		return errNilBaseFeeApricotPhase3
 	}
-
-	// Ensure BaseFee is non-nil as of ApricotPhase3.
-	if rulesExtra.IsApricotPhase3 {
-		if ethHeader.BaseFee == nil {
-			return errNilBaseFeeApricotPhase3
-		}
-		if bfLen := ethHeader.BaseFee.BitLen(); bfLen > 256 {
-			return fmt.Errorf("too large base fee: bitlen %d", bfLen)
-		}
+	if bfLen := ethHeader.BaseFee.BitLen(); bfLen > 256 {
+		return fmt.Errorf("too large base fee: bitlen %d", bfLen)
 	}
 
 	headerExtra := customtypes.GetHeaderExtra(ethHeader)
-	if rulesExtra.IsApricotPhase4 {
-		// NOTE: BlockGasCost may be nil for blocks imported from RLP that predate
-		// the Apricot Phase 4 upgrade or were exported without Lux-specific fields.
-		// We treat nil BlockGasCost as 0 for backward compatibility with imported blocks.
-		// When BlockGasCost IS set, verify it's a valid uint64.
-		if headerExtra.BlockGasCost != nil && !headerExtra.BlockGasCost.IsUint64() {
-			return fmt.Errorf("too large blockGasCost: %d", headerExtra.BlockGasCost)
-		}
+	if headerExtra.BlockGasCost != nil && !headerExtra.BlockGasCost.IsUint64() {
+		return fmt.Errorf("too large blockGasCost: %d", headerExtra.BlockGasCost)
 	}
 
 	// Verify the existence / non-existence of excessBlobGas
@@ -441,16 +408,9 @@ func (b *wrappedBlock) syntacticVerify() error {
 }
 
 // verifyPredicates verifies the predicates in the block are valid according to predicateContext.
+// Under activate-all-implicitly predicates are live from genesis.
 func (b *wrappedBlock) verifyPredicates(predicateContext *precompileconfig.PredicateContext) error {
 	rules := b.vm.chainConfig.Rules(b.ethBlock.Number(), params.IsMergeTODO, b.ethBlock.Time())
-	rulesExtra := params.GetRulesExtra(rules)
-
-	switch {
-	case !rulesExtra.IsDurango && rulesExtra.PredicatersExist():
-		return errors.New("cannot enable predicates before Durango activation")
-	case !rulesExtra.IsDurango:
-		return nil
-	}
 
 	predicateResults := predicate.NewResults()
 	for _, tx := range b.ethBlock.Transactions() {
@@ -466,7 +426,7 @@ func (b *wrappedBlock) verifyPredicates(predicateContext *precompileconfig.Predi
 		return fmt.Errorf("failed to marshal predicate results: %w", err)
 	}
 	extraData := b.ethBlock.Extra()
-	luxRules := rulesExtra.LuxRules
+	luxRules := params.GetRulesExtra(rules).LuxRules
 	headerPredicateResultsBytes := header.PredicateBytesFromExtra(luxRules, extraData)
 	if !bytes.Equal(headerPredicateResultsBytes, predicateResultsBytes) {
 		return fmt.Errorf("%w (remote: %x local: %x)", errInvalidHeaderPredicateResults, headerPredicateResultsBytes, predicateResultsBytes)

@@ -161,17 +161,9 @@ func ToWithUpgradesJSON(c *ChainConfig) *ChainConfigWithUpgradesJSON {
 }
 
 // CheckCompatible checks whether scheduled fork transitions have been imported
-// with a mismatching chain configuration. This includes both geth's Ethereum
-// forks and Lux-specific network upgrades.
+// with a mismatching chain configuration. Under activate-all-implicitly the
+// Lux-side upgrades have no ordering to enforce; only geth's Ethereum forks
+// can raise a compat error.
 func CheckCompatible(stored, newcfg *ChainConfig, headBlock uint64, headTimestamp uint64) *ethparams.ConfigCompatError {
-	// First check geth's Ethereum fork compatibility
-	if err := stored.CheckCompatible(newcfg, headBlock, headTimestamp); err != nil {
-		return err
-	}
-
-	// Then check Lux-specific network upgrades compatibility
-	storedExtra := GetExtra(stored)
-	newExtra := GetExtra(newcfg)
-
-	return storedExtra.NetworkUpgrades.CheckNetworkUpgradesCompatible(&newExtra.NetworkUpgrades, headTimestamp)
+	return stored.CheckCompatible(newcfg, headBlock, headTimestamp)
 }

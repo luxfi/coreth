@@ -44,8 +44,6 @@ type LuxContext struct {
 }
 
 type ChainConfig struct {
-	NetworkUpgrades // Config for timestamps that enable network upgrades.
-
 	LuxContext `json:"-"` // Lux specific context set during VM initialization. Not serialized.
 
 	UpgradeConfig `json:"-"` // Config specified in upgradeBytes (lux network upgrades or enable/disabling precompiles). Not serialized.
@@ -62,19 +60,11 @@ func (c *ChainConfig) Description() string {
 	if c == nil {
 		return ""
 	}
-	var banner string
-
-	banner += "Lux Upgrades (timestamp based):\n"
-	banner += c.NetworkUpgrades.Description()
-	banner += "\n"
-
 	upgradeConfigBytes, err := json.Marshal(c.UpgradeConfig)
 	if err != nil {
 		upgradeConfigBytes = []byte("cannot marshal UpgradeConfig")
 	}
-	banner += fmt.Sprintf("Upgrade Config: %s", string(upgradeConfigBytes))
-	banner += "\n"
-	return banner
+	return fmt.Sprintf("Lux Upgrades: all active from genesis.\nUpgrade Config: %s\n", string(upgradeConfigBytes))
 }
 
 // isForkTimestampIncompatible returns true if a fork scheduled at timestamp s1
@@ -120,54 +110,9 @@ func (c *ChainConfig) MarshalJSON() ([]byte, error) {
 	return json.Marshal(_ChainConfigExtra(*c))
 }
 
-type fork struct {
-	name      string
-	block     *big.Int // some go-ethereum forks use block numbers
-	timestamp *uint64  // Lux forks use timestamps
-	optional  bool     // if true, the fork may be nil and next fork is still allowed
-}
-
-func (c *ChainConfig) CheckConfigForkOrder() error {
-	if c == nil {
-		return nil
-	}
-	return checkForks(c.forkOrder(), false)
-}
-
-// checkForks checks that forks are enabled in order and returns an error if not.
-func checkForks(forks []fork, blockFork bool) error {
-	lastFork := fork{}
-	for _, cur := range forks {
-		if lastFork.name != "" {
-			switch {
-			case lastFork.block == nil && lastFork.timestamp == nil && (cur.block != nil || cur.timestamp != nil):
-				if cur.block != nil {
-					return fmt.Errorf("unsupported fork ordering: %v not enabled, but %v enabled at block %v",
-						lastFork.name, cur.name, cur.block)
-				} else {
-					return fmt.Errorf("unsupported fork ordering: %v not enabled, but %v enabled at timestamp %v",
-						lastFork.name, cur.name, cur.timestamp)
-				}
-			case (lastFork.block != nil && cur.block != nil) || (lastFork.timestamp != nil && cur.timestamp != nil):
-				if lastFork.block != nil && lastFork.block.Cmp(cur.block) > 0 {
-					return fmt.Errorf("unsupported fork ordering: %v enabled at block %v, but %v enabled at block %v",
-						lastFork.name, lastFork.block, cur.name, cur.block)
-				} else if lastFork.timestamp != nil && *lastFork.timestamp > *cur.timestamp {
-					return fmt.Errorf("unsupported fork ordering: %v enabled at timestamp %v, but %v enabled at timestamp %v",
-						lastFork.name, lastFork.timestamp, cur.name, cur.timestamp)
-				}
-				if lastFork.timestamp != nil && cur.block != nil {
-					return fmt.Errorf("unsupported fork ordering: %v used timestamp ordering, but %v reverted to block ordering",
-						lastFork.name, cur.name)
-				}
-			}
-		}
-		if !cur.optional || (cur.block != nil || cur.timestamp != nil) {
-			lastFork = cur
-		}
-	}
-	return nil
-}
+// CheckConfigForkOrder is a no-op under activate-all-implicitly: there is no
+// ordering to enforce because every upgrade is live from genesis.
+func (c *ChainConfig) CheckConfigForkOrder() error { return nil }
 
 // Verify verifies chain config.
 func (c *ChainConfig) Verify() error {
