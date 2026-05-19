@@ -2,7 +2,7 @@
 // See the file LICENSE for licensing terms.
 
 // AP0 defines constants used during the initial network launch.
-package ap0
+package genesisparams
 
 import (
 	"github.com/luxfi/constants"
@@ -17,7 +17,6 @@ const (
 
 	// AtomicTxFee is the amount of LUX that must be burned by an atomic tx.
 	//
-	// This value was replaced with the Apricot Phase 3 dynamic fee mechanism.
 	AtomicTxFee = constants.MilliLux
 
 	// Note: MaximumExtraDataSize has been reduced to 32 in Geth, but is kept the same in Coreth for

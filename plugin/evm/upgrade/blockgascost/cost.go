@@ -1,9 +1,8 @@
 // Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
-// AP4 implements the block gas cost logic activated by the Apricot Phase 4
 // upgrade.
-package ap4
+package blockgascost
 
 import (
 	"math"
@@ -27,21 +26,17 @@ const (
 	// BlockGasCostStep is the rate at which the block gas cost changes per
 	// second.
 	//
-	// This value was modified by the Apricot Phase 5 upgrade.
 	BlockGasCostStep = 50_000
 
-	// MinBaseFee is the minimum base fee that is allowed after Apricot Phase 3
 	// upgrade.
 	//
-	// This value modifies the previously used `ap3.MinBaseFee`.
+	// This value modifies the previously used `dynamicfee.MinBaseFee`.
 	//
-	// This value was modified in Etna.
 	MinBaseFee = 25 * utils.GWei
 
-	// MaxBaseFee is the maximum base fee that is allowed after Apricot Phase 3
 	// upgrade.
 	//
-	// This value modifies the previously used `ap3.MaxBaseFee`.
+	// This value modifies the previously used `dynamicfee.MaxBaseFee`.
 	MaxBaseFee = 1_000 * utils.GWei
 )
 

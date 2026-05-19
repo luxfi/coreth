@@ -48,7 +48,7 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/dynamicfee"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/crypto/kzg4844"
 	"github.com/luxfi/geth/common"
@@ -136,7 +136,7 @@ func (bc *testBlockChain) CurrentBlock() *types.Header {
 			GasLimit: gasLimit,
 			GasUsed:  0,
 			BaseFee:  mid,
-			Extra:    make([]byte, ap3.WindowSize),
+			Extra:    make([]byte, dynamicfee.WindowSize),
 		}
 		config := params.GetExtra(bc.config)
 		baseFee, err := header.BaseFee(
@@ -176,7 +176,7 @@ func (bc *testBlockChain) CurrentBlock() *types.Header {
 		GasLimit:      gasLimit,
 		BaseFee:       baseFee,
 		ExcessBlobGas: &excessBlobGas,
-		Extra:         make([]byte, ap3.WindowSize),
+		Extra:         make([]byte, dynamicfee.WindowSize),
 	}
 }
 
@@ -606,7 +606,7 @@ func TestOpenDrops(t *testing.T) {
 
 	chain := &testBlockChain{
 		config:  testChainConfig,
-		basefee: uint256.NewInt(ap3.MinBaseFee),
+		basefee: uint256.NewInt(dynamicfee.MinBaseFee),
 		blobfee: uint256.NewInt(params.BlobTxMinBlobGasprice),
 		statedb: statedb,
 	}
@@ -725,7 +725,7 @@ func TestOpenIndex(t *testing.T) {
 
 	chain := &testBlockChain{
 		config:  testChainConfig,
-		basefee: uint256.NewInt(ap3.MinBaseFee),
+		basefee: uint256.NewInt(dynamicfee.MinBaseFee),
 		blobfee: uint256.NewInt(params.BlobTxMinBlobGasprice),
 		statedb: statedb,
 	}

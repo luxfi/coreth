@@ -42,7 +42,7 @@ import (
 	"github.com/luxfi/coreth/consensus"
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/dynamicfee"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
 	"github.com/luxfi/geth/core/types"
@@ -85,7 +85,7 @@ func (basic *snapshotTestBasic) prepare(t *testing.T) (*BlockChain, []*types.Blo
 	// Initialize a fresh chain
 	var (
 		gspec = &Genesis{
-			BaseFee: big.NewInt(ap3.InitialBaseFee),
+			BaseFee: big.NewInt(dynamicfee.InitialBaseFee),
 			Config:  params.TestChainConfig,
 		}
 		engine = dummy.NewFullFaker()

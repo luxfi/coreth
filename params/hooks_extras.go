@@ -66,8 +66,8 @@ func (r RulesExtra) MinimumGasConsumption(x uint64) uint64 {
 // Genesis contract is deprecated.
 var PrecompiledContractsLux = map[common.Address]contract.StatefulPrecompiledContract{
 	nativeasset.GenesisContractAddr:    &nativeasset.DeprecatedContract{},
-	nativeasset.NativeAssetBalanceAddr: &nativeasset.NativeAssetBalance{GasCost: AssetBalanceApricot},
-	nativeasset.NativeAssetCallAddr:    &nativeasset.NativeAssetCall{GasCost: AssetCallApricot, CallNewAccountGas: CallNewAccountGas},
+	nativeasset.NativeAssetBalanceAddr: &nativeasset.NativeAssetBalance{GasCost: AssetBalanceGasCost},
+	nativeasset.NativeAssetCallAddr:    &nativeasset.NativeAssetCall{GasCost: AssetCallGasCost, CallNewAccountGas: CallNewAccountGas},
 }
 
 func (RulesExtra) ActivePrecompiles(existing []common.Address) []common.Address {

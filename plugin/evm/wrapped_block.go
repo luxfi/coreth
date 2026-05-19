@@ -357,7 +357,7 @@ func (b *wrappedBlock) syntacticVerify() error {
 	// Under activate-all-implicitly dynamic fees are live from genesis. The
 	// header must carry a base fee.
 	if ethHeader.BaseFee == nil {
-		return errNilBaseFeeApricotPhase3
+		return errNilBaseFee
 	}
 	if bfLen := ethHeader.BaseFee.BitLen(); bfLen > 256 {
 		return fmt.Errorf("too large base fee: bitlen %d", bfLen)

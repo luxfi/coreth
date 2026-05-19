@@ -37,8 +37,8 @@ import (
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/gaslimit_initial"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/blockgascost"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/crypto"
@@ -107,7 +107,7 @@ func newTestBackendFakerEngine(t *testing.T, config *params.ChainConfig, numBloc
 	engine := dummy.NewETHFaker()
 
 	// Generate testing blocks
-	_, blocks, _, err := core.GenerateChainWithGenesis(gspec, engine, numBlocks, ap4.TargetBlockRate-1, genBlocks)
+	_, blocks, _, err := core.GenerateChainWithGenesis(gspec, engine, numBlocks, blockgascost.TargetBlockRate-1, genBlocks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +141,7 @@ func newTestBackend(t *testing.T, config *params.ChainConfig, numBlocks int, ext
 	})
 
 	// Generate testing blocks
-	_, blocks, _, err := core.GenerateChainWithGenesis(gspec, engine, numBlocks, ap4.TargetBlockRate-1, genBlocks)
+	_, blocks, _, err := core.GenerateChainWithGenesis(gspec, engine, numBlocks, blockgascost.TargetBlockRate-1, genBlocks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -354,11 +354,11 @@ func TestSuggestGasPricePreAP3(t *testing.T) {
 		Percentile: 60,
 	}
 
-	backend := newTestBackend(t, params.TestApricotPhase2Config, 3, nil, func(i int, b *core.BlockGen) {
+	backend := newTestBackend(t, params.TestChainConfig, 3, nil, func(i int, b *core.BlockGen) {
 		b.SetCoinbase(common.Address{1})
 
-		signer := types.LatestSigner(params.TestApricotPhase2Config)
-		gasPrice := big.NewInt(ap1.MinGasPrice)
+		signer := types.LatestSigner(params.TestChainConfig)
+		gasPrice := big.NewInt(gaslimit_initial.MinGasPrice)
 		for j := 0; j < 50; j++ {
 			tx := types.NewTx(&types.LegacyTx{
 				Nonce:    b.TxNonce(addr),

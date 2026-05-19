@@ -242,7 +242,7 @@ func (args *TransactionArgs) setFeeDefaults(ctx context.Context, b feeBackend) e
 	// Now attempt to fill in default value depending on whether London is active or not.
 	if isLondon {
 		// London is active, set maxPriorityFeePerGas and maxFeePerGas.
-		if err := args.setApricotPhase3FeeDefault(ctx, head, b); err != nil {
+		if err := args.setDynamicFeeDefault(ctx, head, b); err != nil {
 			return err
 		}
 	} else {
@@ -278,8 +278,8 @@ func (args *TransactionArgs) setCancunFeeDefaults(ctx context.Context, head *typ
 	return nil
 }
 
-// setApricotPhase3FeeDefault fills in reasonable default fee values for unspecified fields.
-func (args *TransactionArgs) setApricotPhase3FeeDefault(ctx context.Context, head *types.Header, b feeBackend) error {
+// setDynamicFeeDefault fills in reasonable default fee values for unspecified fields.
+func (args *TransactionArgs) setDynamicFeeDefault(ctx context.Context, head *types.Header, b feeBackend) error {
 	// Set maxPriorityFeePerGas if it is missing.
 	if args.MaxPriorityFeePerGas == nil {
 		tip, err := b.SuggestGasTipCap(ctx)

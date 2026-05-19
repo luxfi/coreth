@@ -29,15 +29,15 @@ import (
 var (
 	_                          UnsignedAtomicTx       = (*UnsignedImportTx)(nil)
 	_                          secp256k1fx.UnsignedTx = (*UnsignedImportTx)(nil)
-	ErrImportNonLUXInputBanff                         = errors.New("import input cannot contain non-LUX in Banff")
-	ErrImportNonLUXOutputBanff                        = errors.New("import output cannot contain non-LUX in Banff")
+	ErrImportNonLUXInput                         = errors.New("import input must be LUX")
+	ErrImportNonLUXOutput                        = errors.New("import output must be LUX")
 	ErrNoImportInputs                                 = errors.New("tx has no imported inputs")
 	ErrWrongChainID                                   = errors.New("tx has wrong chain ID")
 	ErrNoEVMOutputs                                   = errors.New("tx has no EVM outputs")
 	ErrInputsNotSortedUnique                          = errors.New("inputs not sorted and unique")
 	ErrOutputsNotSortedUnique                         = errors.New("outputs not sorted and unique")
 	ErrOutputsNotSorted                               = errors.New("tx outputs not sorted")
-	errNilBaseFeeApricotPhase3                        = errors.New("nil base fee is invalid after apricotPhase3")
+	errMissingBaseFee                        = errors.New("missing base fee")
 	errInsufficientFundsForFee                        = errors.New("insufficient LUX funds to pay transaction fee")
 )
 
@@ -94,7 +94,7 @@ func (utx *UnsignedImportTx) Verify(
 			return fmt.Errorf("EVM Output failed verification: %w", err)
 		}
 		if out.AssetID != ctx.XAssetID {
-			return ErrImportNonLUXOutputBanff
+			return ErrImportNonLUXOutput
 		}
 	}
 
@@ -103,7 +103,7 @@ func (utx *UnsignedImportTx) Verify(
 			return fmt.Errorf("atomic input failed verification: %w", err)
 		}
 		if in.AssetID() != ctx.XAssetID {
-			return ErrImportNonLUXInputBanff
+			return ErrImportNonLUXInput
 		}
 	}
 	if !utils.IsSortedAndUnique(utx.ImportedInputs) {
@@ -237,7 +237,7 @@ func NewImportTx(
 	}
 
 	if baseFee == nil {
-		return nil, errNilBaseFeeApricotPhase3
+		return nil, errMissingBaseFee
 	}
 	probe := &Tx{UnsignedAtomicTx: &UnsignedImportTx{
 		NetworkID:      ctx.NetworkID,

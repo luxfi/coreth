@@ -75,21 +75,7 @@ var (
 		extras.TestChainConfig,
 	)
 
-	TestLaunchConfig            = TestChainConfig
-	TestApricotPhase1Config     = TestChainConfig
-	TestApricotPhase2Config     = TestChainConfig
-	TestApricotPhase3Config     = TestChainConfig
-	TestApricotPhase4Config     = TestChainConfig
-	TestApricotPhase5Config     = TestChainConfig
-	TestApricotPhasePre6Config  = TestChainConfig
-	TestApricotPhase6Config     = TestChainConfig
-	TestApricotPhasePost6Config = TestChainConfig
-	TestBanffChainConfig        = TestChainConfig
-	TestCortinaChainConfig      = TestChainConfig
-	TestDurangoChainConfig      = TestChainConfig
-	TestEtnaChainConfig         = TestChainConfig
-	TestFortunaChainConfig      = TestChainConfig
-	TestGraniteChainConfig      = TestChainConfig
+	TestLaunchConfig = TestChainConfig
 
 	TestRules = TestChainConfig.Rules(new(big.Int), IsMergeTODO, 0)
 )

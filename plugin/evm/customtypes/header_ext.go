@@ -189,14 +189,12 @@ type HeaderSerializable struct {
 	// BaseFee was added by EIP-1559 and is ignored in legacy headers.
 	BaseFee *big.Int `json:"baseFeePerGas" rlp:"optional"`
 
-	// ExtDataGasUsed was added by Apricot Phase 4 and is ignored in legacy
 	// headers.
 	//
 	// It is not a uint64 like GasLimit or GasUsed because it is not possible to
 	// correctly encode this field optionally with uint64.
 	ExtDataGasUsed *big.Int `json:"extDataGasUsed" rlp:"optional"`
 
-	// BlockGasCost was added by Apricot Phase 4 and is ignored in legacy
 	// headers.
 	BlockGasCost *big.Int `json:"blockGasCost" rlp:"optional"`
 

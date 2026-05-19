@@ -49,9 +49,9 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	"github.com/luxfi/coreth/plugin/evm/extension"
 	"github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/genesisparams"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/gaslimit_initial"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/dynamicfee"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/rpc"
 	"github.com/luxfi/coreth/utils"
@@ -83,7 +83,7 @@ import (
 
 var (
 	schemes          = []string{rawdb.HashScheme, customrawdb.DatabaseScheme}
-	initialBaseFee   = big.NewInt(ap3.InitialBaseFee)
+	initialBaseFee   = big.NewInt(dynamicfee.InitialBaseFee)
 	testKeys         = secp256k1.TestKeys()[:3]
 	testEthAddrs     []common.Address // testEthAddrs[i] corresponds to testKeys[i]
 	testShortIDAddrs []ids.ShortID
@@ -126,31 +126,31 @@ var (
 
 	forkToChainConfig = map[upgradetest.Fork]*params.ChainConfig{
 		upgradetest.NoUpgrades:        params.TestLaunchConfig,
-		upgradetest.ApricotPhase1:     params.TestApricotPhase1Config,
-		upgradetest.ApricotPhase2:     params.TestApricotPhase2Config,
-		upgradetest.ApricotPhase3:     params.TestApricotPhase3Config,
-		upgradetest.ApricotPhase4:     params.TestApricotPhase4Config,
-		upgradetest.ApricotPhase5:     params.TestApricotPhase5Config,
-		upgradetest.ApricotPhasePre6:  params.TestApricotPhasePre6Config,
-		upgradetest.ApricotPhase6:     params.TestApricotPhase6Config,
-		upgradetest.ApricotPhasePost6: params.TestApricotPhasePost6Config,
-		upgradetest.Banff:             params.TestBanffChainConfig,
-		upgradetest.Cortina:           params.TestCortinaChainConfig,
-		upgradetest.Durango:           params.TestDurangoChainConfig,
-		upgradetest.Etna:              params.TestEtnaChainConfig,
-		upgradetest.Fortuna:           params.TestFortunaChainConfig,
-		upgradetest.Granite:           params.TestGraniteChainConfig,
+		upgradetest.ApricotPhase1:     params.TestChainConfig,
+		upgradetest.ApricotPhase2:     params.TestChainConfig,
+		upgradetest.ApricotPhase3:     params.TestChainConfig,
+		upgradetest.ApricotPhase4:     params.TestChainConfig,
+		upgradetest.ApricotPhase5:     params.TestChainConfig,
+		upgradetest.ApricotPhasePre6:  params.TestChainConfig,
+		upgradetest.ApricotPhase6:     params.TestChainConfig,
+		upgradetest.ApricotPhasePost6: params.TestChainConfig,
+		upgradetest.Banff:             params.TestChainConfig,
+		upgradetest.Cortina:           params.TestChainConfig,
+		upgradetest.Durango:           params.TestChainConfig,
+		upgradetest.Etna:              params.TestChainConfig,
+		upgradetest.Fortuna:           params.TestChainConfig,
+		upgradetest.Granite:           params.TestChainConfig,
 	}
 
 	genesisJSONCancun = genesisJSON(activateCancun(params.TestChainConfig))
 
 	apricotRulesPhase0 = *params.GetRulesExtra(params.TestLaunchConfig.Rules(common.Big0, params.IsMergeTODO, 0))
-	apricotRulesPhase1 = *params.GetRulesExtra(params.TestApricotPhase1Config.Rules(common.Big0, params.IsMergeTODO, 0))
-	apricotRulesPhase2 = *params.GetRulesExtra(params.TestApricotPhase2Config.Rules(common.Big0, params.IsMergeTODO, 0))
-	apricotRulesPhase3 = *params.GetRulesExtra(params.TestApricotPhase3Config.Rules(common.Big0, params.IsMergeTODO, 0))
-	apricotRulesPhase5 = *params.GetRulesExtra(params.TestApricotPhase5Config.Rules(common.Big0, params.IsMergeTODO, 0))
-	apricotRulesPhase6 = *params.GetRulesExtra(params.TestApricotPhase6Config.Rules(common.Big0, params.IsMergeTODO, 0))
-	banffRules         = *params.GetRulesExtra(params.TestBanffChainConfig.Rules(common.Big0, params.IsMergeTODO, 0))
+	apricotRulesPhase1 = *params.GetRulesExtra(params.TestChainConfig.Rules(common.Big0, params.IsMergeTODO, 0))
+	apricotRulesPhase2 = *params.GetRulesExtra(params.TestChainConfig.Rules(common.Big0, params.IsMergeTODO, 0))
+	apricotRulesPhase3 = *params.GetRulesExtra(params.TestChainConfig.Rules(common.Big0, params.IsMergeTODO, 0))
+	apricotRulesPhase5 = *params.GetRulesExtra(params.TestChainConfig.Rules(common.Big0, params.IsMergeTODO, 0))
+	apricotRulesPhase6 = *params.GetRulesExtra(params.TestChainConfig.Rules(common.Big0, params.IsMergeTODO, 0))
+	banffRules         = *params.GetRulesExtra(params.TestChainConfig.Rules(common.Big0, params.IsMergeTODO, 0))
 )
 
 func init() {
@@ -612,7 +612,7 @@ func testIssueAtomicTxs(t *testing.T, scheme string) {
 		t.Fatal("Expected logs to be non-nil")
 	}
 
-	exportTx, err := tvm.atomicVM.NewExportTx(tvm.vm.ctx.XAssetID, importAmount-(2*ap0.AtomicTxFee), tvm.vm.ctx.XChainID, testShortIDAddrs[0], initialBaseFee, []*secp256k1.PrivateKey{testKeys[0]})
+	exportTx, err := tvm.atomicVM.NewExportTx(tvm.vm.ctx.XAssetID, importAmount-(2*genesisparams.AtomicTxFee), tvm.vm.ctx.XChainID, testShortIDAddrs[0], initialBaseFee, []*secp256k1.PrivateKey{testKeys[0]})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -718,7 +718,7 @@ func testBuildEthTxBlock(t *testing.T, scheme string) {
 
 	txs := make([]*types.Transaction, 10)
 	for i := 0; i < 10; i++ {
-		tx := types.NewTransaction(uint64(i), testEthAddrs[0], big.NewInt(10), 21000, big.NewInt(ap0.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), testEthAddrs[0], big.NewInt(10), 21000, big.NewInt(genesisparams.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm.vm.chainID), testKeys[0].ToECDSA())
 		if err != nil {
 			t.Fatal(err)
@@ -1249,7 +1249,7 @@ func testSetPreferenceRace(t *testing.T, scheme string) {
 	// and to be split into two separate blocks on VM2
 	txs := make([]*types.Transaction, 10)
 	for i := 0; i < 10; i++ {
-		tx := types.NewTransaction(uint64(i), testEthAddrs[1], big.NewInt(10), 21000, big.NewInt(ap0.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), testEthAddrs[1], big.NewInt(10), 21000, big.NewInt(genesisparams.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm1.vm.chainID), testKeys[1].ToECDSA())
 		if err != nil {
 			t.Fatal(err)
@@ -1461,7 +1461,7 @@ func testConflictingTransitiveAncestryWithGap(t *testing.T, scheme string) {
 		t.Fatalf("Expected new block to match")
 	}
 
-	tx := types.NewTransaction(0, key.Address, big.NewInt(10), 21000, big.NewInt(ap0.MinGasPrice), nil)
+	tx := types.NewTransaction(0, key.Address, big.NewInt(10), 21000, big.NewInt(genesisparams.MinGasPrice), nil)
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm.vm.chainID), key.PrivateKey)
 	if err != nil {
 		t.Fatal(err)
@@ -1731,7 +1731,7 @@ func testReorgProtection(t *testing.T, scheme string) {
 	// and to be split into two separate blocks on VM2
 	txs := make([]*types.Transaction, 10)
 	for i := 0; i < 10; i++ {
-		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(ap0.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(genesisparams.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm1.vm.chainID), key)
 		if err != nil {
 			t.Fatal(err)
@@ -1926,7 +1926,7 @@ func testNonCanonicalAccept(t *testing.T, scheme string) {
 	// and to be split into two separate blocks on VM2
 	txs := make([]*types.Transaction, 10)
 	for i := 0; i < 10; i++ {
-		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(ap0.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(genesisparams.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm1.vm.chainID), key)
 		if err != nil {
 			t.Fatal(err)
@@ -2115,7 +2115,7 @@ func testStickyPreference(t *testing.T, scheme string) {
 	// and to be split into two separate blocks on VM2
 	txs := make([]*types.Transaction, 10)
 	for i := 0; i < 10; i++ {
-		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(ap0.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(genesisparams.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm1.vm.chainID), key)
 		if err != nil {
 			t.Fatal(err)
@@ -2382,7 +2382,7 @@ func testUncleBlock(t *testing.T, scheme string) {
 
 	txs := make([]*types.Transaction, 10)
 	for i := 0; i < 10; i++ {
-		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(ap0.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(genesisparams.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm1.vm.chainID), key)
 		if err != nil {
 			t.Fatal(err)
@@ -2656,7 +2656,7 @@ func testAcceptReorg(t *testing.T, scheme string) {
 	// and to be split into two separate blocks on VM2
 	txs := make([]*types.Transaction, 10)
 	for i := 0; i < 10; i++ {
-		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(ap0.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(genesisparams.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm1.vm.chainID), key)
 		if err != nil {
 			t.Fatal(err)
@@ -2910,7 +2910,7 @@ func testBuildApricotPhase1Block(t *testing.T, scheme string) {
 
 	txs := make([]*types.Transaction, 10)
 	for i := 0; i < 5; i++ {
-		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(ap0.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(genesisparams.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm.vm.chainID), key)
 		if err != nil {
 			t.Fatal(err)
@@ -2918,7 +2918,7 @@ func testBuildApricotPhase1Block(t *testing.T, scheme string) {
 		txs[i] = signedTx
 	}
 	for i := 5; i < 10; i++ {
-		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(ap1.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(gaslimit_initial.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm.vm.chainID), key)
 		if err != nil {
 			t.Fatal(err)
@@ -3397,7 +3397,7 @@ func testBuildApricotPhase4Block(t *testing.T, scheme string) {
 
 	txs := make([]*types.Transaction, 10)
 	for i := 0; i < 5; i++ {
-		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(ap0.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(genesisparams.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm.vm.chainID), key)
 		if err != nil {
 			t.Fatal(err)
@@ -3405,7 +3405,7 @@ func testBuildApricotPhase4Block(t *testing.T, scheme string) {
 		txs[i] = signedTx
 	}
 	for i := 5; i < 10; i++ {
-		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(ap1.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(gaslimit_initial.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm.vm.chainID), key)
 		if err != nil {
 			t.Fatal(err)
@@ -3578,7 +3578,7 @@ func testBuildApricotPhase5Block(t *testing.T, scheme string) {
 
 	txs := make([]*types.Transaction, 10)
 	for i := 0; i < 10; i++ {
-		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(3*ap0.MinGasPrice), nil)
+		tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(3*genesisparams.MinGasPrice), nil)
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(tvm.vm.chainID), key)
 		if err != nil {
 			t.Fatal(err)
@@ -4149,7 +4149,7 @@ func TestBuildBlockWithInsufficientCapacity(t *testing.T) {
 			i,
 			big.NewInt(0),
 			lp176.MinMaxCapacity,
-			big.NewInt(ap0.MinGasPrice),
+			big.NewInt(genesisparams.MinGasPrice),
 			[]byte{0xfe}, // invalid opcode consumes all gas
 		)
 		txs[i], err = types.SignTx(tx, types.NewEIP155Signer(tvm.vm.chainID), testKeys[0].ToECDSA())
@@ -4229,8 +4229,8 @@ func TestBuildBlockLargeTxStarvation(t *testing.T) {
 
 	// Build a block consuming all of the available gas
 	var (
-		highGasPrice = big.NewInt(2 * ap0.MinGasPrice)
-		lowGasPrice  = big.NewInt(ap0.MinGasPrice)
+		highGasPrice = big.NewInt(2 * genesisparams.MinGasPrice)
+		lowGasPrice  = big.NewInt(genesisparams.MinGasPrice)
 	)
 
 	// Refill capacity after distributing funds with import transactions
@@ -4408,7 +4408,7 @@ func TestWaitForEvent(t *testing.T) {
 
 				txs := make([]*types.Transaction, 10)
 				for i := 0; i < 10; i++ {
-					tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(3*ap0.MinGasPrice), nil)
+					tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(3*genesisparams.MinGasPrice), nil)
 					signedTx, err := types.SignTx(tx, types.NewEIP155Signer(vm.chainID), key)
 					require.NoError(t, err)
 
@@ -4462,7 +4462,7 @@ func TestWaitForEvent(t *testing.T) {
 
 				txs := make([]*types.Transaction, 10)
 				for i := 0; i < 10; i++ {
-					tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(3*ap0.MinGasPrice), nil)
+					tx := types.NewTransaction(uint64(i), address, big.NewInt(10), 21000, big.NewInt(3*genesisparams.MinGasPrice), nil)
 					signedTx, err := types.SignTx(tx, types.NewEIP155Signer(vm.chainID), key)
 					require.NoError(t, err)
 

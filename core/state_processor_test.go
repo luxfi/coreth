@@ -45,9 +45,9 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/coreth/plugin/evm/customtypes"
 	customheader "github.com/luxfi/coreth/plugin/evm/header"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap1"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/cortina"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/gaslimit_initial"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/dynamicfee"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/gaslimit"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/crypto"
@@ -131,7 +131,7 @@ func TestStateProcessorErrors(t *testing.T) {
 						Nonce:   0,
 					},
 				},
-				GasLimit: cortina.GasLimit,
+				GasLimit: gaslimit.GasLimit,
 			}
 			// FullFaker used to skip header verification that enforces no blobs.
 			blockchain, _  = NewBlockChain(db, DefaultCacheConfig, gspec, dummy.NewFullFaker(), vm.Config{}, common.Hash{}, false)
@@ -238,13 +238,13 @@ func TestStateProcessorErrors(t *testing.T) {
 			},
 			{ // ErrMaxInitCodeSizeExceeded
 				txs: []*types.Transaction{
-					mkDynamicCreationTx(0, 500000, common.Big0, big.NewInt(ap3.InitialBaseFee), tooBigInitCode[:]),
+					mkDynamicCreationTx(0, 500000, common.Big0, big.NewInt(dynamicfee.InitialBaseFee), tooBigInitCode[:]),
 				},
 				want: "could not apply tx 0 [0x18a05f40f29ff16d5287f6f88b21c9f3c7fbc268f707251144996294552c4cd6]: max initcode size exceeded: code size 49153 limit 49152",
 			},
 			{ // ErrIntrinsicGas: Not enough gas to cover init code
 				txs: []*types.Transaction{
-					mkDynamicCreationTx(0, 54299, common.Big0, big.NewInt(ap3.InitialBaseFee), make([]byte, 320)),
+					mkDynamicCreationTx(0, 54299, common.Big0, big.NewInt(dynamicfee.InitialBaseFee), make([]byte, 320)),
 				},
 				want: "could not apply tx 0 [0x849278f616d51ab56bba399551317213ce7a10e4d9cbc3d14bb663e50cb7ab99]: intrinsic gas too low: have 54299, want 54300",
 			},
@@ -298,7 +298,7 @@ func TestStateProcessorErrors(t *testing.T) {
 						Nonce:   0,
 					},
 				},
-				GasLimit: ap1.GasLimit,
+				GasLimit: gaslimit_initial.GasLimit,
 			}
 			blockchain, _ = NewBlockChain(db, DefaultCacheConfig, gspec, dummy.NewCoinbaseFaker(), vm.Config{}, common.Hash{}, false)
 		)
@@ -338,7 +338,7 @@ func TestStateProcessorErrors(t *testing.T) {
 						Code:    common.FromHex("0xB0B0FACE"),
 					},
 				},
-				GasLimit: cortina.GasLimit,
+				GasLimit: gaslimit.GasLimit,
 			}
 			blockchain, _ = NewBlockChain(db, DefaultCacheConfig, gspec, dummy.NewCoinbaseFaker(), vm.Config{}, common.Hash{}, false)
 		)

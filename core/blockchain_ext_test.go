@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/coreth/consensus/dummy"
 	"github.com/luxfi/coreth/core/extstate"
 	"github.com/luxfi/coreth/params"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap4"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/blockgascost"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"
@@ -1424,7 +1424,7 @@ func GenerateChainInvalidBlockFeeTest(t *testing.T, create createFunc) {
 
 	// This call generates a chain of 3 blocks.
 	signer := types.LatestSigner(params.TestChainConfig)
-	_, _, _, err = GenerateChainWithGenesis(gspec, blockchain.engine, 3, ap4.TargetBlockRate-1, func(i int, gen *BlockGen) {
+	_, _, _, err = GenerateChainWithGenesis(gspec, blockchain.engine, 3, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		tx := types.NewTx(&types.DynamicFeeTx{
 			ChainID:   params.TestChainConfig.ChainID,
 			Nonce:     gen.TxNonce(addr1),
@@ -1466,7 +1466,7 @@ func InsertChainInvalidBlockFeeTest(t *testing.T, create createFunc) {
 	// This call generates a chain of 3 blocks.
 	signer := types.LatestSigner(params.TestChainConfig)
 	eng := dummy.NewFakerWithMode(TestCallbacks, dummy.Mode{ModeSkipBlockFee: true, ModeSkipCoinbase: true})
-	_, chain, _, err := GenerateChainWithGenesis(gspec, eng, 3, ap4.TargetBlockRate-1, func(i int, gen *BlockGen) {
+	_, chain, _, err := GenerateChainWithGenesis(gspec, eng, 3, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		tx := types.NewTx(&types.DynamicFeeTx{
 			ChainID:   params.TestChainConfig.ChainID,
 			Nonce:     gen.TxNonce(addr1),
@@ -1513,7 +1513,7 @@ func InsertChainValidBlockFeeTest(t *testing.T, create createFunc) {
 	signer := types.LatestSigner(params.TestChainConfig)
 	tip := big.NewInt(50000 * params.GWei)
 	transfer := big.NewInt(10000)
-	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, ap4.TargetBlockRate-1, func(i int, gen *BlockGen) {
+	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		feeCap := new(big.Int).Add(gen.BaseFee(), tip)
 		tx := types.NewTx(&types.DynamicFeeTx{
 			ChainID:   params.TestChainConfig.ChainID,

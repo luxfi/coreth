@@ -87,7 +87,6 @@ func (s *semanticVerifier) ImportTx(utx *atomic.UnsignedImportTx) error {
 	}
 
 	// Under activate-all-implicitly every atomic import tx pays a dynamic fee
-	// computed from its fixed-fee gas charge (Apricot Phase 5 path).
 	fc := lux.NewFlowChecker()
 	gasUsed, err := stx.GasUsed(true)
 	if err != nil {
@@ -210,7 +209,6 @@ func (s *semanticVerifier) ExportTx(utx *atomic.UnsignedExportTx) error {
 	}
 
 	// Under activate-all-implicitly every atomic export tx pays a dynamic fee
-	// computed from its fixed-fee gas charge (Apricot Phase 5 path).
 	fc := lux.NewFlowChecker()
 	gasUsed, err := stx.GasUsed(true)
 	if err != nil {

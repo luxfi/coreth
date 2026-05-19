@@ -60,7 +60,6 @@ func newBlockExtender(
 
 // NewBlockExtension returns a new block extension. Under
 // activate-all-implicitly the ext data is always a batch-encoded atomic-tx
-// stream (formerly Apricot Phase 5+ behaviour).
 func (be *blockExtender) NewBlockExtension(b extension.ExtendedBlock) (extension.BlockExtension, error) {
 	ethBlock := b.GetEthBlock()
 	if ethBlock == nil {
