@@ -73,10 +73,12 @@ func TestCorethVM_ReceivesSecurityProfile(t *testing.T) {
 		t.Error("VM.SecurityProfile().ProfileHash is zero — Resolve did not stamp the live hash")
 	}
 
-	// Precompile gate must also be wired.
-	active := gethvm.ActiveSecurityProfile()
-	if active == nil || !active.ForbidECDSAContractAuth {
-		t.Error("gethvm.ActiveSecurityProfile must be set with ForbidECDSAContractAuth=true after install")
+	// Precompile gate must also be wired. Under geth v1.16.94+ the gate
+	// is a *pq.Profile (aliased as gethvm.PQProfile); ForbidECDSAContractAuth
+	// from the consensus axis projects onto ForbidEcrecover (precompile 0x01).
+	active := gethvm.ActivePQProfile()
+	if active == nil || !active.ForbidEcrecover {
+		t.Error("gethvm.ActivePQProfile must be set with ForbidEcrecover=true after install")
 	}
 }
 

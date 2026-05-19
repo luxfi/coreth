@@ -17,26 +17,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Under activate-all-implicitly all gas-limit paths run against a bare
+// *extras.ChainConfig{}: there are no per-upgrade gates left.
+
 func TestGasLimit(t *testing.T) {
 	tests := []struct {
 		name      string
-		upgrades  extras.NetworkUpgrades
 		parent    *types.Header
 		timestamp uint64
 		want      uint64
 		wantErr   error
 	}{
 		{
-			name:     "mainnet_invalid_parent_header",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_invalid_parent_header",
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
 			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "mainnet_initial_max_capacity",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_initial_max_capacity",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -47,9 +47,7 @@ func TestGasLimit(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			require := require.New(t)
 
-			config := &extras.ChainConfig{
-				NetworkUpgrades: test.upgrades,
-			}
+			config := &extras.ChainConfig{}
 			got, err := GasLimit(config, test.parent, test.timestamp)
 			require.ErrorIs(err, test.wantErr)
 			require.Equal(test.want, got)
@@ -59,15 +57,13 @@ func TestGasLimit(t *testing.T) {
 
 func TestVerifyGasUsed(t *testing.T) {
 	tests := []struct {
-		name     string
-		upgrades extras.NetworkUpgrades
-		parent   *types.Header
-		header   *types.Header
-		want     error
+		name   string
+		parent *types.Header
+		header *types.Header
+		want   error
 	}{
 		{
-			name:     "mainnet_massive_extra_gas_used",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_massive_extra_gas_used",
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
 					Number: big.NewInt(300),
@@ -79,8 +75,7 @@ func TestVerifyGasUsed(t *testing.T) {
 			want: errInvalidExtraDataGasUsed,
 		},
 		{
-			name:     "mainnet_gas_used_overflow",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_gas_used_overflow",
 			header: customtypes.WithHeaderExtra(
 				&types.Header{
 					Number:  big.NewInt(301),
@@ -93,8 +88,7 @@ func TestVerifyGasUsed(t *testing.T) {
 			want: math.ErrOverflow,
 		},
 		{
-			name:     "mainnet_invalid_capacity",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_invalid_capacity",
 			parent: &types.Header{
 				Number: big.NewInt(302),
 			},
@@ -104,8 +98,7 @@ func TestVerifyGasUsed(t *testing.T) {
 			want: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "mainnet_invalid_usage",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_invalid_usage",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -116,8 +109,7 @@ func TestVerifyGasUsed(t *testing.T) {
 			want: errInvalidGasUsed,
 		},
 		{
-			name:     "mainnet_max_consumption",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_max_consumption",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -130,9 +122,7 @@ func TestVerifyGasUsed(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			config := &extras.ChainConfig{
-				NetworkUpgrades: test.upgrades,
-			}
+			config := &extras.ChainConfig{}
 			err := VerifyGasUsed(config, test.parent, test.header)
 			require.ErrorIs(t, err, test.want)
 		})
@@ -141,15 +131,13 @@ func TestVerifyGasUsed(t *testing.T) {
 
 func TestVerifyGasLimit(t *testing.T) {
 	tests := []struct {
-		name     string
-		upgrades extras.NetworkUpgrades
-		parent   *types.Header
-		header   *types.Header
-		want     error
+		name   string
+		parent *types.Header
+		header *types.Header
+		want   error
 	}{
 		{
-			name:     "mainnet_invalid_header",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_invalid_header",
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
@@ -157,8 +145,7 @@ func TestVerifyGasLimit(t *testing.T) {
 			want:   lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "mainnet_invalid",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_invalid",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -168,8 +155,7 @@ func TestVerifyGasLimit(t *testing.T) {
 			want: errInvalidGasLimit,
 		},
 		{
-			name:     "mainnet_valid",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_valid",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -180,9 +166,7 @@ func TestVerifyGasLimit(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			config := &extras.ChainConfig{
-				NetworkUpgrades: test.upgrades,
-			}
+			config := &extras.ChainConfig{}
 			err := VerifyGasLimit(config, test.parent, test.header)
 			require.ErrorIs(t, err, test.want)
 		})
@@ -192,23 +176,20 @@ func TestVerifyGasLimit(t *testing.T) {
 func TestGasCapacity(t *testing.T) {
 	tests := []struct {
 		name      string
-		upgrades  extras.NetworkUpgrades
 		parent    *types.Header
 		timestamp uint64
 		want      uint64
 		wantErr   error
 	}{
 		{
-			name:     "mainnet_invalid_header",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_invalid_header",
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
 			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "mainnet_after_1s",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_after_1s",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -220,9 +201,7 @@ func TestGasCapacity(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			require := require.New(t)
 
-			config := &extras.ChainConfig{
-				NetworkUpgrades: test.upgrades,
-			}
+			config := &extras.ChainConfig{}
 			got, err := GasCapacity(config, test.parent, test.timestamp)
 			require.ErrorIs(err, test.wantErr)
 			require.Equal(test.want, got)
@@ -232,16 +211,14 @@ func TestGasCapacity(t *testing.T) {
 
 func TestRemainingAtomicGasCapacity(t *testing.T) {
 	tests := []struct {
-		name     string
-		upgrades extras.NetworkUpgrades
-		parent   *types.Header
-		header   *types.Header
-		want     uint64
-		wantErr  error
+		name    string
+		parent  *types.Header
+		header  *types.Header
+		want    uint64
+		wantErr error
 	}{
 		{
-			name:     "mainnet_invalid_header",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_invalid_header",
 			parent: &types.Header{
 				Number: big.NewInt(1),
 			},
@@ -249,8 +226,7 @@ func TestRemainingAtomicGasCapacity(t *testing.T) {
 			wantErr: lp176.ErrStateInsufficientLength,
 		},
 		{
-			name:     "mainnet_negative_capacity",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_negative_capacity",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -260,8 +236,7 @@ func TestRemainingAtomicGasCapacity(t *testing.T) {
 			wantErr: gas.ErrInsufficientCapacity,
 		},
 		{
-			name:     "mainnet_with_capacity",
-			upgrades: extras.TestChainConfig.NetworkUpgrades,
+			name: "mainnet_with_capacity",
 			parent: &types.Header{
 				Number: big.NewInt(0),
 			},
@@ -276,9 +251,7 @@ func TestRemainingAtomicGasCapacity(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			require := require.New(t)
 
-			config := &extras.ChainConfig{
-				NetworkUpgrades: test.upgrades,
-			}
+			config := &extras.ChainConfig{}
 			got, err := RemainingAtomicGasCapacity(config, test.parent, test.header)
 			require.ErrorIs(err, test.wantErr)
 			require.Equal(test.want, got)
