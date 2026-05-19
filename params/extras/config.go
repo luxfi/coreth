@@ -9,50 +9,25 @@ import (
 	"math/big"
 
 	consensusctx "github.com/luxfi/consensus/context"
-	"github.com/luxfi/coreth/utils"
 	"github.com/luxfi/geth/common"
 	ethparams "github.com/luxfi/geth/params"
 )
 
 var (
-	// TestChainConfig is the default test configuration with all upgrades active.
-	// This represents mainnet behavior where all legacy upgrades are active.
-	TestChainConfig = &ChainConfig{
-		NetworkUpgrades: NetworkUpgrades{
-			BanffBlockTimestamp:   utils.NewUint64(0),
-			CortinaBlockTimestamp: utils.NewUint64(0),
-			DurangoBlockTimestamp: utils.NewUint64(0),
-			EtnaTimestamp:         utils.NewUint64(0),
-			FortunaTimestamp:      utils.NewUint64(0),
-			GraniteTimestamp:      utils.NewUint64(0),
-		},
-	}
+	// TestChainConfig is the canonical Lux C-Chain config with every upgrade
+	// active from genesis. Under activate-all-implicitly there is no difference
+	// between a "test" and a "main" config: callers that need a chain config
+	// get this.
+	TestChainConfig = &ChainConfig{}
 
-	// GenesisChainConfig is for testing genesis block behavior.
-	// Only has Banff+ upgrades scheduled at future timestamps.
-	GenesisChainConfig = &ChainConfig{
-		NetworkUpgrades: NetworkUpgrades{
-			BanffBlockTimestamp:   utils.NewUint64(1000),
-			CortinaBlockTimestamp: utils.NewUint64(2000),
-			DurangoBlockTimestamp: utils.NewUint64(3000),
-			EtnaTimestamp:         utils.NewUint64(4000),
-			FortunaTimestamp:      utils.NewUint64(5000),
-			GraniteTimestamp:      utils.NewUint64(6000),
-		},
-	}
-
-	// MainnetChainConfig represents Lux mainnet configuration.
-	// All legacy upgrades are active, with modern upgrades scheduled.
+	// MainnetChainConfig is an alias for TestChainConfig; the production
+	// chain runs the same activate-all-implicitly rule set.
 	MainnetChainConfig = TestChainConfig
 
-	// Legacy test configs - all point to TestChainConfig for backward compatibility
-	// These are kept for tests that still reference them.
-	TestBanffChainConfig   = TestChainConfig
-	TestCortinaChainConfig = TestChainConfig
-	TestDurangoChainConfig = TestChainConfig
-	TestEtnaChainConfig    = TestChainConfig
-	TestFortunaChainConfig = TestChainConfig
-	TestGraniteChainConfig = TestChainConfig
+	// GenesisChainConfig is retained as the same canonical config; the
+	// activate-all-implicitly directive deletes the "blocks before fork X"
+	// genesis flavor entirely.
+	GenesisChainConfig = TestChainConfig
 )
 
 // UpgradeConfig includes the following configs that may be specified in upgradeBytes:

@@ -62,72 +62,28 @@ func (r RulesExtra) MinimumGasConsumption(x uint64) uint64 {
 	return x // Simply return the input for now
 }
 
-var PrecompiledContractsApricotPhase2 = map[common.Address]contract.StatefulPrecompiledContract{
+// PrecompiledContractsLux is the canonical built-in precompile set under
+// activate-all-implicitly. Native asset precompiles remain active; only the
+// Genesis contract is deprecated.
+var PrecompiledContractsLux = map[common.Address]contract.StatefulPrecompiledContract{
 	nativeasset.GenesisContractAddr:    &nativeasset.DeprecatedContract{},
 	nativeasset.NativeAssetBalanceAddr: &nativeasset.NativeAssetBalance{GasCost: AssetBalanceApricot},
 	nativeasset.NativeAssetCallAddr:    &nativeasset.NativeAssetCall{GasCost: AssetCallApricot, CallNewAccountGas: CallNewAccountGas},
 }
 
-var PrecompiledContractsApricotPhasePre6 = map[common.Address]contract.StatefulPrecompiledContract{
-	nativeasset.GenesisContractAddr:    &nativeasset.DeprecatedContract{},
-	nativeasset.NativeAssetBalanceAddr: &nativeasset.DeprecatedContract{},
-	nativeasset.NativeAssetCallAddr:    &nativeasset.DeprecatedContract{},
-}
-
-var PrecompiledContractsApricotPhase6 = map[common.Address]contract.StatefulPrecompiledContract{
-	nativeasset.GenesisContractAddr:    &nativeasset.DeprecatedContract{},
-	nativeasset.NativeAssetBalanceAddr: &nativeasset.NativeAssetBalance{GasCost: AssetBalanceApricot},
-	nativeasset.NativeAssetCallAddr:    &nativeasset.NativeAssetCall{GasCost: AssetCallApricot, CallNewAccountGas: CallNewAccountGas},
-}
-
-// In Lux, native asset precompiles remain active after Banff (unlike Avalanche).
-// Only the Genesis contract is deprecated.
-var PrecompiledContractsBanff = map[common.Address]contract.StatefulPrecompiledContract{
-	nativeasset.GenesisContractAddr:    &nativeasset.DeprecatedContract{},
-	nativeasset.NativeAssetBalanceAddr: &nativeasset.NativeAssetBalance{GasCost: AssetBalanceApricot},
-	nativeasset.NativeAssetCallAddr:    &nativeasset.NativeAssetCall{GasCost: AssetCallApricot, CallNewAccountGas: CallNewAccountGas},
-}
-
-func (r RulesExtra) ActivePrecompiles(existing []common.Address) []common.Address {
-	var precompiles map[common.Address]contract.StatefulPrecompiledContract
-	switch {
-	case r.IsBanff:
-		precompiles = PrecompiledContractsBanff
-	case r.IsApricotPhase6:
-		precompiles = PrecompiledContractsApricotPhase6
-	case r.IsApricotPhasePre6:
-		precompiles = PrecompiledContractsApricotPhasePre6
-	case r.IsApricotPhase2:
-		precompiles = PrecompiledContractsApricotPhase2
-	}
-
-	var addresses []common.Address
-	addresses = slices.AppendSeq(addresses, maps.Keys(precompiles))
+func (RulesExtra) ActivePrecompiles(existing []common.Address) []common.Address {
+	addresses := slices.AppendSeq([]common.Address(nil), maps.Keys(PrecompiledContractsLux))
 	addresses = append(addresses, existing...)
 	return addresses
 }
 
-// precompileOverrideBuiltin specifies precompiles that were activated prior to the
-// dynamic precompile activation registry.
-// These were only active historically and are not active in the current network.
-func (r RulesExtra) precompileOverrideBuiltin(addr common.Address) (vm.PrecompiledContract, bool) {
-	var precompiles map[common.Address]contract.StatefulPrecompiledContract
-	switch {
-	case r.IsBanff:
-		precompiles = PrecompiledContractsBanff
-	case r.IsApricotPhase6:
-		precompiles = PrecompiledContractsApricotPhase6
-	case r.IsApricotPhasePre6:
-		precompiles = PrecompiledContractsApricotPhasePre6
-	case r.IsApricotPhase2:
-		precompiles = PrecompiledContractsApricotPhase2
-	}
-
-	precompile, ok := precompiles[addr]
+// precompileOverrideBuiltin returns the canonical built-in precompile at addr,
+// if any.
+func (RulesExtra) precompileOverrideBuiltin(addr common.Address) (vm.PrecompiledContract, bool) {
+	precompile, ok := PrecompiledContractsLux[addr]
 	if !ok {
 		return nil, false
 	}
-
 	return makePrecompile(precompile), true
 }
 

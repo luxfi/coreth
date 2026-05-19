@@ -9,8 +9,6 @@ import (
 	"fmt"
 
 	"github.com/luxfi/coreth/params/extras"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap0"
-	"github.com/luxfi/coreth/plugin/evm/upgrade/ap3"
 	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/vm/components/gas"
@@ -109,93 +107,36 @@ func VerifyExtraPrefix(
 	return nil
 }
 
-// VerifyExtra verifies that the header's Extra field is correctly formatted for
-// rules.
-//
-// TODO: Should this be merged with VerifyExtraPrefix?
-func VerifyExtra(rules extras.LuxRules, extra []byte) error {
-	extraLen := len(extra)
-	switch {
-	case rules.IsFortuna:
-		if extraLen < lp176.StateSize {
-			return fmt.Errorf(
-				"%w: expected >= %d but got %d",
-				errInvalidExtraLength,
-				lp176.StateSize,
-				extraLen,
-			)
-		}
-	case rules.IsDurango:
-		if extraLen < ap3.WindowSize {
-			return fmt.Errorf(
-				"%w: expected >= %d but got %d",
-				errInvalidExtraLength,
-				ap3.WindowSize,
-				extraLen,
-			)
-		}
-	case rules.IsApricotPhase3:
-		// Allow >= 80 bytes to support ChainEVM blocks that have additional
-		// metadata beyond the standard AP3 window (e.g., 86-byte Extra fields).
-		// The fee window parsing only uses the first 80 bytes.
-		if extraLen < ap3.WindowSize {
-			return fmt.Errorf(
-				"%w: expected >= %d but got %d",
-				errInvalidExtraLength,
-				ap3.WindowSize,
-				extraLen,
-			)
-		}
-	case rules.IsApricotPhase1:
-		if extraLen != 0 {
-			return fmt.Errorf(
-				"%w: expected 0 but got %d",
-				errInvalidExtraLength,
-				extraLen,
-			)
-		}
-	default:
-		// For historic ChainEVM blocks (before any Lux upgrades were active),
-		// allow Extra fields >= 80 bytes (ChainEVM uses 86 bytes for fee window
-		// plus block gas cost). Also allow the standard <= 64 bytes for pre-EVM blocks.
-		if uint64(extraLen) > ap0.MaximumExtraDataSize && extraLen < ap3.WindowSize {
-			return fmt.Errorf(
-				"%w: expected <= %d or >= %d but got %d",
-				errInvalidExtraLength,
-				ap0.MaximumExtraDataSize,
-				ap3.WindowSize,
-				extraLen,
-			)
-		}
+// VerifyExtra verifies that the header's Extra field is correctly formatted.
+// Under activate-all-implicitly the LP-176 (Fortuna) extra layout is canonical
+// for every header.
+func VerifyExtra(_ extras.LuxRules, extra []byte) error {
+	if len(extra) < lp176.StateSize {
+		return fmt.Errorf(
+			"%w: expected >= %d but got %d",
+			errInvalidExtraLength,
+			lp176.StateSize,
+			len(extra),
+		)
 	}
 	return nil
 }
 
 // PredicateBytesFromExtra returns the predicate result bytes from the header's
-// extra data. If the extra data is not long enough, an empty slice is returned.
-func PredicateBytesFromExtra(rules extras.LuxRules, extra []byte) []byte {
-	offset := ap3.WindowSize
-	if rules.IsFortuna {
-		offset = lp176.StateSize
-	}
-
-	// Prior to Durango, the VM enforces the extra data is smaller than or equal
-	// to `offset`.
-	// After Durango, the VM pre-verifies the extra data past `offset` is valid.
+// extra data. Under activate-all-implicitly the LP-176 (Fortuna) offset is
+// canonical for every header.
+func PredicateBytesFromExtra(_ extras.LuxRules, extra []byte) []byte {
+	offset := lp176.StateSize
 	if len(extra) <= offset {
 		return nil
 	}
 	return extra[offset:]
 }
 
-// SetPredicateBytesInExtra sets the predicate result bytes in the header's extra
-// data. If the extra data is not long enough (i.e., an incomplete header.Extra
-// as built in the miner), it is padded with zeros.
-func SetPredicateBytesInExtra(rules extras.LuxRules, extra []byte, predicateBytes []byte) []byte {
-	offset := ap3.WindowSize
-	if rules.IsFortuna {
-		offset = lp176.StateSize
-	}
+// SetPredicateBytesInExtra sets the predicate result bytes in the header's
+// extra data. Under activate-all-implicitly the LP-176 offset is canonical.
+func SetPredicateBytesInExtra(_ extras.LuxRules, extra []byte, predicateBytes []byte) []byte {
+	offset := lp176.StateSize
 
 	if len(extra) < offset {
 		// pad extra with zeros
