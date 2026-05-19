@@ -145,7 +145,7 @@ require (
 	github.com/luxfi/node v1.23.4
 	github.com/luxfi/p2p v1.19.2
 	github.com/luxfi/precompile v0.5.17
-	github.com/luxfi/proto v0.0.0-proto-rename
+	github.com/luxfi/proto v1.0.0
 	github.com/luxfi/rpc v1.0.0
 	github.com/luxfi/runtime v1.0.1
 	github.com/luxfi/sys v0.0.0-20260110090042-50187ec5ffd8
@@ -240,6 +240,3 @@ require (
 
 exclude google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 
-// Local-dev overlay for the protocol → proto rename.
-// Strip once GitHub admin renames luxfi/protocol → luxfi/proto and a real tag exists.
-replace github.com/luxfi/proto => ../protocol
