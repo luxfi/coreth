@@ -510,7 +510,7 @@ func TestNewImportTx(t *testing.T) {
 
 		expectedRemainingBalance := new(uint256.Int).Mul(
 			uint256.NewInt(importAmount-actualLUXBurned), atomic.X2CRate)
-		addr := common.Address(testKeys[0].EthAddress())
+		addr := common.Address(testKeys[0].EVMAddress())
 		if actualBalance := sdb.GetBalance(addr); actualBalance.Cmp(expectedRemainingBalance) != 0 {
 			t.Fatalf("address remaining balance %s equal %s not %s", addr.String(), actualBalance, expectedRemainingBalance)
 		}

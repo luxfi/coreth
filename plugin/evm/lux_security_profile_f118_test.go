@@ -27,7 +27,7 @@ import (
 // pin matches what the consensus package will accept at Resolve time.
 func strictPQPin(t *testing.T) *config.LuxSecurityProfilePin {
 	t.Helper()
-	profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileLuxStrictPQ)
+	profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileStrictPQ)
 	if err != nil {
 		t.Fatalf("ProfileByID(LuxStrictPQ): %v", err)
 	}
@@ -36,7 +36,7 @@ func strictPQPin(t *testing.T) *config.LuxSecurityProfilePin {
 		t.Fatalf("ComputeHash(LuxStrictPQ): %v", err)
 	}
 	return &config.LuxSecurityProfilePin{
-		ProfileID:      uint8(consensusconfig.ProfileLuxStrictPQ),
+		ProfileID:      uint8(consensusconfig.ProfileStrictPQ),
 		ProfileHashHex: hex.EncodeToString(h[:]),
 	}
 }
@@ -59,9 +59,9 @@ func TestCorethVM_ReceivesSecurityProfile(t *testing.T) {
 	if got == nil {
 		t.Fatal("VM.SecurityProfile() returned nil after install")
 	}
-	if got.ProfileID != uint32(consensusconfig.ProfileLuxStrictPQ) {
+	if got.ProfileID != uint32(consensusconfig.ProfileStrictPQ) {
 		t.Errorf("VM.SecurityProfile().ProfileID = 0x%x, want 0x%x",
-			got.ProfileID, uint32(consensusconfig.ProfileLuxStrictPQ))
+			got.ProfileID, uint32(consensusconfig.ProfileStrictPQ))
 	}
 	if !got.ForbidECDSAWallets {
 		t.Error("LuxStrictPQ must set ForbidECDSAWallets=true; got false")
@@ -90,7 +90,7 @@ func TestCorethVM_RefusesProfileHashMismatch(t *testing.T) {
 
 	v := &VM{}
 	v.config.LuxSecurityProfile = &config.LuxSecurityProfilePin{
-		ProfileID: uint8(consensusconfig.ProfileLuxStrictPQ),
+		ProfileID: uint8(consensusconfig.ProfileStrictPQ),
 		// 48 zero bytes — guaranteed not to match the live hash.
 		ProfileHashHex: "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
 	}
@@ -110,7 +110,7 @@ func TestCorethVM_RefusesProfileHashMismatch(t *testing.T) {
 // the EVM admission axis of F118 — the attack scenario the red team
 // named at /tmp/pq-final/red-team-final.md "Attack 8".
 func TestCorethVM_RefusesECDSATxUnderStrictPQ(t *testing.T) {
-	profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileLuxStrictPQ)
+	profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileStrictPQ)
 	if err != nil {
 		t.Fatalf("ProfileByID(LuxStrictPQ): %v", err)
 	}
@@ -168,7 +168,7 @@ func TestCorethVM_AcceptsClassicalTxUnderClassicalCompat(t *testing.T) {
 // yet. A PQ tx type that bypasses the gate would need explicit opt-in
 // once it lands.
 func TestCorethVM_RefusesEveryClassicalTxType(t *testing.T) {
-	profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileLuxStrictPQ)
+	profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileStrictPQ)
 	if err != nil {
 		t.Fatalf("ProfileByID(LuxStrictPQ): %v", err)
 	}
@@ -203,7 +203,7 @@ func TestCorethVM_RefusesEveryClassicalTxType(t *testing.T) {
 // a PQ type requires a future opt-in path. Test passes today by
 // asserting the documented behaviour.
 func TestCorethVM_AcceptsMLDSATxUnderStrictPQ(t *testing.T) {
-	profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileLuxStrictPQ)
+	profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileStrictPQ)
 	if err != nil {
 		t.Fatalf("ProfileByID(LuxStrictPQ): %v", err)
 	}

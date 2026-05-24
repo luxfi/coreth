@@ -155,7 +155,7 @@ var (
 
 func init() {
 	for _, key := range testKeys {
-		testEthAddrs = append(testEthAddrs, key.EthAddress())
+		testEthAddrs = append(testEthAddrs, key.EVMAddress())
 		testShortIDAddrs = append(testShortIDAddrs, key.Address())
 	}
 }

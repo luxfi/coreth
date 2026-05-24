@@ -250,7 +250,7 @@ func (s *semanticVerifier) ExportTx(utx *atomic.UnsignedExportTx) error {
 		if err != nil {
 			return err
 		}
-		if input.Address != pubKey.EthAddress() {
+		if input.Address != pubKey.EVMAddress() {
 			return errPublicKeySignatureMismatch
 		}
 	}
