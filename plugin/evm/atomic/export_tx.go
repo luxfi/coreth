@@ -363,7 +363,7 @@ func getSpendableFunds(
 		if amount == 0 {
 			break
 		}
-		addr := key.EthAddress()
+		addr := key.EVMAddress()
 		var balance uint64
 		if luxfiidsEqual(ctx.XAssetID, assetID) {
 			// If the asset is LUX, we divide by the x2cRate to convert back to the correct
@@ -446,7 +446,7 @@ func getSpendableLUXWithFee(
 
 		additionalFee := newFee - prevFee
 
-		addr := key.EthAddress()
+		addr := key.EVMAddress()
 		// Since the asset is LUX, we divide by the x2cRate to convert back to
 		// the correct denomination of LUX that can be exported.
 		balance := new(uint256.Int).Div(state.GetBalance(addr), X2CRate).Uint64()

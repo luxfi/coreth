@@ -310,7 +310,7 @@ func (v *VM) installSecurityProfile() error {
 			// that still flip the bool manually (tests). Installs the
 			// canonical LuxStrictPQ profile without hash verification —
 			// callers that need hash binding MUST use the structured pin.
-			profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileLuxStrictPQ)
+			profile, err := consensusconfig.ProfileByID(consensusconfig.ProfileStrictPQ)
 			if err != nil {
 				return fmt.Errorf("legacy LuxStrictPQ bool: ProfileByID: %w", err)
 			}

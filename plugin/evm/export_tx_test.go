@@ -122,7 +122,7 @@ func createExportTxOptions(t *testing.T, vm *atomicvm.VM, sharedMemory *luxatomi
 func TestExportTxEVMStateTransfer(t *testing.T) {
 	key := testKeys[0]
 	addr := key.Address()
-	ethAddr := key.EthAddress()
+	ethAddr := key.EVMAddress()
 
 	luxAmount := 50 * constants.MilliLux
 	luxUTXOID := lux.UTXOID{
@@ -1824,7 +1824,7 @@ func TestNewExportTx(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			addr := common.Address(testKeys[0].EthAddress())
+			addr := common.Address(testKeys[0].EVMAddress())
 			if wrappedStateDB.GetBalance(addr).Cmp(uint256.NewInt(test.bal*constants.Lux)) != 0 {
 				t.Fatalf("address balance %s equal %s not %s", addr.String(), wrappedStateDB.GetBalance(addr), new(big.Int).SetUint64(test.bal*constants.Lux))
 			}
@@ -1963,7 +1963,7 @@ func TestNewExportTxMulticoin(t *testing.T) {
 			parent = tvm.vm.LastAcceptedExtendedBlock()
 			exportAmount := uint64(5000000)
 
-			testKeys0Addr := testKeys[0].EthAddress()
+			testKeys0Addr := testKeys[0].EVMAddress()
 			exportId, err := ids.ToShortID(testKeys0Addr[:])
 			if err != nil {
 				t.Fatal(err)
@@ -2010,7 +2010,7 @@ func TestNewExportTxMulticoin(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			addr := common.Address(testKeys[0].EthAddress())
+			addr := common.Address(testKeys[0].EVMAddress())
 			if wrappedStateDB.GetBalance(addr).Cmp(uint256.NewInt(test.bal*constants.Lux)) != 0 {
 				t.Fatalf("address balance %s equal %s not %s", addr.String(), wrappedStateDB.GetBalance(addr), new(big.Int).SetUint64(test.bal*constants.Lux))
 			}
