@@ -115,7 +115,7 @@ func (utx *UnsignedExportTx) Verify(
 		if err := in.Verify(); err != nil {
 			return err
 		}
-		if !luxfiidsEqual(ctx.XAssetID, in.AssetID) {
+		if !luxfiidsEqual(ctx.UTXOAssetID, in.AssetID) {
 			return ErrExportNonLUXInput
 		}
 	}
@@ -125,10 +125,10 @@ func (utx *UnsignedExportTx) Verify(
 			return err
 		}
 		assetID := out.AssetID()
-		if !luxfiidsEqual(ctx.XAssetID, nodeIDToLuxfiids(assetID)) && luxfiidsEqual(constants.PlatformChainID, utx.DestinationChain) {
+		if !luxfiidsEqual(ctx.UTXOAssetID, nodeIDToLuxfiids(assetID)) && luxfiidsEqual(constants.PlatformChainID, utx.DestinationChain) {
 			return ErrWrongChainID
 		}
-		if !luxfiidsEqual(ctx.XAssetID, assetID) {
+		if !luxfiidsEqual(ctx.UTXOAssetID, assetID) {
 			return ErrExportNonLUXOutput
 		}
 	}
@@ -258,7 +258,7 @@ func NewExportTx(
 	)
 
 	// consume non-LUX
-	if !luxfiidsEqual(ctx.XAssetID, assetID) {
+	if !luxfiidsEqual(ctx.UTXOAssetID, assetID) {
 		ins, signers, err = getSpendableFunds(ctx, state, keys, assetID, amount)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't generate tx inputs/signers: %w", err)
@@ -312,7 +312,7 @@ func NewExportTx(
 func (utx *UnsignedExportTx) EVMStateTransfer(ctx *consensusctx.Context, state StateDB) error {
 	addrs := map[[20]byte]uint64{}
 	for _, from := range utx.Ins {
-		if luxfiidsEqual(ctx.XAssetID, from.AssetID) {
+		if luxfiidsEqual(ctx.UTXOAssetID, from.AssetID) {
 			log.Debug("export_tx", "dest", utx.DestinationChain, "addr", from.Address, "amount", from.Amount, "assetID", "LUX")
 			// We multiply the input amount by x2cRate to convert LUX back to the appropriate
 			// denomination before export.
@@ -365,7 +365,7 @@ func getSpendableFunds(
 		}
 		addr := key.EVMAddress()
 		var balance uint64
-		if luxfiidsEqual(ctx.XAssetID, assetID) {
+		if luxfiidsEqual(ctx.UTXOAssetID, assetID) {
 			// If the asset is LUX, we divide by the x2cRate to convert back to the correct
 			// denomination of LUX that can be exported.
 			balance = new(uint256.Int).Div(state.GetBalance(addr), X2CRate).Uint64()
@@ -477,7 +477,7 @@ func getSpendableLUXWithFee(
 		inputs = append(inputs, EVMInput{
 			Address: addr,
 			Amount:  inputAmount,
-			AssetID: nodeIDToLuxfiids(ctx.XAssetID),
+			AssetID: nodeIDToLuxfiids(ctx.UTXOAssetID),
 			Nonce:   nonce,
 		})
 		signers = append(signers, []*secp256k1.PrivateKey{key})

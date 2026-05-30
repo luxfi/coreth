@@ -512,7 +512,7 @@ func (vm *VM) preBatchOnFinalizeAndAssemble(header *types.Header, state *state.S
 		}
 		// Under activate-all-implicitly the fixed-fee block-fee contribution
 		// is always charged.
-		contribution, gasUsed, err := tx.BlockFeeContribution(true, vm.Runtime.XAssetID, header.BaseFee)
+		contribution, gasUsed, err := tx.BlockFeeContribution(true, vm.Runtime.UTXOAssetID, header.BaseFee)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -566,7 +566,7 @@ func (vm *VM) postBatchOnFinalizeAndAssemble(
 		)
 
 		// we assume that this function will only be called when the block is in at least
-		txContribution, txGasUsed, err = tx.BlockFeeContribution(true, vm.Runtime.XAssetID, header.BaseFee)
+		txContribution, txGasUsed, err = tx.BlockFeeContribution(true, vm.Runtime.UTXOAssetID, header.BaseFee)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -695,7 +695,7 @@ func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, state
 		}
 		// Under activate-all-implicitly the fixed-fee contribution is always
 		// charged.
-		contribution, gasUsed, err := tx.BlockFeeContribution(true, vm.Runtime.XAssetID, block.BaseFee())
+		contribution, gasUsed, err := tx.BlockFeeContribution(true, vm.Runtime.UTXOAssetID, block.BaseFee())
 		if err != nil {
 			return nil, nil, err
 		}
