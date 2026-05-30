@@ -87,7 +87,7 @@ func (t *Txs) atomicTxGasPrice(tx *atomic.Tx) (uint64, error) {
 	if gasUsed == 0 {
 		return 0, ErrNoGasUsed
 	}
-	burned, err := tx.Burned(t.ctx.XAssetID)
+	burned, err := tx.Burned(t.ctx.UTXOAssetID)
 	if err != nil {
 		return 0, err
 	}

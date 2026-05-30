@@ -180,7 +180,7 @@ func TestAtomicTxGossip(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 	quasarCtx := consensustest.Context(t, consensustest.CChainID)
-	quasarCtx.XAssetID = ids.GenerateTestID()
+	quasarCtx.UTXOAssetID = ids.GenerateTestID()
 	validatorState := utils.NewTestValidatorState()
 	quasarCtx.ValidatorState = validatorState
 	memory := luxatomic.NewMemory(memdb.New())
@@ -277,7 +277,7 @@ func TestAtomicTxGossip(t *testing.T) {
 		quasarCtx,
 		ids.GenerateTestID(),
 		0,
-		quasarCtx.XAssetID,
+		quasarCtx.UTXOAssetID,
 		100_000_000_000,
 		pk.Address(),
 	)
@@ -432,7 +432,7 @@ func TestAtomicTxPushGossipOutbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 	quasarCtx := consensustest.Context(t, consensustest.CChainID)
-	quasarCtx.XAssetID = ids.GenerateTestID()
+	quasarCtx.UTXOAssetID = ids.GenerateTestID()
 	validatorState := utils.NewTestValidatorState()
 	quasarCtx.ValidatorState = validatorState
 	memory := luxatomic.NewMemory(memdb.New())
@@ -473,7 +473,7 @@ func TestAtomicTxPushGossipOutbound(t *testing.T) {
 		quasarCtx,
 		ids.GenerateTestID(),
 		0,
-		quasarCtx.XAssetID,
+		quasarCtx.UTXOAssetID,
 		100_000_000_000,
 		pk.Address(),
 	)
@@ -501,7 +501,7 @@ func TestAtomicTxPushGossipInbound(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 	quasarCtx := consensustest.Context(t, consensustest.CChainID)
-	quasarCtx.XAssetID = ids.GenerateTestID()
+	quasarCtx.UTXOAssetID = ids.GenerateTestID()
 	validatorState := utils.NewTestValidatorState()
 	quasarCtx.ValidatorState = validatorState
 	memory := luxatomic.NewMemory(memdb.New())
@@ -540,7 +540,7 @@ func TestAtomicTxPushGossipInbound(t *testing.T) {
 		quasarCtx,
 		ids.GenerateTestID(),
 		0,
-		quasarCtx.XAssetID,
+		quasarCtx.UTXOAssetID,
 		100_000_000_000,
 		pk.Address(),
 	)

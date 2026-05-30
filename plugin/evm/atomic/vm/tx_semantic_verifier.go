@@ -96,7 +96,7 @@ func (s *semanticVerifier) ImportTx(utx *atomic.UnsignedImportTx) error {
 	if err != nil {
 		return err
 	}
-	fc.Produce(ctx.XAssetID, txFee)
+	fc.Produce(ctx.UTXOAssetID, txFee)
 	for _, out := range utx.Outs {
 		fc.Produce(out.AssetID, out.Amount)
 	}
@@ -218,7 +218,7 @@ func (s *semanticVerifier) ExportTx(utx *atomic.UnsignedExportTx) error {
 	if err != nil {
 		return err
 	}
-	fc.Produce(ctx.XAssetID, txFee)
+	fc.Produce(ctx.UTXOAssetID, txFee)
 	for _, out := range utx.ExportedOutputs {
 		fc.Produce(out.AssetID(), out.Output().Amount())
 	}

@@ -136,19 +136,19 @@ require (
 require (
 	github.com/luxfi/atomic v1.0.0
 	github.com/luxfi/concurrent v0.0.3
-	github.com/luxfi/consensus v1.23.9
+	github.com/luxfi/consensus v1.25.0
 	github.com/luxfi/constants v1.4.7
 	github.com/luxfi/database v1.18.3
 	github.com/luxfi/filesystem v0.0.1
 	github.com/luxfi/ids v1.2.9
 	github.com/luxfi/log v1.4.1
 	github.com/luxfi/math v1.4.0
-	github.com/luxfi/node v1.23.36
+	github.com/luxfi/node v1.27.24
 	github.com/luxfi/p2p v1.19.2
 	github.com/luxfi/precompile v0.5.23
-	github.com/luxfi/proto v1.0.0
+	github.com/luxfi/proto v1.1.0
 	github.com/luxfi/rpc v1.0.2
-	github.com/luxfi/runtime v1.0.1
+	github.com/luxfi/runtime v1.1.0
 	github.com/luxfi/sys v0.0.0-20260110090042-50187ec5ffd8
 	github.com/luxfi/timer v1.0.2
 	github.com/luxfi/upgrade v1.0.0
