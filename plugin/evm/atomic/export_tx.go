@@ -49,14 +49,14 @@ func nodeIDToLuxfiids(id ids.ID) luxfiids.ID {
 }
 
 var (
-	_                          UnsignedAtomicTx       = (*UnsignedExportTx)(nil)
-	_                          secp256k1fx.UnsignedTx = (*UnsignedExportTx)(nil)
+	_                     UnsignedAtomicTx       = (*UnsignedExportTx)(nil)
+	_                     secp256k1fx.UnsignedTx = (*UnsignedExportTx)(nil)
 	ErrExportNonLUXInput                         = errors.New("export input must be LUX")
 	ErrExportNonLUXOutput                        = errors.New("export output must be LUX")
-	ErrNoExportOutputs                                = errors.New("tx has no export outputs")
-	errOverflowExport                                 = errors.New("overflow when computing export amount + txFee")
-	errInsufficientFunds                              = errors.New("insufficient funds")
-	errInvalidNonce                                   = errors.New("invalid nonce")
+	ErrNoExportOutputs                           = errors.New("tx has no export outputs")
+	errOverflowExport                            = errors.New("overflow when computing export amount + txFee")
+	errInsufficientFunds                         = errors.New("insufficient funds")
+	errInvalidNonce                              = errors.New("invalid nonce")
 )
 
 // UnsignedExportTx is an unsigned ExportTx

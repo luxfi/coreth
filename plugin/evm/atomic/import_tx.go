@@ -29,15 +29,15 @@ import (
 var (
 	_                          UnsignedAtomicTx       = (*UnsignedImportTx)(nil)
 	_                          secp256k1fx.UnsignedTx = (*UnsignedImportTx)(nil)
-	ErrImportNonLUXInput                         = errors.New("import input must be LUX")
-	ErrImportNonLUXOutput                        = errors.New("import output must be LUX")
+	ErrImportNonLUXInput                              = errors.New("import input must be LUX")
+	ErrImportNonLUXOutput                             = errors.New("import output must be LUX")
 	ErrNoImportInputs                                 = errors.New("tx has no imported inputs")
 	ErrWrongChainID                                   = errors.New("tx has wrong chain ID")
 	ErrNoEVMOutputs                                   = errors.New("tx has no EVM outputs")
 	ErrInputsNotSortedUnique                          = errors.New("inputs not sorted and unique")
 	ErrOutputsNotSortedUnique                         = errors.New("outputs not sorted and unique")
 	ErrOutputsNotSorted                               = errors.New("tx outputs not sorted")
-	errMissingBaseFee                        = errors.New("missing base fee")
+	errMissingBaseFee                                 = errors.New("missing base fee")
 	errInsufficientFundsForFee                        = errors.New("insufficient LUX funds to pay transaction fee")
 )
 
