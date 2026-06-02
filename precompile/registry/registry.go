@@ -28,14 +28,14 @@ import (
 	// ============================================
 	// LP-4200 Unified PQCrypto Block (0x012201..0x012208)
 	// ============================================
-	_ "github.com/luxfi/precompile/mlkem"    // 0x012201 ML-KEM key encapsulation (FIPS 203)
-	_ "github.com/luxfi/precompile/mldsa"    // 0x012202 ML-DSA signature verification (FIPS 204)
-	_ "github.com/luxfi/precompile/slhdsa"   // 0x012203 SLH-DSA stateless hash signatures (FIPS 205)
+	_ "github.com/luxfi/precompile/mldsa"  // 0x012202 ML-DSA signature verification (FIPS 204)
+	_ "github.com/luxfi/precompile/mlkem"  // 0x012201 ML-KEM key encapsulation (FIPS 203)
+	_ "github.com/luxfi/precompile/slhdsa" // 0x012203 SLH-DSA stateless hash signatures (FIPS 205)
 	// 0x012204 Pulsar (Module-LWE threshold FIPS 204) imported below under Threshold
-	_ "github.com/luxfi/precompile/p3q"      // 0x012205 P3Q strict-PQ STARK verifier
+	_ "github.com/luxfi/precompile/p3q" // 0x012205 P3Q strict-PQ STARK verifier
 	// 0x012206 Corona (Ring-LWE threshold) imported below under Threshold
-	_ "github.com/luxfi/precompile/magnetar" // 0x012207 Magnetar (public-DKG MPC threshold SLH-DSA, FIPS 205 byte-equal)
 	_ "github.com/luxfi/precompile/hqc"      // 0x012208 HQC (code-based KEM, family-disjoint backup)
+	_ "github.com/luxfi/precompile/magnetar" // 0x012207 Magnetar (public-DKG MPC threshold SLH-DSA, FIPS 205 byte-equal)
 	_ "github.com/luxfi/precompile/pqcrypto" // Unified PQ crypto operations
 
 	// ============================================
@@ -50,8 +50,8 @@ import (
 	// Threshold Signatures (0x0800-0x08FF)
 	// ============================================
 	_ "github.com/luxfi/precompile/cggmp21" // CGGMP21 threshold ECDSA
-	_ "github.com/luxfi/precompile/frost"   // FROST threshold Schnorr
 	_ "github.com/luxfi/precompile/corona"  // 0x012206 Corona (Ring-LWE threshold, FIPS-equivalent)
+	_ "github.com/luxfi/precompile/frost"   // FROST threshold Schnorr
 	_ "github.com/luxfi/precompile/pulsar"  // 0x012204 Pulsar (Module-LWE threshold FIPS 204)
 
 	// ============================================

@@ -34,7 +34,7 @@ import (
 	"github.com/holiman/uint256"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/params/extras"
-	
+
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/geth/core/rawdb"

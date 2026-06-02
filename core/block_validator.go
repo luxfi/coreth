@@ -35,8 +35,8 @@ import (
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/geth/core/state"
 	"github.com/luxfi/geth/core/types"
-	"github.com/luxfi/geth/trie"
 	gethparams "github.com/luxfi/geth/params"
+	"github.com/luxfi/geth/trie"
 )
 
 // BlockValidator is responsible for validating block headers, uncles and

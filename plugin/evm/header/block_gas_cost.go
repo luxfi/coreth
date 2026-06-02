@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	errBaseFeeNil  = errors.New("base fee is nil")
-	errNoGasUsed   = errors.New("no gas used")
+	errBaseFeeNil = errors.New("base fee is nil")
+	errNoGasUsed  = errors.New("no gas used")
 )
 
 // BlockGasCost returns the required block gas cost. Under
