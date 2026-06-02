@@ -83,6 +83,16 @@ type Genesis struct {
 	BaseFee       *big.Int    `json:"baseFeePerGas"` // EIP-1559
 	ExcessBlobGas *uint64     `json:"excessBlobGas"` // EIP-4844
 	BlobGasUsed   *uint64     `json:"blobGasUsed"`   // EIP-4844
+
+	// SkipPostMergeFields disables adding Shanghai/Cancun/Prague header
+	// fields (WithdrawalsHash, ParentBeaconRoot, ExcessBlobGas,
+	// BlobGasUsed) to the genesis block, regardless of fork activation
+	// time. Lux mainnet C-Chain canonical genesis hash 0x3f4fa2a0… was
+	// produced with the 16-field pre-Shanghai header format; the chain
+	// activates Cancun at genesis time (cancunTime=0) for EVM bytecode
+	// only, while the genesis BLOCK itself must stay in the legacy
+	// header shape to preserve hash continuity. Mirrors luxfi/geth core.
+	SkipPostMergeFields bool `json:"skipPostMergeFields,omitempty"`
 }
 
 // GenesisAccount is an account in the state of the genesis block.
@@ -331,23 +341,31 @@ func (g *Genesis) toBlock(db ethdb.Database, triedb *triedb.Database) *types.Blo
 		} else {
 			head.BaseFee = big.NewInt(params.LuxGenesisBaseFee)
 		}
-		// Shanghai: set WithdrawalsHash to empty (no withdrawals on C-Chain)
-		if conf.IsShanghai(num, g.Timestamp) {
-			head.WithdrawalsHash = &types.EmptyWithdrawalsHash
-		}
-		if conf.IsCancun(num, g.Timestamp) {
-			// EIP-4788: The parentBeaconBlockRoot of the genesis block is always
-			// the zero hash. This is because the genesis block does not have a parent
-			// by definition.
-			head.ParentBeaconRoot = new(common.Hash)
-			// EIP-4844 fields
-			head.ExcessBlobGas = g.ExcessBlobGas
-			head.BlobGasUsed = g.BlobGasUsed
-			if head.ExcessBlobGas == nil {
-				head.ExcessBlobGas = new(uint64)
+		// SkipPostMergeFields is the explicit operator opt-out for ALL
+		// post-merge header fields. When set the genesis block stays in
+		// the 16-field pre-Shanghai header shape, regardless of fork
+		// activation time. Canonical path for replaying historic RLP
+		// exports whose block-0 hash was produced before any post-merge
+		// fork existed (e.g. lux-mainnet-96369.rlp → 0x3f4fa2a0…).
+		if !g.SkipPostMergeFields {
+			// Shanghai: set WithdrawalsHash to empty (no withdrawals on C-Chain)
+			if conf.IsShanghai(num, g.Timestamp) {
+				head.WithdrawalsHash = &types.EmptyWithdrawalsHash
 			}
-			if head.BlobGasUsed == nil {
-				head.BlobGasUsed = new(uint64)
+			if conf.IsCancun(num, g.Timestamp) {
+				// EIP-4788: The parentBeaconBlockRoot of the genesis block is always
+				// the zero hash. This is because the genesis block does not have a parent
+				// by definition.
+				head.ParentBeaconRoot = new(common.Hash)
+				// EIP-4844 fields
+				head.ExcessBlobGas = g.ExcessBlobGas
+				head.BlobGasUsed = g.BlobGasUsed
+				if head.ExcessBlobGas == nil {
+					head.ExcessBlobGas = new(uint64)
+				}
+				if head.BlobGasUsed == nil {
+					head.BlobGasUsed = new(uint64)
+				}
 			}
 		}
 	}
