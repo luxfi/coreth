@@ -840,7 +840,7 @@ func (v *VM) initializeChain(lastAcceptedHash common.Hash) error {
 		log.Info("PostImportCallback: acceptedBlockDB updated and synced successfully")
 
 		// Step 2: Update chain.State.lastAcceptedBlock for consensus
-		// This ensures the Snowman consensus engine recognizes the imported blocks
+		// This ensures the linear-chain consensus engine recognizes the imported blocks
 		// as the canonical chain head.
 		if v.State == nil {
 			log.Warn("PostImportCallback: chain.State not initialized yet, skipping state update")
