@@ -18,10 +18,10 @@ require (
 	github.com/holiman/uint256 v1.3.2
 	github.com/luxfi/cache v1.2.1
 	github.com/luxfi/codec v1.1.4
-	github.com/luxfi/crypto v1.19.3
+	github.com/luxfi/crypto v1.19.15
 	github.com/luxfi/geth v1.16.98
 	github.com/luxfi/go-bip39 v1.1.2
-	github.com/luxfi/metric v1.5.1
+	github.com/luxfi/metric v1.5.5
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/onsi/ginkgo/v2 v2.28.1
@@ -36,7 +36,7 @@ require (
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
 	go.uber.org/zap v1.27.1 // indirect
-	golang.org/x/crypto v0.49.0
+	golang.org/x/crypto v0.50.0
 	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
 	golang.org/x/sync v0.20.0
 	golang.org/x/time v0.15.0
@@ -118,16 +118,16 @@ require (
 	github.com/xrash/smetrics v0.0.0-20250705151800-55b8f293f342 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel v1.42.0 // indirect
-	go.opentelemetry.io/otel/metric v1.42.0 // indirect
-	go.opentelemetry.io/otel/trace v1.42.0 // indirect
+	go.opentelemetry.io/otel v1.43.0 // indirect
+	go.opentelemetry.io/otel/metric v1.43.0 // indirect
+	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/mod v0.34.0 // indirect
 	golang.org/x/net v0.52.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/text v0.36.0 // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -137,26 +137,26 @@ require (
 	github.com/luxfi/atomic v1.0.0
 	github.com/luxfi/concurrent v0.0.3
 	github.com/luxfi/consensus v1.25.0
-	github.com/luxfi/constants v1.4.7
+	github.com/luxfi/constants v1.5.8-0.20260603055356-93c2c2ceb9ca
 	github.com/luxfi/database v1.18.3
 	github.com/luxfi/filesystem v0.0.1
-	github.com/luxfi/ids v1.2.9
+	github.com/luxfi/ids v1.2.10
 	github.com/luxfi/log v1.4.1
-	github.com/luxfi/math v1.4.0
+	github.com/luxfi/math v1.4.1
 	github.com/luxfi/node v1.27.24
 	github.com/luxfi/p2p v1.19.2
-	github.com/luxfi/precompile v0.5.23
+	github.com/luxfi/precompile v0.5.27
 	github.com/luxfi/proto v1.1.0
 	github.com/luxfi/rpc v1.0.2
 	github.com/luxfi/runtime v1.1.0
 	github.com/luxfi/sys v0.0.0-20260110090042-50187ec5ffd8
 	github.com/luxfi/timer v1.0.2
-	github.com/luxfi/upgrade v1.0.0
+	github.com/luxfi/upgrade v1.0.1-0.20260603055252-f51810805436
 	github.com/luxfi/utils v1.1.4
-	github.com/luxfi/utxo v0.2.4
+	github.com/luxfi/utxo v0.3.2
 	github.com/luxfi/version v1.0.1
 	github.com/luxfi/vm v1.0.40
-	github.com/luxfi/warp v1.18.5
+	github.com/luxfi/warp v1.18.6
 )
 
 require (
@@ -187,28 +187,28 @@ require (
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/luxfi/accel v1.1.0 // indirect
-	github.com/luxfi/age v1.4.0 // indirect
-	github.com/luxfi/api v1.0.4 // indirect
+	github.com/luxfi/accel v1.1.4 // indirect
+	github.com/luxfi/age v1.5.0 // indirect
+	github.com/luxfi/api v1.0.11 // indirect
 	github.com/luxfi/compress v0.0.5 // indirect
 	github.com/luxfi/container v0.0.4 // indirect
-	github.com/luxfi/corona v0.4.1 // indirect
+	github.com/luxfi/corona v0.7.5 // indirect
 	github.com/luxfi/crypto/ipa v1.2.4 // indirect
-	github.com/luxfi/fhe v1.8.0 // indirect
-	github.com/luxfi/genesis v1.7.1 // indirect
+	github.com/luxfi/fhe v1.8.2 // indirect
+	github.com/luxfi/genesis v1.12.15 // indirect
 	github.com/luxfi/go-bip32 v1.0.2 // indirect
 	github.com/luxfi/keychain v1.0.2 // indirect
 	github.com/luxfi/lattice/v7 v7.1.0 // indirect
 	github.com/luxfi/net v0.0.4 // indirect
-	github.com/luxfi/pq v1.0.1-0.20260512064747-3d4c9414e15e // indirect
-	github.com/luxfi/protocol v0.0.3 // indirect
+	github.com/luxfi/pq v1.0.3 // indirect
+	github.com/luxfi/protocol v0.0.4 // indirect
 	github.com/luxfi/resource v0.0.1 // indirect
 	github.com/luxfi/staking v1.1.0 // indirect
-	github.com/luxfi/threshold v1.6.8 // indirect
+	github.com/luxfi/threshold v1.8.5 // indirect
 	github.com/luxfi/tls v1.0.3 // indirect
 	github.com/luxfi/trace v0.1.4 // indirect
 	github.com/luxfi/validators v1.2.0 // indirect
-	github.com/luxfi/zapdb v1.8.0 // indirect
+	github.com/luxfi/zapdb v1.10.0 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20220103164710-9a04d6ca976b // indirect
 	github.com/minio/crc64nvme v1.1.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
@@ -221,10 +221,10 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/tinylib/msgp v1.6.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.42.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.43.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.42.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.42.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.42.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.43.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.43.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 // indirect
