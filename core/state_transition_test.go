@@ -181,7 +181,7 @@ func TestNativeAssetContractCall(t *testing.T) {
 			gasUsed: []uint64{132117, 21618},
 			want:    "",
 		},
-		"etna": {
+		"quasar": {
 			config:  params.TestChainConfig,
 			txs:     txs,
 			gasUsed: []uint64{132117, 21618},

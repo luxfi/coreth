@@ -137,7 +137,7 @@ var (
 		upgradetest.Banff:             params.TestChainConfig,
 		upgradetest.Cortina:           params.TestChainConfig,
 		upgradetest.Durango:           params.TestChainConfig,
-		upgradetest.Etna:              params.TestChainConfig,
+		upgradetest.Quasar:              params.TestChainConfig,
 		upgradetest.Fortuna:           params.TestChainConfig,
 		upgradetest.Granite:           params.TestChainConfig,
 	}
@@ -3985,20 +3985,20 @@ func TestParentBeaconRootBlock(t *testing.T) {
 		},
 		{
 			name:          "non-empty parent beacon root in E-Upgrade (Cancun)",
-			fork:          upgradetest.Etna,
+			fork:          upgradetest.Quasar,
 			beaconRoot:    &common.Hash{0x01},
 			expectedError: true,
 			errString:     "expected empty hash",
 		},
 		{
 			name:          "empty parent beacon root in E-Upgrade (Cancun)",
-			fork:          upgradetest.Etna,
+			fork:          upgradetest.Quasar,
 			beaconRoot:    &common.Hash{},
 			expectedError: false,
 		},
 		{
 			name:          "nil parent beacon root in E-Upgrade (Cancun)",
-			fork:          upgradetest.Etna,
+			fork:          upgradetest.Quasar,
 			beaconRoot:    nil,
 			expectedError: true,
 			errString:     "header is missing parentBeaconRoot",
