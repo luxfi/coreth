@@ -737,7 +737,7 @@ When running in archive mode only, the number of blocks before the last accepted
 
 _Boolean_
 
-If set to `true`, the node will not index transactions. TxLookupLimit can be still used to control deleting old transaction indices. Defaults to `false`.
+If set to `true`, the node will not index transactions. TransactionHistory can be still used to control deleting old transaction indices. Defaults to `false`.
 
 ### `inspect-database`
 

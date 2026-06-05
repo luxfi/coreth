@@ -435,10 +435,6 @@ func (v *VM) Initialize(
 	if err := v.config.Validate(v.runtime.NetworkID); err != nil {
 		return err
 	}
-	// We should deprecate config flags as the first thing, before we do anything else
-	// because this can set old flags to new flags. log the message after we have
-	// initialized the logger.
-	deprecateMsg := v.config.Deprecate()
 
 	// Get chain alias from BCLookup with defensive nil check
 	var alias string
@@ -488,10 +484,6 @@ func (v *VM) Initialize(
 
 	// Store toEngine channel for notifying consensus about pending transactions
 	v.toEngine = toEngine
-
-	if deprecateMsg != "" {
-		log.Warn("Deprecation Warning", "msg", deprecateMsg)
-	}
 
 	// Enable debug-level metrics that might impact runtime performance
 	// Note: MetricsExpensiveEnabled config is stored but expensive metrics

@@ -374,7 +374,7 @@ func createSyncServerAndClientVMs(t *testing.T, test syncTest, numBlocks int) *s
 	require.NoError(server.vm.State.SetLastAcceptedBlock(internalBlock))
 
 	// initialise [syncerVM] with blank genesis state
-	stateSyncEnabledJSON := fmt.Sprintf(`{"state-sync-enabled":true, "state-sync-min-blocks": %d, "tx-lookup-limit": %d, "commit-interval": %d}`, test.stateSyncMinBlocks, 4, test.syncableInterval)
+	stateSyncEnabledJSON := fmt.Sprintf(`{"state-sync-enabled":true, "state-sync-min-blocks": %d, "transaction-history": %d, "commit-interval": %d}`, test.stateSyncMinBlocks, 4, test.syncableInterval)
 	syncer := newVM(t, testVMConfig{
 		isSyncing:  true,
 		configJSON: stateSyncEnabledJSON,

@@ -1,5 +1,3 @@
-//go:build pebble
-
 package evm
 
 import (

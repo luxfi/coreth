@@ -11,9 +11,7 @@ import (
 	"github.com/luxfi/codec"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/vm/proto/pb/sdk"
 	"github.com/luxfi/warp"
-	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -53,8 +51,8 @@ func NewSignatureGetter(client NetworkClient, networkCodec codec.Manager) *Netwo
 // Note: this function will continue attempting to fetch the signature from [nodeID] until it receives an invalid value or [ctx] is cancelled.
 // The caller is responsible to cancel [ctx] if it no longer needs to fetch this signature.
 func (s *NetworkSignatureGetter) GetSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *warp.UnsignedMessage) (*bls.Signature, error) {
-	protoMsg := &sdk.SignatureRequest{Message: unsignedWarpMessage.Bytes()}
-	protoBytes, err := proto.Marshal(protoMsg)
+	req := &warp.SignatureRequest{Message: unsignedWarpMessage.Bytes()}
+	protoBytes, err := warp.MarshalSignatureRequest(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal signature request: %w", err)
 	}
@@ -86,8 +84,8 @@ func (s *NetworkSignatureGetter) GetSignature(ctx context.Context, nodeID ids.No
 			}
 			continue
 		}
-		var response sdk.SignatureResponse
-		if err := proto.Unmarshal(signatureRes, &response); err != nil {
+		response, err := warp.UnmarshalSignatureResponse(signatureRes)
+		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal signature res: %w", err)
 		}
 

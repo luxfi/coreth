@@ -106,12 +106,6 @@ func TestUnmarshalConfig(t *testing.T) {
 			true,
 		},
 		{
-			"deprecated tx lookup limit",
-			[]byte(`{"tx-lookup-limit": 1}`),
-			Config{TransactionHistory: 1, TxLookupLimit: 1},
-			false,
-		},
-		{
 			"allow unprotected tx hashes",
 			[]byte(`{"allow-unprotected-tx-hashes": ["0x803351deb6d745e91545a6a3e1c0ea3e9a6a02a1a4193b70edfcd2f40f71a01c"]}`),
 			Config{AllowUnprotectedTxHashes: []common.Hash{common.HexToHash("0x803351deb6d745e91545a6a3e1c0ea3e9a6a02a1a4193b70edfcd2f40f71a01c")}},
@@ -127,7 +121,6 @@ func TestUnmarshalConfig(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				tmp.Deprecate()
 				assert.Equal(t, tt.expected, tmp)
 			}
 		})

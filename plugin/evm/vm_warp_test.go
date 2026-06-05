@@ -50,12 +50,10 @@ import (
 	"github.com/luxfi/upgrade/upgradetest"
 	avagoUtils "github.com/luxfi/utils"
 	"github.com/luxfi/vm/chain"
-	"github.com/luxfi/vm/proto/pb/sdk"
 	"github.com/luxfi/warp"
 	luxwarp "github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -886,8 +884,8 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 
 			tvm.appSender.SendAppResponseF = func(ctx context.Context, nodeID ids.NodeID, requestID uint32, responseBytes []byte) error {
 				calledSendAppResponseFn = true
-				var response sdk.SignatureResponse
-				if err := proto.Unmarshal(responseBytes, &response); err != nil {
+				response, err := luxwarp.UnmarshalSignatureResponse(responseBytes)
+				if err != nil {
 					return err
 				}
 				require.Equal(t, test.expectedResponse, response.Signature)
@@ -900,8 +898,8 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 				return nil
 			}
 
-			protoMsg := &sdk.SignatureRequest{Message: test.message.Bytes()}
-			requestBytes, err := proto.Marshal(protoMsg)
+			protoMsg := &luxwarp.SignatureRequest{Message: test.message.Bytes()}
+			requestBytes, err := luxwarp.MarshalSignatureRequest(protoMsg)
 			require.NoError(t, err)
 			msg := p2p.PrefixMessage(p2p.ProtocolPrefix(luxwarp.SignatureHandlerID), requestBytes)
 

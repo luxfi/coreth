@@ -789,7 +789,7 @@ func (vm *VM) NewImportTx(
 	if !ok {
 		return nil, errors.New("shared memory not available")
 	}
-	atomicUTXOs, _, _, err := lux.GetAtomicUTXOs(sharedMemory, atomic.Codec, chainID, kc.Addresses(), ids.ShortEmpty, ids.Empty, maxUTXOsToFetch)
+	atomicUTXOs, _, _, err := lux.GetAtomicUTXOs(sharedMemory, chainID, kc.Addresses(), ids.ShortEmpty, ids.Empty, maxUTXOsToFetch)
 	if err != nil {
 		return nil, fmt.Errorf("problem retrieving atomic UTXOs: %w", err)
 	}

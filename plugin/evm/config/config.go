@@ -43,7 +43,7 @@ const (
 	defaultPushRegossipNumPeers                   = 0
 	defaultPushGossipFrequency                    = 100 * time.Millisecond
 	defaultPullGossipFrequency                    = 1 * time.Second
-	defaultTxRegossipFrequency                    = 30 * time.Second
+	defaultRegossipFrequency                      = 30 * time.Second
 	defaultOfflinePruningBloomFilterSize   uint64 = 512 // Default size (MB) for the offline pruner to use
 	defaultLogLevel                               = "info"
 	defaultLogJSONFormat                          = false
@@ -103,11 +103,9 @@ type Config struct {
 	GasTarget *gas.Gas `json:"gas-target,omitempty"`
 
 	// Coreth APIs
-	AdminAPIEnabled       bool   `json:"admin-api-enabled"`
-	AdminAPIDir           string `json:"admin-api-dir"`
-	CorethAdminAPIEnabled bool   `json:"coreth-admin-api-enabled"` // Deprecated: use AdminAPIEnabled instead
-	CorethAdminAPIDir     string `json:"coreth-admin-api-dir"`     // Deprecated: use AdminAPIDir instead
-	WarpAPIEnabled        bool   `json:"warp-api-enabled"`
+	AdminAPIEnabled bool   `json:"admin-api-enabled"`
+	AdminAPIDir     string `json:"admin-api-dir"`
+	WarpAPIEnabled  bool   `json:"warp-api-enabled"`
 
 	// EnabledEthAPIs is a list of Ethereum services that should be enabled
 	// If none is specified, then we use the default list [defaultEnabledAPIs]
@@ -187,7 +185,6 @@ type Config struct {
 	PushGossipFrequency       Duration `json:"push-gossip-frequency"`
 	PullGossipFrequency       Duration `json:"pull-gossip-frequency"`
 	RegossipFrequency         Duration `json:"regossip-frequency"`
-	TxRegossipFrequency       Duration `json:"tx-regossip-frequency"` // Deprecated: use RegossipFrequency instead
 
 	// Log
 	LogLevel      string `json:"log-level"`
@@ -233,12 +230,10 @@ type Config struct {
 	TransactionHistory uint64 `json:"transaction-history"`
 	// The maximum number of blocks from head whose state histories are reserved for pruning blockchains.
 	StateHistory uint64 `json:"state-history"`
-	// Deprecated, use 'TransactionHistory' instead.
-	TxLookupLimit uint64 `json:"tx-lookup-limit"`
 
 	// SkipTxIndexing skips indexing transactions.
 	// This is useful for validators that don't need to index transactions.
-	// TxLookupLimit can be still used to control unindexing old transactions.
+	// TransactionHistory can be still used to control unindexing old transactions.
 	SkipTxIndexing bool `json:"skip-tx-indexing"`
 
 	// WarpOffChainMessages encodes off-chain messages (unrelated to any on-chain event ie. block or AddressedCall)
@@ -363,7 +358,7 @@ func (c *Config) SetDefaults(txPoolConfig TxPoolConfig) {
 	c.PushRegossipNumPeers = defaultPushRegossipNumPeers
 	c.PushGossipFrequency.Duration = defaultPushGossipFrequency
 	c.PullGossipFrequency.Duration = defaultPullGossipFrequency
-	c.RegossipFrequency.Duration = defaultTxRegossipFrequency
+	c.RegossipFrequency.Duration = defaultRegossipFrequency
 	c.OfflinePruningBloomFilterSize = defaultOfflinePruningBloomFilterSize
 	c.LogLevel = defaultLogLevel
 	c.LogJSONFormat = defaultLogJSONFormat
@@ -437,27 +432,4 @@ func (c *Config) Validate(networkID uint32) error {
 		return fmt.Errorf("push-gossip-percent-stake is %f but must be in the range [0, 1]", c.PushGossipPercentStake)
 	}
 	return nil
-}
-
-func (c *Config) Deprecate() string {
-	msg := ""
-	// Deprecate the old config options and set the new ones.
-	if c.CorethAdminAPIEnabled {
-		msg += "coreth-admin-api-enabled is deprecated, use admin-api-enabled instead. "
-		c.AdminAPIEnabled = c.CorethAdminAPIEnabled
-	}
-	if c.CorethAdminAPIDir != "" {
-		msg += "coreth-admin-api-dir is deprecated, use admin-api-dir instead. "
-		c.AdminAPIDir = c.CorethAdminAPIDir
-	}
-	if c.TxRegossipFrequency != (Duration{}) {
-		msg += "tx-regossip-frequency is deprecated, use regossip-frequency instead. "
-		c.RegossipFrequency = c.TxRegossipFrequency
-	}
-	if c.TxLookupLimit != 0 {
-		msg += "tx-lookup-limit is deprecated, use transaction-history instead. "
-		c.TransactionHistory = c.TxLookupLimit
-	}
-
-	return msg
 }
