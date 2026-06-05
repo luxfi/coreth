@@ -16,7 +16,6 @@ import (
 	"github.com/luxfi/metric"
 
 	"github.com/luxfi/atomic"
-	"github.com/luxfi/codec"
 	consensuscontext "github.com/luxfi/consensus/context"
 	validators "github.com/luxfi/consensus/validator"
 	consensusversion "github.com/luxfi/consensus/version"
@@ -123,7 +122,7 @@ type network struct {
 	activeAppRequests          *semaphore.Weighted                // controls maximum number of active outbound requests
 	sdkNetwork                 *p2p.Network                       // SDK network (luxd p2p) for sending messages to peers
 	appSender                  AppSender                          // luxd AppSender for sending messages
-	codec                      codec.Manager                      // Codec used for parsing messages
+	codec                      message.Manager                    // Codec used for parsing messages
 	appRequestHandler          message.RequestHandler             // maps request type => handler
 	peers                      *peerTracker                       // tracking of peers & bandwidth
 	appStats                   stats.RequestHandlerStats          // Provide request handler metrics
@@ -144,7 +143,7 @@ type network struct {
 func NewNetwork(
 	ctx *consensuscontext.Context,
 	appSender AppSender,
-	codec codec.Manager,
+	codec message.Manager,
 	maxActiveAppRequests int64,
 	registerer metric.Registerer,
 ) (Network, error) {
