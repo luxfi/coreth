@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luxfi/codec"
 	"github.com/luxfi/coreth/core/state/snapshot"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/sync/handlers/stats"
@@ -49,13 +48,13 @@ type LeafRequestHandler interface {
 type leafsRequestHandler struct {
 	trieDB           *triedb.Database
 	snapshotProvider SnapshotProvider
-	codec            codec.Manager
+	codec            message.Manager
 	stats            stats.LeafsRequestHandlerStats
 	pool             sync.Pool
 	trieKeyLength    int
 }
 
-func NewLeafsRequestHandler(trieDB *triedb.Database, trieKeyLength int, snapshotProvider SnapshotProvider, codec codec.Manager, syncerStats stats.LeafsRequestHandlerStats) *leafsRequestHandler {
+func NewLeafsRequestHandler(trieDB *triedb.Database, trieKeyLength int, snapshotProvider SnapshotProvider, codec message.Manager, syncerStats stats.LeafsRequestHandlerStats) *leafsRequestHandler {
 	return &leafsRequestHandler{
 		trieDB:           trieDB,
 		snapshotProvider: snapshotProvider,
