@@ -779,7 +779,7 @@ func TestExportTxSemanticVerify(t *testing.T) {
 					},
 				}
 				// Sort the outputs and then swap the ordering to ensure that they are ordered incorrectly
-				lux.SortTransferableOutputs(exportOutputs, atomic.Codec)
+				lux.SortTransferableOutputs(exportOutputs)
 				exportOutputs[0], exportOutputs[1] = exportOutputs[1], exportOutputs[0]
 				validExportTx.ExportedOutputs = exportOutputs
 				return &atomic.Tx{UnsignedAtomicTx: &validExportTx}
@@ -1152,7 +1152,7 @@ func TestExportTxVerify(t *testing.T) {
 	}
 
 	// Sort the inputs and outputs to ensure the transaction is canonical
-	lux.SortTransferableOutputs(exportTx.ExportedOutputs, atomic.Codec)
+	lux.SortTransferableOutputs(exportTx.ExportedOutputs)
 	// Pass in a list of signers here with the appropriate length
 	// to avoid causing a nil-pointer error in the helper method
 	emptySigners := make([][]*secp256k1.PrivateKey, 2)

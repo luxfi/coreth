@@ -132,7 +132,7 @@ func (utx *UnsignedExportTx) Verify(
 			return ErrExportNonLUXOutput
 		}
 	}
-	if !lux.IsSortedTransferableOutputs(utx.ExportedOutputs, Codec) {
+	if !lux.IsSortedTransferableOutputs(utx.ExportedOutputs) {
 		return ErrOutputsNotSorted
 	}
 	if !luxutils.IsSortedAndUnique(utx.Ins) {
@@ -291,7 +291,7 @@ func NewExportTx(
 	ins = append(ins, luxIns...)
 	signers = append(signers, luxSigners...)
 
-	lux.SortTransferableOutputs(outs, Codec)
+	lux.SortTransferableOutputs(outs)
 	SortEVMInputsAndSigners(ins, signers)
 
 	utx := &UnsignedExportTx{

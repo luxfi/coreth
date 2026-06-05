@@ -111,7 +111,6 @@ func (service *LuxAPI) GetUTXOs(r *http.Request, args *api.GetUTXOsArgs, reply *
 	}
 	utxos, endAddr, endUTXOID, err := lux.GetAtomicUTXOs(
 		sharedMemory,
-		atomic.Codec,
 		sourceChainID,
 		addrSet,
 		startAddr,
