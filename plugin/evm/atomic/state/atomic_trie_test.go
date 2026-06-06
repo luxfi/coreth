@@ -14,9 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/wrappers"
 	consensustest "github.com/luxfi/consensus/test/helpers"
+	"github.com/luxfi/utils/wrappers"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/badgerdb"
 	"github.com/luxfi/database/memdb"
@@ -812,7 +811,7 @@ func benchmarkApplyToSharedMemory(b *testing.B, disk database.Database, blocks u
 
 // verifyOperations creates an iterator over the atomicTrie at [rootHash] and verifies that the all of the operations in the trie in the interval [from, to] are identical to
 // the atomic operations contained in [operationsMap] on the same interval.
-func verifyOperations(t testing.TB, atomicTrie *AtomicTrie, codec codec.Manager, rootHash common.Hash, from, to uint64, operationsMap map[uint64]map[ids.ID]*luxatomic.Requests) {
+func verifyOperations(t testing.TB, atomicTrie *AtomicTrie, codec atomic.Manager, rootHash common.Hash, from, to uint64, operationsMap map[uint64]map[ids.ID]*luxatomic.Requests) {
 	t.Helper()
 
 	// Start the iterator at `from`

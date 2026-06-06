@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/luxfi/codec"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	"github.com/luxfi/coreth/sync/handlers"
 	"github.com/luxfi/coreth/sync/handlers/stats"
@@ -41,8 +40,10 @@ func NewLeafHandler() *leafHandler {
 	}
 }
 
-// Initialize initializes the atomicLeafHandler with the provided atomicTrieDB, trieKeyLength, and networkCodec
-func (a *leafHandler) Initialize(atomicTrieDB *triedb.Database, trieKeyLength int, networkCodec codec.Manager) {
+// Initialize initializes the atomicLeafHandler with the provided atomicTrieDB,
+// trieKeyLength, and networkCodec. networkCodec is a [message.Manager] —
+// the wire codec for leaf-sync messages, owned by plugin/evm/message.
+func (a *leafHandler) Initialize(atomicTrieDB *triedb.Database, trieKeyLength int, networkCodec message.Manager) {
 	handlerStats := stats.GetOrRegisterHandlerStats(metrics.Enabled())
 	a.LeafRequestHandler = handlers.NewLeafsRequestHandler(atomicTrieDB, trieKeyLength, nil, networkCodec, handlerStats)
 }

@@ -13,14 +13,13 @@ import (
 	"github.com/luxfi/geth/common"
 	log "github.com/luxfi/log"
 
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/wrappers"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/utils"
+	"github.com/luxfi/utils/wrappers"
 )
 
 const (
@@ -60,11 +59,11 @@ type AtomicRepository struct {
 	db *versiondb.Database
 
 	// Use this codec for serializing
-	codec codec.Manager
+	codec atomic.Manager
 }
 
 func NewAtomicTxRepository(
-	db *versiondb.Database, codec codec.Manager, lastAcceptedHeight uint64,
+	db *versiondb.Database, codec atomic.Manager, lastAcceptedHeight uint64,
 ) (*AtomicRepository, error) {
 	repo := &AtomicRepository{
 		atomicTrieDB:               prefixdb.New(atomicTrieDBPrefix, db),

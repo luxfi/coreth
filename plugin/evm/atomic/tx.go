@@ -16,8 +16,6 @@ import (
 
 	"github.com/luxfi/coreth/params/extras"
 
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/wrappers"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/crypto/hash"
 	"github.com/luxfi/crypto/secp256k1"
@@ -25,6 +23,7 @@ import (
 	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/p2p/gossip"
+	"github.com/luxfi/utils/wrappers"
 	"github.com/luxfi/utxo/secp256k1fx"
 	"github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/vm/components/verify"
@@ -195,9 +194,12 @@ func (tx *Tx) Compare(other *Tx) int {
 	}
 }
 
-// Sign this transaction with the provided signers
-func (tx *Tx) Sign(c codec.Manager, signers [][]*secp256k1.PrivateKey) error {
-	unsignedBytes, err := c.Marshal(CodecVersion, &tx.UnsignedAtomicTx)
+// Sign this transaction with the provided signers. The atomic-tx package
+// owns its own wire format via [Codec]; callers no longer pass a codec
+// manager in. Pass nil signers to compute and stash the unsigned/signed
+// byte forms without adding any new credentials.
+func (tx *Tx) Sign(signers [][]*secp256k1.PrivateKey) error {
+	unsignedBytes, err := Codec.Marshal(CodecVersion, &tx.UnsignedAtomicTx)
 	if err != nil {
 		return fmt.Errorf("couldn't marshal UnsignedAtomicTx: %w", err)
 	}
@@ -218,6 +220,25 @@ func (tx *Tx) Sign(c codec.Manager, signers [][]*secp256k1.PrivateKey) error {
 		tx.Creds = append(tx.Creds, cred) // Attach credential
 	}
 
+	signedBytes, err := Codec.Marshal(CodecVersion, tx)
+	if err != nil {
+		return fmt.Errorf("couldn't marshal Tx: %w", err)
+	}
+	tx.Initialize(unsignedBytes, signedBytes)
+	return nil
+}
+
+// initializeBytes re-marshals [tx] via [c] to materialize the unsigned and
+// signed byte forms stashed in Metadata. Used by [ExtractAtomicTx] and
+// [ExtractAtomicTxsBatch] after Unmarshal to populate ID(), Bytes() and
+// SignedBytes() for the round-tripped tx. The manager is parameterized so
+// the test codec (atomictest.TestTxCodec) can round-trip its own unsigned
+// shape without leaking into the production singleton.
+func (tx *Tx) initializeBytes(c Manager) error {
+	unsignedBytes, err := c.Marshal(CodecVersion, &tx.UnsignedAtomicTx)
+	if err != nil {
+		return fmt.Errorf("couldn't marshal UnsignedAtomicTx: %w", err)
+	}
 	signedBytes, err := c.Marshal(CodecVersion, tx)
 	if err != nil {
 		return fmt.Errorf("couldn't marshal Tx: %w", err)

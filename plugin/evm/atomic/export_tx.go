@@ -13,7 +13,6 @@ import (
 	"github.com/luxfi/coreth/params/extras"
 	"github.com/luxfi/geth/core/tracing"
 
-	"github.com/luxfi/codec/wrappers"
 	consensusctx "github.com/luxfi/consensus/context"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
@@ -24,6 +23,7 @@ import (
 	"github.com/luxfi/math"
 	"github.com/luxfi/math/set"
 	luxutils "github.com/luxfi/utils"
+	"github.com/luxfi/utils/wrappers"
 	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/utxo/secp256k1fx"
 	"github.com/luxfi/vm/chains/atomic"
@@ -276,7 +276,7 @@ func NewExportTx(
 		Ins:              ins,
 		ExportedOutputs:  outs,
 	}}
-	if err := probe.Sign(Codec, nil); err != nil {
+	if err := probe.Sign(nil); err != nil {
 		return nil, err
 	}
 	cost, err := probe.GasUsed(true)
@@ -302,7 +302,7 @@ func NewExportTx(
 		ExportedOutputs:  outs,
 	}
 	tx := &Tx{UnsignedAtomicTx: utx}
-	if err := tx.Sign(Codec, signers); err != nil {
+	if err := tx.Sign(signers); err != nil {
 		return nil, err
 	}
 	return tx, utx.Verify(ctx, rules)

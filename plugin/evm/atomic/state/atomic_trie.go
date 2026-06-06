@@ -8,11 +8,10 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/wrappers"
 	"github.com/luxfi/constants"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/ids"
+	"github.com/luxfi/utils/wrappers"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 
 	"github.com/luxfi/coreth/plugin/evm/database"
@@ -43,7 +42,7 @@ type AtomicTrie struct {
 	lastCommittedRoot   common.Hash          // trie root of the most recent commit
 	lastCommittedHeight uint64               // index height of the most recent commit
 	lastAcceptedRoot    common.Hash          // most recent trie root passed to accept trie or the root of the atomic trie on intialization.
-	codec               codec.Manager
+	codec               atomic.Manager
 	memoryCap           common.StorageSize
 }
 
@@ -51,7 +50,7 @@ type AtomicTrie struct {
 // Initializes the trie before returning it.
 func newAtomicTrie(
 	atomicTrieDB luxdatabase.Database, metadataDB luxdatabase.Database,
-	codec codec.Manager, lastAcceptedHeight uint64, commitHeightInterval uint64,
+	codec atomic.Manager, lastAcceptedHeight uint64, commitHeightInterval uint64,
 ) (*AtomicTrie, error) {
 	root, height, err := lastCommittedRootIfExists(metadataDB)
 	if err != nil {

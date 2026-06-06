@@ -24,7 +24,6 @@ import (
 	"github.com/luxfi/atomic"
 	"github.com/luxfi/cache/lru"
 	"github.com/luxfi/cache/metercacher"
-	"github.com/luxfi/codec"
 	"github.com/luxfi/consensus"
 	consensusconfig "github.com/luxfi/consensus/config"
 	"github.com/luxfi/consensus/engine/chain/block"
@@ -236,7 +235,9 @@ type VM struct {
 	profiler profiler.ContinuousProfiler
 
 	network.Network
-	networkCodec codec.Manager
+	// networkCodec is the plugin/evm/message wire codec — leaf-sync, block
+	// requests, and code requests all flow through this manager.
+	networkCodec message.Manager
 
 	// Metrics
 	sdkMetrics      metric.Registry

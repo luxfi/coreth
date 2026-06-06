@@ -9,13 +9,12 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/atomictest"
 
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/wrappers"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/utils"
+	"github.com/luxfi/utils/wrappers"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/stretchr/testify/assert"
 
@@ -26,7 +25,7 @@ import (
 // addTxs writes [txsPerHeight] txs for heights ranging in [fromHeight, toHeight) directly to [acceptedAtomicTxDB],
 // storing the resulting transactions in [txMap] if non-nil and the resulting atomic operations in [operationsMap]
 // if non-nil.
-func addTxs(t testing.TB, codec codec.Manager, acceptedAtomicTxDB database.Database, fromHeight uint64, toHeight uint64, txsPerHeight int, txMap map[uint64][]*atomic.Tx, operationsMap map[uint64]map[ids.ID]*luxatomic.Requests) {
+func addTxs(t testing.TB, codec atomic.Manager, acceptedAtomicTxDB database.Database, fromHeight uint64, toHeight uint64, txsPerHeight int, txMap map[uint64][]*atomic.Tx, operationsMap map[uint64]map[ids.ID]*luxatomic.Requests) {
 	for height := fromHeight; height < toHeight; height++ {
 		txs := make([]*atomic.Tx, 0, txsPerHeight)
 		for i := 0; i < txsPerHeight; i++ {

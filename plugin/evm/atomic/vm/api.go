@@ -158,7 +158,7 @@ func (service *LuxAPI) IssueTx(r *http.Request, args *api.FormattedTx, response 
 	if _, err := atomic.Codec.Unmarshal(txBytes, tx); err != nil {
 		return fmt.Errorf("problem parsing transaction: %w", err)
 	}
-	if err := tx.Sign(atomic.Codec, nil); err != nil {
+	if err := tx.Sign(nil); err != nil {
 		return fmt.Errorf("problem initializing transaction: %w", err)
 	}
 

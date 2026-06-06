@@ -10,13 +10,12 @@ import (
 
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/wrappers"
 	"github.com/luxfi/database"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
 	log "github.com/luxfi/log"
 	"github.com/luxfi/utils"
+	"github.com/luxfi/utils/wrappers"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 )
 
@@ -28,7 +27,7 @@ const (
 // AtomicBackend provides an interface to the atomic trie and shared memory.
 // the AtomicTrie, AtomicRepository, and the VM's shared memory.
 type AtomicBackend struct {
-	codec        codec.Manager
+	codec        atomic.Manager
 	bonusBlocks  map[uint64]ids.ID // Map of height to blockID for blocks to skip indexing
 	sharedMemory luxatomic.SharedMemory
 

@@ -6,7 +6,6 @@ package evm
 import (
 	"context"
 
-	"github.com/luxfi/codec"
 	"github.com/luxfi/coreth/plugin/evm/message"
 	syncHandlers "github.com/luxfi/coreth/sync/handlers"
 	"github.com/luxfi/coreth/sync/handlers/stats"
@@ -36,11 +35,12 @@ type LeafRequestTypeConfig struct {
 }
 
 // newNetworkHandler constructs the handler for serving network requests.
+// The wire codec is [message.Manager], owned by plugin/evm/message.
 func newNetworkHandler(
 	provider syncHandlers.SyncDataProvider,
 	diskDB ethdb.KeyValueReader,
 	warpBackend warp.Backend,
-	networkCodec codec.Manager,
+	networkCodec message.Manager,
 	leafRequestHandlers LeafHandlers,
 	syncStats stats.HandlerStats,
 ) *networkHandler {

@@ -7,9 +7,10 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/wrappers"
+	corethatomic "github.com/luxfi/coreth/plugin/evm/atomic"
+
 	"github.com/luxfi/ids"
+	"github.com/luxfi/utils/wrappers"
 	"github.com/luxfi/vm/chains/atomic"
 
 	"github.com/luxfi/geth/trie"
@@ -17,7 +18,7 @@ import (
 
 type atomicTrieIterator struct {
 	trieIterator *trie.Iterator // underlying trie.Iterator
-	codec        codec.Manager
+	codec        corethatomic.Manager
 	key          []byte
 	atomicOps    *atomic.Requests // atomic operation entries at this iteration
 	blockchainID ids.ID           // blockchain ID
@@ -25,7 +26,7 @@ type atomicTrieIterator struct {
 	err          error            // error if any has occurred
 }
 
-func NewAtomicTrieIterator(trieIterator *trie.Iterator, codec codec.Manager) *atomicTrieIterator {
+func NewAtomicTrieIterator(trieIterator *trie.Iterator, codec corethatomic.Manager) *atomicTrieIterator {
 	return &atomicTrieIterator{trieIterator: trieIterator, codec: codec}
 }
 
