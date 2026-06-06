@@ -246,7 +246,7 @@ func NewImportTx(
 		ImportedInputs: importedInputs,
 		SourceChain:    chainID,
 	}}
-	if err := probe.Sign(Codec, nil); err != nil {
+	if err := probe.Sign(nil); err != nil {
 		return nil, err
 	}
 	gasUsedWithoutChange, err := probe.GasUsed(true)
@@ -295,7 +295,7 @@ func NewImportTx(
 		SourceChain:    chainID,
 	}
 	tx := &Tx{UnsignedAtomicTx: utx}
-	if err := tx.Sign(Codec, signers); err != nil {
+	if err := tx.Sign(signers); err != nil {
 		return nil, err
 	}
 	return tx, utx.Verify(ctx, rules)

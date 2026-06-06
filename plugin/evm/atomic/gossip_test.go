@@ -22,7 +22,7 @@ func TestGossipAtomicTxMarshaller(t *testing.T) {
 
 	key0, err := secp256k1.NewPrivateKey()
 	require.NoError(err)
-	require.NoError(want.Sign(Codec, [][]*secp256k1.PrivateKey{{key0}}))
+	require.NoError(want.Sign([][]*secp256k1.PrivateKey{{key0}}))
 
 	bytes, err := marshaller.MarshalGossip(want)
 	require.NoError(err)

@@ -16,9 +16,8 @@ import (
 	atomicsync "github.com/luxfi/coreth/sync/atomic"
 
 	"github.com/luxfi/coreth/plugin/evm/atomic/txpool"
+	"github.com/luxfi/coreth/plugin/evm/secpfx"
 
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/linearcodec"
 	"github.com/luxfi/consensus/engine/chain/block"
 	"github.com/luxfi/constants"
 	"github.com/luxfi/crypto/secp256k1"
@@ -55,14 +54,12 @@ import (
 )
 
 var (
-	_ secp256k1fx.VM                     = (*VM)(nil)
 	_ block.ChainVM                      = (*VM)(nil)
 	_ block.BuildBlockWithContextChainVM = (*VM)(nil)
 	_ block.StateSyncableVM              = (*VM)(nil)
 )
 
 const (
-	secpCacheSize       = 1024
 	defaultMempoolSize  = 4096
 	targetAtomicTxsSize = 40 * constants.KiB
 	// maxAtomicTxMempoolGas is the maximum amount of gas that is allowed to be
@@ -78,9 +75,10 @@ type VM struct {
 	extension.InnerVM
 	Runtime *runtime.Runtime
 
-	SecpCache     secp256k1.RecoverCacheType
-	Fx            secp256k1fx.Fx
-	baseCodec     codec.Registry
+	// Fx wraps the upstream secp256k1fx behind a thin adapter so the
+	// luxfi/codec dependency stays contained in plugin/evm/secpfx — atomic-tx
+	// code never names it directly.
+	Fx            *secpfx.Adapter
 	AtomicMempool *txpool.Mempool
 
 	// [atomicTxRepository] maintains two indexes on accepted atomic txs.
@@ -211,13 +209,12 @@ func (vm *VM) Initialize(
 	syncExtender.Initialize(vm.AtomicBackend, atomicTrie, vm.InnerVM.Config().StateSyncRequestSize)
 	leafHandler.Initialize(atomicTrie.TrieDB(), atomicstate.TrieKeyLength, message.Codec)
 
-	vm.SecpCache = secp256k1.NewRecoverCache(secpCacheSize)
-
-	// so [vm.baseCodec] is a dummy codec use to fulfill the secp256k1fx VM
-	// interface. The fx will register all of its types, which can be safely
-	// ignored by the VM's codec.
-	vm.baseCodec = linearcodec.NewDefault()
-	return vm.Fx.Initialize(vm)
+	fx, err := secpfx.New(vm)
+	if err != nil {
+		return fmt.Errorf("failed to initialize secp256k1 fx: %w", err)
+	}
+	vm.Fx = fx
+	return nil
 }
 
 func (vm *VM) SetState(ctx context.Context, state uint32) error {
@@ -466,10 +463,7 @@ func (vm *VM) verifyTxs(txs []*atomic.Tx, parentHash common.Hash, baseFee *big.I
 	return nil
 }
 
-// CodecRegistry implements the secp256k1fx interface
-func (vm *VM) CodecRegistry() codec.Registry { return vm.baseCodec }
-
-// Clock implements the secp256k1fx interface
+// Clock satisfies the secpfx.Host interface
 func (vm *VM) Clock() *mockable.Clock { return &vm.clock }
 
 // Logger implements the secp256k1fx interface

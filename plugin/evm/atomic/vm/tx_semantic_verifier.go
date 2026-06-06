@@ -50,11 +50,11 @@ type VerifierBackend struct {
 func NewVerifierBackend(vm *VM, rules extras.Rules) *VerifierBackend {
 	return &VerifierBackend{
 		Runtime:      vm.Runtime,
-		Fx:           &vm.Fx,
+		Fx:           vm.Fx,
 		Rules:        rules,
 		Bootstrapped: vm.bootstrapped.Get(),
 		BlockFetcher: vm,
-		SecpCache:    vm.SecpCache,
+		SecpCache:    vm.Fx.RecoverCache(),
 	}
 }
 
