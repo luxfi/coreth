@@ -1,46 +1,44 @@
-// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// Copyright (C) 2019-2026, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 // Package secpfx wires luxfi/utxo/secp256k1fx into the atomic-tx
-// subsystem behind a small adapter. The upstream Fx machinery requires
-// a host VM that exposes Logger / Clock / CodecRegistry — the registry
-// is luxfi/codec-typed, which would otherwise leak the legacy codec
-// dependency back into plugin/evm/atomic/.
+// subsystem behind a small adapter. After luxfi/utxo dropped runtime
+// codec.Registry from its secp256k1fx.VM contract (ZAP-native: wire
+// schemas are compile-time static, see luxfi/utxo/secp256k1fx/vm.go),
+// the Fx machinery only needs Clock + Logger from the host VM. This
+// adapter provides exactly that — no codec dependency leaks back into
+// plugin/evm/atomic/.
 //
-// Keeping the glue here lets plugin/evm/atomic/* stay codec-free while
-// preserving the structural Fx integration (semantic verification for
-// atomic transfers).
+// Wave 2G-Internal of the codec rip (#101): direct imports of
+// github.com/luxfi/codec / linearcodec are gone; the adapter is
+// codec-free in source as well as in semantics.
 package secpfx
 
 import (
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/linearcodec"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/log"
 	"github.com/luxfi/timer/mockable"
 	"github.com/luxfi/utxo/secp256k1fx"
 )
 
-// Host is the small surface the atomic-tx VM provides to the Fx. It
-// matches the runtime-relevant subset of secp256k1fx.VM but lets us add
-// our own registry without dragging luxfi/codec into the VM.
+// Host is the small surface the atomic-tx VM provides to the Fx.
+// Matches secp256k1fx.VM exactly — Clock + Logger only. The legacy
+// CodecRegistry method is gone from upstream and from this adapter
+// in lock-step.
 type Host interface {
 	Clock() *mockable.Clock
 	Logger() log.Logger
 }
 
-// fxVM adapts a [Host] to the upstream secp256k1fx.VM interface.
-type fxVM struct {
-	Host
-	reg codec.Registry
-}
+// Compile-time assertion: any Host satisfies the upstream Fx VM
+// contract. If upstream adds a method to secp256k1fx.VM that Host
+// doesn't satisfy, this line fails to compile until Host is updated.
+var _ secp256k1fx.VM = (Host)(nil)
 
-func (v *fxVM) CodecRegistry() codec.Registry { return v.reg }
-
-// Adapter is the lifecycle facade returned by [New]. It owns the Fx and
-// the no-op registry, and offers exactly the three operations the
-// atomic-tx VM needs to drive the Fx through its lifecycle plus the
-// VerifyTransfer call used in semantic verification.
+// Adapter is the lifecycle facade returned by [New]. It owns the Fx
+// and offers exactly the operations the atomic-tx VM needs to drive
+// the Fx through its lifecycle plus the VerifyTransfer call used in
+// semantic verification.
 type Adapter struct {
 	fx           *secp256k1fx.Fx
 	recoverCache secp256k1.RecoverCacheType
@@ -51,7 +49,7 @@ type Adapter struct {
 // returns — atomic-tx accept/verify paths can rely on this.
 func New(host Host) (*Adapter, error) {
 	fx := &secp256k1fx.Fx{}
-	if err := fx.Initialize(&fxVM{Host: host, reg: linearcodec.NewDefault()}); err != nil {
+	if err := fx.Initialize(host); err != nil {
 		return nil, err
 	}
 	return &Adapter{
