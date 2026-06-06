@@ -18,7 +18,7 @@ require (
 	github.com/holiman/uint256 v1.3.2
 	github.com/luxfi/cache v1.2.1
 	github.com/luxfi/codec v1.1.4
-	github.com/luxfi/crypto v1.19.15
+	github.com/luxfi/crypto v1.19.17
 	github.com/luxfi/geth v1.16.98
 	github.com/luxfi/go-bip39 v1.1.2
 	github.com/luxfi/metric v1.5.5
@@ -152,7 +152,7 @@ require (
 	github.com/luxfi/sys v0.0.0-20260110090042-50187ec5ffd8
 	github.com/luxfi/timer v1.0.2
 	github.com/luxfi/upgrade v1.0.1-0.20260603055252-f51810805436
-	github.com/luxfi/utils v1.1.4
+	github.com/luxfi/utils v1.1.5
 	github.com/luxfi/utxo v0.3.2
 	github.com/luxfi/version v1.0.1
 	github.com/luxfi/vm v1.0.40
