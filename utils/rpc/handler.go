@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/rpc/v2"
-	json "github.com/luxfi/codec/jsonrpc"
+	"github.com/luxfi/utils/json"
 )
 
 // NewHandler returns a new Handler for a service where:

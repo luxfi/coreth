@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/luxfi/codec/jsonrpc"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/atomic/txpool"
 	"github.com/luxfi/coreth/plugin/evm/client"
@@ -16,6 +15,7 @@ import (
 	"github.com/luxfi/ids"
 	log "github.com/luxfi/log"
 	"github.com/luxfi/math/set"
+	"github.com/luxfi/utils/json"
 	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/vm/api"
 	luxatomic "github.com/luxfi/vm/chains/atomic"

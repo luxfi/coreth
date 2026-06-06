@@ -12,11 +12,11 @@ import (
 	"github.com/luxfi/formatting"
 
 	"github.com/luxfi/address"
-	"github.com/luxfi/codec/jsonrpc"
 	"github.com/luxfi/coreth/plugin/evm/atomic"
 	"github.com/luxfi/coreth/plugin/evm/config"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/rpc"
+	"github.com/luxfi/utils/json"
 	"github.com/luxfi/vm/api"
 )
 
