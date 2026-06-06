@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luxfi/codec"
 	"github.com/luxfi/crypto/bls"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/warp"
@@ -33,16 +32,16 @@ type NetworkClient interface {
 }
 
 // NetworkSignatureGetter fetches warp signatures on behalf of the
-// aggregator using VM App-Specific Messaging
+// aggregator using VM App-Specific Messaging. Request/response framing
+// is owned by the warp package (MarshalSignatureRequest /
+// UnmarshalSignatureResponse) — no separate codec.Manager is required.
 type NetworkSignatureGetter struct {
-	client       NetworkClient
-	networkCodec codec.Manager
+	client NetworkClient
 }
 
-func NewSignatureGetter(client NetworkClient, networkCodec codec.Manager) *NetworkSignatureGetter {
+func NewSignatureGetter(client NetworkClient) *NetworkSignatureGetter {
 	return &NetworkSignatureGetter{
-		client:       client,
-		networkCodec: networkCodec,
+		client: client,
 	}
 }
 

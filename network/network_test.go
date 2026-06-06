@@ -5,15 +5,15 @@ package network
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/luxfi/codec"
-	"github.com/luxfi/codec/linearcodec"
 	consensustest "github.com/luxfi/consensus/test/helpers"
 	consensusversion "github.com/luxfi/consensus/version"
 	"github.com/luxfi/ids"
@@ -577,7 +577,7 @@ func TestNetworkRouting(t *testing.T) {
 	protocol := 0
 	handler := &testSDKHandler{}
 
-	networkCodec := codec.NewManager(0)
+	networkCodec := &testCodec{}
 	ctx := consensustest.Runtime(t, consensustest.CChainID)
 	network, err := NewNetwork(ctx, sender, networkCodec, 1, metric.NewRegistry())
 	require.NoError(err)
@@ -596,19 +596,254 @@ func TestNetworkRouting(t *testing.T) {
 	require.ErrorIs(err, p2p.ErrUnrequestedResponse)
 }
 
-func buildCodec(t *testing.T, types ...interface{}) codec.Manager {
-	codecManager := codec.NewDefaultManager()
-	c := linearcodec.NewDefault()
-	for _, typ := range types {
-		assert.NoError(t, c.RegisterType(typ))
+// testCodec is the test-local replacement for codec.Manager / linearcodec
+// after the Wave 2C codec rip (#101). It implements message.Manager (the
+// only surface network.NewNetwork consumes from its `codec` parameter) and
+// supports the small closed set of test message types defined further down
+// in this file (HelloRequest/Response, GreetingRequest/Response,
+// TestMessage, HelloGossip).
+//
+// Wire layout, big-endian throughout:
+//
+//	[u16 version=0]
+//	[u32 typeID]                   // only present when marshalling
+//	                               //   pointer-to-interface (via &request)
+//	[type-specific body]
+//
+// The typeID is the position the type was registered in via buildCodec —
+// matching the linearcodec ordering. Bodies use u16 length-prefixed strings
+// for all current test types.
+type testCodec struct {
+	registered []reflect.Type
+}
+
+func (tc *testCodec) RegisterType(v interface{}) error {
+	tc.registered = append(tc.registered, reflect.TypeOf(v))
+	return nil
+}
+
+func (tc *testCodec) typeIDFor(v interface{}) (uint32, bool) {
+	rt := reflect.TypeOf(v)
+	for i, t := range tc.registered {
+		if t == rt {
+			return uint32(i), true
+		}
 	}
-	assert.NoError(t, codecManager.RegisterCodec(codecVersion, c))
-	return codecManager
+	return 0, false
+}
+
+func (tc *testCodec) typeForID(id uint32) (reflect.Type, bool) {
+	if int(id) >= len(tc.registered) {
+		return nil, false
+	}
+	return tc.registered[id], true
+}
+
+func (tc *testCodec) Marshal(version uint16, source interface{}) ([]byte, error) {
+	if version != codecVersion {
+		return nil, fmt.Errorf("testCodec: unknown version %d", version)
+	}
+	out := make([]byte, 2)
+	binary.BigEndian.PutUint16(out[0:2], version)
+
+	// Dispatch on pointer-to-interface vs concrete value.
+	switch v := source.(type) {
+	case *message.Request:
+		// Pointer-to-interface — emit type-ID + body of the underlying
+		// concrete value (linearcodec behaviour for `&interface`).
+		concrete := *v
+		id, ok := tc.typeIDFor(concrete)
+		if !ok {
+			return nil, fmt.Errorf("testCodec: unregistered request type %T", concrete)
+		}
+		out = appendU32(out, id)
+		body, err := marshalTestValue(concrete)
+		if err != nil {
+			return nil, err
+		}
+		return append(out, body...), nil
+	case *interface{}:
+		// marshalStruct helper used `&obj` where obj is interface{}. Re-
+		// dispatch on the underlying concrete value with a type-ID prefix.
+		concrete := *v
+		id, ok := tc.typeIDFor(concrete)
+		if !ok {
+			return nil, fmt.Errorf("testCodec: unregistered type %T", concrete)
+		}
+		out = appendU32(out, id)
+		body, err := marshalTestValue(concrete)
+		if err != nil {
+			return nil, err
+		}
+		return append(out, body...), nil
+	case *HelloGossip:
+		// MarshalGossip path — concrete pointer, no type-ID prefix.
+		body, err := marshalTestValue(*v)
+		if err != nil {
+			return nil, err
+		}
+		return append(out, body...), nil
+	default:
+		// Concrete-value marshalling — no type-ID prefix.
+		body, err := marshalTestValue(source)
+		if err != nil {
+			return nil, err
+		}
+		return append(out, body...), nil
+	}
+}
+
+func (tc *testCodec) Unmarshal(b []byte, dest interface{}) (uint16, error) {
+	if len(b) < 2 {
+		return 0, errors.New("testCodec: short buffer")
+	}
+	version := binary.BigEndian.Uint16(b[0:2])
+	if version != codecVersion {
+		return version, fmt.Errorf("testCodec: unknown version %d", version)
+	}
+	p := b[2:]
+	switch d := dest.(type) {
+	case *message.Request:
+		// Pointer-to-interface destination — read u32 type-ID, allocate
+		// the registered concrete type, fill it, and assign back through
+		// the interface pointer (linearcodec behaviour for `&interface`).
+		if len(p) < 4 {
+			return version, errors.New("testCodec: short type-ID")
+		}
+		id := binary.BigEndian.Uint32(p[0:4])
+		p = p[4:]
+		rt, ok := tc.typeForID(id)
+		if !ok {
+			return version, fmt.Errorf("testCodec: unknown type-ID %d", id)
+		}
+		concrete, err := unmarshalTestConcrete(rt, p)
+		if err != nil {
+			return version, err
+		}
+		req, ok := concrete.(message.Request)
+		if !ok {
+			return version, fmt.Errorf("testCodec: type %T does not implement message.Request", concrete)
+		}
+		*d = req
+		return version, nil
+	case *HelloRequest:
+		return version, unmarshalTestString(p, &d.Message)
+	case *HelloResponse:
+		return version, unmarshalTestString(p, &d.Response)
+	case *GreetingRequest:
+		return version, unmarshalTestString(p, &d.Greeting)
+	case *GreetingResponse:
+		return version, unmarshalTestString(p, &d.Greet)
+	case *TestMessage:
+		return version, unmarshalTestString(p, &d.Message)
+	case *HelloGossip:
+		return version, unmarshalTestString(p, &d.Msg)
+	default:
+		return version, fmt.Errorf("testCodec: unsupported dest %T", dest)
+	}
+}
+
+// unmarshalTestConcrete builds a concrete value of [rt] from [p] and
+// returns it as interface{}. Only the closed set of test message types is
+// supported.
+func unmarshalTestConcrete(rt reflect.Type, p []byte) (interface{}, error) {
+	switch rt {
+	case reflect.TypeOf(HelloRequest{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return HelloRequest{Message: s}, nil
+	case reflect.TypeOf(HelloResponse{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return HelloResponse{Response: s}, nil
+	case reflect.TypeOf(GreetingRequest{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return GreetingRequest{Greeting: s}, nil
+	case reflect.TypeOf(GreetingResponse{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return GreetingResponse{Greet: s}, nil
+	case reflect.TypeOf(TestMessage{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return TestMessage{Message: s}, nil
+	case reflect.TypeOf(HelloGossip{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return HelloGossip{Msg: s}, nil
+	default:
+		return nil, fmt.Errorf("testCodec: unknown concrete type %v", rt)
+	}
+}
+
+func marshalTestValue(v interface{}) ([]byte, error) {
+	switch s := v.(type) {
+	case HelloRequest:
+		return marshalTestString(s.Message), nil
+	case HelloResponse:
+		return marshalTestString(s.Response), nil
+	case GreetingRequest:
+		return marshalTestString(s.Greeting), nil
+	case GreetingResponse:
+		return marshalTestString(s.Greet), nil
+	case TestMessage:
+		return marshalTestString(s.Message), nil
+	case HelloGossip:
+		return marshalTestString(s.Msg), nil
+	default:
+		return nil, fmt.Errorf("testCodec: unsupported source %T", v)
+	}
+}
+
+func marshalTestString(s string) []byte {
+	out := make([]byte, 2+len(s))
+	binary.BigEndian.PutUint16(out[0:2], uint16(len(s)))
+	copy(out[2:], s)
+	return out
+}
+
+func unmarshalTestString(b []byte, out *string) error {
+	if len(b) < 2 {
+		return errors.New("testCodec: short string buffer")
+	}
+	n := binary.BigEndian.Uint16(b[0:2])
+	if len(b) < 2+int(n) {
+		return errors.New("testCodec: string length exceeds buffer")
+	}
+	*out = string(b[2 : 2+int(n)])
+	return nil
+}
+
+func appendU32(buf []byte, v uint32) []byte {
+	var tmp [4]byte
+	binary.BigEndian.PutUint32(tmp[:], v)
+	return append(buf, tmp[:]...)
+}
+
+func buildCodec(t *testing.T, types ...interface{}) message.Manager {
+	tc := &testCodec{}
+	for _, typ := range types {
+		assert.NoError(t, tc.RegisterType(typ))
+	}
+	return tc
 }
 
 // marshalStruct is a helper method used to marshal an object as `interface{}`
-// so that the codec is able to include the TypeID in the resulting bytes
-func marshalStruct(codec codec.Manager, obj interface{}) ([]byte, error) {
+// so that the codec is able to include the TypeID in the resulting bytes.
+func marshalStruct(codec message.Manager, obj interface{}) ([]byte, error) {
 	return codec.Marshal(codecVersion, &obj)
 }
 
@@ -688,7 +923,7 @@ type TestRequestHandler interface {
 
 type HelloGreetingRequestHandler struct {
 	message.RequestHandler
-	codec codec.Manager
+	codec message.Manager
 }
 
 func (h *HelloGreetingRequestHandler) HandleHelloRequest(ctx context.Context, nodeID ids.NodeID, requestID uint32, request *HelloRequest) ([]byte, error) {
@@ -720,7 +955,7 @@ func (tx *HelloGossip) GossipID() ids.ID {
 }
 
 type helloGossipMarshaller struct {
-	codec codec.Manager
+	codec message.Manager
 }
 
 func (g helloGossipMarshaller) MarshalGossip(tx *HelloGossip) ([]byte, error) {
