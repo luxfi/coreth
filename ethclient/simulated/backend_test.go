@@ -165,16 +165,16 @@ func TestFork(t *testing.T) {
 	client := sim.Client()
 	ctx := context.Background()
 
-	// 1.
-	// The fork parent is the genesis block. We read its hash directly from the
-	// blockchain rather than via client.HeaderByNumber: with all upgrades active
-	// from genesis (Shanghai+), the genesis header carries a non-nil
-	// WithdrawalsHash, but the JSON-RPC header encoder (RPCMarshalHeader) drops
-	// withdrawalsRoot, so a client-decoded genesis header hashes to a different
-	// value than the canonical one and Fork would fail to find it. See the
-	// package report for this RPCMarshalHeader bug (only the genesis block is
-	// affected, since mined blocks have a nil WithdrawalsHash).
-	parentHash := sim.eth.BlockChain().Genesis().Hash()
+	// 1. Save the genesis block hash via the JSON-RPC client. This exercises the
+	// header round-trip: with all upgrades active from genesis (Shanghai+), the
+	// genesis header carries a WithdrawalsHash that is part of the canonical
+	// header hash, so RPCMarshalHeader emits withdrawalsRoot and the
+	// client-decoded header hashes to the same value (else Fork can't find it).
+	genesisHeader, err := client.HeaderByNumber(ctx, nil)
+	if err != nil {
+		t.Fatalf("getting genesis header: %v", err)
+	}
+	parentHash := genesisHeader.Hash()
 
 	// 2.
 	n := int(rand.Int31n(21))
@@ -224,16 +224,16 @@ func TestForkResendTx(t *testing.T) {
 	client := sim.Client()
 	ctx := context.Background()
 
-	// 1.
-	// The fork parent is the genesis block. We read its hash directly from the
-	// blockchain rather than via client.HeaderByNumber: with all upgrades active
-	// from genesis (Shanghai+), the genesis header carries a non-nil
-	// WithdrawalsHash, but the JSON-RPC header encoder (RPCMarshalHeader) drops
-	// withdrawalsRoot, so a client-decoded genesis header hashes to a different
-	// value than the canonical one and Fork would fail to find it. See the
-	// package report for this RPCMarshalHeader bug (only the genesis block is
-	// affected, since mined blocks have a nil WithdrawalsHash).
-	parentHash := sim.eth.BlockChain().Genesis().Hash()
+	// 1. Save the genesis block hash via the JSON-RPC client. This exercises the
+	// header round-trip: with all upgrades active from genesis (Shanghai+), the
+	// genesis header carries a WithdrawalsHash that is part of the canonical
+	// header hash, so RPCMarshalHeader emits withdrawalsRoot and the
+	// client-decoded header hashes to the same value (else Fork can't find it).
+	genesisHeader, err := client.HeaderByNumber(ctx, nil)
+	if err != nil {
+		t.Fatalf("getting genesis header: %v", err)
+	}
+	parentHash := genesisHeader.Hash()
 
 	// 2.
 	tx, err := newTx(sim, testKey)

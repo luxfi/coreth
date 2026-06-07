@@ -1400,7 +1400,6 @@ func TestRPCMarshalBlock(t *testing.T) {
 			want: `{
 				"blockExtraData":"0x",
 				"difficulty": "0x0",
-				"extDataHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
 				"extraData": "0x",
 				"gasLimit": "0x0",
 				"gasUsed": "0x0",
@@ -1427,7 +1426,6 @@ func TestRPCMarshalBlock(t *testing.T) {
 			want: `{
 				"blockExtraData":"0x",
 				"difficulty": "0x0",
-				"extDataHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
 				"extraData": "0x",
 				"gasLimit": "0x0",
 				"gasUsed": "0x0",
@@ -1460,7 +1458,6 @@ func TestRPCMarshalBlock(t *testing.T) {
 			want: `{
 				"blockExtraData":"0x",
 				"difficulty": "0x0",
-				"extDataHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
 				"extraData": "0x",
 				"gasLimit": "0x0",
 				"gasUsed": "0x0",
