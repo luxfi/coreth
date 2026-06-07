@@ -89,7 +89,7 @@ require (
 	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/luxfi/mock v0.1.1 // indirect
-	github.com/luxfi/sampler v1.0.0 // indirect
+	github.com/luxfi/sampler v1.1.0 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/pointerstructure v1.2.1 // indirect
@@ -155,7 +155,7 @@ require (
 	github.com/luxfi/utils v1.1.5
 	github.com/luxfi/utxo v0.3.7
 	github.com/luxfi/version v1.0.1
-	github.com/luxfi/vm v1.1.11
+	github.com/luxfi/vm v1.2.0
 	github.com/luxfi/warp v1.18.6
 )
 
@@ -208,7 +208,7 @@ require (
 	github.com/luxfi/net v0.0.4 // indirect
 	github.com/luxfi/pq v1.0.3 // indirect
 	github.com/luxfi/resource v0.0.1 // indirect
-	github.com/luxfi/staking v1.1.0 // indirect
+	github.com/luxfi/staking v1.5.0 // indirect
 	github.com/luxfi/threshold v1.9.7 // indirect
 	github.com/luxfi/tls v1.0.3 // indirect
 	github.com/luxfi/trace v0.1.4 // indirect
