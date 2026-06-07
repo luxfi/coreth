@@ -1264,10 +1264,24 @@ func RPCMarshalHeader(head *types.Header) map[string]interface{} {
 		"timestamp":        hexutil.Uint64(head.Time),
 		"transactionsRoot": head.TxHash,
 		"receiptsRoot":     head.ReceiptHash,
-		"extDataHash":      headExtra.ExtDataHash,
+	}
+	// extDataHash is an optional RLP field of the (Lux) header and is therefore
+	// part of the canonical header hash. The genesis header has none, so emit it
+	// only when present — emitting a zero value for genesis would make the block
+	// non-round-trippable (a client-decoded header would carry a non-nil
+	// ExtDataHash and hash differently).
+	if head.ExtDataHash != nil {
+		result["extDataHash"] = *head.ExtDataHash
 	}
 	if head.BaseFee != nil {
 		result["baseFeePerGas"] = (*hexutil.Big)(head.BaseFee)
+	}
+	// withdrawalsRoot is part of the canonical (geth-standard) header hash
+	// once Shanghai is active, so it MUST be emitted for the block's JSON-RPC
+	// representation to round-trip to the same hash. (extDataHash above is a
+	// coreth informational field outside the header hash.)
+	if head.WithdrawalsHash != nil {
+		result["withdrawalsRoot"] = head.WithdrawalsHash
 	}
 	if headExtra.ExtDataGasUsed != nil {
 		result["extDataGasUsed"] = (*hexutil.Big)(headExtra.ExtDataGasUsed)
@@ -1283,6 +1297,9 @@ func RPCMarshalHeader(head *types.Header) map[string]interface{} {
 	}
 	if head.ParentBeaconRoot != nil {
 		result["parentBeaconBlockRoot"] = head.ParentBeaconRoot
+	}
+	if head.RequestsHash != nil {
+		result["requestsHash"] = head.RequestsHash
 	}
 	return result
 }
