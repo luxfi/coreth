@@ -426,10 +426,11 @@ func testRepopulateMissingTriesParallel(t *testing.T, parallelism int) {
 		chainDB = rawdb.NewMemoryDatabase()
 	)
 
-	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000)
+	// Ensure that key1 has some funds in the genesis block. With all upgrades
+	// active the dynamic fee is always on, so fund at Ether scale and pay fees.
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 
@@ -439,11 +440,10 @@ func testRepopulateMissingTriesParallel(t *testing.T, parallelism int) {
 	}
 	defer blockchain.Stop()
 
-	// This call generates a chain of 3 blocks.
-	signer := types.HomesteadSigner{}
+	// This call generates a chain of 10 blocks.
+	signer := types.LatestSigner(params.TestChainConfig)
 	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 10, 10, func(i int, gen *BlockGen) {
-		tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), params.TxGas, nil, nil), signer, key1)
-		gen.AddTx(tx)
+		gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(10000), newFeeTracker()))
 	})
 	if err != nil {
 		t.Fatal(err)

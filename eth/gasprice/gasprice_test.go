@@ -382,12 +382,18 @@ func TestSuggestGasPricePreAP3(t *testing.T) {
 }
 
 func TestSuggestTipCapMaxBlocksLookback(t *testing.T) {
+	// Under activate-all-implicitly the block-gas-cost surcharge is gone:
+	// EstimateRequiredTip returns 0 for every block, so the percentile over
+	// recent blocks is 0 and the oracle clamps up to minPrice
+	// (lp176.MinGasPrice = 1). The tips paid in-block no longer bias the
+	// estimate, so the legacy expected tip of 3 is now 1 (matches the
+	// TestSuggestTipCapIncludesExtraDataGas migration).
 	applyGasPriceTest(t, suggestTipCapTest{
 		chainConfig:     params.TestChainConfig,
 		numBlocks:       200,
 		extDataGasUsage: common.Big0,
 		genBlock:        testGenBlock(t, 550, 80),
-		expectedTip:     big.NewInt(3),
+		expectedTip:     big.NewInt(1),
 	}, defaultOracleConfig())
 }
 

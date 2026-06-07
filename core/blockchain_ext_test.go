@@ -4,6 +4,7 @@
 package core
 
 import (
+	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"testing"
@@ -54,6 +55,61 @@ var (
 		},
 	}
 )
+
+// testGenesisBalance is an Ether-scale starting balance. With all upgrades
+// active the dynamic fee is always on (MinBaseFee is 75 gwei), so funded
+// accounts must hold enough to pay base fee + tip for their transactions.
+var testGenesisBalance = new(big.Int).Mul(big.NewInt(1000000), big.NewInt(params.Ether))
+
+// testTip is the priority fee (tip) used by the shared blockchain tests. It is
+// large enough that a single TxGas transaction produces sufficient block fee to
+// satisfy the required block gas cost when blocks are spaced by the default gap
+// used in these tests.
+var testTip = big.NewInt(50000 * params.GWei)
+
+// feeTracker accumulates the total fee spent per address while a chain is being
+// generated, so that state assertions can subtract the fee paid under the
+// all-upgrades dynamic-fee model.
+type feeTracker map[common.Address]*big.Int
+
+func newFeeTracker() feeTracker { return make(feeTracker) }
+
+// spent returns the total fee spent by addr as a uint256.
+func (f feeTracker) spent(addr common.Address) *uint256.Int {
+	if v, ok := f[addr]; ok {
+		return uint256.MustFromBig(v)
+	}
+	return uint256.NewInt(0)
+}
+
+// newDynamicFeeTx builds and signs a dynamic-fee transfer paying base fee + tip,
+// records the fee spent by the sender in the tracker, and returns the signed tx.
+func newDynamicFeeTx(t *testing.T, gen *BlockGen, signer types.Signer, key *ecdsa.PrivateKey, from, to common.Address, value *big.Int, fees feeTracker) *types.Transaction {
+	t.Helper()
+	feeCap := new(big.Int).Add(gen.BaseFee(), testTip)
+	tx := types.NewTx(&types.DynamicFeeTx{
+		ChainID:   params.TestChainConfig.ChainID,
+		Nonce:     gen.TxNonce(from),
+		To:        &to,
+		Gas:       params.TxGas,
+		Value:     value,
+		GasFeeCap: feeCap,
+		GasTipCap: testTip,
+		Data:      []byte{},
+	})
+	signedTx, err := types.SignTx(tx, signer, key)
+	require.NoError(t, err)
+
+	// A simple value transfer always uses exactly params.TxGas, and the
+	// effective gas price is base fee + tip (since feeCap == base fee + tip).
+	feeSpent := new(big.Int).Mul(new(big.Int).Add(gen.BaseFee(), testTip), new(big.Int).SetUint64(params.TxGas))
+	if cur, ok := fees[from]; ok {
+		cur.Add(cur, feeSpent)
+	} else {
+		fees[from] = feeSpent
+	}
+	return signedTx
+}
 
 type createFunc func(db ethdb.Database, gspec *Genesis, lastAcceptedHash common.Hash, dataPath string) (*BlockChain, error)
 type ChainTest struct {
@@ -106,12 +162,12 @@ var tests = []ChainTest{
 		ReprocessAcceptBlockIdenticalStateRootTest,
 	},
 	{
-		"GenerateChainInvalidBlockFee",
-		GenerateChainInvalidBlockFeeTest,
+		"GenerateChainZeroTipBlock",
+		GenerateChainZeroTipBlockTest,
 	},
 	{
-		"InsertChainInvalidBlockFee",
-		InsertChainInvalidBlockFeeTest,
+		"InsertChainZeroTipBlockAccepted",
+		InsertChainZeroTipBlockAcceptedTest,
 	},
 	{
 		"InsertChainValidBlockFee",
@@ -253,9 +309,9 @@ func InsertChainAcceptSingleBlockTest(t *testing.T, create createFunc) {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000)
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 	blockchain, err := create(chainDB, gspec, common.Hash{}, t.TempDir())
@@ -265,10 +321,10 @@ func InsertChainAcceptSingleBlockTest(t *testing.T, create createFunc) {
 	defer blockchain.Stop()
 
 	// This call generates a chain of 3 blocks.
-	signer := types.HomesteadSigner{}
-	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, 10, func(i int, gen *BlockGen) {
-		tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), params.TxGas, nil, nil), signer, key1)
-		gen.AddTx(tx)
+	signer := types.LatestSigner(params.TestChainConfig)
+	fees := newFeeTracker()
+	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
+		gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(10000), fees))
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -283,6 +339,9 @@ func InsertChainAcceptSingleBlockTest(t *testing.T, create createFunc) {
 	}
 	blockchain.DrainAcceptorQueue()
 
+	// Only the first block is accepted, so only the fee from its single tx is spent.
+	feeSpent := uint256.MustFromBig(new(big.Int).Mul(new(big.Int).Add(chain[0].BaseFee(), testTip), new(big.Int).SetUint64(params.TxGas)))
+
 	// check the state of the last accepted block
 	checkState := func(sdb *state.StateDB) error {
 		nonce := sdb.GetNonce(addr1)
@@ -293,6 +352,7 @@ func InsertChainAcceptSingleBlockTest(t *testing.T, create createFunc) {
 		balance1 := sdb.GetBalance(addr1)
 		genesisBalance := uint256.MustFromBig(genesisBalance)
 		expectedBalance1 := new(uint256.Int).Sub(genesisBalance, transferredFunds)
+		expectedBalance1.Sub(expectedBalance1, feeSpent)
 		if balance1.Cmp(expectedBalance1) != 0 {
 			return fmt.Errorf("expected addr1 balance: %d, found balance: %d", expectedBalance1, balance1)
 		}
@@ -323,9 +383,9 @@ func InsertLongForkedChainTest(t *testing.T, create createFunc) {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000000)
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 
@@ -336,21 +396,20 @@ func InsertLongForkedChainTest(t *testing.T, create createFunc) {
 	defer blockchain.Stop()
 
 	numBlocks := 129
-	signer := types.HomesteadSigner{}
-	_, chain1, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks, 10, func(i int, gen *BlockGen) {
+	signer := types.LatestSigner(params.TestChainConfig)
+	fees1 := newFeeTracker()
+	_, chain1, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		// Generate a transaction to create a unique block
-		tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), params.TxGas, nil, nil), signer, key1)
-		gen.AddTx(tx)
+		gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(10000), fees1))
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// Generate the forked chain to be longer than the original chain to check for a regression where
 	// a longer chain can trigger a reorg.
-	_, chain2, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks+1, 10, func(i int, gen *BlockGen) {
+	_, chain2, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks+1, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		// Generate a transaction with a different amount to ensure [chain2] is different than [chain1].
-		tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(5000), params.TxGas, nil, nil), signer, key1)
-		gen.AddTx(tx)
+		gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(5000), newFeeTracker()))
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -460,6 +519,7 @@ func InsertLongForkedChainTest(t *testing.T, create createFunc) {
 		transferredFunds := uint256.NewInt(129 * 10_000)
 		genesisBalance := uint256.MustFromBig(genesisBalance)
 		expectedBalance := new(uint256.Int).Sub(genesisBalance, transferredFunds)
+		expectedBalance.Sub(expectedBalance, fees1.spent(addr1))
 		if balance1.Cmp(expectedBalance) != 0 {
 			return fmt.Errorf("expected addr1 balance: %d, found balance: %d", expectedBalance, balance1)
 		}
@@ -489,9 +549,9 @@ func AcceptNonCanonicalBlockTest(t *testing.T, create createFunc) {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000000)
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 
@@ -502,19 +562,17 @@ func AcceptNonCanonicalBlockTest(t *testing.T, create createFunc) {
 	defer blockchain.Stop()
 
 	numBlocks := 3
-	signer := types.HomesteadSigner{}
-	_, chain1, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks, 10, func(i int, gen *BlockGen) {
+	signer := types.LatestSigner(params.TestChainConfig)
+	_, chain1, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		// Generate a transaction to create a unique block
-		tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), params.TxGas, nil, nil), signer, key1)
-		gen.AddTx(tx)
+		gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(10000), newFeeTracker()))
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, chain2, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks, 10, func(i int, gen *BlockGen) {
+	_, chain2, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		// Generate a transaction with a different amount to create a chain of blocks different from [chain1]
-		tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(5000), params.TxGas, nil, nil), signer, key1)
-		gen.AddTx(tx)
+		gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(5000), newFeeTracker()))
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -561,6 +619,9 @@ func AcceptNonCanonicalBlockTest(t *testing.T, create createFunc) {
 		t.Fatal(err)
 	}
 
+	// Only chain2[0] is accepted, so only the fee from its single tx is spent.
+	feeSpent := uint256.MustFromBig(new(big.Int).Mul(new(big.Int).Add(chain2[0].BaseFee(), testTip), new(big.Int).SetUint64(params.TxGas)))
+
 	// check the state of the last accepted block
 	checkState := func(sdb *state.StateDB) error {
 		nonce1 := sdb.GetNonce(addr1)
@@ -571,6 +632,7 @@ func AcceptNonCanonicalBlockTest(t *testing.T, create createFunc) {
 		transferredFunds := uint256.NewInt(5000)
 		genesisBalance := uint256.MustFromBig(genesisBalance)
 		expectedBalance := new(uint256.Int).Sub(genesisBalance, transferredFunds)
+		expectedBalance.Sub(expectedBalance, feeSpent)
 		if balance1.Cmp(expectedBalance) != 0 {
 			return fmt.Errorf("expected balance1: %d, found balance: %d", expectedBalance, balance1)
 		}
@@ -598,9 +660,9 @@ func SetPreferenceRewindTest(t *testing.T, create createFunc) {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000000)
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 
@@ -611,11 +673,10 @@ func SetPreferenceRewindTest(t *testing.T, create createFunc) {
 	defer blockchain.Stop()
 
 	numBlocks := 3
-	signer := types.HomesteadSigner{}
-	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks, 10, func(i int, gen *BlockGen) {
+	signer := types.LatestSigner(params.TestChainConfig)
+	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		// Generate a transaction to create a unique block
-		tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), params.TxGas, nil, nil), signer, key1)
-		gen.AddTx(tx)
+		gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(10000), newFeeTracker()))
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -701,6 +762,9 @@ func SetPreferenceRewindTest(t *testing.T, create createFunc) {
 		balance1 := sdb.GetBalance(addr1)
 		genesisBalance := uint256.MustFromBig(genesisBalance)
 		expectedBalance1 := new(uint256.Int).Sub(genesisBalance, transferredFunds)
+		// Only chain[0] is accepted, so only the fee from its single tx is spent.
+		feeSpent := uint256.MustFromBig(new(big.Int).Mul(new(big.Int).Add(chain[0].BaseFee(), testTip), new(big.Int).SetUint64(params.TxGas)))
+		expectedBalance1.Sub(expectedBalance1, feeSpent)
 		if balance1.Cmp(expectedBalance1) != 0 {
 			return fmt.Errorf("expected addr1 balance: %d, found balance %d", expectedBalance1, balance1)
 		}
@@ -732,11 +796,17 @@ func BuildOnVariousStagesTest(t *testing.T, create createFunc) {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000)
+	// All three accounts are funded at Ether scale: under the all-upgrades
+	// dynamic-fee model the sender of each tx must hold enough to pay the
+	// transfer plus base fee + tip (the original full-balance transfers can no
+	// longer pay any fee). A fixed, small transfer is used instead.
+	genesisBalance := testGenesisBalance
+	xfer := big.NewInt(10000)
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc: types.GenesisAlloc{
 			addr1: {Balance: genesisBalance},
+			addr2: {Balance: genesisBalance},
 			addr3: {Balance: genesisBalance},
 		},
 	}
@@ -748,29 +818,25 @@ func BuildOnVariousStagesTest(t *testing.T, create createFunc) {
 	defer blockchain.Stop()
 
 	// This call generates a chain of 3 blocks.
-	signer := types.HomesteadSigner{}
-	genDB, chain1, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 20, 10, func(i int, gen *BlockGen) {
-		// Send all funds back and forth between the two accounts
+	signer := types.LatestSigner(params.TestChainConfig)
+	genDB, chain1, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 20, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
+		// Send funds back and forth between the two accounts
 		if i%2 == 0 {
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, genesisBalance, params.TxGas, nil, nil), signer, key1)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, xfer, newFeeTracker()))
 		} else {
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr2), addr1, genesisBalance, params.TxGas, nil, nil), signer, key2)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key2, addr2, addr1, xfer, newFeeTracker()))
 		}
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// Build second chain forked off of the 10th block in [chain1]
-	chain2, _, err := GenerateChain(gspec.Config, chain1[9], blockchain.engine, genDB, 10, 10, func(i int, gen *BlockGen) {
-		// Send all funds back and forth between the two accounts
+	chain2, _, err := GenerateChain(gspec.Config, chain1[9], blockchain.engine, genDB, 10, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
+		// Send funds back and forth between the two accounts
 		if i%2 == 0 {
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr3), addr2, genesisBalance, params.TxGas, nil, nil), signer, key3)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key3, addr3, addr2, xfer, newFeeTracker()))
 		} else {
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr2), addr3, genesisBalance, params.TxGas, nil, nil), signer, key2)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key2, addr2, addr3, xfer, newFeeTracker()))
 		}
 	})
 	if err != nil {
@@ -779,14 +845,12 @@ func BuildOnVariousStagesTest(t *testing.T, create createFunc) {
 	// Build third chain forked off of the 5th block in [chain1].
 	// The parent of this chain will be accepted before this fork
 	// is inserted.
-	chain3, _, err := GenerateChain(gspec.Config, chain1[4], blockchain.engine, genDB, 10, 10, func(i int, gen *BlockGen) {
-		// Send all funds back and forth between accounts 2 and 3.
+	chain3, _, err := GenerateChain(gspec.Config, chain1[4], blockchain.engine, genDB, 10, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
+		// Send funds back and forth between accounts 2 and 3.
 		if i%2 == 0 {
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr2), addr3, genesisBalance, params.TxGas, nil, nil), signer, key2)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key2, addr2, addr3, xfer, newFeeTracker()))
 		} else {
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr3), addr2, genesisBalance, params.TxGas, nil, nil), signer, key3)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key3, addr3, addr2, xfer, newFeeTracker()))
 		}
 	})
 	if err != nil {
@@ -847,21 +911,43 @@ func BuildOnVariousStagesTest(t *testing.T, create createFunc) {
 		}
 	}
 
+	// The accepted chain is chain1[0..9] followed by chain2[0]. Compute the fee
+	// spent by each sender across exactly those accepted blocks. Each block
+	// contains a single TxGas transfer, so its fee is (baseFee+tip)*TxGas.
+	blockFee := func(b *types.Block) *uint256.Int {
+		return uint256.MustFromBig(new(big.Int).Mul(new(big.Int).Add(b.BaseFee(), testTip), new(big.Int).SetUint64(params.TxGas)))
+	}
+	feeAddr1 := uint256.NewInt(0) // chain1 even blocks: 0,2,4,6,8
+	feeAddr2 := uint256.NewInt(0) // chain1 odd blocks: 1,3,5,7,9
+	for i := 0; i < 10; i++ {
+		if i%2 == 0 {
+			feeAddr1.Add(feeAddr1, blockFee(chain1[i]))
+		} else {
+			feeAddr2.Add(feeAddr2, blockFee(chain1[i]))
+		}
+	}
+	feeAddr3 := blockFee(chain2[0]) // chain2[0]: addr3 -> addr2
+	xferU := uint256.MustFromBig(xfer)
+
 	// check the state of the last accepted block
 	checkState := func(sdb *state.StateDB) error {
+		genesisBalance := uint256.MustFromBig(genesisBalance)
+
 		nonce := sdb.GetNonce(addr1)
 		if nonce != 5 {
 			return fmt.Errorf("expected nonce addr1: 5, found nonce: %d", nonce)
 		}
+		// addr1 sends and receives xfer 5 times each (net 0); only fees are lost.
 		balance1 := sdb.GetBalance(addr1)
-		genesisBalance := uint256.MustFromBig(genesisBalance)
-		expectedBalance1 := genesisBalance
+		expectedBalance1 := new(uint256.Int).Sub(genesisBalance, feeAddr1)
 		if balance1.Cmp(expectedBalance1) != 0 {
 			return fmt.Errorf("expected addr1 balance: %d, found balance: %d", expectedBalance1, balance1)
 		}
 
+		// addr2 nets +xfer (received from addr3 in chain2[0]) and loses its fees.
 		balance2 := sdb.GetBalance(addr2)
-		expectedBalance2 := genesisBalance
+		expectedBalance2 := new(uint256.Int).Add(genesisBalance, xferU)
+		expectedBalance2.Sub(expectedBalance2, feeAddr2)
 		if balance2.Cmp(expectedBalance2) != 0 {
 			return fmt.Errorf("expected addr2 balance: %d, found balance: %d", expectedBalance2, balance2)
 		}
@@ -871,8 +957,10 @@ func BuildOnVariousStagesTest(t *testing.T, create createFunc) {
 			return fmt.Errorf("expected addr2 nonce: 5, found nonce: %d", nonce)
 		}
 
+		// addr3 sends xfer once (chain2[0]) and loses that tx's fee.
 		balance3 := sdb.GetBalance(addr3)
-		expectedBalance3 := common.U2560
+		expectedBalance3 := new(uint256.Int).Sub(genesisBalance, xferU)
+		expectedBalance3.Sub(expectedBalance3, feeAddr3)
 		if balance3.Cmp(expectedBalance3) != 0 {
 			return fmt.Errorf("expected addr3 balance: %d, found balance: %d", expectedBalance3, balance3)
 		}
@@ -892,7 +980,7 @@ func EmptyBlocksTest(t *testing.T, create createFunc) {
 
 	// Ensure that key1 has some funds in the genesis block.
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{},
 	}
 
@@ -902,7 +990,7 @@ func EmptyBlocksTest(t *testing.T, create createFunc) {
 	}
 	defer blockchain.Stop()
 
-	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, 10, func(i int, gen *BlockGen) {})
+	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -936,9 +1024,9 @@ func EmptyAndNonEmptyBlocksTest(t *testing.T, create createFunc) {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000000)
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 
@@ -948,11 +1036,12 @@ func EmptyAndNonEmptyBlocksTest(t *testing.T, create createFunc) {
 	}
 	defer blockchain.Stop()
 
-	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 5, 10, func(i int, gen *BlockGen) {
+	signer := types.LatestSigner(params.TestChainConfig)
+	fees := newFeeTracker()
+	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 5, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		if i == 3 {
 			// Generate a transaction to create a unique block
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), params.TxGas, nil, nil), types.HomesteadSigner{}, key1)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(10000), fees))
 		}
 	})
 	if err != nil {
@@ -979,6 +1068,7 @@ func EmptyAndNonEmptyBlocksTest(t *testing.T, create createFunc) {
 		transferredFunds := uint256.NewInt(10000)
 		genesisBalance := uint256.MustFromBig(genesisBalance)
 		expectedBalance := new(uint256.Int).Sub(genesisBalance, transferredFunds)
+		expectedBalance.Sub(expectedBalance, fees.spent(addr1))
 		if balance1.Cmp(expectedBalance) != 0 {
 			return fmt.Errorf("expected balance1: %d, found balance: %d", expectedBalance, balance1)
 		}
@@ -1006,9 +1096,9 @@ func ReorgReInsertTest(t *testing.T, create createFunc) {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000000)
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 
@@ -1018,12 +1108,12 @@ func ReorgReInsertTest(t *testing.T, create createFunc) {
 	}
 	defer blockchain.Stop()
 
-	signer := types.HomesteadSigner{}
+	signer := types.LatestSigner(params.TestChainConfig)
+	fees := newFeeTracker()
 	numBlocks := 3
-	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks, 10, func(i int, gen *BlockGen) {
+	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, numBlocks, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		// Generate a transaction to create a unique block
-		tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), params.TxGas, nil, nil), signer, key1)
-		gen.AddTx(tx)
+		gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(10000), fees))
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1072,6 +1162,7 @@ func ReorgReInsertTest(t *testing.T, create createFunc) {
 		transferredFunds := uint256.NewInt(30000)
 		genesisBalance := uint256.MustFromBig(genesisBalance)
 		expectedBalance := new(uint256.Int).Sub(genesisBalance, transferredFunds)
+		expectedBalance.Sub(expectedBalance, fees.spent(addr1))
 		if balance1.Cmp(expectedBalance) != 0 {
 			return fmt.Errorf("expected balance1: %d, found balance: %d", expectedBalance, balance1)
 		}
@@ -1112,9 +1203,9 @@ func AcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc) {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000000)
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 
@@ -1124,27 +1215,30 @@ func AcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc) {
 	}
 	defer blockchain.Stop()
 
-	signer := types.HomesteadSigner{}
-	_, chain1, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, 10, func(i int, gen *BlockGen) {
+	// The two chains move the same total amount (1000000000 wei) from addr1 to
+	// addr2 across two blocks, split differently. Because both chains start from
+	// the same genesis and use the same block spacing and tip, each block at a
+	// given height has the same base fee, so the fees paid are identical and the
+	// resulting state roots still match.
+	signer := types.LatestSigner(params.TestChainConfig)
+	fees := newFeeTracker()
+	_, chain1, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		if i < 2 {
 			// Send half the funds from addr1 to addr2 in one transaction per each of the two blocks in [chain1]
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(500000000), params.TxGas, nil, nil), signer, key1)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(500000000), fees))
 		}
 		// Allow the third block to be empty.
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, chain2, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 2, 10, func(i int, gen *BlockGen) {
+	_, chain2, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 2, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		// Send 1/4 of the funds from addr1 to addr2 in tx1 and 3/4 of the funds in tx2. This will produce the identical state
 		// root in the second block of [chain2] as is present in the second block of [chain1].
 		if i == 0 {
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(250000000), params.TxGas, nil, nil), signer, key1)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(250000000), newFeeTracker()))
 		} else {
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(750000000), params.TxGas, nil, nil), signer, key1)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(750000000), newFeeTracker()))
 		}
 	})
 	if err != nil {
@@ -1213,7 +1307,12 @@ func AcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc) {
 			return fmt.Errorf("expected addr1 nonce: 2, found nonce: %d", nonce1)
 		}
 		balance1 := sdb.GetBalance(addr1)
-		expectedBalance := common.U2560
+		genesisBalance := uint256.MustFromBig(genesisBalance)
+		// addr1 sent a total of 1000000000 wei to addr2 across the two non-empty
+		// blocks and paid the fees for those two txs.
+		totalTransferred := uint256.MustFromBig(big.NewInt(1000000000))
+		expectedBalance := new(uint256.Int).Sub(genesisBalance, totalTransferred)
+		expectedBalance.Sub(expectedBalance, fees.spent(addr1))
 		if balance1.Cmp(expectedBalance) != 0 {
 			return fmt.Errorf("expected balance1: %d, found balance: %d", expectedBalance, balance1)
 		}
@@ -1222,9 +1321,8 @@ func AcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc) {
 			return fmt.Errorf("expected addr2 nonce: 0, found nonce %d", nonce2)
 		}
 		balance2 := sdb.GetBalance(addr2)
-		genesisBalance := uint256.MustFromBig(genesisBalance)
-		if balance2.Cmp(genesisBalance) != 0 {
-			return fmt.Errorf("expected balance2: %d, found %d", genesisBalance, balance2)
+		if balance2.Cmp(totalTransferred) != 0 {
+			return fmt.Errorf("expected balance2: %d, found %d", totalTransferred, balance2)
 		}
 		return nil
 	}
@@ -1256,9 +1354,9 @@ func ReprocessAcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc)
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000000)
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 
@@ -1267,27 +1365,30 @@ func ReprocessAcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc)
 		t.Fatal(err)
 	}
 
-	signer := types.HomesteadSigner{}
-	_, chain1, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, 10, func(i int, gen *BlockGen) {
+	// The two chains move the same total amount (1000000000 wei) from addr1 to
+	// addr2 across two blocks, split differently. Because both chains start from
+	// the same genesis and use the same block spacing and tip, each block at a
+	// given height has the same base fee, so the fees paid are identical and the
+	// resulting state roots still match.
+	signer := types.LatestSigner(params.TestChainConfig)
+	fees := newFeeTracker()
+	_, chain1, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		if i < 2 {
 			// Send half the funds from addr1 to addr2 in one transaction per each of the two blocks in [chain1]
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(500000000), params.TxGas, nil, nil), signer, key1)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(500000000), fees))
 		}
 		// Allow the third block to be empty.
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, chain2, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 2, 10, func(i int, gen *BlockGen) {
+	_, chain2, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 2, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		// Send 1/4 of the funds from addr1 to addr2 in tx1 and 3/4 of the funds in tx2. This will produce the identical state
 		// root in the second block of [chain2] as is present in the second block of [chain1].
 		if i == 0 {
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(250000000), params.TxGas, nil, nil), signer, key1)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(250000000), newFeeTracker()))
 		} else {
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(750000000), params.TxGas, nil, nil), signer, key1)
-			gen.AddTx(tx)
+			gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(750000000), newFeeTracker()))
 		}
 	})
 	if err != nil {
@@ -1382,7 +1483,12 @@ func ReprocessAcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc)
 			return fmt.Errorf("expected addr1 nonce: 2, found nonce: %d", nonce1)
 		}
 		balance1 := sdb.GetBalance(addr1)
-		expectedBalance := common.U2560
+		genesisBalance := uint256.MustFromBig(genesisBalance)
+		// addr1 sent a total of 1000000000 wei to addr2 across the two non-empty
+		// blocks and paid the fees for those two txs.
+		totalTransferred := uint256.MustFromBig(big.NewInt(1000000000))
+		expectedBalance := new(uint256.Int).Sub(genesisBalance, totalTransferred)
+		expectedBalance.Sub(expectedBalance, fees.spent(addr1))
 		if balance1.Cmp(expectedBalance) != 0 {
 			return fmt.Errorf("expected balance1: %d, found balance: %d", expectedBalance, balance1)
 		}
@@ -1391,9 +1497,8 @@ func ReprocessAcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc)
 			return fmt.Errorf("expected addr2 nonce: 0, found nonce %d", nonce2)
 		}
 		balance2 := sdb.GetBalance(addr2)
-		genesisBalance := uint256.MustFromBig(genesisBalance)
-		if balance2.Cmp(genesisBalance) != 0 {
-			return fmt.Errorf("expected balance2: %d, found %d", genesisBalance, balance2)
+		if balance2.Cmp(totalTransferred) != 0 {
+			return fmt.Errorf("expected balance2: %d, found %d", totalTransferred, balance2)
 		}
 		return nil
 	}
@@ -1401,7 +1506,7 @@ func ReprocessAcceptBlockIdenticalStateRootTest(t *testing.T, create createFunc)
 	checkBlockChainState(t, blockchain, gspec, chainDB, create, checkState)
 }
 
-func GenerateChainInvalidBlockFeeTest(t *testing.T, create createFunc) {
+func GenerateChainZeroTipBlockTest(t *testing.T, create createFunc) {
 	var (
 		require = require.New(t)
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
@@ -1422,7 +1527,11 @@ func GenerateChainInvalidBlockFeeTest(t *testing.T, create createFunc) {
 	require.NoError(err)
 	t.Cleanup(blockchain.Stop)
 
-	// This call generates a chain of 3 blocks.
+	// Under LP-176 the legacy block-gas-cost surcharge was removed, so a
+	// zero-tip block (paying only the base fee) generates successfully.
+	// This is a regression guard against the old block-gas-cost rejection.
+	// (The surviving fee-cap-below-base-fee rejection is covered by the
+	// ErrFeeCapTooLow case in state_processor_test.go.)
 	signer := types.LatestSigner(params.TestChainConfig)
 	_, _, _, err = GenerateChainWithGenesis(gspec, blockchain.engine, 3, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		tx := types.NewTx(&types.DynamicFeeTx{
@@ -1439,10 +1548,10 @@ func GenerateChainInvalidBlockFeeTest(t *testing.T, create createFunc) {
 		require.NoError(err)
 		gen.AddTx(signedTx)
 	})
-	require.ErrorIs(err, dummy.ErrInsufficientBlockGas)
+	require.NoError(err)
 }
 
-func InsertChainInvalidBlockFeeTest(t *testing.T, create createFunc) {
+func InsertChainZeroTipBlockAcceptedTest(t *testing.T, create createFunc) {
 	var (
 		require = require.New(t)
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
@@ -1463,10 +1572,11 @@ func InsertChainInvalidBlockFeeTest(t *testing.T, create createFunc) {
 	require.NoError(err)
 	t.Cleanup(blockchain.Stop)
 
-	// This call generates a chain of 3 blocks.
+	// Under LP-176 the legacy block-gas-cost surcharge was removed, so a
+	// zero-tip block (paying only the base fee) is now valid on insert.
+	// This is a regression guard against the old block-gas-cost rejection.
 	signer := types.LatestSigner(params.TestChainConfig)
-	eng := dummy.NewFakerWithMode(TestCallbacks, dummy.Mode{ModeSkipBlockFee: true, ModeSkipCoinbase: true})
-	_, chain, _, err := GenerateChainWithGenesis(gspec, eng, 3, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
+	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 3, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
 		tx := types.NewTx(&types.DynamicFeeTx{
 			ChainID:   params.TestChainConfig.ChainID,
 			Nonce:     gen.TxNonce(addr1),
@@ -1483,7 +1593,7 @@ func InsertChainInvalidBlockFeeTest(t *testing.T, create createFunc) {
 	})
 	require.NoError(err)
 	_, err = blockchain.InsertChain(chain)
-	require.ErrorIs(err, dummy.ErrInsufficientBlockGas)
+	require.NoError(err)
 }
 
 func InsertChainValidBlockFeeTest(t *testing.T, create createFunc) {
@@ -1581,9 +1691,9 @@ func ReexecBlocksTest(t *testing.T, create ReexecTestFunc) {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000)
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 
@@ -1594,10 +1704,10 @@ func ReexecBlocksTest(t *testing.T, create ReexecTestFunc) {
 	defer blockchain.Stop()
 
 	// This call generates a chain of 10 blocks.
-	signer := types.HomesteadSigner{}
-	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 10, 10, func(i int, gen *BlockGen) {
-		tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), params.TxGas, nil, nil), signer, key1)
-		gen.AddTx(tx)
+	signer := types.LatestSigner(params.TestChainConfig)
+	fees := newFeeTracker()
+	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, 10, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
+		gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(10000), fees))
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1660,6 +1770,7 @@ func ReexecBlocksTest(t *testing.T, create ReexecTestFunc) {
 		balance1 := sdb.GetBalance(addr1)
 		genesisBalance := uint256.MustFromBig(genesisBalance)
 		expectedBalance1 := new(uint256.Int).Sub(genesisBalance, transferredFunds)
+		expectedBalance1.Sub(expectedBalance1, fees.spent(addr1))
 		if balance1.Cmp(expectedBalance1) != 0 {
 			return fmt.Errorf("expected addr1 balance: %d, found balance: %d", expectedBalance1, balance1)
 		}
@@ -1711,9 +1822,9 @@ func ReexecMaxBlocksTest(t *testing.T, create ReexecTestFunc) {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	genesisBalance := big.NewInt(1000000)
+	genesisBalance := testGenesisBalance
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: params.TestChainConfig,
 		Alloc:  types.GenesisAlloc{addr1: {Balance: genesisBalance}},
 	}
 
@@ -1728,10 +1839,10 @@ func ReexecMaxBlocksTest(t *testing.T, create ReexecTestFunc) {
 	newCommitInterval := 6
 	numAcceptedBlocks := 2*newCommitInterval - 1
 
-	signer := types.HomesteadSigner{}
-	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, genNumBlocks, 10, func(i int, gen *BlockGen) {
-		tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), params.TxGas, nil, nil), signer, key1)
-		gen.AddTx(tx)
+	signer := types.LatestSigner(params.TestChainConfig)
+	fees := newFeeTracker()
+	_, chain, _, err := GenerateChainWithGenesis(gspec, blockchain.engine, genNumBlocks, blockgascost.TargetBlockRate-1, func(i int, gen *BlockGen) {
+		gen.AddTx(newDynamicFeeTx(t, gen, signer, key1, addr1, addr2, big.NewInt(10000), fees))
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1794,6 +1905,7 @@ func ReexecMaxBlocksTest(t *testing.T, create ReexecTestFunc) {
 		balance1 := sdb.GetBalance(addr1)
 		genesisBalance := uint256.MustFromBig(genesisBalance)
 		expectedBalance1 := new(uint256.Int).Sub(genesisBalance, transferredFunds)
+		expectedBalance1.Sub(expectedBalance1, fees.spent(addr1))
 		if balance1.Cmp(expectedBalance1) != 0 {
 			return fmt.Errorf("expected addr1 balance: %d, found balance: %d", expectedBalance1, balance1)
 		}
