@@ -78,7 +78,7 @@ func (t *Txs) length() int {
 }
 
 // atomicTxGasPrice is the [gasPrice] paid by a transaction to burn a given
-// amount of [LUXAssetID] given the value of [gasUsed].
+// amount of [UTXOAssetID] given the value of [gasUsed].
 func (t *Txs) atomicTxGasPrice(tx *atomic.Tx) (uint64, error) {
 	gasUsed, err := tx.GasUsed(true)
 	if err != nil {
