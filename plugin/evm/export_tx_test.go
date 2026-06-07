@@ -1401,7 +1401,7 @@ func TestExportTxVerify(t *testing.T) {
 // Note: this is a brittle test to ensure that the gas cost of a transaction does
 // not change
 func TestExportTxGasCost(t *testing.T) {
-	luxAssetID := ids.GenerateTestID()
+	utxoAssetID := ids.GenerateTestID()
 	chainID := ids.GenerateTestID()
 	xChainID := ids.GenerateTestID()
 	networkID := uint32(5)
@@ -1425,13 +1425,13 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 						Nonce:   0,
 					},
 				},
 				ExportedOutputs: []*lux.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: lux.Asset{ID: utxoAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1457,13 +1457,13 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 						Nonce:   0,
 					},
 				},
 				ExportedOutputs: []*lux.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: lux.Asset{ID: utxoAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1490,13 +1490,13 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 						Nonce:   0,
 					},
 				},
 				ExportedOutputs: []*lux.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: lux.Asset{ID: utxoAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1522,13 +1522,13 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 						Nonce:   0,
 					},
 				},
 				ExportedOutputs: []*lux.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: lux.Asset{ID: utxoAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1554,25 +1554,25 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 						Nonce:   0,
 					},
 					{
 						Address: testEthAddrs[1],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 						Nonce:   0,
 					},
 					{
 						Address: testEthAddrs[2],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 						Nonce:   0,
 					},
 				},
 				ExportedOutputs: []*lux.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: lux.Asset{ID: utxoAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount * 3,
 							OutputOwners: secp256k1fx.OutputOwners{
@@ -1598,25 +1598,25 @@ func TestExportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 						Nonce:   0,
 					},
 					{
 						Address: testEthAddrs[1],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 						Nonce:   0,
 					},
 					{
 						Address: testEthAddrs[2],
 						Amount:  exportAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 						Nonce:   0,
 					},
 				},
 				ExportedOutputs: []*lux.TransferableOutput{
 					{
-						Asset: lux.Asset{ID: luxAssetID},
+						Asset: lux.Asset{ID: utxoAssetID},
 						Out: &secp256k1fx.TransferOutput{
 							Amt: exportAmount * 3,
 							OutputOwners: secp256k1fx.OutputOwners{
