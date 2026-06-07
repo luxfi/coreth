@@ -166,7 +166,15 @@ func TestFork(t *testing.T) {
 	ctx := context.Background()
 
 	// 1.
-	parent, _ := client.HeaderByNumber(ctx, nil)
+	// The fork parent is the genesis block. We read its hash directly from the
+	// blockchain rather than via client.HeaderByNumber: with all upgrades active
+	// from genesis (Shanghai+), the genesis header carries a non-nil
+	// WithdrawalsHash, but the JSON-RPC header encoder (RPCMarshalHeader) drops
+	// withdrawalsRoot, so a client-decoded genesis header hashes to a different
+	// value than the canonical one and Fork would fail to find it. See the
+	// package report for this RPCMarshalHeader bug (only the genesis block is
+	// affected, since mined blocks have a nil WithdrawalsHash).
+	parentHash := sim.eth.BlockChain().Genesis().Hash()
 
 	// 2.
 	n := int(rand.Int31n(21))
@@ -181,7 +189,9 @@ func TestFork(t *testing.T) {
 	}
 
 	// 4.
-	sim.Fork(parent.Hash())
+	if err := sim.Fork(parentHash); err != nil {
+		t.Fatalf("forking: %v", err)
+	}
 
 	// 5.
 	for i := 0; i < n+1; i++ {
@@ -215,7 +225,15 @@ func TestForkResendTx(t *testing.T) {
 	ctx := context.Background()
 
 	// 1.
-	parent, _ := client.HeaderByNumber(ctx, nil)
+	// The fork parent is the genesis block. We read its hash directly from the
+	// blockchain rather than via client.HeaderByNumber: with all upgrades active
+	// from genesis (Shanghai+), the genesis header carries a non-nil
+	// WithdrawalsHash, but the JSON-RPC header encoder (RPCMarshalHeader) drops
+	// withdrawalsRoot, so a client-decoded genesis header hashes to a different
+	// value than the canonical one and Fork would fail to find it. See the
+	// package report for this RPCMarshalHeader bug (only the genesis block is
+	// affected, since mined blocks have a nil WithdrawalsHash).
+	parentHash := sim.eth.BlockChain().Genesis().Hash()
 
 	// 2.
 	tx, err := newTx(sim, testKey)
@@ -237,7 +255,7 @@ func TestForkResendTx(t *testing.T) {
 	require.Equal(uint64(1), b1.NumberU64())
 
 	// 4.
-	if err := sim.Fork(parent.Hash()); err != nil {
+	if err := sim.Fork(parentHash); err != nil {
 		t.Errorf("forking: %v", err)
 	}
 

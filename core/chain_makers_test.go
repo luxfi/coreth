@@ -28,6 +28,7 @@
 package core
 
 import (
+	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 
@@ -53,31 +54,51 @@ func ExampleGenerateChain() {
 		genDb   = rawdb.NewMemoryDatabase()
 	)
 
-	// Ensure that key1 has some funds in the genesis block.
+	// Ensure that key1 has some funds in the genesis block. With all upgrades
+	// active the dynamic fee is always on, so accounts must be funded at Ether
+	// scale and transactions must pay base fee + tip.
+	funds := new(big.Int).Mul(big.NewInt(1000000), big.NewInt(params.Ether))
 	gspec := &Genesis{
-		Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
-		Alloc:  types.GenesisAlloc{addr1: {Balance: big.NewInt(1000000)}},
+		Config: params.TestChainConfig,
+		Alloc: types.GenesisAlloc{
+			addr1: {Balance: funds},
+			addr2: {Balance: funds},
+		},
 	}
 	genesis := gspec.MustCommit(genDb, triedb.NewDatabase(genDb, triedb.HashDefaults))
 
 	// This call generates a chain of 3 blocks. The function runs for
 	// each block and adds different features to gen based on the
 	// block index.
-	signer := types.HomesteadSigner{}
+	signer := types.LatestSigner(params.TestChainConfig)
+	tip := big.NewInt(50000 * params.GWei)
+	newTx := func(gen *BlockGen, key *ecdsa.PrivateKey, from, to common.Address, amount *big.Int) *types.Transaction {
+		tx, err := types.SignTx(types.NewTx(&types.DynamicFeeTx{
+			ChainID:   params.TestChainConfig.ChainID,
+			Nonce:     gen.TxNonce(from),
+			To:        &to,
+			Gas:       params.TxGas,
+			Value:     amount,
+			GasFeeCap: new(big.Int).Add(gen.BaseFee(), tip),
+			GasTipCap: tip,
+			Data:      []byte{},
+		}), signer, key)
+		if err != nil {
+			panic(err)
+		}
+		return tx
+	}
 	chain, _, err := GenerateChain(gspec.Config, genesis, dummy.NewCoinbaseFaker(), genDb, 3, 10, func(i int, gen *BlockGen) {
 		switch i {
 		case 0:
 			// In block 1, addr1 sends addr2 some ether.
-			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), params.TxGas, nil, nil), signer, key1)
-			gen.AddTx(tx)
+			gen.AddTx(newTx(gen, key1, addr1, addr2, big.NewInt(10000)))
 		case 1:
 			// In block 2, addr1 sends some more ether to addr2.
 			// addr2 passes it on to addr3.
-			tx1, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(1000), params.TxGas, nil, nil), signer, key1)
-			gen.AddTx(tx1)
+			gen.AddTx(newTx(gen, key1, addr1, addr2, big.NewInt(1000)))
 		case 2:
-			tx2, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr2), addr3, big.NewInt(1000), params.TxGas, nil, nil), signer, key2)
-			gen.AddTx(tx2)
+			gen.AddTx(newTx(gen, key2, addr2, addr3, big.NewInt(1000)))
 		}
 	})
 	if err != nil {
@@ -95,15 +116,27 @@ func ExampleGenerateChain() {
 
 	state, _ := blockchain.State()
 	fmt.Printf("last block: #%d\n", blockchain.CurrentBlock().Number)
-	fmt.Println("balance of addr1:", state.GetBalance(addr1))
-	fmt.Println("balance of addr2:", state.GetBalance(addr2))
+	// Print the net change from the genesis balance for the senders, and the
+	// absolute balance for addr3 (which only ever receives). With all upgrades
+	// active each transaction pays base fee + tip, so the senders' net change is
+	// the transferred value plus the fees they paid.
+	addr1Spent := new(big.Int).Sub(funds, state.GetBalance(addr1).ToBig())
+	addr2Spent := new(big.Int).Sub(funds, state.GetBalance(addr2).ToBig())
+	fmt.Println("addr1 net spent:", addr1Spent)
+	fmt.Println("addr2 net spent:", addr2Spent)
 	fmt.Println("balance of addr3:", state.GetBalance(addr3))
 	// Expected output has been modified since uncle blocks and block rewards have
-	// been removed from the original test.
+	// been removed from the original test, and because all upgrades are active so
+	// transactions pay base fee + tip.
+	//
+	// addr1 sends 10000 + 1000 (= 11000) and pays the fee for two txs.
+	// addr2 receives 11000, sends 1000, and pays the fee for one tx, so its net
+	// spent is the one fee + 1000 - 11000 received = fee - 10000.
+	// addr3 receives 1000 and sends nothing.
 
 	// Output:
 	// last block: #3
-	// balance of addr1: 989000
-	// balance of addr2: 10000
+	// addr1 net spent: 2100000000000053000
+	// addr2 net spent: 1050000000000011000
 	// balance of addr3: 1000
 }

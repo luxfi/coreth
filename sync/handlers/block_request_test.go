@@ -13,6 +13,7 @@ import (
 	"github.com/luxfi/coreth/core"
 	"github.com/luxfi/coreth/params"
 	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
 	"github.com/luxfi/coreth/sync/handlers/stats"
 	"github.com/luxfi/coreth/sync/handlers/stats/statstest"
 	"github.com/luxfi/crypto"
@@ -158,18 +159,23 @@ func TestBlockRequestHandlerLargeBlocks(t *testing.T) {
 		key1, _     = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		cryptoAddr1 = crypto.PubkeyToAddress(key1.PublicKey)
 		addr1       = common.BytesToAddress(cryptoAddr1.Bytes())
-		funds       = big.NewInt(1000000000000000000)
+		funds       = new(big.Int).Mul(big.NewInt(1000000), big.NewInt(params.Ether))
 		gspec       = &core.Genesis{
-			Config: &params.ChainConfig{HomesteadBlock: new(big.Int)},
+			Config: params.TestChainConfig,
 			Alloc:  types.GenesisAlloc{addr1: {Balance: funds}},
 		}
-		signer = types.LatestSigner(gspec.Config)
+		signer = types.LatestSigner(params.TestChainConfig)
 	)
 	memdb := rawdb.NewMemoryDatabase()
 	tdb := triedb.NewDatabase(memdb, nil)
 	genesis := gspec.MustCommit(memdb, tdb)
 	engine := dummy.NewETHFaker()
-	blocks, _, err := core.GenerateChain(gspec.Config, genesis, engine, memdb, 96, 0, func(i int, b *core.BlockGen) {
+	// Under the always-on LP-176 fee model, each block's gas capacity is bounded
+	// by the dynamic-fee window and accrues over time. A single large block here
+	// uses ~4.2M gas (1 MiB of zero calldata), which exceeds the per-second
+	// refill, so we space blocks by lp176.TimeToFillCapacity seconds to let the
+	// capacity fully refill to its maximum before each block is built.
+	blocks, _, err := core.GenerateChain(params.TestChainConfig, genesis, engine, memdb, 96, lp176.TimeToFillCapacity, func(i int, b *core.BlockGen) {
 		var data []byte
 		switch {
 		case i <= 32:
@@ -177,11 +183,22 @@ func TestBlockRequestHandlerLargeBlocks(t *testing.T) {
 		default:
 			data = make([]byte, constants.MiB/16)
 		}
-		tx, err := types.SignTx(types.NewTransaction(b.TxNonce(addr1), addr1, big.NewInt(10000), 4_215_304, nil, data), signer, key1)
+		to := addr1
+		tx := types.NewTx(&types.DynamicFeeTx{
+			ChainID:   params.TestChainConfig.ChainID,
+			Nonce:     b.TxNonce(addr1),
+			To:        &to,
+			Gas:       4_215_304,
+			GasFeeCap: b.BaseFee(),
+			GasTipCap: big.NewInt(0),
+			Value:     big.NewInt(10000),
+			Data:      data,
+		})
+		signedTx, err := types.SignTx(tx, signer, key1)
 		if err != nil {
 			t.Fatal(err)
 		}
-		b.AddTx(tx)
+		b.AddTx(signedTx)
 	})
 	if err != nil {
 		t.Fatal("unexpected error when generating test blockchain", err)
