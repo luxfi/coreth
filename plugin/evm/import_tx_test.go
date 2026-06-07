@@ -548,7 +548,7 @@ func TestNewImportTx(t *testing.T) {
 // Note: this is a brittle test to ensure that the gas cost of a transaction does
 // not change
 func TestImportTxGasCost(t *testing.T) {
-	luxAssetID := ids.GenerateTestID()
+	utxoAssetID := ids.GenerateTestID()
 	antAssetID := ids.GenerateTestID()
 	chainID := ids.GenerateTestID()
 	xChainID := ids.GenerateTestID()
@@ -571,7 +571,7 @@ func TestImportTxGasCost(t *testing.T) {
 				SourceChain:  xChainID,
 				ImportedInputs: []*lux.TransferableInput{{
 					UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-					Asset:  lux.Asset{ID: luxAssetID},
+					Asset:  lux.Asset{ID: utxoAssetID},
 					In: &secp256k1fx.TransferInput{
 						Amt:   importAmount,
 						Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -580,7 +580,7 @@ func TestImportTxGasCost(t *testing.T) {
 				Outs: []atomic.EVMOutput{{
 					Address: testEthAddrs[0],
 					Amount:  importAmount,
-					AssetID: luxAssetID,
+					AssetID: utxoAssetID,
 				}},
 			},
 			Keys:            [][]*secp256k1.PrivateKey{{testKeys[0]}},
@@ -595,7 +595,7 @@ func TestImportTxGasCost(t *testing.T) {
 				SourceChain:  xChainID,
 				ImportedInputs: []*lux.TransferableInput{{
 					UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-					Asset:  lux.Asset{ID: luxAssetID},
+					Asset:  lux.Asset{ID: utxoAssetID},
 					In: &secp256k1fx.TransferInput{
 						Amt:   importAmount,
 						Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -604,7 +604,7 @@ func TestImportTxGasCost(t *testing.T) {
 				Outs: []atomic.EVMOutput{{
 					Address: testEthAddrs[0],
 					Amount:  importAmount,
-					AssetID: luxAssetID,
+					AssetID: utxoAssetID,
 				}},
 			},
 			Keys:            [][]*secp256k1.PrivateKey{{testKeys[0]}},
@@ -619,7 +619,7 @@ func TestImportTxGasCost(t *testing.T) {
 				SourceChain:  xChainID,
 				ImportedInputs: []*lux.TransferableInput{{
 					UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-					Asset:  lux.Asset{ID: luxAssetID},
+					Asset:  lux.Asset{ID: utxoAssetID},
 					In: &secp256k1fx.TransferInput{
 						Amt:   importAmount,
 						Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -628,7 +628,7 @@ func TestImportTxGasCost(t *testing.T) {
 				Outs: []atomic.EVMOutput{{
 					Address: testEthAddrs[0],
 					Amount:  importAmount,
-					AssetID: luxAssetID,
+					AssetID: utxoAssetID,
 				}},
 			},
 			Keys:            [][]*secp256k1.PrivateKey{{testKeys[0]}},
@@ -645,7 +645,7 @@ func TestImportTxGasCost(t *testing.T) {
 				ImportedInputs: []*lux.TransferableInput{
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -681,7 +681,7 @@ func TestImportTxGasCost(t *testing.T) {
 				ImportedInputs: []*lux.TransferableInput{
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -700,7 +700,7 @@ func TestImportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  importAmount,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 					},
 					{
 						Address: testEthAddrs[0],
@@ -721,7 +721,7 @@ func TestImportTxGasCost(t *testing.T) {
 				SourceChain:  xChainID,
 				ImportedInputs: []*lux.TransferableInput{{
 					UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-					Asset:  lux.Asset{ID: luxAssetID},
+					Asset:  lux.Asset{ID: utxoAssetID},
 					In: &secp256k1fx.TransferInput{
 						Amt:   importAmount,
 						Input: secp256k1fx.Input{SigIndices: []uint32{0, 1}},
@@ -730,7 +730,7 @@ func TestImportTxGasCost(t *testing.T) {
 				Outs: []atomic.EVMOutput{{
 					Address: testEthAddrs[0],
 					Amount:  importAmount,
-					AssetID: luxAssetID,
+					AssetID: utxoAssetID,
 				}},
 			},
 			Keys:            [][]*secp256k1.PrivateKey{{testKeys[0], testKeys[1]}},
@@ -746,7 +746,7 @@ func TestImportTxGasCost(t *testing.T) {
 				ImportedInputs: []*lux.TransferableInput{
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -754,7 +754,7 @@ func TestImportTxGasCost(t *testing.T) {
 					},
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -762,7 +762,7 @@ func TestImportTxGasCost(t *testing.T) {
 					},
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -770,7 +770,7 @@ func TestImportTxGasCost(t *testing.T) {
 					},
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -778,7 +778,7 @@ func TestImportTxGasCost(t *testing.T) {
 					},
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -786,7 +786,7 @@ func TestImportTxGasCost(t *testing.T) {
 					},
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -794,7 +794,7 @@ func TestImportTxGasCost(t *testing.T) {
 					},
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -802,7 +802,7 @@ func TestImportTxGasCost(t *testing.T) {
 					},
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -810,7 +810,7 @@ func TestImportTxGasCost(t *testing.T) {
 					},
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -818,7 +818,7 @@ func TestImportTxGasCost(t *testing.T) {
 					},
 					{
 						UTXOID: lux.UTXOID{TxID: ids.GenerateTestID()},
-						Asset:  lux.Asset{ID: luxAssetID},
+						Asset:  lux.Asset{ID: utxoAssetID},
 						In: &secp256k1fx.TransferInput{
 							Amt:   importAmount,
 							Input: secp256k1fx.Input{SigIndices: []uint32{0}},
@@ -829,7 +829,7 @@ func TestImportTxGasCost(t *testing.T) {
 					{
 						Address: testEthAddrs[0],
 						Amount:  importAmount * 10,
-						AssetID: luxAssetID,
+						AssetID: utxoAssetID,
 					},
 				},
 			},

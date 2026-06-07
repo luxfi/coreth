@@ -248,10 +248,10 @@ func (tx *Tx) initializeBytes(c Manager) error {
 }
 
 // BlockFeeContribution calculates how much LUX towards the block fee contribution was paid
-// for via this transaction denominated in [luxAssetID] with [baseFee] used to calculate the
+// for via this transaction denominated in [utxoAssetID] with [baseFee] used to calculate the
 // cost of this transaction. This function also returns the [gasUsed] by the
 // transaction for inclusion in the [baseFee] algorithm.
-func (tx *Tx) BlockFeeContribution(fixedFee bool, luxAssetID ids.ID, baseFee *big.Int) (*big.Int, *big.Int, error) {
+func (tx *Tx) BlockFeeContribution(fixedFee bool, utxoAssetID ids.ID, baseFee *big.Int) (*big.Int, *big.Int, error) {
 	if baseFee == nil {
 		return nil, nil, errNilBaseFee
 	}
@@ -266,7 +266,7 @@ func (tx *Tx) BlockFeeContribution(fixedFee bool, luxAssetID ids.ID, baseFee *bi
 	if err != nil {
 		return nil, nil, err
 	}
-	burned, err := tx.Burned(luxAssetID)
+	burned, err := tx.Burned(utxoAssetID)
 	if err != nil {
 		return nil, nil, err
 	}
