@@ -254,8 +254,8 @@ github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0
 github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
 github.com/leanovate/gopter v0.2.11 h1:vRjThO1EKPb/1NsDXuDrzldR28RLkBflWYcU9CvzWu4=
 github.com/leanovate/gopter v0.2.11/go.mod h1:aK3tzZP/C+p1m3SPRE4SYZFGP7jjkuSI4f7Xvpt0S9c=
-github.com/luxfi/accel v1.1.9 h1:Tsk6gXj2uKE19501bD0ajRYdeCHIlTGb6jYyLc+F8hc=
-github.com/luxfi/accel v1.1.9/go.mod h1:K00BcnLzEYMPHwCFq8Tf/450ApmTs9xBVvYOnofJCkc=
+github.com/luxfi/accel v1.2.2 h1:IzG1qUogapr4/KbbHP9avAimu3ioGJqh67WYKHxfZys=
+github.com/luxfi/accel v1.2.2/go.mod h1:5IvpNMfw9FgeBB9oobp+jbauAdhapfhc2bHYPUsHL9Y=
 github.com/luxfi/address v1.0.1 h1:Sc4keyuVzBIvHr7uVeYZf2/WY9YDGUgDi/iiWenj49g=
 github.com/luxfi/address v1.0.1/go.mod h1:5j3Eh66v9zvv1GbNdZwt+23krV8JlSDaRzmWZU8ZRM0=
 github.com/luxfi/age v1.5.0 h1:G69HbSV4R3vKEH9B0CulnRaMdSdf4RalMgP8xKmxHeI=
