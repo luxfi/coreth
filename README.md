@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/hero.svg" alt="coreth" width="880"></p>
+
 # ⚠️ DEPRECATED - Use github.com/luxfi/evm
 
 > **This repository has been deprecated and merged into [github.com/luxfi/evm](https://github.com/luxfi/evm).**
