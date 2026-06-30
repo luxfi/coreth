@@ -1,0 +1,394 @@
+---
+title: Performance Tuning
+description: Performance optimization, caching, and operational best practices
+---
+
+# Performance Tuning
+
+This guide covers performance optimization for Coreth nodes, including hardware recommendations, caching strategies, and operational best practices.
+
+## Hardware Requirements
+
+### Minimum Requirements
+
+| Component | Mainnet | Testnet |
+|-----------|---------|---------|
+| CPU | 8 cores | 4 cores |
+| RAM | 16 GB | 8 GB |
+| Disk | 1 TB SSD | 500 GB SSD |
+| Network | 100 Mbps | 50 Mbps |
+
+### Recommended Production
+
+| Component | Specification |
+|-----------|---------------|
+| CPU | 16+ cores, 3.0+ GHz |
+| RAM | 32+ GB |
+| Disk | 2+ TB NVMe SSD |
+| Network | 1 Gbps |
+
+### Disk Performance
+
+SSD is required. HDD is not supported for mainnet due to:
+- State trie random access patterns
+- Snapshot generation I/O
+- Block processing latency requirements
+
+NVMe specifications:
+- Sequential read: 3000+ MB/s
+- Sequential write: 2000+ MB/s
+- Random 4K IOPS: 500,000+
+
+## Memory Configuration
+
+### Cache Sizing
+
+Configure caches based on available RAM:
+
+```json
+{
+  "trie-clean-cache": 1024,
+  "trie-dirty-cache": 1024,
+  "snapshot-cache": 512,
+  "tx-lookup-limit": 0
+}
+```
+
+### Memory Budget
+
+| RAM | Clean Cache | Dirty Cache | Snapshot |
+|-----|-------------|-------------|----------|
+| 16 GB | 512 MB | 512 MB | 256 MB |
+| 32 GB | 1024 MB | 1024 MB | 512 MB |
+| 64 GB | 2048 MB | 2048 MB | 1024 MB |
+
+### Go Runtime
+
+Tune Go garbage collector:
+
+```bash
+export GOGC=100
+export GOMEMLIMIT=28GiB  # ~90% of available RAM
+```
+
+## RPC Performance
+
+### Connection Limits
+
+```json
+{
+  "rpc-gas-cap": 50000000,
+  "rpc-tx-fee-cap": 100,
+  "api-max-duration": 30000000000,
+  "api-max-blocks-per-request": 1000
+}
+```
+
+### WebSocket Limits
+
+```json
+{
+  "ws-cpu-refill-rate": 100000000,
+  "ws-cpu-max-stored": 500000000
+}
+```
+
+### Batch Request Limits
+
+Limit batch sizes to prevent DoS:
+
+```json
+{
+  "batch-request-limit": 100,
+  "batch-response-max-size": 10000000
+}
+```
+
+## Transaction Pool
+
+### Pool Configuration
+
+```json
+{
+  "local-txs-enabled": false,
+  "tx-pool-price-limit": 25000000000,
+  "tx-pool-price-bump": 10,
+  "tx-pool-account-slots": 16,
+  "tx-pool-global-slots": 4096,
+  "tx-pool-account-queue": 64,
+  "tx-pool-global-queue": 1024
+}
+```
+
+### Pool Tuning
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `price-limit` | Minimum gas price | 25 gwei |
+| `price-bump` | Replacement bump % | 10% |
+| `account-slots` | Pending per account | 16 |
+| `global-slots` | Total pending | 4096 |
+| `account-queue` | Queued per account | 64 |
+| `global-queue` | Total queued | 1024 |
+
+### Regossip
+
+```json
+{
+  "tx-regossip-frequency": 30000000000,
+  "tx-regossip-max-size": 25
+}
+```
+
+## Block Processing
+
+### Parallel Execution
+
+Coreth processes transactions sequentially by default. EVM state dependencies prevent full parallelization.
+
+Optimization strategies:
+- Pre-fetch state during block download
+- Parallel signature verification
+- Async receipt computation
+
+### Gas Limit
+
+Block gas limits affect processing time:
+
+| Gas Limit | Transactions | Processing Time |
+|-----------|--------------|-----------------|
+| 8M | ~400 simple | ~100ms |
+| 15M | ~750 simple | ~200ms |
+| 30M | ~1500 simple | ~400ms |
+
+### Block Production
+
+Target block rate configuration:
+
+```json
+{
+  "feeConfig": {
+    "targetBlockRate": 2,
+    "minBlockGasCost": 0,
+    "maxBlockGasCost": 1000000,
+    "blockGasCostStep": 200000
+  }
+}
+```
+
+## Network Optimization
+
+### Peer Configuration
+
+```bash
+./luxd \
+  --network-peer-list-gossip-frequency=30s \
+  --network-peer-list-size=50 \
+  --network-peer-list-gossip-size=25
+```
+
+### Bandwidth Management
+
+Coreth network usage:
+- Block gossip: ~10 KB/block
+- Transaction gossip: ~1 KB/tx
+- State sync: 100+ GB initial
+
+Reduce bandwidth:
+- Limit peer count
+- Reduce gossip frequency
+- Use regional peers
+
+## Database Optimization
+
+### LevelDB Tuning
+
+LevelDB configuration:
+
+```go
+opts := &opt.Options{
+    OpenFilesCacheCapacity: 2048,
+    BlockCacheCapacity:     512 * opt.MiB,
+    WriteBuffer:            128 * opt.MiB,
+    CompactionTableSize:    4 * opt.MiB,
+}
+```
+
+### Compaction
+
+Monitor compaction:
+
+```bash
+# Check database stats
+ls -la /path/to/chaindata/
+
+# Disk usage over time
+du -sh /path/to/chaindata/
+```
+
+Schedule offline compaction during maintenance windows.
+
+### I/O Scheduler
+
+Linux I/O scheduler for NVMe:
+
+```bash
+echo none > /sys/block/nvme0n1/queue/scheduler
+```
+
+Or `mq-deadline` for rotating storage.
+
+## Monitoring
+
+### Key Metrics
+
+| Metric | Alert Threshold | Description |
+|--------|-----------------|-------------|
+| `chain_head_block` | Stale > 10s | Block height |
+| `txpool_pending` | > 10000 | Pending transactions |
+| `rpc_duration_seconds` | p99 > 1s | RPC latency |
+| `system_memory_used` | > 90% | Memory usage |
+| `system_disk_used` | > 85% | Disk usage |
+
+### Prometheus Metrics
+
+Enable metrics:
+
+```json
+{
+  "metrics-enabled": true,
+  "metrics-expensive-enabled": false
+}
+```
+
+Scrape endpoint: `http://localhost:9650/ext/metrics`
+
+### Logging
+
+Production log configuration:
+
+```json
+{
+  "log-level": "info",
+  "log-format": "json",
+  "log-display-level": "off"
+}
+```
+
+Reduce log volume:
+- Use `info` level, not `debug`
+- Filter repetitive messages
+- Rotate logs (max 1GB)
+
+## Profiling
+
+### CPU Profiling
+
+Enable continuous profiling:
+
+```json
+{
+  "continuous-profiler-dir": "/tmp/profiles",
+  "continuous-profiler-frequency": 900000000000,
+  "continuous-profiler-max-files": 10
+}
+```
+
+Analyze profiles:
+
+```bash
+go tool pprof /tmp/profiles/cpu-*.pb.gz
+```
+
+### Memory Profiling
+
+```bash
+curl http://localhost:9650/debug/pprof/heap > heap.pb.gz
+go tool pprof heap.pb.gz
+```
+
+### Trace
+
+```bash
+curl http://localhost:9650/debug/pprof/trace?seconds=30 > trace.out
+go tool trace trace.out
+```
+
+## Scaling Strategies
+
+### Vertical Scaling
+
+Increase single-node capacity:
+- More RAM = larger caches
+- Faster CPU = faster block processing
+- NVMe = lower I/O latency
+
+### Horizontal Scaling
+
+Multiple nodes for availability:
+- Geographic distribution
+- Load balancer for RPC
+- Separate archive nodes
+
+### Read Replicas
+
+Deploy read-only nodes:
+- Handle read RPC traffic
+- Reduce load on validators
+- Geographic latency optimization
+
+```
+              Load Balancer
+                   |
+       +-----------+-----------+
+       |           |           |
+   +-------+   +-------+   +-------+
+   | Node1 |   | Node2 |   | Node3 |
+   | (R/W) |   | (R)   |   | (R)   |
+   +-------+   +-------+   +-------+
+```
+
+## Troubleshooting
+
+### High Memory Usage
+
+1. Check cache configuration
+2. Monitor Go GC stats
+3. Reduce trie cache if OOM
+4. Enable `GOMEMLIMIT`
+
+### Slow RPC
+
+1. Check `rpc_duration_seconds` histogram
+2. Reduce `api-max-blocks-per-request`
+3. Add rate limiting
+4. Scale horizontally
+
+### Disk Full
+
+1. Enable pruning
+2. Run offline pruning
+3. Remove old logs
+4. Increase disk capacity
+
+### Block Processing Lag
+
+1. Check CPU utilization
+2. Verify disk I/O capacity
+3. Increase peer count
+4. Check network connectivity
+
+## Checklist
+
+Production deployment checklist:
+
+- [ ] NVMe SSD with 2+ TB capacity
+- [ ] 32+ GB RAM with proper cache config
+- [ ] Metrics and alerting configured
+- [ ] Log rotation enabled
+- [ ] Pruning enabled (unless archive)
+- [ ] Firewall rules configured
+- [ ] TLS for RPC endpoints
+- [ ] Rate limiting enabled
+- [ ] Backup strategy documented
+- [ ] Monitoring dashboards deployed

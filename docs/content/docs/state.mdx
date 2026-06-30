@@ -1,0 +1,423 @@
+---
+title: State Management
+description: State storage, pruning, snapshots, and sync
+---
+
+# State Management
+
+Coreth manages blockchain state using a Merkle Patricia Trie backed by LevelDB. This document covers state storage, pruning strategies, snapshots, and synchronization.
+
+## State Architecture
+
+### Merkle Patricia Trie
+
+State is stored in a Merkle Patricia Trie (MPT):
+
+```
+                    Root Hash
+                        |
+            +-----------+-----------+
+            |                       |
+        Branch Node             Branch Node
+            |                       |
+    +-------+-------+       +-------+-------+
+    |               |       |               |
+  Leaf            Leaf    Leaf           Extension
+(account)      (account) (storage)           |
+                                          Branch
+                                             |
+                                      +------+------+
+                                      |             |
+                                    Leaf          Leaf
+                                 (storage)     (storage)
+```
+
+### Account State
+
+Each account contains:
+
+```go
+type Account struct {
+    Nonce       uint64
+    Balance     *big.Int
+    Root        common.Hash  // Storage trie root
+    CodeHash    []byte       // Contract code hash
+}
+```
+
+### Storage
+
+Contract storage uses a separate trie per account:
+
+```
+Account Trie Root --> Account --> Storage Trie Root --> Storage Slots
+```
+
+## Database Structure
+
+### LevelDB Layout
+
+```
++------------------+--------------------------------+
+| Key Prefix       | Value                          |
++------------------+--------------------------------+
+| h + num + hash   | Block header                   |
+| b + num + hash   | Block body                     |
+| r + num + hash   | Block receipts                 |
+| H + hash         | Block number                   |
+| n + num          | Canonical hash                 |
+| s + hash         | Trie node                      |
+| c + hash         | Contract code                  |
+| S + hash         | Snapshot account               |
+| s + hash + hash  | Snapshot storage               |
++------------------+--------------------------------+
+```
+
+### Path-Based Storage (Experimental)
+
+Path-based storage uses the trie path as key:
+
+```
+Key: owner + path
+Value: encoded trie node
+```
+
+Benefits:
+- More efficient iteration
+- Better cache locality
+- Simpler pruning
+
+## Pruning
+
+### Online Pruning
+
+Enabled by default, removes old state during operation:
+
+```json
+{
+  "pruning-enabled": true
+}
+```
+
+Pruning removes:
+- State trie nodes unreferenced for >128 blocks
+- Old snapshots beyond retention window
+
+**Trade-offs:**
+- Reduced disk usage (typically 50-80% savings)
+- Cannot serve historical `eth_call` queries
+- Cannot generate proofs for old state
+
+### Archive Mode
+
+Disable pruning for full historical access:
+
+```json
+{
+  "pruning-enabled": false
+}
+```
+
+Archive nodes:
+- Store all historical state
+- Serve queries at any block
+- Support debugging old transactions
+- Require significantly more disk (500GB+)
+
+### Offline Pruning
+
+Compact database while node is stopped:
+
+```bash
+# Stop the node first
+./luxd offline-prune \
+  --data-dir=/path/to/data \
+  --config-file=/path/to/config.json
+```
+
+Configuration:
+
+```json
+{
+  "offline-pruning-enabled": true,
+  "offline-pruning-bloom-filter-size": 512,
+  "offline-pruning-data-directory": "/tmp/pruning"
+}
+```
+
+Process:
+1. Scan live state to build bloom filter
+2. Iterate database, marking reachable nodes
+3. Delete unreachable nodes
+4. Compact database
+
+### Pruning Metrics
+
+Monitor pruning via metrics:
+
+| Metric | Description |
+|--------|-------------|
+| `trie_memcache_gc_count` | GC runs |
+| `trie_memcache_gc_time` | GC duration |
+| `db_compaction_count` | DB compactions |
+| `db_size_bytes` | Database size |
+
+## Snapshots
+
+Snapshots provide fast state access without trie traversal.
+
+### Snapshot Structure
+
+```
+Disk Snapshot (base)
+        |
+        v
++------------------+
+| Account Layer    |
+| (flat mapping)   |
++------------------+
+        |
+        v
++------------------+
+| Storage Layer    |
+| (flat mapping)   |
++------------------+
+        ^
+        |
+Memory Diff Layers (recent blocks)
+```
+
+### Configuration
+
+```json
+{
+  "snapshot-async": true,
+  "snapshot-verification-enabled": false
+}
+```
+
+| Option | Description |
+|--------|-------------|
+| `snapshot-async` | Generate snapshots asynchronously |
+| `snapshot-verification-enabled` | Verify snapshot integrity |
+
+### Snapshot Generation
+
+Snapshots are generated:
+- During initial sync
+- After state sync completion
+- Periodically during operation
+
+```
+Block N     Block N+1   Block N+2
+   |            |           |
+   v            v           v
++------+    +------+    +------+
+| Diff |    | Diff |    | Diff |    Memory
++------+    +------+    +------+
+   |            |           |
+   +------------+-----------+
+                |
+                v
+         +-------------+
+         | Disk Layer  |                Disk
+         +-------------+
+```
+
+### Snapshot Recovery
+
+On crash, snapshots recover from disk layer + replay:
+
+1. Load disk snapshot (last flushed state)
+2. Replay blocks since snapshot
+3. Rebuild diff layers
+4. Resume normal operation
+
+## State Sync
+
+State sync enables fast bootstrapping by downloading state directly instead of replaying all blocks.
+
+### Sync Modes
+
+| Mode | Description | Time | Disk |
+|------|-------------|------|------|
+| Full | Replay all blocks | Days | Full history |
+| Snap | Download state + recent blocks | Hours | Pruned |
+| Light | Headers only (not supported) | - | - |
+
+### Snap Sync Process
+
+1. **Pivot Selection**: Choose recent finalized block
+2. **State Download**: Fetch account and storage trie
+3. **Healing**: Fill missing trie nodes
+4. **Block Sync**: Download and verify recent blocks
+5. **State Verification**: Verify downloaded state root
+
+```
+Peer Network
+     |
+     v
++----------+     +----------+     +----------+
+| Download |---->| Verify   |---->| Store    |
+| State    |     | Proofs   |     | Locally  |
++----------+     +----------+     +----------+
+     |                                  |
+     v                                  v
++----------+                      +----------+
+| Request  |                      | Build    |
+| Missing  |                      | Snapshot |
++----------+                      +----------+
+```
+
+### Sync Configuration
+
+```json
+{
+  "state-sync-enabled": true,
+  "state-sync-skip-resume": false,
+  "state-sync-min-blocks": 300000
+}
+```
+
+### Monitoring Sync
+
+```bash
+# Check sync status
+curl -X POST -H "Content-Type: application/json" --data '{
+  "jsonrpc": "2.0",
+  "method": "eth_syncing",
+  "params": [],
+  "id": 1
+}' http://localhost:9650/ext/bc/C/rpc
+```
+
+Response during sync:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "currentBlock": "0x5000",
+    "highestBlock": "0x10000",
+    "startingBlock": "0x0"
+  }
+}
+```
+
+## State Queries
+
+### eth_getProof
+
+Generate Merkle proofs for account state:
+
+```bash
+curl -X POST -H "Content-Type: application/json" --data '{
+  "jsonrpc": "2.0",
+  "method": "eth_getProof",
+  "params": [
+    "0x...",
+    ["0x0", "0x1"],
+    "latest"
+  ],
+  "id": 1
+}' http://localhost:9650/ext/bc/C/rpc
+```
+
+Response:
+```json
+{
+  "accountProof": ["0x...", "0x..."],
+  "balance": "0x...",
+  "codeHash": "0x...",
+  "nonce": "0x...",
+  "storageHash": "0x...",
+  "storageProof": [
+    {
+      "key": "0x0",
+      "value": "0x...",
+      "proof": ["0x...", "0x..."]
+    }
+  ]
+}
+```
+
+### debug_getTrieNodes
+
+Fetch raw trie nodes (debug API):
+
+```bash
+curl -X POST -H "Content-Type: application/json" --data '{
+  "jsonrpc": "2.0",
+  "method": "debug_getTrieNodes",
+  "params": [
+    "0x...",
+    [["0x...", "0x..."]]
+  ],
+  "id": 1
+}' http://localhost:9650/ext/bc/C/rpc
+```
+
+## Performance Tuning
+
+### Cache Configuration
+
+Configure in-memory caches:
+
+```json
+{
+  "trie-clean-cache": 512,
+  "trie-dirty-cache": 512,
+  "snapshot-cache": 256
+}
+```
+
+| Cache | Purpose | Default |
+|-------|---------|---------|
+| `trie-clean-cache` | Clean trie nodes | 512 MB |
+| `trie-dirty-cache` | Modified trie nodes | 512 MB |
+| `snapshot-cache` | Snapshot data | 256 MB |
+
+### Memory Usage
+
+Total memory usage:
+```
+base + trie_cache + snapshot_cache + block_cache
+```
+
+Recommended minimum: 8GB RAM for mainnet operation.
+
+### Disk I/O
+
+Reduce I/O pressure:
+- Use SSD (required for mainnet)
+- Increase cache sizes
+- Enable async snapshot generation
+- Schedule offline pruning during low traffic
+
+## Disaster Recovery
+
+### Corrupted State
+
+If state becomes corrupted:
+
+1. Stop the node
+2. Delete state database: `rm -rf /data/chaindata/`
+3. Keep block database if intact
+4. Restart with state sync enabled
+
+### Database Repair
+
+LevelDB repair:
+
+```go
+// Usually handled automatically on startup
+db, err := leveldb.RecoverFile(path, nil)
+```
+
+### Backup Strategy
+
+Recommended backup approach:
+
+1. Periodic offline snapshots of `chaindata/`
+2. Archive important contract state externally
+3. Maintain multiple geographically distributed nodes

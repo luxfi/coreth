@@ -1,0 +1,1001 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
+package network
+
+import (
+	"context"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"reflect"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	consensustest "github.com/luxfi/consensus/test/helpers"
+	consensusversion "github.com/luxfi/consensus/version"
+	"github.com/luxfi/ids"
+	"github.com/luxfi/metric"
+	"github.com/luxfi/p2p"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/luxfi/coreth/plugin/evm/message"
+)
+
+const (
+	codecVersion uint16 = 0
+)
+
+const (
+	// Client name for version strings
+	versionClient = "luxd"
+)
+
+var (
+	defaultPeerVersion = &consensusversion.Application{
+		Name:  versionClient,
+		Major: 1,
+		Minor: 0,
+		Patch: 0,
+	}
+
+	_ message.Request = (*HelloRequest)(nil)
+	_                 = (*HelloResponse)(nil)
+	_                 = (*GreetingRequest)(nil)
+	_                 = (*GreetingResponse)(nil)
+	_                 = (*TestMessage)(nil)
+
+	_ message.RequestHandler = (*HelloGreetingRequestHandler)(nil)
+	_ message.RequestHandler = (*testRequestHandler)(nil)
+
+	_ AppSender = (*testAppSender)(nil)
+
+	_ p2p.Handler = (*testSDKHandler)(nil)
+)
+
+func TestNetworkDoesNotConnectToItself(t *testing.T) {
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
+	n, err := NewNetwork(ctx, nil, nil, 1, metric.NewRegistry())
+	require.NoError(t, err)
+	assert.NoError(t, n.Connected(context.Background(), ctx.NodeID, defaultPeerVersion))
+	assert.EqualValues(t, 0, n.Size())
+}
+
+func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
+	callNum := uint32(0)
+	senderWg := &sync.WaitGroup{}
+	var net Network
+	sender := testAppSender{
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
+			senderWg.Add(1)
+			go func() {
+				defer senderWg.Done()
+				if err := net.AppRequest(context.Background(), nodeID, requestID, time.Now().Add(5*time.Second), requestBytes); err != nil {
+					panic(err)
+				}
+			}()
+			return nil
+		},
+		sendAppResponseFn: func(nodeID ids.NodeID, requestID uint32, responseBytes []byte) error {
+			senderWg.Add(1)
+			go func() {
+				defer senderWg.Done()
+				if err := net.AppResponse(context.Background(), nodeID, requestID, responseBytes); err != nil {
+					panic(err)
+				}
+				atomic.AddUint32(&callNum, 1)
+			}()
+			return nil
+		},
+	}
+
+	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
+	net, err := NewNetwork(ctx, sender, codecManager, 16, metric.NewRegistry())
+	require.NoError(t, err)
+	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
+	nodeID := ids.GenerateTestNodeID()
+	assert.NoError(t, net.Connected(context.Background(), nodeID, defaultPeerVersion))
+
+	requestMessage := HelloRequest{Message: "this is a request"}
+
+	defer net.Shutdown()
+	assert.NoError(t, net.Connected(context.Background(), nodeID, defaultPeerVersion))
+
+	totalRequests := 5000
+	numCallsPerRequest := 1 // on sending response
+	totalCalls := totalRequests * numCallsPerRequest
+
+	requestWg := &sync.WaitGroup{}
+	requestWg.Add(totalCalls)
+	for i := 0; i < totalCalls; i++ {
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
+			assert.NoError(t, err)
+			responseBytes, _, err := net.SendSyncedAppRequestAny(context.Background(), defaultPeerVersion, requestBytes)
+			assert.NoError(t, err)
+			assert.NotNil(t, responseBytes)
+
+			var response TestMessage
+			if _, err = codecManager.Unmarshal(responseBytes, &response); err != nil {
+				panic(fmt.Errorf("unexpected error during unmarshal: %w", err))
+			}
+			assert.Equal(t, "Hi", response.Message)
+		}(requestWg)
+	}
+
+	requestWg.Wait()
+	senderWg.Wait()
+	assert.Equal(t, totalCalls, int(atomic.LoadUint32(&callNum)))
+}
+
+func TestAppRequestOnCtxCancellation(t *testing.T) {
+	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
+	sender := testAppSender{
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
+			return nil
+		},
+		sendAppResponseFn: func(nodeID ids.NodeID, requestID uint32, responseBytes []byte) error {
+			return nil
+		},
+	}
+
+	quasarCtx := consensustest.Runtime(t, consensustest.CChainID)
+	net, err := NewNetwork(quasarCtx, sender, codecManager, 1, metric.NewRegistry())
+	require.NoError(t, err)
+	handler := &HelloGreetingRequestHandler{codec: codecManager}
+	net.SetRequestHandler(handler)
+
+	requestMessage := HelloRequest{Message: "this is a request"}
+	requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
+	assert.NoError(t, err)
+
+	nodeID := ids.GenerateTestNodeID()
+	ctx, cancel := context.WithCancel(context.Background())
+	// cancel context prior to sending
+	cancel()
+	err = net.SendAppRequest(ctx, nodeID, requestBytes, nil)
+	assert.ErrorIs(t, err, context.Canceled)
+}
+
+func TestRequestRequestsRoutingAndResponse(t *testing.T) {
+	callNum := uint32(0)
+	senderWg := &sync.WaitGroup{}
+	var net Network
+	var lock sync.Mutex
+	contactedNodes := make(map[ids.NodeID]struct{})
+	sender := testAppSender{
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
+			lock.Lock()
+			contactedNodes[nodeID] = struct{}{}
+			lock.Unlock()
+			senderWg.Add(1)
+			go func() {
+				defer senderWg.Done()
+				if err := net.AppRequest(context.Background(), nodeID, requestID, time.Now().Add(5*time.Second), requestBytes); err != nil {
+					panic(err)
+				}
+			}()
+			return nil
+		},
+		sendAppResponseFn: func(nodeID ids.NodeID, requestID uint32, responseBytes []byte) error {
+			senderWg.Add(1)
+			go func() {
+				defer senderWg.Done()
+				if err := net.AppResponse(context.Background(), nodeID, requestID, responseBytes); err != nil {
+					panic(err)
+				}
+				atomic.AddUint32(&callNum, 1)
+			}()
+			return nil
+		},
+	}
+
+	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
+	net, err := NewNetwork(ctx, sender, codecManager, 16, metric.NewRegistry())
+	require.NoError(t, err)
+	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
+
+	nodes := []ids.NodeID{
+		ids.GenerateTestNodeID(),
+		ids.GenerateTestNodeID(),
+		ids.GenerateTestNodeID(),
+		ids.GenerateTestNodeID(),
+		ids.GenerateTestNodeID(),
+	}
+	for _, nodeID := range nodes {
+		assert.NoError(t, net.Connected(context.Background(), nodeID, defaultPeerVersion))
+	}
+
+	requestMessage := HelloRequest{Message: "this is a request"}
+	defer net.Shutdown()
+
+	totalRequests := 5000
+	numCallsPerRequest := 1 // on sending response
+	totalCalls := totalRequests * numCallsPerRequest
+
+	requestWg := &sync.WaitGroup{}
+	requestWg.Add(totalCalls)
+	nodeIdx := 0
+	for i := 0; i < totalCalls; i++ {
+		nodeIdx = (nodeIdx + 1) % (len(nodes))
+		nodeID := nodes[nodeIdx]
+		go func(wg *sync.WaitGroup, nodeID ids.NodeID) {
+			defer wg.Done()
+			requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
+			assert.NoError(t, err)
+			responseBytes, err := net.SendSyncedAppRequest(context.Background(), nodeID, requestBytes)
+			assert.NoError(t, err)
+			assert.NotNil(t, responseBytes)
+
+			var response TestMessage
+			if _, err = codecManager.Unmarshal(responseBytes, &response); err != nil {
+				panic(fmt.Errorf("unexpected error during unmarshal: %w", err))
+			}
+			assert.Equal(t, "Hi", response.Message)
+		}(requestWg, nodeID)
+	}
+
+	requestWg.Wait()
+	senderWg.Wait()
+	assert.Equal(t, totalCalls, int(atomic.LoadUint32(&callNum)))
+	for _, nodeID := range nodes {
+		if _, exists := contactedNodes[nodeID]; !exists {
+			t.Fatalf("expected nodeID %s to be contacted but was not", nodeID)
+		}
+	}
+
+	// ensure empty nodeID is not allowed
+	assert.ErrorContains(t,
+		net.SendAppRequest(context.Background(), ids.EmptyNodeID, []byte("hello there"), nil),
+		"cannot send request to empty nodeID",
+	)
+}
+
+func TestAppRequestOnShutdown(t *testing.T) {
+	var (
+		net    Network
+		wg     sync.WaitGroup
+		called bool
+	)
+	sender := testAppSender{
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
+			wg.Add(1)
+			go func() {
+				called = true
+				// shutdown the network here to ensure any outstanding requests are handled as failed
+				net.Shutdown()
+				wg.Done()
+			}() // this is on a goroutine to avoid a deadlock since calling Shutdown takes the lock.
+			return nil
+		},
+	}
+
+	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
+	net, err := NewNetwork(ctx, sender, codecManager, 1, metric.NewRegistry())
+	require.NoError(t, err)
+	nodeID := ids.GenerateTestNodeID()
+	require.NoError(t, net.Connected(context.Background(), nodeID, defaultPeerVersion))
+
+	requestMessage := HelloRequest{Message: "this is a request"}
+	require.NoError(t, net.Connected(context.Background(), nodeID, defaultPeerVersion))
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
+		require.NoError(t, err)
+		responseBytes, _, err := net.SendSyncedAppRequestAny(context.Background(), defaultPeerVersion, requestBytes)
+		require.Error(t, err, errRequestFailed)
+		require.Nil(t, responseBytes)
+	}()
+	wg.Wait()
+	require.True(t, called)
+}
+
+func TestSyncedAppRequestAnyOnCtxCancellation(t *testing.T) {
+	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
+	type reqInfo struct {
+		nodeID    ids.NodeID
+		requestID uint32
+	}
+	sentAppRequest := make(chan reqInfo, 1)
+
+	sender := testAppSender{
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
+			sentAppRequest <- reqInfo{
+				nodeID:    nodeID,
+				requestID: requestID,
+			}
+			return nil
+		},
+		sendAppResponseFn: func(nodeID ids.NodeID, requestID uint32, responseBytes []byte) error {
+			return nil
+		},
+	}
+
+	quasarCtx := consensustest.Runtime(t, consensustest.CChainID)
+	net, err := NewNetwork(quasarCtx, sender, codecManager, 1, metric.NewRegistry())
+	require.NoError(t, err)
+	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
+	assert.NoError(t,
+		net.Connected(
+			context.Background(),
+			ids.GenerateTestNodeID(),
+			consensusversion.Current(),
+		),
+	)
+
+	requestMessage := HelloRequest{Message: "this is a request"}
+	requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
+	assert.NoError(t, err)
+
+	// cancel context prior to sending
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, _, err = net.SendSyncedAppRequestAny(ctx, defaultPeerVersion, requestBytes)
+	assert.ErrorIs(t, err, context.Canceled)
+	// Assert we didn't send anything
+	select {
+	case <-sentAppRequest:
+		assert.FailNow(t, "should not have sent request")
+	default:
+	}
+
+	// Cancel context after sending
+	assert.Empty(t, net.(*network).outstandingRequestHandlers) // no outstanding requests
+	ctx, cancel = context.WithCancel(context.Background())
+	doneChan := make(chan struct{})
+	go func() {
+		_, _, err = net.SendSyncedAppRequestAny(ctx, defaultPeerVersion, requestBytes)
+		assert.ErrorIs(t, err, context.Canceled)
+		close(doneChan)
+	}()
+	// Wait until we've "sent" the app request over the network
+	// before cancelling context.
+	sentAppRequestInfo := <-sentAppRequest
+	assert.Len(t, net.(*network).outstandingRequestHandlers, 1)
+	cancel()
+	<-doneChan
+	// Should still be able to process a response after cancelling.
+	assert.Len(t, net.(*network).outstandingRequestHandlers, 1) // context cancellation SendAppRequestAny failure doesn't clear
+	assert.NoError(t, net.AppResponse(
+		context.Background(),
+		sentAppRequestInfo.nodeID,
+		sentAppRequestInfo.requestID,
+		[]byte{}))
+	assert.Empty(t, net.(*network).outstandingRequestHandlers) // Received response
+}
+
+func TestRequestMinVersion(t *testing.T) {
+	callNum := uint32(0)
+	nodeID := ids.GenerateTestNodeID()
+	codecManager := buildCodec(t, TestMessage{})
+
+	var net Network
+	sender := testAppSender{
+		sendAppRequestFn: func(requestNodeID ids.NodeID, reqID uint32, messageBytes []byte) error {
+			atomic.AddUint32(&callNum, 1)
+			assert.Equal(t, nodeID, requestNodeID, "request node should be expected nodeID")
+
+			go func() {
+				time.Sleep(200 * time.Millisecond)
+				atomic.AddUint32(&callNum, 1)
+				responseBytes, err := codecManager.Marshal(codecVersion, TestMessage{Message: "this is a response"})
+				if err != nil {
+					panic(err)
+				}
+				assert.NoError(t, net.AppResponse(context.Background(), nodeID, reqID, responseBytes))
+			}()
+			return nil
+		},
+	}
+
+	// passing nil as codec works because the net.AppRequest is never called
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
+	net, err := NewNetwork(ctx, sender, codecManager, 1, metric.NewRegistry())
+	require.NoError(t, err)
+	requestMessage := TestMessage{Message: "this is a request"}
+	requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
+	assert.NoError(t, err)
+	assert.NoError(t,
+		net.Connected(
+			context.Background(),
+			nodeID,
+			&consensusversion.Application{
+				Name:  versionClient,
+				Major: 1,
+				Minor: 7,
+				Patch: 1,
+			},
+		),
+	)
+
+	// ensure version does not match
+	responseBytes, _, err := net.SendSyncedAppRequestAny(
+		context.Background(),
+		&consensusversion.Application{
+			Name:  versionClient,
+			Major: 2,
+			Minor: 0,
+			Patch: 0,
+		},
+		requestBytes,
+	)
+	assert.Equal(t, "no peers found matching version luxd/2.0.0 out of 1 peers", err.Error())
+	assert.Nil(t, responseBytes)
+
+	// ensure version matches and the request goes through
+	responseBytes, _, err = net.SendSyncedAppRequestAny(context.Background(), defaultPeerVersion, requestBytes)
+	assert.NoError(t, err)
+
+	var response TestMessage
+	if _, err = codecManager.Unmarshal(responseBytes, &response); err != nil {
+		t.Fatal("unexpected error during unmarshal", err)
+	}
+	assert.Equal(t, "this is a response", response.Message)
+}
+
+func TestOnRequestHonoursDeadline(t *testing.T) {
+	var net Network
+	responded := false
+	sender := testAppSender{
+		sendAppRequestFn: func(nodeID ids.NodeID, reqID uint32, message []byte) error {
+			return nil
+		},
+		sendAppResponseFn: func(nodeID ids.NodeID, reqID uint32, message []byte) error {
+			responded = true
+			return nil
+		},
+	}
+
+	codecManager := buildCodec(t, TestMessage{})
+	requestBytes, err := marshalStruct(codecManager, TestMessage{Message: "hello there"})
+	assert.NoError(t, err)
+
+	requestHandler := &testRequestHandler{
+		processingDuration: 500 * time.Millisecond,
+	}
+
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
+	net, err = NewNetwork(ctx, sender, codecManager, 1, metric.NewRegistry())
+	require.NoError(t, err)
+	net.SetRequestHandler(requestHandler)
+	nodeID := ids.GenerateTestNodeID()
+
+	requestHandler.response, err = marshalStruct(codecManager, TestMessage{Message: "hi there"})
+	assert.NoError(t, err)
+	assert.NoError(t, net.AppRequest(context.Background(), nodeID, 0, time.Now().Add(1*time.Millisecond), requestBytes))
+	// ensure the handler didn't get called (as peer.Network would've dropped the request)
+	assert.EqualValues(t, requestHandler.calls, 0)
+
+	requestHandler.processingDuration = 0
+	assert.NoError(t, net.AppRequest(context.Background(), nodeID, 2, time.Now().Add(250*time.Millisecond), requestBytes))
+	assert.True(t, responded)
+	assert.EqualValues(t, requestHandler.calls, 1)
+}
+
+func TestHandleInvalidMessages(t *testing.T) {
+	codecManager := buildCodec(t, HelloGossip{}, TestMessage{})
+	nodeID := ids.GenerateTestNodeID()
+	requestID := uint32(1)
+	sender := testAppSender{}
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
+	clientNetwork, err := NewNetwork(ctx, sender, codecManager, 1, metric.NewRegistry())
+	require.NoError(t, err)
+	clientNetwork.SetRequestHandler(&testRequestHandler{})
+
+	assert.NoError(t, clientNetwork.Connected(context.Background(), nodeID, defaultPeerVersion))
+
+	defer clientNetwork.Shutdown()
+
+	// Ensure a valid gossip message sent as any App specific message type does not trigger a fatal error
+	marshaller := helloGossipMarshaller{codec: codecManager}
+	gossipMsg, err := marshaller.MarshalGossip(&HelloGossip{Msg: "hello there!"})
+	assert.NoError(t, err)
+
+	// Ensure a valid request message sent as any App specific message type does not trigger a fatal error
+	requestMessage, err := marshalStruct(codecManager, TestMessage{Message: "Hello"})
+	assert.NoError(t, err)
+
+	// Ensure a random message sent as any App specific message type does not trigger a fatal error
+	garbageResponse := make([]byte, 10)
+	// Ensure a zero-length message sent as any App specific message type does not trigger a fatal error
+	emptyResponse := make([]byte, 0)
+	// Ensure a nil byte slice sent as any App specific message type does not trigger a fatal error
+	var nilResponse []byte
+
+	// Check for edge cases
+	assert.NoError(t, clientNetwork.AppGossip(context.Background(), nodeID, gossipMsg))
+	assert.NoError(t, clientNetwork.AppGossip(context.Background(), nodeID, requestMessage))
+	assert.NoError(t, clientNetwork.AppGossip(context.Background(), nodeID, garbageResponse))
+	assert.NoError(t, clientNetwork.AppGossip(context.Background(), nodeID, emptyResponse))
+	assert.NoError(t, clientNetwork.AppGossip(context.Background(), nodeID, nilResponse))
+	assert.NoError(t, clientNetwork.AppRequest(context.Background(), nodeID, requestID, time.Now().Add(time.Second), gossipMsg))
+	assert.NoError(t, clientNetwork.AppRequest(context.Background(), nodeID, requestID, time.Now().Add(time.Second), requestMessage))
+	assert.NoError(t, clientNetwork.AppRequest(context.Background(), nodeID, requestID, time.Now().Add(time.Second), garbageResponse))
+	assert.NoError(t, clientNetwork.AppRequest(context.Background(), nodeID, requestID, time.Now().Add(time.Second), emptyResponse))
+	assert.NoError(t, clientNetwork.AppRequest(context.Background(), nodeID, requestID, time.Now().Add(time.Second), nilResponse))
+	assert.ErrorIs(t, p2p.ErrUnrequestedResponse, clientNetwork.AppResponse(context.Background(), nodeID, requestID, gossipMsg))
+	assert.ErrorIs(t, p2p.ErrUnrequestedResponse, clientNetwork.AppResponse(context.Background(), nodeID, requestID, requestMessage))
+	assert.ErrorIs(t, p2p.ErrUnrequestedResponse, clientNetwork.AppResponse(context.Background(), nodeID, requestID, garbageResponse))
+	assert.ErrorIs(t, p2p.ErrUnrequestedResponse, clientNetwork.AppResponse(context.Background(), nodeID, requestID, emptyResponse))
+	assert.ErrorIs(t, p2p.ErrUnrequestedResponse, clientNetwork.AppResponse(context.Background(), nodeID, requestID, nilResponse))
+}
+
+func TestNetworkPropagatesRequestHandlerError(t *testing.T) {
+	codecManager := buildCodec(t, TestMessage{})
+	nodeID := ids.GenerateTestNodeID()
+	requestID := uint32(0)
+	sender := testAppSender{}
+
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
+	clientNetwork, err := NewNetwork(ctx, sender, codecManager, 1, metric.NewRegistry())
+	require.NoError(t, err)
+	clientNetwork.SetRequestHandler(&testRequestHandler{err: errors.New("fail")}) // Return an error from the request handler
+
+	assert.NoError(t, clientNetwork.Connected(context.Background(), nodeID, defaultPeerVersion))
+
+	defer clientNetwork.Shutdown()
+
+	// Ensure a valid request message sent as any App specific message type does not trigger a fatal error
+	requestMessage, err := marshalStruct(codecManager, TestMessage{Message: "Hello"})
+	assert.NoError(t, err)
+
+	// Check that if the request handler returns an error, it is propagated as a fatal error.
+	assert.Error(t, clientNetwork.AppRequest(context.Background(), nodeID, requestID, time.Now().Add(time.Second), requestMessage))
+}
+
+func TestNetworkAppRequestAfterShutdown(t *testing.T) {
+	require := require.New(t)
+
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
+	net, err := NewNetwork(ctx, nil, nil, 16, metric.NewRegistry())
+	require.NoError(err)
+	net.Shutdown()
+
+	require.NoError(net.SendAppRequest(context.Background(), ids.GenerateTestNodeID(), nil, nil))
+	require.NoError(net.SendAppRequest(context.Background(), ids.GenerateTestNodeID(), nil, nil))
+}
+
+func TestNetworkRouting(t *testing.T) {
+	require := require.New(t)
+	sender := &testAppSender{
+		sendAppRequestFn: func(nodeID ids.NodeID, requestID uint32, requestBytes []byte) error {
+			return nil
+		},
+		sendAppResponseFn: func(id ids.NodeID, u uint32, bytes []byte) error {
+			return nil
+		},
+	}
+	protocol := 0
+	handler := &testSDKHandler{}
+
+	networkCodec := &testCodec{}
+	ctx := consensustest.Runtime(t, consensustest.CChainID)
+	network, err := NewNetwork(ctx, sender, networkCodec, 1, metric.NewRegistry())
+	require.NoError(err)
+	require.NoError(network.AddHandler(uint64(protocol), handler))
+
+	nodeID := ids.GenerateTestNodeID()
+	foobar := append([]byte{byte(protocol)}, []byte("foobar")...)
+	// forward it to the sdk handler
+	require.NoError(network.AppRequest(context.Background(), nodeID, 1, time.Now().Add(5*time.Second), foobar))
+	require.True(handler.appRequested)
+
+	err = network.AppResponse(context.Background(), ids.GenerateTestNodeID(), 1, foobar)
+	require.ErrorIs(err, p2p.ErrUnrequestedResponse)
+
+	err = network.AppRequestFailed(context.Background(), nodeID, 1, &p2p.Error{Code: -1, Message: "timeout"})
+	require.ErrorIs(err, p2p.ErrUnrequestedResponse)
+}
+
+// testCodec is the test-local replacement for codec.Manager / linearcodec
+// after the Wave 2C codec rip (#101). It implements message.Manager (the
+// only surface network.NewNetwork consumes from its `codec` parameter) and
+// supports the small closed set of test message types defined further down
+// in this file (HelloRequest/Response, GreetingRequest/Response,
+// TestMessage, HelloGossip).
+//
+// Wire layout, big-endian throughout:
+//
+//	[u16 version=0]
+//	[u32 typeID]                   // only present when marshalling
+//	                               //   pointer-to-interface (via &request)
+//	[type-specific body]
+//
+// The typeID is the position the type was registered in via buildCodec —
+// matching the linearcodec ordering. Bodies use u16 length-prefixed strings
+// for all current test types.
+type testCodec struct {
+	registered []reflect.Type
+}
+
+func (tc *testCodec) RegisterType(v interface{}) error {
+	tc.registered = append(tc.registered, reflect.TypeOf(v))
+	return nil
+}
+
+func (tc *testCodec) typeIDFor(v interface{}) (uint32, bool) {
+	rt := reflect.TypeOf(v)
+	for i, t := range tc.registered {
+		if t == rt {
+			return uint32(i), true
+		}
+	}
+	return 0, false
+}
+
+func (tc *testCodec) typeForID(id uint32) (reflect.Type, bool) {
+	if int(id) >= len(tc.registered) {
+		return nil, false
+	}
+	return tc.registered[id], true
+}
+
+func (tc *testCodec) Marshal(version uint16, source interface{}) ([]byte, error) {
+	if version != codecVersion {
+		return nil, fmt.Errorf("testCodec: unknown version %d", version)
+	}
+	out := make([]byte, 2)
+	binary.BigEndian.PutUint16(out[0:2], version)
+
+	// Dispatch on pointer-to-interface vs concrete value.
+	switch v := source.(type) {
+	case *message.Request:
+		// Pointer-to-interface — emit type-ID + body of the underlying
+		// concrete value (linearcodec behaviour for `&interface`).
+		concrete := *v
+		id, ok := tc.typeIDFor(concrete)
+		if !ok {
+			return nil, fmt.Errorf("testCodec: unregistered request type %T", concrete)
+		}
+		out = appendU32(out, id)
+		body, err := marshalTestValue(concrete)
+		if err != nil {
+			return nil, err
+		}
+		return append(out, body...), nil
+	case *interface{}:
+		// marshalStruct helper used `&obj` where obj is interface{}. Re-
+		// dispatch on the underlying concrete value with a type-ID prefix.
+		concrete := *v
+		id, ok := tc.typeIDFor(concrete)
+		if !ok {
+			return nil, fmt.Errorf("testCodec: unregistered type %T", concrete)
+		}
+		out = appendU32(out, id)
+		body, err := marshalTestValue(concrete)
+		if err != nil {
+			return nil, err
+		}
+		return append(out, body...), nil
+	case *HelloGossip:
+		// MarshalGossip path — concrete pointer, no type-ID prefix.
+		body, err := marshalTestValue(*v)
+		if err != nil {
+			return nil, err
+		}
+		return append(out, body...), nil
+	default:
+		// Concrete-value marshalling — no type-ID prefix.
+		body, err := marshalTestValue(source)
+		if err != nil {
+			return nil, err
+		}
+		return append(out, body...), nil
+	}
+}
+
+func (tc *testCodec) Unmarshal(b []byte, dest interface{}) (uint16, error) {
+	if len(b) < 2 {
+		return 0, errors.New("testCodec: short buffer")
+	}
+	version := binary.BigEndian.Uint16(b[0:2])
+	if version != codecVersion {
+		return version, fmt.Errorf("testCodec: unknown version %d", version)
+	}
+	p := b[2:]
+	switch d := dest.(type) {
+	case *message.Request:
+		// Pointer-to-interface destination — read u32 type-ID, allocate
+		// the registered concrete type, fill it, and assign back through
+		// the interface pointer (linearcodec behaviour for `&interface`).
+		if len(p) < 4 {
+			return version, errors.New("testCodec: short type-ID")
+		}
+		id := binary.BigEndian.Uint32(p[0:4])
+		p = p[4:]
+		rt, ok := tc.typeForID(id)
+		if !ok {
+			return version, fmt.Errorf("testCodec: unknown type-ID %d", id)
+		}
+		concrete, err := unmarshalTestConcrete(rt, p)
+		if err != nil {
+			return version, err
+		}
+		req, ok := concrete.(message.Request)
+		if !ok {
+			return version, fmt.Errorf("testCodec: type %T does not implement message.Request", concrete)
+		}
+		*d = req
+		return version, nil
+	case *HelloRequest:
+		return version, unmarshalTestString(p, &d.Message)
+	case *HelloResponse:
+		return version, unmarshalTestString(p, &d.Response)
+	case *GreetingRequest:
+		return version, unmarshalTestString(p, &d.Greeting)
+	case *GreetingResponse:
+		return version, unmarshalTestString(p, &d.Greet)
+	case *TestMessage:
+		return version, unmarshalTestString(p, &d.Message)
+	case *HelloGossip:
+		return version, unmarshalTestString(p, &d.Msg)
+	default:
+		return version, fmt.Errorf("testCodec: unsupported dest %T", dest)
+	}
+}
+
+// unmarshalTestConcrete builds a concrete value of [rt] from [p] and
+// returns it as interface{}. Only the closed set of test message types is
+// supported.
+func unmarshalTestConcrete(rt reflect.Type, p []byte) (interface{}, error) {
+	switch rt {
+	case reflect.TypeOf(HelloRequest{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return HelloRequest{Message: s}, nil
+	case reflect.TypeOf(HelloResponse{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return HelloResponse{Response: s}, nil
+	case reflect.TypeOf(GreetingRequest{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return GreetingRequest{Greeting: s}, nil
+	case reflect.TypeOf(GreetingResponse{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return GreetingResponse{Greet: s}, nil
+	case reflect.TypeOf(TestMessage{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return TestMessage{Message: s}, nil
+	case reflect.TypeOf(HelloGossip{}):
+		var s string
+		if err := unmarshalTestString(p, &s); err != nil {
+			return nil, err
+		}
+		return HelloGossip{Msg: s}, nil
+	default:
+		return nil, fmt.Errorf("testCodec: unknown concrete type %v", rt)
+	}
+}
+
+func marshalTestValue(v interface{}) ([]byte, error) {
+	switch s := v.(type) {
+	case HelloRequest:
+		return marshalTestString(s.Message), nil
+	case HelloResponse:
+		return marshalTestString(s.Response), nil
+	case GreetingRequest:
+		return marshalTestString(s.Greeting), nil
+	case GreetingResponse:
+		return marshalTestString(s.Greet), nil
+	case TestMessage:
+		return marshalTestString(s.Message), nil
+	case HelloGossip:
+		return marshalTestString(s.Msg), nil
+	default:
+		return nil, fmt.Errorf("testCodec: unsupported source %T", v)
+	}
+}
+
+func marshalTestString(s string) []byte {
+	out := make([]byte, 2+len(s))
+	binary.BigEndian.PutUint16(out[0:2], uint16(len(s)))
+	copy(out[2:], s)
+	return out
+}
+
+func unmarshalTestString(b []byte, out *string) error {
+	if len(b) < 2 {
+		return errors.New("testCodec: short string buffer")
+	}
+	n := binary.BigEndian.Uint16(b[0:2])
+	if len(b) < 2+int(n) {
+		return errors.New("testCodec: string length exceeds buffer")
+	}
+	*out = string(b[2 : 2+int(n)])
+	return nil
+}
+
+func appendU32(buf []byte, v uint32) []byte {
+	var tmp [4]byte
+	binary.BigEndian.PutUint32(tmp[:], v)
+	return append(buf, tmp[:]...)
+}
+
+func buildCodec(t *testing.T, types ...interface{}) message.Manager {
+	tc := &testCodec{}
+	for _, typ := range types {
+		assert.NoError(t, tc.RegisterType(typ))
+	}
+	return tc
+}
+
+// marshalStruct is a helper method used to marshal an object as `interface{}`
+// so that the codec is able to include the TypeID in the resulting bytes.
+func marshalStruct(codec message.Manager, obj interface{}) ([]byte, error) {
+	return codec.Marshal(codecVersion, &obj)
+}
+
+type testAppSender struct {
+	sendAppRequestFn            func(ids.NodeID, uint32, []byte) error
+	sendAppResponseFn           func(ids.NodeID, uint32, []byte) error
+	sendCrossChainAppRequestFn  func(ids.ID, uint32, []byte) error
+	sendCrossChainAppResponseFn func(ids.ID, uint32, []byte) error
+}
+
+func (t testAppSender) SendAppRequest(nodeID ids.NodeID, requestID uint32, message []byte) error {
+	if t.sendAppRequestFn != nil {
+		return t.sendAppRequestFn(nodeID, requestID, message)
+	}
+	return nil
+}
+
+func (t testAppSender) SendAppResponse(nodeID ids.NodeID, requestID uint32, message []byte) error {
+	if t.sendAppResponseFn != nil {
+		return t.sendAppResponseFn(nodeID, requestID, message)
+	}
+	return nil
+}
+
+func (t testAppSender) SendCrossChainAppRequest(chainID ids.ID, requestID uint32, message []byte) error {
+	if t.sendCrossChainAppRequestFn != nil {
+		return t.sendCrossChainAppRequestFn(chainID, requestID, message)
+	}
+	return nil
+}
+
+func (t testAppSender) SendCrossChainAppResponse(chainID ids.ID, requestID uint32, message []byte) error {
+	if t.sendCrossChainAppResponseFn != nil {
+		return t.sendCrossChainAppResponseFn(chainID, requestID, message)
+	}
+	return nil
+}
+
+type HelloRequest struct {
+	Message string `serialize:"true"`
+}
+
+func (h HelloRequest) Handle(ctx context.Context, nodeID ids.NodeID, requestID uint32, handler message.RequestHandler) ([]byte, error) {
+	// casting is only necessary for test since RequestHandler does not implement anything at the moment
+	return handler.(TestRequestHandler).HandleHelloRequest(ctx, nodeID, requestID, &h)
+}
+
+func (h HelloRequest) String() string {
+	return fmt.Sprintf("HelloRequest(%s)", h.Message)
+}
+
+type GreetingRequest struct {
+	Greeting string `serialize:"true"`
+}
+
+func (g GreetingRequest) Handle(ctx context.Context, nodeID ids.NodeID, requestID uint32, handler message.RequestHandler) ([]byte, error) {
+	// casting is only necessary for test since RequestHandler does not implement anything at the moment
+	return handler.(TestRequestHandler).HandleGreetingRequest(ctx, nodeID, requestID, &g)
+}
+
+func (g GreetingRequest) String() string {
+	return fmt.Sprintf("GreetingRequest(%s)", g.Greeting)
+}
+
+type HelloResponse struct {
+	Response string `serialize:"true"`
+}
+
+type GreetingResponse struct {
+	Greet string `serialize:"true"`
+}
+
+type TestRequestHandler interface {
+	HandleHelloRequest(ctx context.Context, nodeID ids.NodeID, requestID uint32, request *HelloRequest) ([]byte, error)
+	HandleGreetingRequest(ctx context.Context, nodeID ids.NodeID, requestID uint32, request *GreetingRequest) ([]byte, error)
+}
+
+type HelloGreetingRequestHandler struct {
+	message.RequestHandler
+	codec message.Manager
+}
+
+func (h *HelloGreetingRequestHandler) HandleHelloRequest(ctx context.Context, nodeID ids.NodeID, requestID uint32, request *HelloRequest) ([]byte, error) {
+	return h.codec.Marshal(codecVersion, HelloResponse{Response: "Hi"})
+}
+
+func (h *HelloGreetingRequestHandler) HandleGreetingRequest(ctx context.Context, nodeID ids.NodeID, requestID uint32, request *GreetingRequest) ([]byte, error) {
+	return h.codec.Marshal(codecVersion, GreetingResponse{Greet: "Hey there"})
+}
+
+type TestMessage struct {
+	Message string `serialize:"true"`
+}
+
+func (t TestMessage) Handle(ctx context.Context, nodeID ids.NodeID, requestID uint32, handler message.RequestHandler) ([]byte, error) {
+	return handler.(*testRequestHandler).handleTestRequest(ctx, nodeID, requestID, &t)
+}
+
+func (t TestMessage) String() string {
+	return fmt.Sprintf("TestMessage(%s)", t.Message)
+}
+
+type HelloGossip struct {
+	Msg string `serialize:"true"`
+}
+
+func (tx *HelloGossip) GossipID() ids.ID {
+	return ids.FromStringOrPanic(tx.Msg)
+}
+
+type helloGossipMarshaller struct {
+	codec message.Manager
+}
+
+func (g helloGossipMarshaller) MarshalGossip(tx *HelloGossip) ([]byte, error) {
+	return g.codec.Marshal(0, tx)
+}
+
+func (g helloGossipMarshaller) UnmarshalGossip(bytes []byte) (*HelloGossip, error) {
+	h := &HelloGossip{}
+	_, err := g.codec.Unmarshal(bytes, h)
+	return h, err
+}
+
+type testRequestHandler struct {
+	message.RequestHandler
+	calls              uint32
+	processingDuration time.Duration
+	response           []byte
+	err                error
+}
+
+func (r *testRequestHandler) handleTestRequest(ctx context.Context, _ ids.NodeID, _ uint32, _ *TestMessage) ([]byte, error) {
+	r.calls++
+	select {
+	case <-time.After(r.processingDuration):
+		break
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+	return r.response, r.err
+}
+
+type testSDKHandler struct {
+	appRequested bool
+}
+
+func (t *testSDKHandler) Gossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) {
+	// No-op for tests
+}
+
+func (t *testSDKHandler) Request(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *p2p.Error) {
+	t.appRequested = true
+	return nil, nil
+}
