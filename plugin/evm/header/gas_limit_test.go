@@ -1,0 +1,260 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
+package header
+
+import (
+	"math/big"
+	"testing"
+
+	"github.com/luxfi/coreth/params/extras"
+	"github.com/luxfi/coreth/plugin/evm/customtypes"
+	"github.com/luxfi/coreth/plugin/evm/upgrade/lp176"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/types"
+	"github.com/luxfi/math"
+	"github.com/luxfi/vm/components/gas"
+	"github.com/stretchr/testify/require"
+)
+
+// Under activate-all-implicitly all gas-limit paths run against a bare
+// *extras.ChainConfig{}: there are no per-upgrade gates left.
+
+func TestGasLimit(t *testing.T) {
+	tests := []struct {
+		name      string
+		parent    *types.Header
+		timestamp uint64
+		want      uint64
+		wantErr   error
+	}{
+		{
+			name: "mainnet_invalid_parent_header",
+			parent: &types.Header{
+				Number: big.NewInt(1),
+			},
+			wantErr: lp176.ErrStateInsufficientLength,
+		},
+		{
+			name: "mainnet_initial_max_capacity",
+			parent: &types.Header{
+				Number: big.NewInt(0),
+			},
+			want: lp176.MinMaxCapacity,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require := require.New(t)
+
+			config := &extras.ChainConfig{}
+			got, err := GasLimit(config, test.parent, test.timestamp)
+			require.ErrorIs(err, test.wantErr)
+			require.Equal(test.want, got)
+		})
+	}
+}
+
+func TestVerifyGasUsed(t *testing.T) {
+	tests := []struct {
+		name   string
+		parent *types.Header
+		header *types.Header
+		want   error
+	}{
+		{
+			name: "mainnet_massive_extra_gas_used",
+			header: customtypes.WithHeaderExtra(
+				&types.Header{
+					Number: big.NewInt(300),
+				},
+				&customtypes.HeaderExtra{
+					ExtDataGasUsed: new(big.Int).Lsh(common.Big1, 64),
+				},
+			),
+			want: errInvalidExtraDataGasUsed,
+		},
+		{
+			name: "mainnet_gas_used_overflow",
+			header: customtypes.WithHeaderExtra(
+				&types.Header{
+					Number:  big.NewInt(301),
+					GasUsed: math.MaxUint[uint64](),
+				},
+				&customtypes.HeaderExtra{
+					ExtDataGasUsed: common.Big1,
+				},
+			),
+			want: math.ErrOverflow,
+		},
+		{
+			name: "mainnet_invalid_capacity",
+			parent: &types.Header{
+				Number: big.NewInt(302),
+			},
+			header: &types.Header{
+				Number: big.NewInt(303),
+			},
+			want: lp176.ErrStateInsufficientLength,
+		},
+		{
+			name: "mainnet_invalid_usage",
+			parent: &types.Header{
+				Number: big.NewInt(0),
+			},
+			header: &types.Header{
+				Time:    1,
+				GasUsed: lp176.MinMaxPerSecond + 1,
+			},
+			want: errInvalidGasUsed,
+		},
+		{
+			name: "mainnet_max_consumption",
+			parent: &types.Header{
+				Number: big.NewInt(0),
+			},
+			header: &types.Header{
+				Time:    1,
+				GasUsed: lp176.MinMaxPerSecond,
+			},
+			want: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			config := &extras.ChainConfig{}
+			err := VerifyGasUsed(config, test.parent, test.header)
+			require.ErrorIs(t, err, test.want)
+		})
+	}
+}
+
+func TestVerifyGasLimit(t *testing.T) {
+	tests := []struct {
+		name   string
+		parent *types.Header
+		header *types.Header
+		want   error
+	}{
+		{
+			name: "mainnet_invalid_header",
+			parent: &types.Header{
+				Number: big.NewInt(1),
+			},
+			header: &types.Header{},
+			want:   lp176.ErrStateInsufficientLength,
+		},
+		{
+			name: "mainnet_invalid",
+			parent: &types.Header{
+				Number: big.NewInt(0),
+			},
+			header: &types.Header{
+				GasLimit: lp176.MinMaxCapacity + 1,
+			},
+			want: errInvalidGasLimit,
+		},
+		{
+			name: "mainnet_valid",
+			parent: &types.Header{
+				Number: big.NewInt(0),
+			},
+			header: &types.Header{
+				GasLimit: lp176.MinMaxCapacity,
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			config := &extras.ChainConfig{}
+			err := VerifyGasLimit(config, test.parent, test.header)
+			require.ErrorIs(t, err, test.want)
+		})
+	}
+}
+
+func TestGasCapacity(t *testing.T) {
+	tests := []struct {
+		name      string
+		parent    *types.Header
+		timestamp uint64
+		want      uint64
+		wantErr   error
+	}{
+		{
+			name: "mainnet_invalid_header",
+			parent: &types.Header{
+				Number: big.NewInt(1),
+			},
+			wantErr: lp176.ErrStateInsufficientLength,
+		},
+		{
+			name: "mainnet_after_1s",
+			parent: &types.Header{
+				Number: big.NewInt(0),
+			},
+			timestamp: 1,
+			want:      lp176.MinMaxPerSecond,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require := require.New(t)
+
+			config := &extras.ChainConfig{}
+			got, err := GasCapacity(config, test.parent, test.timestamp)
+			require.ErrorIs(err, test.wantErr)
+			require.Equal(test.want, got)
+		})
+	}
+}
+
+func TestRemainingAtomicGasCapacity(t *testing.T) {
+	tests := []struct {
+		name    string
+		parent  *types.Header
+		header  *types.Header
+		want    uint64
+		wantErr error
+	}{
+		{
+			name: "mainnet_invalid_header",
+			parent: &types.Header{
+				Number: big.NewInt(1),
+			},
+			header:  &types.Header{},
+			wantErr: lp176.ErrStateInsufficientLength,
+		},
+		{
+			name: "mainnet_negative_capacity",
+			parent: &types.Header{
+				Number: big.NewInt(0),
+			},
+			header: &types.Header{
+				GasUsed: 1,
+			},
+			wantErr: gas.ErrInsufficientCapacity,
+		},
+		{
+			name: "mainnet_with_capacity",
+			parent: &types.Header{
+				Number: big.NewInt(0),
+			},
+			header: &types.Header{
+				Time:    1,
+				GasUsed: 1,
+			},
+			want: lp176.MinMaxPerSecond - 1,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require := require.New(t)
+
+			config := &extras.ChainConfig{}
+			got, err := RemainingAtomicGasCapacity(config, test.parent, test.header)
+			require.ErrorIs(err, test.wantErr)
+			require.Equal(test.want, got)
+		})
+	}
+}

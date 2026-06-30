@@ -1,0 +1,54 @@
+// Copyright (C) 2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
+package params
+
+import (
+	"github.com/luxfi/coreth/precompile/contract"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/precompile/mldsa"
+	"github.com/luxfi/precompile/pqcrypto"
+	"github.com/luxfi/precompile/slhdsa"
+
+	pqcontract "github.com/luxfi/precompile/contract"
+)
+
+// pqPrecompileAdapter wraps a precompiles.StatefulPrecompiledContract to implement
+// coreth's contract.StatefulPrecompiledContract interface.
+type pqPrecompileAdapter struct {
+	inner pqcontract.StatefulPrecompiledContract
+}
+
+// Run implements contract.StatefulPrecompiledContract.
+// The PQ crypto precompiles don't use AccessibleState, so we can safely pass nil.
+func (p *pqPrecompileAdapter) Run(
+	_ contract.AccessibleState,
+	caller common.Address,
+	addr common.Address,
+	input []byte,
+	suppliedGas uint64,
+	readOnly bool,
+) (ret []byte, remainingGas uint64, err error) {
+	return p.inner.Run(nil, caller, addr, input, suppliedGas, readOnly)
+}
+
+// PQCryptoPrecompiles returns the post-quantum cryptography precompiles.
+// These provide ML-DSA, SLH-DSA, and ML-KEM signature verification and key encapsulation.
+var PQCryptoPrecompiles = map[common.Address]contract.StatefulPrecompiledContract{
+	// ML-DSA (FIPS 204) - Lattice-based signatures
+	mldsa.ContractMLDSAVerifyAddress: &pqPrecompileAdapter{inner: mldsa.MLDSAVerifyPrecompile},
+
+	// SLH-DSA (FIPS 205) - Hash-based signatures
+	slhdsa.ContractSLHDSAVerifyAddress: &pqPrecompileAdapter{inner: slhdsa.SLHDSAVerifyPrecompile},
+
+	// PQCrypto - General post-quantum operations including ML-KEM
+	pqcrypto.ContractAddress: &pqPrecompileAdapter{inner: pqcrypto.PQCryptoPrecompile},
+}
+
+func init() {
+	// PQ crypto precompiles are part of the canonical Lux built-in set under
+	// activate-all-implicitly.
+	for addr, precompile := range PQCryptoPrecompiles {
+		PrecompiledContractsLux[addr] = precompile
+	}
+}

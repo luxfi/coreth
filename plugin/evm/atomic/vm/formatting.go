@@ -1,0 +1,81 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
+package vm
+
+import (
+	"fmt"
+
+	"github.com/luxfi/address"
+	consensusctx "github.com/luxfi/consensus/context"
+	"github.com/luxfi/constants"
+	"github.com/luxfi/ids"
+)
+
+// ParseServiceAddress get address ID from address string, being it either localized (using address manager,
+// doing also components validations), or not localized.
+// If both attempts fail, reports error from localized address parsing
+func ParseServiceAddress(ctx *consensusctx.Context, addrStr string) (ids.ShortID, error) {
+	addr, err := ids.ShortFromString(addrStr)
+	if err == nil {
+		return addr, nil
+	}
+	return ParseLocalAddress(ctx, addrStr)
+}
+
+// ParseLocalAddress takes in an address for this chain and produces the ID
+func ParseLocalAddress(ctx *consensusctx.Context, addrStr string) (ids.ShortID, error) {
+	chainID, addr, err := ParseAddress(ctx, addrStr)
+	if err != nil {
+		return ids.ShortID{}, err
+	}
+	if chainID != ctx.ChainID {
+		return ids.ShortID{}, fmt.Errorf("expected chainID to be %q but was %q",
+			ctx.ChainID, chainID)
+	}
+	return addr, nil
+}
+
+// FormatLocalAddress takes in a raw address and produces the formatted address
+func FormatLocalAddress(ctx *consensusctx.Context, addr ids.ShortID) (string, error) {
+	bcLookup := ctx.AsBCLookup()
+	if bcLookup == nil {
+		return "", fmt.Errorf("BCLookup not available")
+	}
+	chainIDAlias, err := bcLookup.PrimaryAlias(ctx.ChainID)
+	if err != nil {
+		return "", err
+	}
+	hrp := constants.GetHRP(ctx.NetworkID)
+	return address.Format(chainIDAlias, hrp, addr.Bytes())
+}
+
+// ParseAddress takes in an address and produces the ID of the chain it's for
+// the ID of the address
+func ParseAddress(ctx *consensusctx.Context, addrStr string) (ids.ID, ids.ShortID, error) {
+	chainIDAlias, hrp, addrBytes, err := address.Parse(addrStr)
+	if err != nil {
+		return ids.ID{}, ids.ShortID{}, err
+	}
+
+	bcLookup := ctx.AsBCLookup()
+	if bcLookup == nil {
+		return ids.ID{}, ids.ShortID{}, fmt.Errorf("BCLookup not available")
+	}
+	chainID, err := bcLookup.Lookup(chainIDAlias)
+	if err != nil {
+		return ids.ID{}, ids.ShortID{}, err
+	}
+
+	expectedHRP := constants.GetHRP(ctx.NetworkID)
+	if hrp != expectedHRP {
+		return ids.ID{}, ids.ShortID{}, fmt.Errorf("expected hrp %q but got %q",
+			expectedHRP, hrp)
+	}
+
+	addr, err := ids.ToShortID(addrBytes)
+	if err != nil {
+		return ids.ID{}, ids.ShortID{}, err
+	}
+	return chainID, addr, nil
+}

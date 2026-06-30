@@ -1,0 +1,847 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
+package vm
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"math/big"
+	"net/http"
+	"sync"
+
+	"github.com/luxfi/coreth/plugin/evm/atomic"
+	atomicstate "github.com/luxfi/coreth/plugin/evm/atomic/state"
+	atomicsync "github.com/luxfi/coreth/sync/atomic"
+
+	"github.com/luxfi/coreth/plugin/evm/atomic/txpool"
+	"github.com/luxfi/coreth/plugin/evm/secpfx"
+
+	"github.com/luxfi/consensus/engine/chain/block"
+	"github.com/luxfi/constants"
+	"github.com/luxfi/crypto/secp256k1"
+	luxdatabase "github.com/luxfi/database"
+	"github.com/luxfi/ids"
+	log "github.com/luxfi/log"
+	"github.com/luxfi/math/set"
+	"github.com/luxfi/p2p"
+	luxdssip "github.com/luxfi/p2p/gossip"
+	"github.com/luxfi/runtime"
+	"github.com/luxfi/timer/mockable"
+	luxutils "github.com/luxfi/utils"
+	lux "github.com/luxfi/utxo"
+	"github.com/luxfi/utxo/secp256k1fx"
+	luxvm "github.com/luxfi/vm"
+	luxatomic "github.com/luxfi/vm/chains/atomic"
+
+	"github.com/luxfi/coreth/consensus/dummy"
+	"github.com/luxfi/coreth/core/extstate"
+	"github.com/luxfi/coreth/params"
+	"github.com/luxfi/coreth/params/extras"
+	"github.com/luxfi/coreth/plugin/evm/config"
+	"github.com/luxfi/coreth/plugin/evm/customtypes"
+	"github.com/luxfi/coreth/plugin/evm/extension"
+	"github.com/luxfi/coreth/plugin/evm/gossip"
+	customheader "github.com/luxfi/coreth/plugin/evm/header"
+	"github.com/luxfi/coreth/plugin/evm/message"
+	"github.com/luxfi/coreth/plugin/evm/vmerrors"
+	"github.com/luxfi/coreth/utils"
+	"github.com/luxfi/coreth/utils/rpc"
+	"github.com/luxfi/geth/common"
+	"github.com/luxfi/geth/core/state"
+	"github.com/luxfi/geth/core/types"
+)
+
+var (
+	_ block.ChainVM                      = (*VM)(nil)
+	_ block.BuildBlockWithContextChainVM = (*VM)(nil)
+	_ block.StateSyncableVM              = (*VM)(nil)
+)
+
+const (
+	defaultMempoolSize  = 4096
+	targetAtomicTxsSize = 40 * constants.KiB
+	// maxAtomicTxMempoolGas is the maximum amount of gas that is allowed to be
+	// used by an atomic transaction in the mempool. It is allowed to build
+	// blocks with larger atomic transactions, but they will not be accepted
+	// into the mempool.
+	maxAtomicTxMempoolGas   = atomic.AtomicGasLimit
+	atomicTxGossipNamespace = "atomic_tx_gossip"
+	luxEndpoint             = "/lux"
+)
+
+type VM struct {
+	extension.InnerVM
+	Runtime *runtime.Runtime
+
+	// Fx wraps the upstream secp256k1fx behind a thin adapter so the
+	// luxfi/codec dependency stays contained in plugin/evm/secpfx — atomic-tx
+	// code never names it directly.
+	Fx            *secpfx.Adapter
+	AtomicMempool *txpool.Mempool
+
+	// [atomicTxRepository] maintains two indexes on accepted atomic txs.
+	// - txID to accepted atomic tx
+	// - block height to list of atomic txs accepted on block at that height
+	AtomicTxRepository *atomicstate.AtomicRepository
+	// [atomicBackend] abstracts verification and processing of atomic transactions
+	AtomicBackend *atomicstate.AtomicBackend
+
+	atomicTxGossipHandler p2p.Handler
+	AtomicTxPushGossiper  *luxdssip.PushGossiper[*atomic.Tx]
+	AtomicTxPullGossiper  luxdssip.Gossiper
+
+	// [cancel] may be nil until [quasar.NormalOp] starts
+	cancel     context.CancelFunc
+	shutdownWg sync.WaitGroup
+
+	clock        mockable.Clock
+	bootstrapped luxutils.Atomic[bool]
+}
+
+func WrapVM(vm extension.InnerVM) *VM {
+	return &VM{InnerVM: vm}
+}
+
+// Initialize implements the block.ChainVM interface
+func (vm *VM) Initialize(
+	ctx context.Context,
+	init block.Init,
+) error {
+	rt := init.Runtime
+	vm.Runtime = rt
+
+	var extDataHashes map[common.Hash]common.Hash
+	// Set the chain config for mainnet/testnet chain IDs
+	switch rt.NetworkID {
+	case constants.MainnetID:
+		extDataHashes = mainnetExtDataHashes
+	case constants.TestnetID:
+		extDataHashes = testnetExtDataHashes
+	}
+	// Free the memory of the extDataHash map
+	testnetExtDataHashes = nil
+	mainnetExtDataHashes = nil
+
+	// Create the atomic extension structs
+	// some of them need to be initialized after the inner VM is initialized
+	blockExtender := newBlockExtender(extDataHashes, vm)
+	syncExtender := &atomicsync.Extender{}
+	syncProvider := &atomicsync.SummaryProvider{}
+	// Create and pass the leaf handler to the atomic extension
+	// it will be initialized after the inner VM is initialized
+	leafHandler := atomicsync.NewLeafHandler()
+	atomicLeafTypeConfig := &extension.LeafRequestConfig{
+		LeafType:   atomicsync.TrieNode,
+		MetricName: "sync_atomic_trie_leaves",
+		Handler:    leafHandler,
+	}
+
+	atomicTxs := txpool.NewTxs(rt, defaultMempoolSize)
+	extensionConfig := &extension.Config{
+		ConsensusCallbacks:         vm.createConsensusCallbacks(),
+		BlockExtender:              blockExtender,
+		SyncableParser:             atomicsync.NewSummaryParser(),
+		SyncExtender:               syncExtender,
+		SyncSummaryProvider:        syncProvider,
+		ExtraSyncLeafHandlerConfig: atomicLeafTypeConfig,
+		ExtraMempool:               atomicTxs,
+		Clock:                      &vm.clock,
+	}
+	if err := vm.InnerVM.SetExtensionConfig(extensionConfig); err != nil {
+		return fmt.Errorf("failed to set extension config: %w", err)
+	}
+
+	// Initialize inner vm with the provided parameters
+	if err := vm.InnerVM.Initialize(ctx, init); err != nil {
+		return fmt.Errorf("failed to initialize inner VM: %w", err)
+	}
+
+	atomicMempool, err := txpool.NewMempool(atomicTxs, vm.InnerVM.MetricRegistry(), vm.verifyTxAtTip)
+	if err != nil {
+		return fmt.Errorf("failed to initialize mempool: %w", err)
+	}
+	vm.AtomicMempool = atomicMempool
+
+	// initialize bonus blocks on mainnet
+	var (
+		bonusBlockHeights map[uint64]ids.ID
+	)
+	if vm.Runtime.NetworkID == constants.MainnetID {
+		var err error
+		bonusBlockHeights, err = readMainnetBonusBlocks()
+		if err != nil {
+			return fmt.Errorf("failed to read mainnet bonus blocks: %w", err)
+		}
+	}
+
+	// initialize atomic repository
+	lastAcceptedHash, lastAcceptedHeight, err := vm.InnerVM.ReadLastAccepted()
+	if err != nil {
+		return fmt.Errorf("failed to read last accepted block: %w", err)
+	}
+	vm.AtomicTxRepository, err = atomicstate.NewAtomicTxRepository(vm.InnerVM.VersionDB(), atomic.Codec, lastAcceptedHeight)
+	if err != nil {
+		return fmt.Errorf("failed to create atomic repository: %w", err)
+	}
+	sharedMemory, ok := vm.Runtime.SharedMemory.(luxatomic.SharedMemory)
+	if !ok {
+		// SharedMemory is nil when running as a plugin via ZAP transport,
+		// which doesn't proxy SharedMemory across processes. Use a no-op
+		// implementation so the VM can start; import/export txs will fail
+		// at verification time rather than preventing chain startup.
+		log.Warn("SharedMemory unavailable, using no-op implementation; cross-chain atomic txs will not work")
+		sharedMemory = &noopSharedMemory{}
+	}
+	vm.AtomicBackend, err = atomicstate.NewAtomicBackend(
+		sharedMemory, bonusBlockHeights,
+		vm.AtomicTxRepository, lastAcceptedHeight, lastAcceptedHash,
+		vm.InnerVM.Config().CommitInterval,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create atomic backend: %w", err)
+	}
+
+	// Atomic backend is available now, we can initialize structs that depend on it
+	atomicTrie := vm.AtomicBackend.AtomicTrie()
+	syncProvider.Initialize(atomicTrie)
+	syncExtender.Initialize(vm.AtomicBackend, atomicTrie, vm.InnerVM.Config().StateSyncRequestSize)
+	leafHandler.Initialize(atomicTrie.TrieDB(), atomicstate.TrieKeyLength, message.Codec)
+
+	fx, err := secpfx.New(vm)
+	if err != nil {
+		return fmt.Errorf("failed to initialize secp256k1 fx: %w", err)
+	}
+	vm.Fx = fx
+	return nil
+}
+
+func (vm *VM) SetState(ctx context.Context, state uint32) error {
+	vmState := luxvm.State(state)
+	switch vmState {
+	case luxvm.Syncing:
+		vm.bootstrapped.Set(false)
+	case luxvm.Bootstrapping:
+		if err := vm.onBootstrapStarted(); err != nil {
+			return err
+		}
+	case luxvm.Ready:
+		if err := vm.onNormalOperationsStarted(); err != nil {
+			return err
+		}
+	}
+
+	return vm.InnerVM.SetState(ctx, uint32(vmState))
+}
+
+func (vm *VM) onBootstrapStarted() error {
+	vm.bootstrapped.Set(false)
+	return vm.Fx.Bootstrapping()
+}
+
+func (vm *VM) onNormalOperationsStarted() error {
+	if vm.bootstrapped.Get() {
+		return nil
+	}
+	vm.bootstrapped.Set(true)
+	if err := vm.Fx.Bootstrapped(); err != nil {
+		return err
+	}
+
+	// Type assert Log from context
+	logger, ok := vm.Runtime.Log.(log.Logger)
+	if !ok {
+		return fmt.Errorf("expected log.Logger, got %T", vm.Runtime.Log)
+	}
+
+	ctx, cancel := context.WithCancel(context.TODO())
+	vm.cancel = cancel
+	atomicTxGossipMarshaller := atomic.TxMarshaller{}
+	atomicTxGossipClient := vm.InnerVM.NewClient(p2p.AtomicTxGossipHandlerID, p2p.WithValidatorSampling(vm.InnerVM.P2PValidators()))
+	atomicTxGossipMetrics, err := luxdssip.NewMetrics(vm.InnerVM.MetricRegistry(), atomicTxGossipNamespace)
+	if err != nil {
+		return fmt.Errorf("failed to initialize atomic tx gossip metrics: %w", err)
+	}
+
+	pushGossipParams := luxdssip.BranchingFactor{
+		StakePercentage: vm.InnerVM.Config().PushGossipPercentStake,
+		Validators:      vm.InnerVM.Config().PushGossipNumValidators,
+		Peers:           vm.InnerVM.Config().PushGossipNumPeers,
+	}
+	pushRegossipParams := luxdssip.BranchingFactor{
+		Validators: vm.InnerVM.Config().PushRegossipNumValidators,
+		Peers:      vm.InnerVM.Config().PushRegossipNumPeers,
+	}
+
+	vm.AtomicTxPushGossiper, err = luxdssip.NewPushGossiper[*atomic.Tx](
+		&atomicTxGossipMarshaller,
+		vm.AtomicMempool,
+		vm.InnerVM.P2PValidators(),
+		atomicTxGossipClient,
+		atomicTxGossipMetrics,
+		pushGossipParams,
+		pushRegossipParams,
+		config.PushGossipDiscardedElements,
+		config.TxGossipTargetMessageSize,
+		vm.InnerVM.Config().RegossipFrequency.Duration,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to initialize atomic tx push gossiper: %w", err)
+	}
+
+	vm.atomicTxGossipHandler = gossip.NewTxGossipHandler[*atomic.Tx](
+		logger,
+		&atomicTxGossipMarshaller,
+		vm.AtomicMempool,
+		atomicTxGossipMetrics,
+		config.TxGossipTargetMessageSize,
+		config.TxGossipThrottlingPeriod,
+		config.TxGossipThrottlingLimit,
+		vm.InnerVM.P2PValidators(),
+		nil, // BloomChecker - not needed for atomic tx gossip
+	)
+
+	if err := vm.InnerVM.AddHandler(p2p.AtomicTxGossipHandlerID, vm.atomicTxGossipHandler); err != nil {
+		return fmt.Errorf("failed to add atomic tx gossip handler: %w", err)
+	}
+
+	atomicTxPullGossiper := luxdssip.NewPullGossiper[*atomic.Tx](
+		logger,
+		&atomicTxGossipMarshaller,
+		vm.AtomicMempool,
+		atomicTxGossipClient,
+		atomicTxGossipMetrics,
+		config.TxGossipPollSize,
+	)
+
+	vm.AtomicTxPullGossiper = &luxdssip.ValidatorGossiper{
+		Gossiper:   atomicTxPullGossiper,
+		NodeID:     vm.Runtime.NodeID,
+		Validators: vm.InnerVM.P2PValidators(),
+	}
+
+	vm.shutdownWg.Add(1)
+	go func() {
+		luxdssip.Every(ctx, logger, vm.AtomicTxPushGossiper, vm.InnerVM.Config().PushGossipFrequency.Duration)
+		vm.shutdownWg.Done()
+	}()
+
+	vm.shutdownWg.Add(1)
+	go func() {
+		luxdssip.Every(ctx, logger, vm.AtomicTxPullGossiper, vm.InnerVM.Config().PullGossipFrequency.Duration)
+		vm.shutdownWg.Done()
+	}()
+
+	return nil
+}
+
+func (vm *VM) Shutdown(context.Context) error {
+	if vm.Runtime == nil {
+		return nil
+	}
+	if vm.cancel != nil {
+		vm.cancel()
+	}
+	if err := vm.InnerVM.Shutdown(context.Background()); err != nil {
+		log.Error("failed to shutdown inner VM", "err", err)
+	}
+	vm.shutdownWg.Wait()
+	return nil
+}
+
+func (vm *VM) CreateHandlers(ctx context.Context) (map[string]http.Handler, error) {
+	// Get handlers from inner VM first (includes /rpc, /ws, /admin)
+	apis, err := vm.InnerVM.CreateHandlers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if apis == nil {
+		apis = make(map[string]http.Handler)
+	}
+
+	// Add LUX API handler for atomic transactions
+	luxAPI, err := rpc.NewHandler("lux", &LuxAPI{vm})
+	if err != nil {
+		return nil, fmt.Errorf("failed to register service for LUX API due to %w", err)
+	}
+	log.Info("LUX API enabled")
+	apis[luxEndpoint] = luxAPI
+	return apis, nil
+}
+
+// verifyTxAtTip verifies that [tx] is valid to be issued on top of the currently preferred block
+func (vm *VM) verifyTxAtTip(tx *atomic.Tx) error {
+	if txByteLen := len(tx.SignedBytes()); txByteLen > targetAtomicTxsSize {
+		return fmt.Errorf("tx size (%d) exceeds total atomic txs size target (%d)", txByteLen, targetAtomicTxsSize)
+	}
+	gasUsed, err := tx.GasUsed(true)
+	if err != nil {
+		return err
+	}
+	if gasUsed > maxAtomicTxMempoolGas {
+		return fmt.Errorf("tx gas usage (%d) exceeds maximum allowed mempool gas usage (%d)", gasUsed, maxAtomicTxMempoolGas)
+	}
+	blockchain := vm.InnerVM.Blockchain()
+	// Note: we fetch the current block and then the state at that block instead of the current state directly
+	// since we need the header of the current block below.
+	preferredBlock := blockchain.CurrentBlock()
+	preferredState, err := blockchain.StateAt(preferredBlock.Root)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve block state at tip while verifying atomic tx: %w", err)
+	}
+	extraConfig := params.GetExtra(vm.InnerVM.ChainConfig())
+	extraRules := params.GetRulesExtra(vm.InnerVM.ChainConfig().Rules(preferredBlock.Number, params.IsMergeTODO, preferredBlock.Time))
+	parentHeader := preferredBlock
+	timestamp := uint64(vm.clock.Time().Unix())
+	// Under activate-all-implicitly dynamic fees are always live.
+	nextBaseFee, err := customheader.EstimateNextBaseFee(extraConfig, parentHeader, timestamp)
+	if err != nil {
+		// Return extremely detailed error since CalcBaseFee should never encounter an issue here
+		return fmt.Errorf("failed to calculate base fee with parent timestamp (%d), parent ExtraData: (0x%x), and current timestamp (%d): %w", parentHeader.Time, parentHeader.Extra, timestamp, err)
+	}
+
+	// We don’t need to revert the state here in case verifyTx errors, because
+	// [preferredState] is thrown away either way.
+	return vm.verifyTx(tx, parentHeader.Hash(), nextBaseFee, preferredState, *extraRules)
+}
+
+// verifyTx verifies that [tx] is valid to be issued into a block with parent block [parentHash]
+// and validated at [state] using [rules] as the current rule set.
+// Note: VerifyTx may modify [state]. If [state] needs to be properly maintained, the caller is responsible
+// for reverting to the correct snapshot after calling this function. If this function is called with a
+// throwaway state, then this is not necessary.
+// TODO: unexport this function
+func (vm *VM) verifyTx(tx *atomic.Tx, parentHash common.Hash, baseFee *big.Int, statedb *state.StateDB, rules extras.Rules) error {
+	parent, err := vm.InnerVM.GetExtendedBlock(context.TODO(), ids.ID(parentHash))
+	if err != nil {
+		return fmt.Errorf("failed to get parent block: %w", err)
+	}
+	verifierBackend := NewVerifierBackend(vm, rules)
+	if err := verifierBackend.SemanticVerify(tx, parent, baseFee); err != nil {
+		return err
+	}
+	wrappedStateDB := extstate.New(statedb)
+	atomicStateDB := newStateDBWrapper(wrappedStateDB)
+	return tx.UnsignedAtomicTx.EVMStateTransfer(vm.Runtime, atomicStateDB)
+}
+
+// verifyTxs verifies that [txs] are valid to be issued into a block with parent block [parentHash]
+// using [rules] as the current rule set.
+func (vm *VM) verifyTxs(txs []*atomic.Tx, parentHash common.Hash, baseFee *big.Int, height uint64, rules extras.Rules) error {
+	// Ensure that the parent was verified and inserted correctly.
+	if !vm.InnerVM.Blockchain().HasBlock(parentHash, height-1) {
+		return errRejectedParent
+	}
+
+	ancestorID := ids.ID(parentHash)
+	// If the ancestor is unknown, then the parent failed verification when
+	// it was called.
+	// If the ancestor is rejected, then this block shouldn't be inserted
+	// into the canonical chain because the parent will be missing.
+	ancestor, err := vm.InnerVM.GetExtendedBlock(context.TODO(), ancestorID)
+	if err != nil {
+		return errRejectedParent
+	}
+
+	// Ensure each tx in [txs] doesn't conflict with any other atomic tx in
+	// a processing ancestor block.
+	inputs := set.Set[ids.ID]{}
+	verifierBackend := NewVerifierBackend(vm, rules)
+
+	for _, atomicTx := range txs {
+		utx := atomicTx.UnsignedAtomicTx
+		if err := verifierBackend.SemanticVerify(atomicTx, ancestor, baseFee); err != nil {
+			return fmt.Errorf("invalid block due to failed semantic verify: %w at height %d", err, height)
+		}
+		txInputs := utx.InputUTXOs()
+		if inputs.Overlaps(txInputs) {
+			return ErrConflictingAtomicInputs
+		}
+		inputs.Union(txInputs)
+	}
+	return nil
+}
+
+// Clock satisfies the secpfx.Host interface
+func (vm *VM) Clock() *mockable.Clock { return &vm.clock }
+
+// Logger implements the secp256k1fx interface
+func (vm *VM) Logger() log.Logger { return vm.Runtime.Log.(log.Logger) }
+
+func (vm *VM) createConsensusCallbacks() dummy.ConsensusCallbacks {
+	return dummy.ConsensusCallbacks{
+		OnFinalizeAndAssemble: vm.onFinalizeAndAssemble,
+		OnExtraStateChange:    vm.onExtraStateChange,
+	}
+}
+
+func (vm *VM) preBatchOnFinalizeAndAssemble(header *types.Header, state *state.StateDB, txs []*types.Transaction) ([]byte, *big.Int, *big.Int, error) {
+	for {
+		tx, exists := vm.AtomicMempool.NextTx()
+		if !exists {
+			break
+		}
+		// Take a snapshot of [state] before calling verifyTx so that if the transaction fails verification
+		// we can revert to [snapshot].
+		// Note: snapshot is taken inside the loop because you cannot revert to the same snapshot more than
+		// once.
+		snapshot := state.Snapshot()
+		rules := vm.rules(header.Number, header.Time)
+		if err := vm.verifyTx(tx, header.ParentHash, header.BaseFee, state, rules); err != nil {
+			// Discard the transaction from the mempool on failed verification.
+			log.Debug("discarding tx from mempool on failed verification", "txID", tx.ID(), "err", err)
+			vm.AtomicMempool.DiscardCurrentTx(tx.ID())
+			state.RevertToSnapshot(snapshot)
+			continue
+		}
+
+		atomicTxBytes, err := atomic.Codec.Marshal(atomic.CodecVersion, tx)
+		if err != nil {
+			// Discard the transaction from the mempool and error if the transaction
+			// cannot be marshalled. This should never happen.
+			log.Debug("discarding tx due to unmarshal err", "txID", tx.ID(), "err", err)
+			vm.AtomicMempool.DiscardCurrentTx(tx.ID())
+			return nil, nil, nil, fmt.Errorf("failed to marshal atomic transaction %s due to %w", tx.ID(), err)
+		}
+		// Under activate-all-implicitly the fixed-fee block-fee contribution
+		// is always charged.
+		contribution, gasUsed, err := tx.BlockFeeContribution(true, vm.Runtime.UTXOAssetID, header.BaseFee)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		return atomicTxBytes, contribution, gasUsed, nil
+	}
+
+	if len(txs) == 0 {
+		// this could happen due to the async logic of geth tx pool
+		return nil, nil, nil, ErrEmptyBlock
+	}
+
+	return nil, nil, nil, nil
+}
+
+func (vm *VM) postBatchOnFinalizeAndAssemble(
+	header *types.Header,
+	parent *types.Header,
+	state *state.StateDB,
+	txs []*types.Transaction,
+) ([]byte, *big.Int, *big.Int, error) {
+	var (
+		batchAtomicTxs    []*atomic.Tx
+		batchAtomicUTXOs  set.Set[ids.ID]
+		batchContribution *big.Int = new(big.Int).Set(common.Big0)
+		batchGasUsed      *big.Int = new(big.Int).Set(common.Big0)
+		rules                      = vm.rules(header.Number, header.Time)
+		size              int
+	)
+
+	atomicGasLimit, err := customheader.RemainingAtomicGasCapacity(vm.chainConfigExtra(), parent, header)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	for {
+		tx, exists := vm.AtomicMempool.NextTx()
+		if !exists {
+			break
+		}
+
+		// Ensure that adding [tx] to the block will not exceed the block size soft limit.
+		txSize := len(tx.SignedBytes())
+		if size+txSize > targetAtomicTxsSize {
+			vm.AtomicMempool.CancelCurrentTx(tx.ID())
+			break
+		}
+
+		var (
+			txGasUsed, txContribution *big.Int
+			err                       error
+		)
+
+		// we assume that this function will only be called when the block is in at least
+		txContribution, txGasUsed, err = tx.BlockFeeContribution(true, vm.Runtime.UTXOAssetID, header.BaseFee)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		// ensure `gasUsed + batchGasUsed` doesn't exceed `atomicGasLimit`
+		if totalGasUsed := new(big.Int).Add(batchGasUsed, txGasUsed); !utils.BigLessOrEqualUint64(totalGasUsed, atomicGasLimit) {
+			// Send [tx] back to the mempool's tx heap.
+			vm.AtomicMempool.CancelCurrentTx(tx.ID())
+			break
+		}
+
+		if batchAtomicUTXOs.Overlaps(tx.InputUTXOs()) {
+			// Discard the transaction from the mempool since it will fail verification
+			// after this block has been accepted.
+			// Note: if the proposed block is not accepted, the transaction may still be
+			// valid, but we discard it early here based on the assumption that the proposed
+			// block will most likely be accepted.
+			// Discard the transaction from the mempool on failed verification.
+			log.Debug("discarding tx due to overlapping input utxos", "txID", tx.ID())
+			vm.AtomicMempool.DiscardCurrentTx(tx.ID())
+			continue
+		}
+
+		snapshot := state.Snapshot()
+		if err := vm.verifyTx(tx, header.ParentHash, header.BaseFee, state, rules); err != nil {
+			// Discard the transaction from the mempool and reset the state to [snapshot]
+			// if it fails verification here.
+			// Note: prior to this point, we have not modified [state] so there is no need to
+			// revert to a snapshot if we discard the transaction prior to this point.
+			log.Debug("discarding tx from mempool due to failed verification", "txID", tx.ID(), "err", err)
+			vm.AtomicMempool.DiscardCurrentTx(tx.ID())
+			state.RevertToSnapshot(snapshot)
+			continue
+		}
+
+		batchAtomicTxs = append(batchAtomicTxs, tx)
+		batchAtomicUTXOs.Union(tx.InputUTXOs())
+		// Add the [txGasUsed] to the [batchGasUsed] when the [tx] has passed verification
+		batchGasUsed.Add(batchGasUsed, txGasUsed)
+		batchContribution.Add(batchContribution, txContribution)
+		size += txSize
+	}
+
+	// If there is a non-zero number of transactions, marshal them and return the byte slice
+	// for the block's extra data along with the contribution and gas used.
+	if len(batchAtomicTxs) > 0 {
+		atomicTxBytes, err := atomic.Codec.Marshal(atomic.CodecVersion, batchAtomicTxs)
+		if err != nil {
+			// If we fail to marshal the batch of atomic transactions for any reason,
+			// discard the entire set of current transactions.
+			log.Debug("discarding txs due to error marshaling atomic transactions", "err", err)
+			vm.AtomicMempool.DiscardCurrentTxs()
+			return nil, nil, nil, fmt.Errorf("failed to marshal batch of atomic transactions due to %w", err)
+		}
+		return atomicTxBytes, batchContribution, batchGasUsed, nil
+	}
+
+	// If there are no regular transactions and there were also no atomic transactions to be included,
+	// then the block is empty and should be considered invalid.
+	if len(txs) == 0 {
+		// this could happen due to the async logic of geth tx pool
+		return nil, nil, nil, ErrEmptyBlock
+	}
+
+	// If there are no atomic transactions, but there is a non-zero number of regular transactions, then
+	// we return a nil slice with no contribution from the atomic transactions and a nil error.
+	return nil, nil, nil, nil
+}
+
+func (vm *VM) onFinalizeAndAssemble(
+	header *types.Header,
+	parent *types.Header,
+	state *state.StateDB,
+	txs []*types.Transaction,
+) ([]byte, *big.Int, *big.Int, error) {
+	// Under activate-all-implicitly the post-AP5 batch path is the only path.
+	return vm.postBatchOnFinalizeAndAssemble(header, parent, state, txs)
+}
+
+func (vm *VM) onExtraStateChange(block *types.Block, parent *types.Header, statedb *state.StateDB) (*big.Int, *big.Int, error) {
+	var (
+		batchContribution *big.Int = big.NewInt(0)
+		batchGasUsed      *big.Int = big.NewInt(0)
+		header                     = block.Header()
+		chainConfig                = vm.InnerVM.ChainConfig()
+		// We cannot use chain config from InnerVM since it's not available when this function is called for the first time (bc.loadLastState).
+		rules      = chainConfig.Rules(header.Number, params.IsMergeTODO, header.Time)
+		rulesExtra = *params.GetRulesExtra(rules)
+	)
+
+	// Under activate-all-implicitly atomic-tx blobs are always batch-encoded.
+	txs, err := atomic.ExtractAtomicTxs(customtypes.BlockExtData(block), true, atomic.Codec)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// If [atomicBackend] is nil, the VM is still initializing and is reprocessing accepted blocks.
+	if vm.AtomicBackend != nil {
+		if vm.AtomicBackend.IsBonus(block.NumberU64(), block.Hash()) {
+			log.Info("skipping atomic tx verification on bonus block", "block", block.Hash())
+		} else {
+			// Verify [txs] do not conflict with themselves or ancestor blocks.
+			if err := vm.verifyTxs(txs, block.ParentHash(), block.BaseFee(), block.NumberU64(), rulesExtra); err != nil {
+				return nil, nil, err
+			}
+		}
+		// Update the atomic backend with [txs] from this block.
+		//
+		// Note: The atomic trie canonically contains the duplicate operations
+		// from any bonus blocks.
+		_, err := vm.AtomicBackend.InsertTxs(block.Hash(), block.NumberU64(), block.ParentHash(), txs)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// If there are no transactions, we can return early.
+	if len(txs) == 0 {
+		return nil, nil, nil
+	}
+
+	wrappedStateDB := extstate.New(statedb)
+	atomicStateDB := newStateDBWrapper(wrappedStateDB)
+	for _, tx := range txs {
+		if err := tx.UnsignedAtomicTx.EVMStateTransfer(vm.Runtime, atomicStateDB); err != nil {
+			return nil, nil, err
+		}
+		// Under activate-all-implicitly the fixed-fee contribution is always
+		// charged.
+		contribution, gasUsed, err := tx.BlockFeeContribution(true, vm.Runtime.UTXOAssetID, block.BaseFee())
+		if err != nil {
+			return nil, nil, err
+		}
+		batchContribution.Add(batchContribution, contribution)
+		batchGasUsed.Add(batchGasUsed, gasUsed)
+	}
+
+	// Atomic gas limit is always enforced.
+	chainConfigExtra := params.GetExtra(chainConfig)
+	atomicGasLimit, err := customheader.RemainingAtomicGasCapacity(chainConfigExtra, parent, header)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !utils.BigLessOrEqualUint64(batchGasUsed, atomicGasLimit) {
+		return nil, nil, fmt.Errorf("atomic gas used (%d) by block (%s), exceeds atomic gas limit (%d)", batchGasUsed, block.Hash().Hex(), atomicGasLimit)
+	}
+	return batchContribution, batchGasUsed, nil
+}
+
+func (vm *VM) BuildBlock(ctx context.Context) (block.Block, error) {
+	return vm.BuildBlockWithContext(ctx, nil)
+}
+
+func (vm *VM) BuildBlockWithContext(ctx context.Context, proposerVMBlockCtx *block.Context) (block.Block, error) {
+	blk, err := vm.InnerVM.BuildBlockWithContext(ctx, proposerVMBlockCtx)
+
+	// Handle errors and signal the mempool to take appropriate action
+	switch {
+	case err == nil:
+		// Marks the current transactions from the mempool as being successfully issued
+		// into a block.
+		vm.AtomicMempool.IssueCurrentTxs()
+	case errors.Is(err, vmerrors.ErrGenerateBlockFailed), errors.Is(err, vmerrors.ErrBlockVerificationFailed):
+		log.Debug("cancelling txs due to error generating block", "err", err)
+		vm.AtomicMempool.CancelCurrentTxs()
+	case errors.Is(err, vmerrors.ErrWrapBlockFailed):
+		log.Debug("discarding txs due to error making new block", "err", err)
+		vm.AtomicMempool.DiscardCurrentTxs()
+	}
+	return blk, err
+}
+
+func (vm *VM) chainConfigExtra() *extras.ChainConfig {
+	return params.GetExtra(vm.InnerVM.ChainConfig())
+}
+
+func (vm *VM) rules(number *big.Int, time uint64) extras.Rules {
+	ethrules := vm.InnerVM.ChainConfig().Rules(number, params.IsMergeTODO, time)
+	return *params.GetRulesExtra(ethrules)
+}
+
+// CurrentRules returns the chain rules for the current block.
+func (vm *VM) CurrentRules() extras.Rules {
+	header := vm.InnerVM.Blockchain().CurrentHeader()
+	return vm.rules(header.Number, header.Time)
+}
+
+// TODO: these should be unexported after test refactor is done
+
+// getAtomicTx returns the requested transaction, status, and height.
+// If the status is Unknown, then the returned transaction will be nil.
+func (vm *VM) GetAtomicTx(txID ids.ID) (*atomic.Tx, atomic.Status, uint64, error) {
+	if tx, height, err := vm.AtomicTxRepository.GetByTxID(txID); err == nil {
+		return tx, atomic.Accepted, height, nil
+	} else if err != luxdatabase.ErrNotFound {
+		return nil, atomic.Unknown, 0, err
+	}
+	tx, dropped, found := vm.AtomicMempool.GetTx(txID)
+	switch {
+	case found && dropped:
+		return tx, atomic.Dropped, 0, nil
+	case found:
+		return tx, atomic.Processing, 0, nil
+	default:
+		return nil, atomic.Unknown, 0, nil
+	}
+}
+
+func (vm *VM) NewImportTx(
+	chainID ids.ID, // chain to import from
+	to common.Address, // Address of recipient
+	baseFee *big.Int, // fee to use post-AP3
+	keys []*secp256k1.PrivateKey, // Keys to import the funds
+) (*atomic.Tx, error) {
+	kc := secp256k1fx.NewKeychain()
+	for _, key := range keys {
+		kc.Add(key)
+	}
+
+	sharedMemory, ok := vm.Runtime.SharedMemory.(luxatomic.SharedMemory)
+	if !ok {
+		return nil, errors.New("shared memory not available")
+	}
+	atomicUTXOs, _, _, err := lux.GetAtomicUTXOs(sharedMemory, chainID, kc.Addresses(), ids.ShortEmpty, ids.Empty, maxUTXOsToFetch)
+	if err != nil {
+		return nil, fmt.Errorf("problem retrieving atomic UTXOs: %w", err)
+	}
+
+	return atomic.NewImportTx(vm.Runtime, vm.CurrentRules(), vm.clock.Unix(), chainID, to, baseFee, kc, atomicUTXOs)
+}
+
+// newExportTx returns a new ExportTx
+func (vm *VM) NewExportTx(
+	assetID ids.ID, // AssetID of the tokens to export
+	amount uint64, // Amount of tokens to export
+	chainID ids.ID, // Chain to send the UTXOs to
+	to ids.ShortID, // Address of chain recipient
+	baseFee *big.Int, // fee to use post-AP3
+	keys []*secp256k1.PrivateKey, // Pay the fee and provide the tokens
+) (*atomic.Tx, error) {
+	statedb, err := vm.InnerVM.Blockchain().State()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the transaction
+	tx, err := atomic.NewExportTx(
+		vm.Runtime,        // Context
+		vm.CurrentRules(), // VM rules
+		newStateDBWrapper(extstate.New(statedb)),
+		assetID, // AssetID
+		amount,  // Amount
+		chainID, // ID of the chain to send the funds to
+		to,      // Address
+		baseFee,
+		keys, // Private keys
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+// noopSharedMemory implements luxatomic.SharedMemory as a no-op.
+// Used when SharedMemory is unavailable (e.g. ZAP transport plugin mode)
+// so the chain can start; atomic import/export txs will fail at verification.
+type noopSharedMemory struct{}
+
+func (*noopSharedMemory) Get(_ ids.ID, keys [][]byte) ([][]byte, error) {
+	return make([][]byte, len(keys)), nil
+}
+
+func (*noopSharedMemory) Indexed(_ ids.ID, _ [][]byte, _, _ []byte, _ int) ([][]byte, []byte, []byte, error) {
+	return nil, nil, nil, nil
+}
+
+func (*noopSharedMemory) Apply(_ map[ids.ID]*luxatomic.Requests, batches ...luxdatabase.Batch) error {
+	// Skip atomic operations but still write the database batches
+	// (commitBatch, atomicChangesBatch) to avoid data loss on restart.
+	if len(batches) == 0 {
+		return nil
+	}
+	return luxatomic.WriteAll(batches[0], batches[1:]...)
+}

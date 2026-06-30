@@ -1,0 +1,83 @@
+// Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
+// upgrade.
+package blockgascost
+
+import (
+	"math"
+
+	"github.com/luxfi/coreth/utils"
+	safemath "github.com/luxfi/math"
+)
+
+const (
+	// MinBlockGasCost is the minimum block gas cost.
+	MinBlockGasCost = 0
+	// MaxBlockGasCost is the maximum block gas cost. If the block gas cost
+	// would exceed this value, the block gas cost is set to this value.
+	MaxBlockGasCost = 1_000_000
+	// TargetBlockRate is the target amount of time in seconds between blocks.
+	// If blocks are produced faster than this rate, the block gas cost is
+	// increased. If blocks are produced slower than this rate, the block gas
+	// cost is decreased.
+	TargetBlockRate = 2
+
+	// BlockGasCostStep is the rate at which the block gas cost changes per
+	// second.
+	//
+	BlockGasCostStep = 50_000
+
+	// upgrade.
+	//
+	// This value modifies the previously used `dynamicfee.MinBaseFee`.
+	//
+	MinBaseFee = 25 * utils.GWei
+
+	// upgrade.
+	//
+	// This value modifies the previously used `dynamicfee.MaxBaseFee`.
+	MaxBaseFee = 1_000 * utils.GWei
+)
+
+// BlockGasCost calculates the required block gas cost.
+//
+// cost = parentCost + step * ([TargetBlockRate] - timeElapsed)
+//
+// The returned cost is clamped to [[MinBlockGasCost], [MaxBlockGasCost]].
+func BlockGasCost(
+	parentCost uint64,
+	step uint64,
+	timeElapsed uint64,
+) uint64 {
+	deviation := safemath.AbsDiff(TargetBlockRate, timeElapsed)
+	change, err := safemath.Mul64(step, deviation)
+	if err != nil {
+		change = math.MaxUint64
+	}
+
+	var (
+		cost        uint64
+		defaultCost uint64 = MaxBlockGasCost
+	)
+	if timeElapsed > TargetBlockRate {
+		cost, err = safemath.Sub(parentCost, change)
+		defaultCost = MinBlockGasCost
+	} else {
+		cost, err = safemath.Add64(parentCost, change)
+	}
+	if err != nil {
+		cost = defaultCost
+	}
+
+	switch {
+	case cost < MinBlockGasCost:
+		// This is technically dead code because [MinBlockGasCost] is 0, but it
+		// makes the code more clear.
+		return MinBlockGasCost
+	case cost > MaxBlockGasCost:
+		return MaxBlockGasCost
+	default:
+		return cost
+	}
+}
