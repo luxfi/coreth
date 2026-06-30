@@ -137,7 +137,7 @@ require (
 	github.com/luxfi/atomic v1.0.0
 	github.com/luxfi/concurrent v0.0.3
 	github.com/luxfi/consensus v1.25.13
-	github.com/luxfi/constants v1.5.8-0.20260603055356-93c2c2ceb9ca
+	github.com/luxfi/constants v1.6.0
 	github.com/luxfi/database v1.20.3
 	github.com/luxfi/filesystem v0.0.1
 	github.com/luxfi/ids v1.2.14
@@ -151,8 +151,8 @@ require (
 	github.com/luxfi/runtime v1.1.0
 	github.com/luxfi/sys v0.0.0-20260110090042-50187ec5ffd8
 	github.com/luxfi/timer v1.0.2
-	github.com/luxfi/upgrade v1.0.1-0.20260603055252-f51810805436
-	github.com/luxfi/utils v1.1.5
+	github.com/luxfi/upgrade v1.0.2
+	github.com/luxfi/utils v1.3.0
 	github.com/luxfi/utxo v0.3.7
 	github.com/luxfi/version v1.0.1
 	github.com/luxfi/vm v1.2.0
@@ -269,7 +269,3 @@ require (
 )
 
 exclude google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
-
-replace github.com/luxfi/constants => github.com/luxfi/constants v1.5.8
-
-replace github.com/luxfi/upgrade => github.com/luxfi/upgrade v1.0.2
