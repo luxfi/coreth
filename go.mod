@@ -217,7 +217,7 @@ require (
 	github.com/luxfi/bft v0.1.5 // indirect
 	github.com/luxfi/compress v0.0.5 // indirect
 	github.com/luxfi/container v0.0.4 // indirect
-	github.com/luxfi/corona v0.7.6 // indirect
+	github.com/luxfi/corona v0.10.3 // indirect
 	github.com/luxfi/crypto/ipa v1.2.4 // indirect
 	github.com/luxfi/fhe v1.8.2 // indirect
 	github.com/luxfi/genesis v1.13.8 // indirect
@@ -225,6 +225,7 @@ require (
 	github.com/luxfi/keychain v1.0.2 // indirect
 	github.com/luxfi/lattice/v7 v7.1.4 // indirect
 	github.com/luxfi/mdns v0.1.1 // indirect
+	github.com/luxfi/mlwe v0.2.1 // indirect
 	github.com/luxfi/net v0.0.4 // indirect
 	github.com/luxfi/pq v1.0.3 // indirect
 	github.com/luxfi/resource v0.0.1 // indirect
@@ -268,3 +269,7 @@ require (
 )
 
 exclude google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
+
+replace github.com/luxfi/constants => github.com/luxfi/constants v1.5.8
+
+replace github.com/luxfi/upgrade => github.com/luxfi/upgrade v1.0.2
