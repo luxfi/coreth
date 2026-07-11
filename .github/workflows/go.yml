@@ -10,7 +10,7 @@ on:
 jobs:
   lint:
     name: Lint
-    runs-on: evo
+    runs-on: lux-build-amd64
     steps:
     - uses: actions/checkout@v4
       with:
@@ -37,7 +37,7 @@ jobs:
   test:
     name: Test
     needs: lint
-    runs-on: evo
+    runs-on: lux-build-amd64
     strategy:
       matrix:
         go:
