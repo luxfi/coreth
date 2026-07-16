@@ -1808,6 +1808,22 @@ func (v *VM) importRLPBlocks(rlpPath string) error {
 				"hash", currentHash,
 				"height", currentBlock.Number.Uint64(),
 			)
+
+			// v1.36.19 FIX — refresh the IN-MEMORY consensus view after a startup RLP
+			// import. The write above updated the on-disk acceptedBlockDB, but
+			// initChainState() (run before this import in Initialize) set
+			// chain.State.lastAcceptedBlock to the PRE-import genesis tip. Without
+			// refreshing it this boot, the consensus layer stays at height 0 while the
+			// EVM head is the imported tip, and the proposervm wedges
+			// ("BuildBlock: preferred block not fetchable", preferred=empty id) until a
+			// restart re-reads acceptedBlockDB. The admin_importChain RPC path
+			// (eth/api_admin.go) already calls this; the startup --import-chain-data path
+			// must too. Reuse the SAME tested callback: it refreshes
+			// chain.State.lastAcceptedBlock AND notifies the consensus engine to resume
+			// block production from the imported tip.
+			if err := v.eth.CallPostImportCallback(currentHash, currentBlock.Number.Uint64()); err != nil {
+				return fmt.Errorf("failed to sync consensus state after RLP import: %w", err)
+			}
 		}
 	}
 
