@@ -7,7 +7,7 @@ import (
 	"github.com/luxfi/coreth/precompile/contract"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/precompile/mldsa"
-	"github.com/luxfi/precompile/pqcrypto"
+	"github.com/luxfi/precompile/mlkem"
 	"github.com/luxfi/precompile/slhdsa"
 
 	pqcontract "github.com/luxfi/precompile/contract"
@@ -41,8 +41,8 @@ var PQCryptoPrecompiles = map[common.Address]contract.StatefulPrecompiledContrac
 	// SLH-DSA (FIPS 205) - Hash-based signatures
 	slhdsa.ContractSLHDSAVerifyAddress: &pqPrecompileAdapter{inner: slhdsa.SLHDSAVerifyPrecompile},
 
-	// PQCrypto - General post-quantum operations including ML-KEM
-	pqcrypto.ContractAddress: &pqPrecompileAdapter{inner: pqcrypto.PQCryptoPrecompile},
+	// ML-KEM (FIPS 203) - Key encapsulation (crypto in luxfi/crypto/mlkem)
+	mlkem.ContractAddress: &pqPrecompileAdapter{inner: mlkem.MLKEMPrecompile},
 }
 
 func init() {
