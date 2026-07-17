@@ -36,7 +36,6 @@ import (
 	// 0x012206 Corona (Ring-LWE threshold) imported below under Threshold
 	_ "github.com/luxfi/precompile/hqc"      // 0x012208 HQC (code-based KEM, family-disjoint backup)
 	_ "github.com/luxfi/precompile/magnetar" // 0x012207 Magnetar (public-DKG MPC threshold SLH-DSA, FIPS 205 byte-equal)
-	_ "github.com/luxfi/precompile/pqcrypto" // Unified PQ crypto operations
 
 	// ============================================
 	// Privacy/Encryption (0x0700-0x07FF)
