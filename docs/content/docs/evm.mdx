@@ -186,12 +186,12 @@ Contracts can be verified on the Lux block explorer:
 module.exports = {
   networks: {
     lux: {
-      url: "https://api.lux.network/ext/bc/C/rpc",
+      url: "https://api.lux.network/v1/bc/C/rpc",
       chainId: 43114,
       accounts: [PRIVATE_KEY],
     },
     luxTestnet: {
-      url: "https://api.testnet.lux.network/ext/bc/C/rpc",
+      url: "https://api.lux-test.network/v1/bc/C/rpc",
       chainId: 43113,
       accounts: [PRIVATE_KEY],
     },
@@ -203,8 +203,8 @@ module.exports = {
 
 ```toml
 [rpc_endpoints]
-lux = "https://api.lux.network/ext/bc/C/rpc"
-lux_testnet = "https://api.testnet.lux.network/ext/bc/C/rpc"
+lux = "https://api.lux.network/v1/bc/C/rpc"
+lux_testnet = "https://api.lux-test.network/v1/bc/C/rpc"
 
 [etherscan]
 lux = { key = "${EXPLORER_API_KEY}", url = "https://api.explorer.lux.network/api" }
