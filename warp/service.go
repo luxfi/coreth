@@ -85,7 +85,7 @@ func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, qu
 	if err != nil {
 		return nil, err
 	}
-	unsignedMessage, err := warp.NewUnsignedMessage(a.chainContext.NetworkID, a.chainContext.ChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := warp.NewMessage(a.chainContext.NetworkID, a.chainContext.ChainID, blockHashPayload.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, qu
 	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, chainIDStr)
 }
 
-func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.UnsignedMessage, quorumNum uint64, chainIDStr string) (hexutil.Bytes, error) {
+func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.Message, quorumNum uint64, chainIDStr string) (hexutil.Bytes, error) {
 	chainID := constants.PrimaryNetworkID
 	if len(chainIDStr) > 0 {
 		sid, err := ids.FromString(chainIDStr)
@@ -143,9 +143,9 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.Uns
 		"numValidators", len(warpValidatorList),
 		"totalWeight", totalWeight,
 	)
-	warpMessage := &warp.Message{
-		UnsignedMessage: unsignedMessage,
-		Signature:       &warp.BitSetSignature{},
+	warpMessage := &warp.Envelope{
+		Message: *unsignedMessage,
+		Beam:    warp.BitSetSignature{},
 	}
 	signedMessage, _, _, err := a.signatureAggregator.AggregateSignatures(
 		ctx,
@@ -161,5 +161,11 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.Uns
 	// TODO: return the signature and total weight as well to the caller for more complete details
 	// Need to decide on the best UI for this and write up documentation with the potential
 	// gotchas that could impact signed messages becoming invalid.
-	return hexutil.Bytes(signedMessage.Bytes()), nil
+	// Envelope.Bytes now reports c14n failures rather than panicking, so the
+	// error has to reach the caller instead of yielding a truncated message.
+	b, err := signedMessage.Bytes()
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize signed message: %w", err)
+	}
+	return hexutil.Bytes(b), nil
 }

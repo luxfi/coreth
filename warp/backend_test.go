@@ -25,7 +25,7 @@ var (
 	sourceChainID              = ids.GenerateTestID()
 	testSourceAddress          = utils.RandomBytes(20)
 	testPayload                = []byte("test")
-	testUnsignedMessage *warp.UnsignedMessage
+	testUnsignedMessage *warp.Message
 )
 
 func init() {
@@ -33,7 +33,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	testUnsignedMessage, err = warp.NewUnsignedMessage(networkID, sourceChainID, testAddressedCallPayload.Bytes())
+	testUnsignedMessage, err = warp.NewMessage(networkID, sourceChainID, testAddressedCallPayload.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +92,7 @@ func TestGetBlockSignature(t *testing.T) {
 
 	blockHashPayload, err := payload.NewHash(blkID[:])
 	require.NoError(err)
-	unsignedMessage, err := warp.NewUnsignedMessage(networkID, sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := warp.NewMessage(networkID, sourceChainID, blockHashPayload.Bytes())
 	require.NoError(err)
 	expectedSig, err := warpSigner.Sign(unsignedMessage)
 	require.NoError(err)

@@ -32,7 +32,7 @@ func newValidator(t testing.TB, weight uint64) (bls.Signer, *warp.Validator) {
 
 func TestAggregateSignatures(t *testing.T) {
 	errTest := errors.New("test error")
-	unsignedMsg, err := warp.NewUnsignedMessage(
+	unsignedMsg, err := warp.NewMessage(
 		1338,
 		ids.ID{'y', 'e', 'e', 't'},
 		[]byte("hello world"),
@@ -81,7 +81,7 @@ func TestAggregateSignatures(t *testing.T) {
 		name                  string
 		contextWithCancelFunc func() (context.Context, context.CancelFunc)
 		aggregatorFunc        func(*gomock.Controller, context.CancelFunc) *Aggregator
-		unsignedMsg           *warp.UnsignedMessage
+		unsignedMsg           *warp.Message
 		quorumNum             uint64
 		expectedSigners       []*warp.Validator
 		expectedErr           error
@@ -246,7 +246,7 @@ func TestAggregateSignatures(t *testing.T) {
 				// because the parent context is canceled.
 				client := NewMockSignatureGetter(ctrl)
 				client.EXPECT().GetSignature(gomock.Any(), nodeID1, gomock.Any()).DoAndReturn(
-					func(ctx context.Context, _ ids.NodeID, _ *warp.UnsignedMessage) (*bls.Signature, error) {
+					func(ctx context.Context, _ ids.NodeID, _ *warp.Message) (*bls.Signature, error) {
 						<-ctx.Done()
 						err := ctx.Err()
 						require.ErrorIs(t, err, context.Canceled)
@@ -254,7 +254,7 @@ func TestAggregateSignatures(t *testing.T) {
 					},
 				).Times(1)
 				client.EXPECT().GetSignature(gomock.Any(), nodeID2, gomock.Any()).DoAndReturn(
-					func(ctx context.Context, _ ids.NodeID, _ *warp.UnsignedMessage) (*bls.Signature, error) {
+					func(ctx context.Context, _ ids.NodeID, _ *warp.Message) (*bls.Signature, error) {
 						<-ctx.Done()
 						err := ctx.Err()
 						require.ErrorIs(t, err, context.Canceled)
@@ -262,7 +262,7 @@ func TestAggregateSignatures(t *testing.T) {
 					},
 				).MaxTimes(1)
 				client.EXPECT().GetSignature(gomock.Any(), nodeID3, gomock.Any()).DoAndReturn(
-					func(ctx context.Context, _ ids.NodeID, _ *warp.UnsignedMessage) (*bls.Signature, error) {
+					func(ctx context.Context, _ ids.NodeID, _ *warp.Message) (*bls.Signature, error) {
 						<-ctx.Done()
 						err := ctx.Err()
 						require.ErrorIs(t, err, context.Canceled)
@@ -285,14 +285,14 @@ func TestAggregateSignatures(t *testing.T) {
 			aggregatorFunc: func(ctrl *gomock.Controller, cancel context.CancelFunc) *Aggregator {
 				client := NewMockSignatureGetter(ctrl)
 				client.EXPECT().GetSignature(gomock.Any(), nodeID1, gomock.Any()).DoAndReturn(
-					func(ctx context.Context, _ ids.NodeID, _ *warp.UnsignedMessage) (*bls.Signature, error) {
+					func(ctx context.Context, _ ids.NodeID, _ *warp.Message) (*bls.Signature, error) {
 						// cancel the context and return the signature
 						cancel()
 						return sig1, nil
 					},
 				).Times(1)
 				client.EXPECT().GetSignature(gomock.Any(), nodeID2, gomock.Any()).DoAndReturn(
-					func(ctx context.Context, _ ids.NodeID, _ *warp.UnsignedMessage) (*bls.Signature, error) {
+					func(ctx context.Context, _ ids.NodeID, _ *warp.Message) (*bls.Signature, error) {
 						// Should not be able to grab another signature since context was cancelled in another go routine
 						<-ctx.Done()
 						err := ctx.Err()
@@ -301,7 +301,7 @@ func TestAggregateSignatures(t *testing.T) {
 					},
 				).MaxTimes(1)
 				client.EXPECT().GetSignature(gomock.Any(), nodeID3, gomock.Any()).DoAndReturn(
-					func(ctx context.Context, _ ids.NodeID, _ *warp.UnsignedMessage) (*bls.Signature, error) {
+					func(ctx context.Context, _ ids.NodeID, _ *warp.Message) (*bls.Signature, error) {
 						// Should not be able to grab another signature since context was cancelled in another go routine
 						<-ctx.Done()
 						err := ctx.Err()
@@ -328,7 +328,7 @@ func TestAggregateSignatures(t *testing.T) {
 				client.EXPECT().GetSignature(gomock.Any(), nodeID3, gomock.Any()).DoAndReturn(
 					// The aggregator will receive sig1 and sig2 which is sufficient weight,
 					// so the remaining outstanding goroutine should be cancelled.
-					func(ctx context.Context, _ ids.NodeID, _ *warp.UnsignedMessage) (*bls.Signature, error) {
+					func(ctx context.Context, _ ids.NodeID, _ *warp.Message) (*bls.Signature, error) {
 						<-ctx.Done()
 						err := ctx.Err()
 						require.ErrorIs(t, err, context.Canceled)
@@ -362,7 +362,9 @@ func TestAggregateSignatures(t *testing.T) {
 				return
 			}
 
-			require.Equal(unsignedMsg, res.Message.UnsignedMessage)
+			// Envelope embeds the Message by value, so compare against the
+			// pointee rather than the pointer the aggregator was handed.
+			require.Equal(*unsignedMsg, res.Message.Message)
 
 			expectedSigWeight := uint64(0)
 			for _, vdr := range tt.expectedSigners {
@@ -377,8 +379,10 @@ func TestAggregateSignatures(t *testing.T) {
 			}
 			expectedSig, err := bls.AggregateSignatures(expectedSigs)
 			require.NoError(err)
-			gotBLSSig, ok := res.Message.Signature.(*warp.BitSetSignature)
-			require.True(ok)
+			// Beam is a concrete BitSetSignature on the envelope now, not the
+			// interface the old signed Message carried, so there is nothing to
+			// assert a type on.
+			gotBLSSig := res.Message.Beam
 			require.Equal(bls.SignatureToBytes(expectedSig), gotBLSSig.Signature[:])
 
 			// Count signers from the bitset

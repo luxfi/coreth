@@ -109,7 +109,7 @@ func testSendWarpMessage(t *testing.T, scheme string) {
 		payloadData,
 	)
 	require.NoError(err)
-	expectedUnsignedMessage, err := warp.NewUnsignedMessage(
+	expectedUnsignedMessage, err := warp.NewMessage(
 		tvm.vm.ctx.NetworkID,
 		tvm.vm.ctx.ChainID,
 		addressedPayload.Bytes(),
@@ -183,7 +183,7 @@ func testSendWarpMessage(t *testing.T, scheme string) {
 
 	blockHashPayload, err := payload.NewHash(blk.ID())
 	require.NoError(err)
-	unsignedMessage, err = warp.NewUnsignedMessage(tvm.vm.ctx.NetworkID, tvm.vm.ctx.ChainID, blockHashPayload.Bytes())
+	unsignedMessage, err = warp.NewMessage(tvm.vm.ctx.NetworkID, tvm.vm.ctx.ChainID, blockHashPayload.Bytes())
 	require.NoError(err)
 
 	// Verify the produced message signature is valid
@@ -208,7 +208,7 @@ func testValidateWarpMessage(t *testing.T, scheme string) {
 		payloadData,
 	)
 	require.NoError(err)
-	unsignedMessage, err := warp.NewUnsignedMessage(constants.UnitTestID, sourceChainID, addressedPayload.Bytes())
+	unsignedMessage, err := warp.NewMessage(constants.UnitTestID, sourceChainID, addressedPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -242,7 +242,7 @@ func testValidateInvalidWarpMessage(t *testing.T, scheme string) {
 		payloadData,
 	)
 	require.NoError(err)
-	unsignedMessage, err := warp.NewUnsignedMessage(constants.UnitTestID, sourceChainID, addressedPayload.Bytes())
+	unsignedMessage, err := warp.NewMessage(constants.UnitTestID, sourceChainID, addressedPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -269,7 +269,7 @@ func testValidateWarpBlockHash(t *testing.T, scheme string) {
 	blockHash := ids.GenerateTestID()
 	blockHashPayload, err := payload.NewHash(blockHash)
 	require.NoError(err)
-	unsignedMessage, err := warp.NewUnsignedMessage(constants.UnitTestID, sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := warp.NewMessage(constants.UnitTestID, sourceChainID, blockHashPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -298,7 +298,7 @@ func testValidateInvalidWarpBlockHash(t *testing.T, scheme string) {
 	blockHash := ids.GenerateTestID()
 	blockHashPayload, err := payload.NewHash(blockHash)
 	require.NoError(err)
-	unsignedMessage, err := warp.NewUnsignedMessage(constants.UnitTestID, sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := warp.NewMessage(constants.UnitTestID, sourceChainID, blockHashPayload.Bytes())
 	require.NoError(err)
 
 	exampleWarpABI := contract.ParseABI(exampleWarpABI)
@@ -311,7 +311,7 @@ func testValidateInvalidWarpBlockHash(t *testing.T, scheme string) {
 	testWarpVMTransaction(t, scheme, unsignedMessage, false, exampleWarpPayload)
 }
 
-func testWarpVMTransaction(t *testing.T, scheme string, unsignedMessage *warp.UnsignedMessage, validSignature bool, txPayload []byte) {
+func testWarpVMTransaction(t *testing.T, scheme string, unsignedMessage *warp.Message, validSignature bool, txPayload []byte) {
 	require := require.New(t)
 	fork := upgradetest.Durango
 	tvm := newVM(t, testVMConfig{
@@ -381,7 +381,7 @@ func testWarpVMTransaction(t *testing.T, scheme string, unsignedMessage *warp.Un
 	blsAggregatedSignatureBytes := bls.SignatureToBytes(blsAggregatedSignature)
 	copy(warpSignature.Signature[:], blsAggregatedSignatureBytes)
 
-	signedMessage, err := warp.NewMessage(
+	signedMessage, err := warp.NewEnvelope(
 		unsignedMessage,
 		warpSignature,
 	)
@@ -590,7 +590,7 @@ func testReceiveWarpMessage(
 
 	vm.ctx.ChainID = ids.GenerateTestID()
 	vm.ctx.NetworkID = constants.UnitTestID
-	unsignedMessage, err := warp.NewUnsignedMessage(
+	unsignedMessage, err := warp.NewMessage(
 		vm.ctx.NetworkID,
 		sourceChainID,
 		addressedPayload.Bytes(),
@@ -680,7 +680,7 @@ func testReceiveWarpMessage(
 	blsAggregatedSignatureBytes := bls.SignatureToBytes(blsAggregatedSignature)
 	copy(warpSignature.Signature[:], blsAggregatedSignatureBytes)
 
-	signedMessage, err := warp.NewMessage(
+	signedMessage, err := warp.NewEnvelope(
 		unsignedMessage,
 		warpSignature,
 	)
@@ -815,7 +815,7 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 	// Setup known message
 	knownPayload, err := payload.NewAddressedCall([]byte{0, 0, 0}, []byte("test"))
 	require.NoError(t, err)
-	knownWarpMessage, err := warp.NewUnsignedMessage(tvm.vm.ctx.NetworkID, tvm.vm.ctx.ChainID, knownPayload.Bytes())
+	knownWarpMessage, err := warp.NewMessage(tvm.vm.ctx.NetworkID, tvm.vm.ctx.ChainID, knownPayload.Bytes())
 	require.NoError(t, err)
 
 	// Add the known message and get its signature to confirm
@@ -831,7 +831,7 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 
 	type testCase struct {
 		name             string
-		message          *warp.UnsignedMessage
+		message          *warp.Message
 		expectedResponse []byte
 		err              *commonEng.AppError
 	}
@@ -844,10 +844,10 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 		},
 		{
 			name: "unknown message",
-			message: func() *warp.UnsignedMessage {
+			message: func() *warp.Message {
 				unknownPayload, err := payload.NewAddressedCall([]byte{1, 1, 1}, []byte("unknown"))
 				require.NoError(t, err)
-				msg, err := warp.NewUnsignedMessage(tvm.vm.ctx.NetworkID, tvm.vm.ctx.ChainID, unknownPayload.Bytes())
+				msg, err := warp.NewMessage(tvm.vm.ctx.NetworkID, tvm.vm.ctx.ChainID, unknownPayload.Bytes())
 				require.NoError(t, err)
 				return msg
 			}(),
@@ -855,10 +855,10 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 		},
 		{
 			name: "known block",
-			message: func() *warp.UnsignedMessage {
+			message: func() *warp.Message {
 				payload, err := payload.NewHash(lastAcceptedID)
 				require.NoError(t, err)
-				msg, err := warp.NewUnsignedMessage(tvm.vm.ctx.NetworkID, tvm.vm.ctx.ChainID, payload.Bytes())
+				msg, err := warp.NewMessage(tvm.vm.ctx.NetworkID, tvm.vm.ctx.ChainID, payload.Bytes())
 				require.NoError(t, err)
 				return msg
 			}(),
@@ -866,10 +866,10 @@ func testSignatureRequestsToVM(t *testing.T, scheme string) {
 		},
 		{
 			name: "unknown block",
-			message: func() *warp.UnsignedMessage {
+			message: func() *warp.Message {
 				payload, err := payload.NewHash(ids.GenerateTestID())
 				require.NoError(t, err)
-				msg, err := warp.NewUnsignedMessage(tvm.vm.ctx.NetworkID, tvm.vm.ctx.ChainID, payload.Bytes())
+				msg, err := warp.NewMessage(tvm.vm.ctx.NetworkID, tvm.vm.ctx.ChainID, payload.Bytes())
 				require.NoError(t, err)
 				return msg
 			}(),
@@ -933,11 +933,11 @@ func TestClearWarpDB(t *testing.T) {
 
 	// use multiple messages to test that all messages get cleared
 	payloads := [][]byte{[]byte("test1"), []byte("test2"), []byte("test3"), []byte("test4"), []byte("test5")}
-	messages := []*warp.UnsignedMessage{}
+	messages := []*warp.Message{}
 
 	// add all messages
 	for _, payload := range payloads {
-		unsignedMsg, err := warp.NewUnsignedMessage(vm.Ctx.NetworkID, vm.Ctx.ChainID, payload)
+		unsignedMsg, err := warp.NewMessage(vm.Ctx.NetworkID, vm.Ctx.ChainID, payload)
 		require.NoError(t, err)
 		require.NoError(t, innerVM.warpBackend.AddMessage(unsignedMsg))
 		// ensure that the message was added

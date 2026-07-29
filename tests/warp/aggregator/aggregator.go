@@ -23,7 +23,7 @@ type AggregateSignatureResult struct {
 	// Total weight of all validators in the chain.
 	TotalWeight uint64
 	// The message with the aggregate signature.
-	Message *warp.Message
+	Message *warp.Envelope
 }
 
 type signatureFetchResult struct {
@@ -51,7 +51,7 @@ func New(client SignatureGetter, validators []*warp.Validator, totalWeight uint6
 
 // Returns an aggregate signature over [unsignedMessage].
 // The returned signature's weight exceeds the threshold given by [quorumNum].
-func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *warp.UnsignedMessage, quorumNum uint64) (*AggregateSignatureResult, error) {
+func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *warp.Message, quorumNum uint64) (*AggregateSignatureResult, error) {
 	// Create a child context to cancel signature fetching if we reach signature threshold.
 	signatureFetchCtx, signatureFetchCancel := context.WithCancel(ctx)
 	defer signatureFetchCancel()
@@ -159,7 +159,9 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *w
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
 
-	msg, err := warp.NewMessage(unsignedMessage, warpSignature)
+	// Classical Beam-only path: the Corona (Ringtail) and ML-DSA cert-set lanes
+	// are not aggregated here, so both carry nil.
+	msg, err := warp.NewEnvelope(unsignedMessage, *warpSignature, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct warp message: %w", err)
 	}

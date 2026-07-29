@@ -28,7 +28,7 @@ type testWarpSigner struct {
 	signer warp.Signer
 }
 
-func (s *testWarpSigner) Sign(msg *warp.UnsignedMessage) ([]byte, error) {
+func (s *testWarpSigner) Sign(msg *warp.Message) ([]byte, error) {
 	sig, err := s.signer.Sign(msg)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func TestAddressedCallSignatures(t *testing.T) {
 
 	offChainPayload, err := payload.NewAddressedCall([]byte{1, 2, 3}, []byte{1, 2, 3})
 	require.NoError(t, err)
-	offchainMessage, err := warp.NewUnsignedMessage(testNetworkID, chainID, offChainPayload.Bytes())
+	offchainMessage, err := warp.NewMessage(testNetworkID, chainID, offChainPayload.Bytes())
 	require.NoError(t, err)
 	offchainSignature, err := warpSigner.Sign(offchainMessage)
 	require.NoError(t, err)
@@ -64,7 +64,7 @@ func TestAddressedCallSignatures(t *testing.T) {
 			setup: func(backend Backend) (request []byte, expectedResponse []byte) {
 				knownPayload, err := payload.NewAddressedCall([]byte{0, 0, 0}, []byte("test"))
 				require.NoError(t, err)
-				msg, err := warp.NewUnsignedMessage(testNetworkID, chainID, knownPayload.Bytes())
+				msg, err := warp.NewMessage(testNetworkID, chainID, knownPayload.Bytes())
 				require.NoError(t, err)
 				signature, err := warpSigner.Sign(msg)
 				require.NoError(t, err)
@@ -90,7 +90,7 @@ func TestAddressedCallSignatures(t *testing.T) {
 			setup: func(_ Backend) (request []byte, expectedResponse []byte) {
 				unknownPayload, err := payload.NewAddressedCall([]byte{0, 0, 0}, []byte("unknown message"))
 				require.NoError(t, err)
-				unknownMessage, err := warp.NewUnsignedMessage(testNetworkID, chainID, unknownPayload.Bytes())
+				unknownMessage, err := warp.NewMessage(testNetworkID, chainID, unknownPayload.Bytes())
 				require.NoError(t, err)
 				return unknownMessage.Bytes(), nil
 			},
@@ -181,7 +181,7 @@ func TestBlockSignatures(t *testing.T) {
 			panic(err)
 		}
 
-		msg, err := warp.NewUnsignedMessage(testNetworkID, chainID, idPayload.Bytes())
+		msg, err := warp.NewMessage(testNetworkID, chainID, idPayload.Bytes())
 		if err != nil {
 			panic(err)
 		}
@@ -198,7 +198,7 @@ func TestBlockSignatures(t *testing.T) {
 			setup: func() (request []byte, expectedResponse []byte) {
 				hashPayload, err := payload.NewHash(knownBlkID[:])
 				require.NoError(t, err)
-				unsignedMessage, err := warp.NewUnsignedMessage(testNetworkID, chainID, hashPayload.Bytes())
+				unsignedMessage, err := warp.NewMessage(testNetworkID, chainID, hashPayload.Bytes())
 				require.NoError(t, err)
 				signature, err := warpSigner.Sign(unsignedMessage)
 				require.NoError(t, err)

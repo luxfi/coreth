@@ -42,7 +42,7 @@ var (
 	sourceChainID = ids.GenerateTestID()
 
 	// valid unsigned warp message used throughout testing
-	unsignedMsg *warp.UnsignedMessage
+	unsignedMsg *warp.Message
 	// valid addressed payload
 	addressedPayload      *payload.AddressedCall
 	addressedPayloadBytes []byte
@@ -89,7 +89,7 @@ func init() {
 		panic(err)
 	}
 	addressedPayloadBytes = addressedPayload.Bytes()
-	unsignedMsg, err = warp.NewUnsignedMessage(constants.UnitTestID, sourceChainID, addressedPayload.Bytes())
+	unsignedMsg, err = warp.NewMessage(constants.UnitTestID, sourceChainID, addressedPayload.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -135,7 +135,7 @@ func newTestValidator() *testValidator {
 
 // createWarpMessage constructs a signed warp message using the global variable [unsignedMsg]
 // and the first [numKeys] signatures from [blsSignatures]
-func createWarpMessage(numKeys int) *warp.Message {
+func createWarpMessage(numKeys int) *warp.Envelope {
 	aggregateSignature, err := bls.AggregateSignatures(blsSignatures[0:numKeys])
 	if err != nil {
 		panic(err)
@@ -148,7 +148,7 @@ func createWarpMessage(numKeys int) *warp.Message {
 		Signers: bitSet.Bytes(),
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
-	warpMsg, err := warp.NewMessage(unsignedMsg, warpSignature)
+	warpMsg, err := warp.NewEnvelope(unsignedMsg, warpSignature)
 	if err != nil {
 		panic(err)
 	}
@@ -230,7 +230,7 @@ func testWarpMessageFromPrimaryNetwork(t *testing.T, requirePrimaryNetworkSigner
 	cChainID := ids.GenerateTestID()
 	addressedCall, err := payload.NewAddressedCall(agoUtils.RandomBytes(20), agoUtils.RandomBytes(100))
 	require.NoError(err)
-	unsignedMsg, err := warp.NewUnsignedMessage(constants.UnitTestID, cChainID, addressedCall.Bytes())
+	unsignedMsg, err := warp.NewMessage(constants.UnitTestID, cChainID, addressedCall.Bytes())
 	require.NoError(err)
 
 	getValidatorsOutput := make(map[ids.NodeID]*validators.GetValidatorOutput)
@@ -257,7 +257,7 @@ func testWarpMessageFromPrimaryNetwork(t *testing.T, requirePrimaryNetworkSigner
 		Signers: bitSet.Bytes(),
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
-	warpMsg, err := warp.NewMessage(unsignedMsg, warpSignature)
+	warpMsg, err := warp.NewEnvelope(unsignedMsg, warpSignature)
 	require.NoError(err)
 
 	predicateBytes := predicate.PackPredicate(warpMsg.Bytes())
@@ -378,9 +378,9 @@ func TestInvalidAddressedPayload(t *testing.T) {
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
 	// Create an unsigned message with an invalid addressed payload
-	unsignedMsg, err := warp.NewUnsignedMessage(constants.UnitTestID, sourceChainID, []byte{1, 2, 3})
+	unsignedMsg, err := warp.NewMessage(constants.UnitTestID, sourceChainID, []byte{1, 2, 3})
 	require.NoError(t, err)
-	warpMsg, err := warp.NewMessage(unsignedMsg, warpSignature)
+	warpMsg, err := warp.NewEnvelope(unsignedMsg, warpSignature)
 	require.NoError(t, err)
 	warpMsgBytes := warpMsg.Bytes()
 	predicateBytes := predicate.PackPredicate(warpMsgBytes)
@@ -404,14 +404,14 @@ func TestInvalidAddressedPayload(t *testing.T) {
 func TestInvalidBitSet(t *testing.T) {
 	addressedCall, err := payload.NewAddressedCall(agoUtils.RandomBytes(20), agoUtils.RandomBytes(100))
 	require.NoError(t, err)
-	unsignedMsg, err := warp.NewUnsignedMessage(
+	unsignedMsg, err := warp.NewMessage(
 		constants.UnitTestID,
 		sourceChainID,
 		addressedCall.Bytes(),
 	)
 	require.NoError(t, err)
 
-	msg, err := warp.NewMessage(
+	msg, err := warp.NewEnvelope(
 		unsignedMsg,
 		&warp.BitSetSignature{
 			Signers:   make([]byte, 1),

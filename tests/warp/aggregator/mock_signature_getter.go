@@ -44,7 +44,7 @@ func (m *MockSignatureGetter) EXPECT() *MockSignatureGetterMockRecorder {
 }
 
 // GetSignature mocks base method.
-func (m *MockSignatureGetter) GetSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *warp.UnsignedMessage) (*bls.Signature, error) {
+func (m *MockSignatureGetter) GetSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *warp.Message) (*bls.Signature, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSignature", ctx, nodeID, unsignedWarpMessage)
 	ret0, _ := ret[0].(*bls.Signature)
