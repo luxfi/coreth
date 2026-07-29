@@ -153,22 +153,20 @@ func (c *Config) PredicateGas(predicateBytes []byte) (uint64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("%w: %s", errInvalidPredicateBytes, err)
 	}
-	warpMessage, err := warp.ParseMessage(unpackedPredicateBytes)
+	warpMessage, err := warp.ParseEnvelope(unpackedPredicateBytes)
 	if err != nil {
 		return 0, fmt.Errorf("%w: %s", errInvalidWarpMsg, err)
 	}
-	_, err = payload.ParsePayload(warpMessage.UnsignedMessage.Payload)
+	_, err = payload.ParsePayload(warpMessage.Message.Payload)
 	if err != nil {
 		return 0, fmt.Errorf("%w: %s", errInvalidWarpMsgPayload, err)
 	}
 
-	// Get number of signers from the signature
-	numSigners := 0
-	if bitSetSig, ok := warpMessage.Signature.(*warp.BitSetSignature); ok {
-		numSigners = bitSetSig.Signers.Len()
-	} else {
-		return 0, fmt.Errorf("%w: unknown signature type", errCannotGetNumSigners)
-	}
+	// Get number of signers from the Beam lane. Envelope.Beam is a concrete
+	// BitSetSignature, not the interface the old signed Message carried, so the
+	// unknown-signature-type branch that used to guard this is now structurally
+	// unreachable — a parsed envelope always has a Beam to count.
+	numSigners := warpMessage.Beam.Signers.Len()
 	signerGas, overflow := math.SafeMul(uint64(numSigners), GasCostPerWarpSigner)
 	if overflow {
 		return 0, errOverflowSignersGasCost
@@ -189,7 +187,7 @@ func (c *Config) VerifyPredicate(predicateContext *precompileconfig.PredicateCon
 	}
 
 	// Note: PredicateGas should be called before VerifyPredicate, so we should never reach an error case here.
-	warpMsg, err := warp.ParseMessage(unpackedPredicateBytes)
+	warpMsg, err := warp.ParseEnvelope(unpackedPredicateBytes)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errCannotParseWarpMsg, err)
 	}
@@ -203,7 +201,7 @@ func (c *Config) VerifyPredicate(predicateContext *precompileconfig.PredicateCon
 
 	// Wrap validators.State on the chain quasar context to special case the Primary Network
 	var sourceChainID ids.ID
-	copy(sourceChainID[:], warpMsg.UnsignedMessage.SourceChainID[:])
+	copy(sourceChainID[:], warpMsg.Message.SourceChainID[:])
 
 	// Type assert ValidatorState to validators.State
 	validatorState, ok := predicateContext.ConsensusCtx.ValidatorState.(validators.State)
@@ -219,7 +217,7 @@ func (c *Config) VerifyPredicate(predicateContext *precompileconfig.PredicateCon
 	)
 
 	// Verify the message signature
-	err = warp.VerifyMessage(
+	err = warp.VerifyEnvelope(
 		warpMsg,
 		predicateContext.ConsensusCtx.NetworkID,
 		state.AsWarpValidatorState(),

@@ -21,7 +21,7 @@ const (
 
 // Verify verifies the signature of the message
 // It also implements the warp.Verifier interface
-func (b *backend) Verify(ctx context.Context, unsignedMessage *warp.UnsignedMessage, _ []byte) error {
+func (b *backend) Verify(ctx context.Context, unsignedMessage *warp.Message, _ []byte) error {
 	messageID := unsignedMessage.ID()
 	// Known on-chain messages should be signed
 	if _, err := b.GetMessage(messageID); err == nil {

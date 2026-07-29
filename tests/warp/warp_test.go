@@ -183,11 +183,11 @@ type warpTest struct {
 	// Fields set throughout test execution
 	blockID                     ids.ID
 	blockPayload                *payload.Hash
-	blockPayloadUnsignedMessage *warp.UnsignedMessage
-	blockPayloadSignedMessage   *warp.Message
+	blockPayloadUnsignedMessage *warp.Message
+	blockPayloadSignedMessage   *warp.Envelope
 
-	addressedCallUnsignedMessage *warp.UnsignedMessage
-	addressedCallSignedMessage   *warp.Message
+	addressedCallUnsignedMessage *warp.Message
+	addressedCallSignedMessage   *warp.Envelope
 }
 
 func newWarpTest(ctx context.Context, sendingChain *Chain, receivingChain *Chain) *warpTest {
@@ -291,7 +291,7 @@ func (w *warpTest) sendMessageFromSendingChain() {
 	w.blockID = ids.ID(blockHash) // Set blockID to construct a warp message containing a block hash payload later
 	w.blockPayload, err = payload.NewHash(w.blockID[:])
 	require.NoError(err)
-	w.blockPayloadUnsignedMessage, err = warp.NewUnsignedMessage(w.networkID, w.sendingChain.BlockchainID, w.blockPayload.Bytes())
+	w.blockPayloadUnsignedMessage, err = warp.NewMessage(w.networkID, w.sendingChain.BlockchainID, w.blockPayload.Bytes())
 	require.NoError(err)
 
 	ginkgo.GinkgoLogr.Info("Fetching relevant warp logs from the newly produced block")

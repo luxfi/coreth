@@ -42,7 +42,7 @@ func init() {
 
 type messageHandler interface {
 	packFailed() []byte
-	handleMessage(msg *warp.Message) ([]byte, error)
+	handleMessage(msg *warp.Envelope) ([]byte, error)
 }
 
 func handleWarpMessage(accessibleState contract.AccessibleState, input []byte, suppliedGas uint64, handler messageHandler) ([]byte, uint64, error) {
@@ -82,7 +82,7 @@ func handleWarpMessage(accessibleState contract.AccessibleState, input []byte, s
 	if err != nil {
 		return nil, remainingGas, fmt.Errorf("%w: %s", errInvalidPredicateBytes, err)
 	}
-	warpMessage, err := warp.ParseMessage(unpackedPredicateBytes)
+	warpMessage, err := warp.ParseEnvelope(unpackedPredicateBytes)
 	if err != nil {
 		return nil, remainingGas, fmt.Errorf("%w: %s", errInvalidWarpMsg, err)
 	}
@@ -99,14 +99,14 @@ func (addressedPayloadHandler) packFailed() []byte {
 	return getVerifiedWarpMessageInvalidOutput
 }
 
-func (addressedPayloadHandler) handleMessage(warpMessage *warp.Message) ([]byte, error) {
-	addressedPayload, err := payload.ParseAddressedCall(warpMessage.UnsignedMessage.Payload)
+func (addressedPayloadHandler) handleMessage(warpMessage *warp.Envelope) ([]byte, error) {
+	addressedPayload, err := payload.ParseAddressedCall(warpMessage.Message.Payload)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errInvalidAddressedPayload, err)
 	}
 	return PackGetVerifiedWarpMessageOutput(GetVerifiedWarpMessageOutput{
 		Message: WarpMessage{
-			SourceChainID:       common.Hash(warpMessage.UnsignedMessage.SourceChainID),
+			SourceChainID:       common.Hash(warpMessage.Message.SourceChainID),
 			OriginSenderAddress: common.BytesToAddress(addressedPayload.SourceAddress),
 			Payload:             addressedPayload.Payload,
 		},
@@ -120,14 +120,14 @@ func (blockHashHandler) packFailed() []byte {
 	return getVerifiedWarpBlockHashInvalidOutput
 }
 
-func (blockHashHandler) handleMessage(warpMessage *warp.Message) ([]byte, error) {
-	blockHashPayload, err := payload.ParseHash(warpMessage.UnsignedMessage.Payload)
+func (blockHashHandler) handleMessage(warpMessage *warp.Envelope) ([]byte, error) {
+	blockHashPayload, err := payload.ParseHash(warpMessage.Message.Payload)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errInvalidBlockHashPayload, err)
 	}
 	return PackGetVerifiedWarpBlockHashOutput(GetVerifiedWarpBlockHashOutput{
 		WarpBlockHash: WarpBlockHash{
-			SourceChainID: common.Hash(warpMessage.UnsignedMessage.SourceChainID),
+			SourceChainID: common.Hash(warpMessage.Message.SourceChainID),
 			BlockHash:     common.BytesToHash(blockHashPayload.Hash[:]),
 		},
 		Valid: true,
