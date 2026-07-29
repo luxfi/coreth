@@ -161,8 +161,6 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.Mes
 	// TODO: return the signature and total weight as well to the caller for more complete details
 	// Need to decide on the best UI for this and write up documentation with the potential
 	// gotchas that could impact signed messages becoming invalid.
-	// Envelope.Bytes now reports c14n failures rather than panicking, so the
-	// error has to reach the caller instead of yielding a truncated message.
 	b, err := signedMessage.Bytes()
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize signed message: %w", err)
