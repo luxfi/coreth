@@ -162,10 +162,7 @@ func (c *Config) PredicateGas(predicateBytes []byte) (uint64, error) {
 		return 0, fmt.Errorf("%w: %s", errInvalidWarpMsgPayload, err)
 	}
 
-	// Get number of signers from the Beam lane. Envelope.Beam is a concrete
-	// BitSetSignature, not the interface the old signed Message carried, so the
-	// unknown-signature-type branch that used to guard this is now structurally
-	// unreachable — a parsed envelope always has a Beam to count.
+	// Beam is a concrete BitSetSignature, so a parsed envelope always has one.
 	numSigners := warpMessage.Beam.Signers.Len()
 	signerGas, overflow := math.SafeMul(uint64(numSigners), GasCostPerWarpSigner)
 	if overflow {

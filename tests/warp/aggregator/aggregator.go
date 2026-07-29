@@ -159,8 +159,7 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *w
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
 
-	// Classical Beam-only path: the Corona (Ringtail) and ML-DSA cert-set lanes
-	// are not aggregated here, so both carry nil.
+	// Beam-only: no Corona or ML-DSA cert-set lane.
 	msg, err := warp.NewEnvelope(unsignedMessage, *warpSignature, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct warp message: %w", err)

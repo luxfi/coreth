@@ -362,8 +362,6 @@ func TestAggregateSignatures(t *testing.T) {
 				return
 			}
 
-			// Envelope embeds the Message by value, so compare against the
-			// pointee rather than the pointer the aggregator was handed.
 			require.Equal(*unsignedMsg, res.Message.Message)
 
 			expectedSigWeight := uint64(0)
@@ -379,9 +377,6 @@ func TestAggregateSignatures(t *testing.T) {
 			}
 			expectedSig, err := bls.AggregateSignatures(expectedSigs)
 			require.NoError(err)
-			// Beam is a concrete BitSetSignature on the envelope now, not the
-			// interface the old signed Message carried, so there is nothing to
-			// assert a type on.
 			gotBLSSig := res.Message.Beam
 			require.Equal(bls.SignatureToBytes(expectedSig), gotBLSSig.Signature[:])
 
