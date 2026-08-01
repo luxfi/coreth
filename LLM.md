@@ -55,6 +55,27 @@ go test -v ./...
 
 ## Known Issues & Fixes
 
+### `Dockerfile` is dead and is deliberately not maintained
+
+The root `Dockerfile` cannot build, for three independent reasons, and no CI
+workflow references it (`.github/workflows/` builds and tests only — it never
+builds an image). It was left untouched during the fleet-wide Go 1.26.5 builder
+bump precisely so this file does not read as current:
+
+1. `FROM golang:1.26.4-bullseye` — that tag has never existed. The official
+   `golang` images dropped Debian 11; the last bullseye tag published is
+   `golang:1.24.6-bullseye`. Any Go >= 1.25 builder must be `bookworm` (or
+   `trixie`/`alpine`), which is what the rest of the fleet uses.
+2. `RUN ./scripts/build_lux.sh` — that script no longer exists anywhere in
+   `luxfi/node`, on `main` or on any recent `v1.36.x` tag. The current entry
+   point is `scripts/build.sh`.
+3. `FROM debian:11-slim` as the runtime — EOL, and glibc-incompatible with any
+   builder new enough to compile this module.
+
+Fixing only the base image would leave the build failing at (2) while making
+the file look maintained. Either repair all three against a real `LUX_VERSION`
+and wire it to CI, or delete it.
+
 ### Block Import Persistence Fix (2025-12-31)
 
 **Issue**: After importing blocks via `admin_importChain`, blocks were stored in the database but the consensus layer didn't recognize them as the chain head. This meant:
