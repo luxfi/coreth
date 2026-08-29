@@ -32,8 +32,8 @@ import (
 	_ "github.com/luxfi/precompile/mldsa"    // 0x012202 ML-DSA signature verification (FIPS 204)
 	_ "github.com/luxfi/precompile/slhdsa"   // 0x012203 SLH-DSA stateless hash signatures (FIPS 205)
 	// 0x012204 Pulsar (Module-LWE threshold FIPS 204) imported below under Threshold
-	_ "github.com/luxfi/precompile/p3q"      // 0x012205 P3Q strict-PQ STARK verifier
-	// 0x012206 Corona (Ring-LWE threshold) imported below under Threshold
+	_ "github.com/luxfi/precompile/p3q"      // 0x012205 P3Q unified PQ threshold-signature verifier family (kinds: Pulsar, Corona, Magnetar)
+	// 0x012206 Corona (Module-LWE threshold) imported below under Threshold
 	_ "github.com/luxfi/precompile/magnetar" // 0x012207 Magnetar (public-DKG MPC threshold SLH-DSA, FIPS 205 byte-equal)
 	_ "github.com/luxfi/precompile/hqc"      // 0x012208 HQC (code-based KEM, family-disjoint backup)
 	_ "github.com/luxfi/precompile/pqcrypto" // Unified PQ crypto operations
@@ -51,7 +51,7 @@ import (
 	// ============================================
 	_ "github.com/luxfi/precompile/cggmp21" // CGGMP21 threshold ECDSA
 	_ "github.com/luxfi/precompile/frost"   // FROST threshold Schnorr
-	_ "github.com/luxfi/precompile/corona"  // 0x012206 Corona (Ring-LWE threshold, FIPS-equivalent)
+	_ "github.com/luxfi/precompile/corona"  // 0x012206 Corona (Module-LWE threshold, FIPS-equivalent)
 	_ "github.com/luxfi/precompile/pulsar"  // 0x012204 Pulsar (Module-LWE threshold FIPS 204)
 
 	// ============================================
