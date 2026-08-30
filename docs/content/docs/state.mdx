@@ -288,7 +288,7 @@ curl -X POST -H "Content-Type: application/json" --data '{
   "method": "eth_syncing",
   "params": [],
   "id": 1
-}' http://localhost:9650/v1/bc/C/rpc
+}' http://localhost:9650/v1/chain/C/rpc
 ```
 
 Response during sync:
@@ -320,7 +320,7 @@ curl -X POST -H "Content-Type: application/json" --data '{
     "latest"
   ],
   "id": 1
-}' http://localhost:9650/v1/bc/C/rpc
+}' http://localhost:9650/v1/chain/C/rpc
 ```
 
 Response:
@@ -354,7 +354,7 @@ curl -X POST -H "Content-Type: application/json" --data '{
     [["0x...", "0x..."]]
   ],
   "id": 1
-}' http://localhost:9650/v1/bc/C/rpc
+}' http://localhost:9650/v1/chain/C/rpc
 ```
 
 ## Performance Tuning

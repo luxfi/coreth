@@ -16,13 +16,13 @@ Ethereum has its own notion of `networkID` and `chainID`. These have no relation
 To interact with C-Chain via the JSON-RPC endpoint:
 
 ```sh
-/v1/bc/C/rpc
+/v1/chain/C/rpc
 ```
 
 To interact with other instances of the EVM via the JSON-RPC endpoint:
 
 ```sh
-/v1/bc/blockchainID/rpc
+/v1/chain/blockchainID/rpc
 ```
 
 where `blockchainID` is the ID of the blockchain running the EVM.
@@ -37,13 +37,13 @@ websocket API calls for API methods that don't exist on the C-Chain's HTTP API
 To interact with C-Chain via the websocket endpoint:
 
 ```sh
-/v1/bc/C/ws
+/v1/chain/C/ws
 ```
 
 For example, to interact with the C-Chain's Ethereum APIs via websocket on localhost, you can use:
 
 ```sh
-ws://127.0.0.1:9650/v1/bc/C/ws
+ws://127.0.0.1:9650/v1/chain/C/ws
 ```
 
 <Callout title="Tip" icon = {<BadgeCheck className="size-5 text-card" fill="green" />} >
@@ -54,7 +54,7 @@ host that supports encryption, use `wss://`.
 To interact with other instances of the EVM via the websocket endpoint:
 
 ```sh
-/v1/bc/blockchainID/ws
+/v1/chain/blockchainID/ws
 ```
 
 where `blockchainID` is the ID of the blockchain running the EVM.
@@ -96,7 +96,7 @@ In addition to the standard Ethereum APIs, Lux offers `eth_baseFee`,
 They use the same endpoint as standard Ethereum APIs:
 
 ```sh
-/v1/bc/C/rpc
+/v1/chain/C/rpc
 ```
 
 #### `eth_baseFee`
@@ -119,7 +119,7 @@ curl -X POST --data '{
     "id"     :1,
     "method" :"eth_baseFee",
     "params" :[]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/rpc
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/rpc
 ```
 
 **Example Response:**
@@ -152,7 +152,7 @@ curl -X POST --data '{
     "id"     :1,
     "method" :"eth_maxPriorityFeePerGas",
     "params" :[]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/rpc
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/rpc
 ```
 
 **Example Response:**
@@ -175,7 +175,7 @@ The Admin API provides administrative functionality for the EVM.
 ### Endpoint
 
 ```sh
-/v1/bc/C/admin
+/v1/chain/C/admin
 ```
 
 ### Methods
@@ -198,7 +198,7 @@ curl -X POST --data '{
     "id"     :1,
     "method" :"admin_startCPUProfiler",
     "params" :[]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/admin
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/admin
 ```
 
 #### `admin_stopCPUProfiler`
@@ -219,7 +219,7 @@ curl -X POST --data '{
     "id"     :1,
     "method" :"admin_stopCPUProfiler",
     "params" :[]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/admin
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/admin
 ```
 
 #### `admin_memoryProfile`
@@ -240,7 +240,7 @@ curl -X POST --data '{
     "id"     :1,
     "method" :"admin_memoryProfile",
     "params" :[]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/admin
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/admin
 ```
 
 #### `admin_lockProfile`
@@ -261,7 +261,7 @@ curl -X POST --data '{
     "id"     :1,
     "method" :"admin_lockProfile",
     "params" :[]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/admin
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/admin
 ```
 
 #### `admin_setLogLevel`
@@ -286,7 +286,7 @@ curl -X POST --data '{
     "params" :[{
         "level": "debug"
     }]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/admin
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/admin
 ```
 
 #### `admin_getVMConfig`
@@ -311,7 +311,7 @@ curl -X POST --data '{
     "id"     :1,
     "method" :"admin_getVMConfig",
     "params" :[]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/admin
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/admin
 ```
 
 ## Lux-Specific APIs
@@ -319,7 +319,7 @@ curl -X POST --data '{
 ### Endpoint
 
 ```sh
-/v1/bc/C/lux
+/v1/chain/C/lux
 ```
 
 ### Methods
@@ -364,7 +364,7 @@ curl -X POST --data '{
         "limit": 100,
         "encoding": "hex"
     }]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/lux
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/lux
 ```
 
 #### `lux.issueTx`
@@ -393,7 +393,7 @@ curl -X POST --data '{
         "tx": "0x...",
         "encoding": "hex"
     }]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/lux
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/lux
 ```
 
 #### `lux.getAtomicTxStatus`
@@ -421,7 +421,7 @@ curl -X POST --data '{
     "params" :[{
         "txID": "2QouvNW..."
     }]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/lux
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/lux
 ```
 
 #### `lux.getAtomicTx`
@@ -452,7 +452,7 @@ curl -X POST --data '{
         "txID": "2QouvNW...",
         "encoding": "hex"
     }]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/lux
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/lux
 ```
 
 #### `lux.version`
@@ -475,5 +475,5 @@ curl -X POST --data '{
     "id"     :1,
     "method" :"lux.version",
     "params" :[]
-}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/bc/C/lux
+}' -H 'content-type:application/json;' 127.0.0.1:9650/v1/chain/C/lux
 ```
