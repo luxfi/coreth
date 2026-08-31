@@ -13,7 +13,7 @@ import (
 const TestnetAPIURI = "https://api.lux-test.network"
 
 func ExampleClient() {
-	ethC, err := Dial(TestnetAPIURI + "/v1/bc/C/rpc")
+	ethC, err := Dial(TestnetAPIURI + "/v1/chain/C/rpc")
 	if err != nil {
 		panic(err)
 	}

@@ -651,5 +651,5 @@ func generateKeys(preFundedKey *ecdsa.PrivateKey, numWorkers int) ([]*key.Key, [
 }
 
 func toWebsocketURI(uri string, blockchainID string) string {
-	return fmt.Sprintf("ws://%s/v1/bc/%s/ws", strings.TrimPrefix(uri, "http://"), blockchainID)
+	return fmt.Sprintf("ws://%s/v1/chain/%s/ws", strings.TrimPrefix(uri, "http://"), blockchainID)
 }
