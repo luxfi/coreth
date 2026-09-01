@@ -29,7 +29,7 @@ func (s *ChainSuite) SetBlockchainIDs(blockchainIDs map[string]string) {
 
 // GetDefaultChainURI returns the default chain URI for a given blockchainID
 func GetDefaultChainURI(blockchainID string) string {
-	return fmt.Sprintf("%s/v1/bc/%s/rpc", DefaultLocalNodeURI, blockchainID)
+	return fmt.Sprintf("%s/v1/chain/%s/rpc", DefaultLocalNodeURI, blockchainID)
 }
 
 // GetFilesAndAliases returns a map of aliases to file paths in given [dir].
