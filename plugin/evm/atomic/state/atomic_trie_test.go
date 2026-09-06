@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	consensustest "github.com/luxfi/consensus/test/helpers"
-	"github.com/luxfi/utils/wrappers"
+	"github.com/luxfi/util/wrappers"
 	"github.com/luxfi/database"
 	"github.com/luxfi/database/badgerdb"
 	"github.com/luxfi/database/memdb"

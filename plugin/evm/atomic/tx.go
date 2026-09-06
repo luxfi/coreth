@@ -23,7 +23,7 @@ import (
 	luxfiids "github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/p2p/gossip"
-	"github.com/luxfi/utils/wrappers"
+	"github.com/luxfi/util/wrappers"
 	"github.com/luxfi/utxo/secp256k1fx"
 	"github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/vm/components/verify"

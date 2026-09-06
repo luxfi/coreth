@@ -26,7 +26,7 @@ import (
 	"github.com/luxfi/crypto/bls/signer/localsigner"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
-	agoUtils "github.com/luxfi/utils"
+	agoUtils "github.com/luxfi/util"
 	"github.com/luxfi/warp"
 	"github.com/luxfi/warp/payload"
 	"github.com/stretchr/testify/require"

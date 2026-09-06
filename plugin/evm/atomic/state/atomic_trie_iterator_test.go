@@ -12,7 +12,7 @@ import (
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/utils"
+	"github.com/luxfi/util"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

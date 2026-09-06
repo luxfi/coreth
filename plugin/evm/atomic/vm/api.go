@@ -15,7 +15,7 @@ import (
 	"github.com/luxfi/ids"
 	log "github.com/luxfi/log"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/utils/json"
+	"github.com/luxfi/util/json"
 	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/vm/api"
 	luxatomic "github.com/luxfi/vm/chains/atomic"

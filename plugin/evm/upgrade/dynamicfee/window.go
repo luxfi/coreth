@@ -11,7 +11,7 @@ import (
 
 	"github.com/luxfi/coreth/utils"
 	safemath "github.com/luxfi/math"
-	"github.com/luxfi/utils/wrappers"
+	"github.com/luxfi/util/wrappers"
 )
 
 const (

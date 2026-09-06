@@ -18,8 +18,8 @@ import (
 	"github.com/luxfi/database/prefixdb"
 	"github.com/luxfi/database/versiondb"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/utils"
-	"github.com/luxfi/utils/wrappers"
+	"github.com/luxfi/util"
+	"github.com/luxfi/util/wrappers"
 )
 
 const (

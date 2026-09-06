@@ -22,8 +22,8 @@ import (
 	log "github.com/luxfi/log"
 	"github.com/luxfi/math"
 	"github.com/luxfi/math/set"
-	luxutils "github.com/luxfi/utils"
-	"github.com/luxfi/utils/wrappers"
+	luxutil "github.com/luxfi/util"
+	"github.com/luxfi/util/wrappers"
 	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/utxo/secp256k1fx"
 	"github.com/luxfi/vm/chains/atomic"
@@ -135,7 +135,7 @@ func (utx *UnsignedExportTx) Verify(
 	if !lux.IsSortedTransferableOutputs(utx.ExportedOutputs) {
 		return ErrOutputsNotSorted
 	}
-	if !luxutils.IsSortedAndUnique(utx.Ins) {
+	if !luxutil.IsSortedAndUnique(utx.Ins) {
 		return ErrInputsNotSortedUnique
 	}
 

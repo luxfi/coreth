@@ -16,7 +16,7 @@ import (
 	"github.com/luxfi/coreth/plugin/evm/config"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/rpc"
-	"github.com/luxfi/utils/json"
+	"github.com/luxfi/util/json"
 	"github.com/luxfi/vm/api"
 )
 

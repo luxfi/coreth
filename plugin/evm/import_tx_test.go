@@ -28,7 +28,7 @@ import (
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
 	"github.com/luxfi/upgrade/upgradetest"
-	luxutils "github.com/luxfi/utils"
+	luxutil "github.com/luxfi/util"
 	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/utxo/secp256k1fx"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
@@ -129,8 +129,8 @@ func TestImportTxVerify(t *testing.T) {
 	}
 
 	// Sort the inputs and outputs to ensure the transaction is canonical
-	luxutils.Sort(importTx.ImportedInputs)
-	luxutils.Sort(importTx.Outs)
+	luxutil.Sort(importTx.ImportedInputs)
+	luxutil.Sort(importTx.Outs)
 
 	tests := map[string]atomicTxVerifyTest{
 		"nil tx": {

@@ -10,7 +10,7 @@ import (
 	corethatomic "github.com/luxfi/coreth/plugin/evm/atomic"
 
 	"github.com/luxfi/ids"
-	"github.com/luxfi/utils/wrappers"
+	"github.com/luxfi/util/wrappers"
 	"github.com/luxfi/vm/chains/atomic"
 
 	"github.com/luxfi/geth/trie"

@@ -33,7 +33,7 @@ import (
 	"github.com/luxfi/metric"
 	"github.com/luxfi/p2p"
 	"github.com/luxfi/p2p/gossip"
-	agoUtils "github.com/luxfi/utils"
+	agoUtils "github.com/luxfi/util"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/vm/proto/pb/sdk"
 	"github.com/stretchr/testify/require"

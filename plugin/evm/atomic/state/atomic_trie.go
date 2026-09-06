@@ -11,7 +11,7 @@ import (
 	"github.com/luxfi/constants"
 	luxdatabase "github.com/luxfi/database"
 	"github.com/luxfi/ids"
-	"github.com/luxfi/utils/wrappers"
+	"github.com/luxfi/util/wrappers"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 
 	"github.com/luxfi/coreth/plugin/evm/database"

@@ -29,7 +29,7 @@ import (
 	luxdssip "github.com/luxfi/p2p/gossip"
 	"github.com/luxfi/runtime"
 	"github.com/luxfi/timer/mockable"
-	luxutils "github.com/luxfi/utils"
+	luxutil "github.com/luxfi/util"
 	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/utxo/secp256k1fx"
 	luxvm "github.com/luxfi/vm"
@@ -97,7 +97,7 @@ type VM struct {
 	shutdownWg sync.WaitGroup
 
 	clock        mockable.Clock
-	bootstrapped luxutils.Atomic[bool]
+	bootstrapped luxutil.Atomic[bool]
 }
 
 func WrapVM(vm extension.InnerVM) *VM {

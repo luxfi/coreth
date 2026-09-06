@@ -16,7 +16,7 @@ import (
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/utils/wrappers"
+	"github.com/luxfi/util/wrappers"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 	"github.com/luxfi/vm/components/verify"
 )

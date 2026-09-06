@@ -19,7 +19,7 @@ import (
 	log "github.com/luxfi/log"
 	"github.com/luxfi/math"
 	"github.com/luxfi/math/set"
-	"github.com/luxfi/utils"
+	"github.com/luxfi/util"
 	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/utxo/secp256k1fx"
 	"github.com/luxfi/vm/chains/atomic"

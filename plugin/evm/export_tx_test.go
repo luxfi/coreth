@@ -31,7 +31,7 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
 	"github.com/luxfi/upgrade/upgradetest"
-	luxutils "github.com/luxfi/utils"
+	luxutil "github.com/luxfi/util"
 	lux "github.com/luxfi/utxo"
 	"github.com/luxfi/utxo/secp256k1fx"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
@@ -524,7 +524,7 @@ func TestExportTxSemanticVerify(t *testing.T) {
 			},
 		},
 	}
-	luxutils.Sort(validExportTx.Ins)
+	luxutil.Sort(validExportTx.Ins)
 
 	validLUXExportTx := &atomic.UnsignedExportTx{
 		NetworkID:        vm.Ctx.NetworkID,

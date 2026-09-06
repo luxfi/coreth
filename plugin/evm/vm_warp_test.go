@@ -48,7 +48,7 @@ import (
 	"github.com/luxfi/p2p"
 	"github.com/luxfi/upgrade"
 	"github.com/luxfi/upgrade/upgradetest"
-	avagoUtils "github.com/luxfi/utils"
+	avagoUtils "github.com/luxfi/util"
 	"github.com/luxfi/vm/chain"
 	"github.com/luxfi/warp"
 	luxwarp "github.com/luxfi/warp"

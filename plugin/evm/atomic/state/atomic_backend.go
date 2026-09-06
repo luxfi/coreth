@@ -14,8 +14,8 @@ import (
 	"github.com/luxfi/geth/common"
 	"github.com/luxfi/ids"
 	log "github.com/luxfi/log"
-	"github.com/luxfi/utils"
-	"github.com/luxfi/utils/wrappers"
+	"github.com/luxfi/util"
+	"github.com/luxfi/util/wrappers"
 	luxatomic "github.com/luxfi/vm/chains/atomic"
 )
 

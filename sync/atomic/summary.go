@@ -15,7 +15,7 @@ import (
 
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/geth/common"
-	"github.com/luxfi/utils/wrappers"
+	"github.com/luxfi/util/wrappers"
 )
 
 var (
