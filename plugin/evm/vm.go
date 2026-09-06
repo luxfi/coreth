@@ -803,7 +803,7 @@ func (v *VM) initializeChain(lastAcceptedHash common.Hash) error {
 	if err != nil {
 		return err
 	}
-	v.eth.SetEtherbase(constants.BlackholeAddr)
+	v.eth.SetEtherbase(common.Address(constants.BlackholeAddr))
 	v.txPool = v.eth.TxPool()
 	v.blockChain = v.eth.BlockChain()
 	v.miner = v.eth.Miner()

@@ -347,7 +347,7 @@ func (b *wrappedBlock) syntacticVerify() error {
 	}
 	// Coinbase must match the BlackholeAddr on C-Chain
 	if ethHeader.Coinbase != constants.BlackholeAddr {
-		return fmt.Errorf("invalid coinbase %v does not match required blackhole address %v", ethHeader.Coinbase, constants.BlackholeAddr)
+		return fmt.Errorf("invalid coinbase %v does not match required blackhole address %v", ethHeader.Coinbase, common.Address(constants.BlackholeAddr))
 	}
 	// Block must not have any uncles
 	if len(b.ethBlock.Uncles()) > 0 {

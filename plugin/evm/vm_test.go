@@ -4085,7 +4085,7 @@ func TestNoBlobsAllowed(t *testing.T) {
 	// Make one block with a single blob tx
 	signer := types.NewCancunSigner(gspec.Config.ChainID)
 	blockGen := func(_ int, b *core.BlockGen) {
-		b.SetCoinbase(constants.BlackholeAddr)
+		b.SetCoinbase(common.Address(constants.BlackholeAddr))
 		fee := big.NewInt(500)
 		fee.Add(fee, b.BaseFee())
 		tx, err := types.SignTx(types.NewTx(&types.BlobTx{

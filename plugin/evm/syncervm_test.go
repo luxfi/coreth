@@ -663,7 +663,7 @@ func generateAndAcceptBlocks(t *testing.T, vm *VM, numBlocks int, gen func(int, 
 		10,
 		func(i int, g *core.BlockGen) {
 			g.SetOnBlockGenerated(acceptExternalBlock)
-			g.SetCoinbase(constants.BlackholeAddr) // necessary for syntactic validation of the block
+			g.SetCoinbase(common.Address(constants.BlackholeAddr)) // necessary for syntactic validation of the block
 			gen(i, g)
 		},
 	)
