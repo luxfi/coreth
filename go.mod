@@ -1,6 +1,6 @@
 module github.com/luxfi/coreth
 
-go 1.26.4
+go 1.26.5
 
 exclude github.com/luxfi/geth v1.16.1
 
@@ -155,7 +155,7 @@ require (
 	github.com/luxfi/utils v1.3.1
 	github.com/luxfi/utxo v0.5.8
 	github.com/luxfi/version v1.0.1
-	github.com/luxfi/vm v1.3.16
+	github.com/luxfi/vm v1.3.17
 	github.com/luxfi/warp v1.24.1
 )
 
@@ -199,7 +199,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.9.1 // indirect
 	github.com/getsentry/sentry-go v0.44.1 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
-	github.com/go-json-experiment/json v0.0.0-20260601182631-00ed12fed2a6 // indirect
+	github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/mock v1.7.0-rc.1 // indirect
 	github.com/google/btree v1.1.3 // indirect
