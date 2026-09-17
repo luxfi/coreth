@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "node_modules/tsgo/bin/tsc --noEmit --incremental false"
   },
   "dependencies": {
     "fumadocs-core": "^14.5.5",
@@ -23,7 +24,8 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.2"
+    "tsgo": "npm:typescript@7.0.2",
+    "typescript": "6.0.3"
   },
   "packageManager": "pnpm@10.0.0"
 }
