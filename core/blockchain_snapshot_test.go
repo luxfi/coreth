@@ -48,7 +48,7 @@ import (
 	"github.com/luxfi/geth/core/types"
 	"github.com/luxfi/geth/core/vm"
 	"github.com/luxfi/geth/ethdb"
-	"github.com/luxfi/geth/ethdb/pebble"
+	"github.com/luxfi/geth/ethdb/zapdb"
 )
 
 // snapshotTestBasic wraps the common testing fields in the snapshot tests.
@@ -77,7 +77,7 @@ func (basic *snapshotTestBasic) prepare(t *testing.T) (*BlockChain, []*types.Blo
 	datadir := t.TempDir()
 	ancient := path.Join(datadir, "ancient")
 
-	kvdb, err := pebble.New(datadir, 0, 0, "", false)
+	kvdb, err := zapdb.New(datadir, 0, 0, "", false)
 	if err != nil {
 		t.Fatalf("Failed to create persistent database: %v", err)
 	}
@@ -258,7 +258,7 @@ func (snaptest *crashSnapshotTest) test(t *testing.T) {
 	chain.triedb.Close()
 
 	// Start a new blockchain back up and see where the repair leads us
-	newkvdb, err := pebble.New(snaptest.datadir, 0, 0, "", false)
+	newkvdb, err := zapdb.New(snaptest.datadir, 0, 0, "", false)
 	if err != nil {
 		t.Fatalf("Failed to reopen persistent database: %v", err)
 	}

@@ -1,6 +1,6 @@
 module github.com/luxfi/coreth
 
-go 1.26.5
+go 1.27.1
 
 exclude github.com/luxfi/geth v1.16.1
 
